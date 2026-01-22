@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { Search, X, User, Tag, Folder, Clock } from "lucide-react";
+import { Search, X, User, Tag, Folder, Clock, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LibraryAsset } from "@/lib/mockLibraryData";
+import { LibraryAsset, AI_GENERATED_TAGS } from "@/lib/mockLibraryData";
 
 interface FacetGroup {
   label: string;
@@ -66,12 +66,14 @@ interface Suggestion {
   icon: React.ReactNode;
   count?: number;
   category?: string; // The group label for facets
+  isAiGenerated?: boolean;
 }
 
 interface SelectedFacet {
   value: string;
   type: "tag" | "facet";
   category: string; // e.g., "Tag", "People", "Teams", etc.
+  isAiGenerated?: boolean;
 }
 
 interface FacetedSearchWithTypeaheadProps {
@@ -217,7 +219,7 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
         });
       });
 
-    // Match "People" facets FIRST (before tags)
+    // Match "People" facets FIRST (before tags) - People are AI-recognized
     const peopleGroup = facetGroups.find(g => g.label === "People");
     if (peopleGroup) {
       peopleGroup.facets
@@ -233,6 +235,7 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
               icon: <User className="w-4 h-4 text-muted-foreground" />,
               count,
               category: "People",
+              isAiGenerated: true, // People are always AI-recognized
             });
           }
         });
@@ -245,6 +248,7 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
       .slice(0, 3)
       .forEach(tag => {
         const count = filteredAssets.filter(a => a.tags.includes(tag)).length;
+        const isAi = AI_GENERATED_TAGS.has(tag);
         results.push({
           type: "tag",
           value: tag,
@@ -252,6 +256,7 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
           icon: <Tag className="w-4 h-4 text-muted-foreground" />,
           count,
           category: "Tag",
+          isAiGenerated: isAi,
         });
       });
 
@@ -281,13 +286,13 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
     return results.slice(0, 8);
   }, [searchQuery, filteredAssets, selectedFacetValues, facetCounts]);
 
-  const handleFacetToggle = useCallback((facetValue: string, type: "tag" | "facet", category: string) => {
+  const handleFacetToggle = useCallback((facetValue: string, type: "tag" | "facet", category: string, isAiGenerated?: boolean) => {
     setSelectedFacets((prev) => {
       const exists = prev.some(f => f.value === facetValue);
       if (exists) {
         return prev.filter((f) => f.value !== facetValue);
       } else {
-        return [...prev, { value: facetValue, type, category }];
+        return [...prev, { value: facetValue, type, category, isAiGenerated }];
       }
     });
   }, []);
@@ -330,7 +335,7 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
 
   const handleSuggestionClick = (suggestion: Suggestion) => {
     if (suggestion.type === "facet" || suggestion.type === "tag") {
-      handleFacetToggle(suggestion.value, suggestion.type, suggestion.category || "Tag");
+      handleFacetToggle(suggestion.value, suggestion.type, suggestion.category || "Tag", suggestion.isAiGenerated);
       setSearchQuery("");
     } else if (suggestion.type === "creator") {
       // Add creator as a search term
@@ -372,17 +377,32 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
       {/* Selected Facets Pills */}
       {selectedFacets.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-2">
-          {selectedFacets.map((facet) => (
-            <Badge
-              key={facet.value}
-              variant="secondary"
-              className="gap-1 pr-1 cursor-pointer hover:bg-secondary/80"
-              onClick={() => handleRemoveFacet(facet.value)}
-            >
-              {facet.category}: {facet.value}
-              <X className="w-3 h-3" />
-            </Badge>
-          ))}
+          {selectedFacets.map((facet) => {
+            const isPeople = facet.category === "People";
+            const isAi = facet.isAiGenerated;
+            
+            return (
+              <Badge
+                key={facet.value}
+                variant="secondary"
+                className={`gap-1.5 pr-1.5 cursor-pointer transition-colors ${
+                  isAi 
+                    ? "bg-slate-200 hover:bg-slate-300 text-slate-700" 
+                    : "hover:bg-secondary/80"
+                }`}
+                onClick={() => handleRemoveFacet(facet.value)}
+              >
+                {isPeople ? (
+                  <User className="w-3.5 h-3.5" />
+                ) : (
+                  <Tag className="w-3.5 h-3.5" />
+                )}
+                {isAi && <Sparkles className="w-3 h-3" />}
+                {facet.category === "Tag" ? `${facet.value} (tag)` : `${facet.value} (recognized)`}
+                <X className="w-3.5 h-3.5 ml-0.5" />
+              </Badge>
+            );
+          })}
         </div>
       )}
 
@@ -465,16 +485,35 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
               <div className="text-xs font-medium text-muted-foreground px-2 py-1 mb-1">
                 Suggestions ({filteredAssets.length} results)
               </div>
-              {suggestions.map((suggestion, idx) => (
-                <button
-                  key={`${suggestion.type}-${suggestion.value}-${idx}`}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                  className="w-full flex items-center gap-2 px-2 py-2 text-sm text-left rounded hover:bg-accent transition-colors"
-                >
-                  {suggestion.icon}
-                  <span className="truncate">{suggestion.label}</span>
-                </button>
-              ))}
+              {suggestions.map((suggestion, idx) => {
+                const isPeople = suggestion.category === "People";
+                const isAi = suggestion.isAiGenerated;
+                
+                return (
+                  <button
+                    key={`${suggestion.type}-${suggestion.value}-${idx}`}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    className="w-full flex items-center gap-2 px-2 py-2 text-sm text-left rounded hover:bg-accent transition-colors"
+                  >
+                    {isPeople ? (
+                      <User className="w-4 h-4 text-muted-foreground" />
+                    ) : suggestion.type === "tag" ? (
+                      <Tag className="w-4 h-4 text-muted-foreground" />
+                    ) : (
+                      suggestion.icon
+                    )}
+                    {isAi && <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />}
+                    <span className="truncate">
+                      {isPeople 
+                        ? `${suggestion.value} (recognized)`
+                        : suggestion.type === "tag"
+                          ? `${suggestion.value} (tag)`
+                          : suggestion.label
+                      }
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </ScrollArea>
         </div>
