@@ -68,6 +68,8 @@ export function LibraryScreenV4({ isMobile = false }: LibraryScreenV4Props) {
         if (filterId === "content-type") field = "type";
         if (filterId === "aspect-ratio") field = "aspect";
         if (filterId === "date-range") field = "date";
+        if (filterId === "tags") field = "tag";
+        if (filterId === "people") field = "tag"; // People are also tags
         
         filterFacetObjs.push({
           field,

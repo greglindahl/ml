@@ -70,6 +70,41 @@ const filters: FilterConfig[] = [
     ],
   },
   {
+    id: "tags",
+    label: "Tags",
+    icon: null,
+    multiSelect: true,
+    options: [
+      // Sports
+      { label: "Basketball", value: "basketball" },
+      { label: "Football", value: "football" },
+      { label: "Baseball", value: "baseball" },
+      { label: "Esports", value: "esports" },
+      // Teams
+      { label: "Lakers", value: "Lakers" },
+      { label: "Warriors", value: "Warriors" },
+      { label: "Celtics", value: "Celtics" },
+      { label: "Nets", value: "Nets" },
+      { label: "Bucks", value: "Bucks" },
+      { label: "Mavericks", value: "Mavericks" },
+      { label: "Suns", value: "Suns" },
+      { label: "Heat", value: "Heat" },
+      // Categories
+      { label: "Marketing", value: "marketing" },
+      { label: "Product", value: "product" },
+      { label: "Social", value: "social" },
+      { label: "Brand", value: "brand" },
+      // Shot types
+      { label: "Solo (1)", value: "solo (1)" },
+      { label: "Small Group (2-4)", value: "small group (2-4)" },
+      { label: "Team Shot (5+)", value: "team shot (5+)" },
+      { label: "Candid", value: "candid" },
+      { label: "Headshot", value: "headshot" },
+      { label: "Portrait", value: "portrait" },
+      { label: "Landscape", value: "landscape" },
+    ],
+  },
+  {
     id: "creator",
     label: "Creator",
     icon: null,
@@ -323,6 +358,13 @@ export function FilterBar({ onFilterChange, onCustomDateChange, hideFilters = []
                   <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5">
                     <i className="bi bi-stars text-primary/70" />
                     AI-recognized face
+                  </div>
+                )}
+                {/* Sub-header for Tags filter */}
+                {filter.id === "tags" && (
+                  <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                    <i className="bi bi-tag text-muted-foreground" />
+                    Manually added tags
                   </div>
                 )}
                 {filter.options
