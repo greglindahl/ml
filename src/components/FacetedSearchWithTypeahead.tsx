@@ -196,9 +196,14 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
   }, [facetCounts, onFacetCountsChange]);
 
   // Trigger search when query or facets change
+  // Combine searchQuery with search-type pills for fuzzy matching
   useEffect(() => {
-    onSearch?.(searchQuery, selectedFacetValues);
-  }, [searchQuery, selectedFacetValues, onSearch]);
+    const searchTermPills = selectedFacets.filter(f => f.type === "search").map(f => f.value);
+    const tagFacetValues = selectedFacets.filter(f => f.type !== "search").map(f => f.value);
+    // Combine current input with search term pills for the query
+    const combinedQuery = [searchQuery, ...searchTermPills].filter(Boolean).join(" ");
+    onSearch?.(combinedQuery, tagFacetValues);
+  }, [searchQuery, selectedFacets, onSearch]);
 
   // Helper to get icon for a facet group
   const getIconForGroup = (groupLabel: string): React.ReactNode => {
