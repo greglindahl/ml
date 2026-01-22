@@ -1,6 +1,11 @@
 // Mock library data for realistic search testing
 import Fuse from 'fuse.js';
 
+export interface TagInfo {
+  value: string;
+  isAiGenerated: boolean;
+}
+
 export interface LibraryAsset {
   id: string;
   name: string;
@@ -11,11 +16,39 @@ export interface LibraryAsset {
   aspectRatio: "1:1" | "16:9" | "9:16" | "4:3";
   status: "approved" | "pending" | "draft";
   tags: string[];
+  tagInfo?: TagInfo[]; // Detailed tag info with AI-generated flag
   fileSize: string;
   dimensions?: string;
   duration?: string;
   folderId?: string; // Which folder/gallery this asset belongs to
 }
+
+// Define which tags are AI-generated (recognized by AI) vs manual
+export const AI_GENERATED_TAGS = new Set([
+  // Player recognition (AI face/person detection)
+  "Lebron James",
+  "Steph Curry", 
+  "Kevin Durant",
+  "Giannis Antetokounmpo",
+  "Luka Doncic",
+  // Object/logo detection
+  "Nike",
+  "Gatorade",
+  "adidas",
+  "Under Armour",
+  // Action recognition
+  "dunk",
+  "slam dunk",
+  "three pointer",
+  "block",
+  "assist",
+  "crossover",
+  "fastbreak",
+  // Scene recognition
+  "courtside",
+  "celebration",
+  "victory",
+]);
 
 const creators = [
   { id: "john", name: "John Smith" },
