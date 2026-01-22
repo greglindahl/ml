@@ -235,22 +235,43 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
       .forEach(tag => {
         const count = filteredAssets.filter(a => a.tags.includes(tag)).length;
         const isAi = AI_GENERATED_TAGS.has(tag);
-        const suggestion: Suggestion = {
-          type: "tag",
-          value: tag,
-          label: `${tag} (tag)`,
-          icon: <Tag className="w-4 h-4" />,
-          count,
-          category: "Tag",
-          isAiGenerated: isAi,
-        };
         
         // Check if this tag matches a person name (for "Tagged People" section)
         const isPeopleName = peopleGroup?.facets.some(p => p.toLowerCase() === tag.toLowerCase());
         if (isPeopleName) {
-          taggedPeople.push(suggestion);
+          // For people names as tags, show BOTH AI and manual versions
+          // AI-tagged version (with sparkle)
+          if (isAi) {
+            taggedPeople.push({
+              type: "tag",
+              value: tag,
+              label: tag,
+              icon: <Tag className="w-4 h-4" />,
+              count,
+              category: "Tag",
+              isAiGenerated: true,
+            });
+          }
+          // Manual tag version (without sparkle) - always add for people names
+          taggedPeople.push({
+            type: "tag",
+            value: `${tag}__manual`, // Use suffix to differentiate
+            label: tag,
+            icon: <Tag className="w-4 h-4" />,
+            count,
+            category: "Tag",
+            isAiGenerated: false,
+          });
         } else {
-          otherTags.push(suggestion);
+          otherTags.push({
+            type: "tag",
+            value: tag,
+            label: tag,
+            icon: <Tag className="w-4 h-4" />,
+            count,
+            category: "Tag",
+            isAiGenerated: isAi,
+          });
         }
       });
 
@@ -372,7 +393,7 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
                   <Tag className="w-3.5 h-3.5" />
                 )}
                 {isAi && <Sparkles className="w-3 h-3" />}
-                {facet.category === "Tag" ? `${facet.value} (tag)` : `${facet.value} (recognized)`}
+                {facet.value.replace(/__manual$/, '')}
                 <X className="w-3.5 h-3.5 ml-0.5" />
               </Badge>
             );
@@ -472,7 +493,7 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-secondary hover:bg-secondary/80 rounded-full text-sm transition-colors"
                       >
                         <User className="w-4 h-4" />
-                        <span>{suggestion.value} (recognized)</span>
+                        <span>{suggestion.value}</span>
                       </button>
                     ))}
                   </div>
@@ -498,7 +519,7 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
                         >
                           <Tag className="w-4 h-4" />
                           {isAi && <Sparkles className="w-3.5 h-3.5" />}
-                          <span>{suggestion.value} (tag)</span>
+                          <span>{suggestion.value.replace(/__manual$/, '')}</span>
                         </button>
                       );
                     })}
@@ -525,7 +546,7 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
                         >
                           <Tag className="w-4 h-4" />
                           {isAi && <Sparkles className="w-3.5 h-3.5" />}
-                          <span>{suggestion.value} (tag)</span>
+                          <span>{suggestion.value}</span>
                         </button>
                       );
                     })}
