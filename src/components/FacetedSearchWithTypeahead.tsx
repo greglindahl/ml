@@ -324,6 +324,19 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
     });
   }, []);
 
+  const removeRecentSearch = useCallback((searchToRemove: string) => {
+    setRecentSearches(prev => {
+      const updated = prev.filter(s => s !== searchToRemove);
+      localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  const clearAllRecentSearches = useCallback(() => {
+    setRecentSearches([]);
+    localStorage.removeItem(RECENT_SEARCHES_KEY);
+  }, []);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && searchQuery.trim()) {
       e.preventDefault();
@@ -453,19 +466,44 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
               {/* Recent Searches Section */}
               {recentSearches.length > 0 && !searchQuery.trim() && (
                 <div className="mb-4">
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                    Recent Searches
-                  </h4>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Recent Searches
+                    </h4>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        clearAllRecentSearches();
+                      }}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Clear all
+                    </button>
+                  </div>
                   <div className="flex flex-col gap-1">
                     {recentSearches.map((search, idx) => (
-                      <button
+                      <div
                         key={`recent-${idx}`}
-                        onClick={() => handleAddSearchTerm(search)}
-                        className="flex items-center gap-2 px-2 py-1.5 text-sm text-left rounded hover:bg-accent transition-colors"
+                        className="flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-accent transition-colors group"
                       >
-                        <Clock className="w-4 h-4 text-muted-foreground" />
-                        <span>{search}</span>
-                      </button>
+                        <button
+                          onClick={() => handleAddSearchTerm(search)}
+                          className="flex items-center gap-2 flex-1 text-left"
+                        >
+                          <Clock className="w-4 h-4 text-muted-foreground" />
+                          <span>{search}</span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeRecentSearch(search);
+                          }}
+                          className="p-0.5 rounded hover:bg-secondary opacity-0 group-hover:opacity-100 transition-opacity"
+                          aria-label={`Remove ${search} from recent searches`}
+                        >
+                          <X className="w-3.5 h-3.5 text-muted-foreground" />
+                        </button>
+                      </div>
                     ))}
                   </div>
                 </div>
