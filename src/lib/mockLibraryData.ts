@@ -48,6 +48,11 @@ export const AI_GENERATED_TAGS = new Set([
   "courtside",
   "celebration",
   "victory",
+  // Sport detection
+  "basketball",
+  "football",
+  "baseball",
+  "esports",
 ]);
 
 const creators = [
