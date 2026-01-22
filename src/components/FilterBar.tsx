@@ -318,6 +318,13 @@ export function FilterBar({ onFilterChange, onCustomDateChange, hideFilters = []
                 </div>
               </div>
               <div className="max-h-[280px] overflow-y-auto">
+                {/* Sub-header for People filter */}
+                {filter.id === "people" && (
+                  <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                    <i className="bi bi-stars text-primary/70" />
+                    AI-recognized face
+                  </div>
+                )}
                 {filter.options
                   .filter(option => 
                     option.label.toLowerCase().includes((searchQueries[filter.id] || "").toLowerCase())
