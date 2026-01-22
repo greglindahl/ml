@@ -57,6 +57,19 @@ const folderOptions = flattenFolderTree(folders);
 
 const filters: FilterConfig[] = [
   {
+    id: "people",
+    label: "People",
+    icon: null,
+    multiSelect: true,
+    options: [
+      { label: "Lebron James", value: "Lebron James" },
+      { label: "Steph Curry", value: "Steph Curry" },
+      { label: "Kevin Durant", value: "Kevin Durant" },
+      { label: "Giannis Antetokounmpo", value: "Giannis Antetokounmpo" },
+      { label: "Luka Doncic", value: "Luka Doncic" },
+    ],
+  },
+  {
     id: "creator",
     label: "Creator",
     icon: null,
@@ -75,19 +88,6 @@ const filters: FilterConfig[] = [
     options: [
       { label: "Image", value: "image" },
       { label: "Video", value: "video" },
-    ],
-  },
-  {
-    id: "people",
-    label: "People",
-    icon: null,
-    multiSelect: true,
-    options: [
-      { label: "Lebron James", value: "Lebron James" },
-      { label: "Steph Curry", value: "Steph Curry" },
-      { label: "Kevin Durant", value: "Kevin Durant" },
-      { label: "Giannis Antetokounmpo", value: "Giannis Antetokounmpo" },
-      { label: "Luka Doncic", value: "Luka Doncic" },
     ],
   },
   {
