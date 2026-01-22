@@ -61,7 +61,7 @@ const facetGroups: FacetGroup[] = [
 ];
 
 interface Suggestion {
-  type: "asset" | "creator" | "tag" | "facet";
+  type: "asset" | "creator" | "tag" | "facet" | "search";
   value: string;
   label: string;
   icon: React.ReactNode;
@@ -72,8 +72,8 @@ interface Suggestion {
 
 interface SelectedFacet {
   value: string;
-  type: "tag" | "facet";
-  category: string; // e.g., "Tag", "People", "Teams", etc.
+  type: "tag" | "facet" | "search";
+  category: string; // e.g., "Tag", "People", "Teams", "Search", etc.
   isAiGenerated?: boolean;
 }
 
@@ -279,7 +279,7 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
     return { recognizedPeople, taggedPeople, otherTags };
   }, [searchQuery, filteredAssets, selectedFacetValues, facetCounts]);
 
-  const handleFacetToggle = useCallback((facetValue: string, type: "tag" | "facet", category: string, isAiGenerated?: boolean) => {
+  const handleFacetToggle = useCallback((facetValue: string, type: "tag" | "facet" | "search", category: string, isAiGenerated?: boolean) => {
     setSelectedFacets((prev) => {
       const exists = prev.some(f => f.value === facetValue);
       if (exists) {
@@ -309,12 +309,26 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
   }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && searchQuery.trim()) {
       e.preventDefault();
-      addToRecentSearches(searchQuery);
-      setIsOpen(false);
+      // Add search term as a pill
+      handleAddSearchTerm(searchQuery.trim());
     }
   };
+
+  const handleAddSearchTerm = useCallback((term: string) => {
+    if (!term.trim()) return;
+    // Add to recent searches
+    addToRecentSearches(term);
+    // Add as a selected facet with type "search"
+    setSelectedFacets((prev) => {
+      const exists = prev.some(f => f.value.toLowerCase() === term.toLowerCase() && f.type === "search");
+      if (exists) return prev;
+      return [...prev, { value: term, type: "search", category: "Search" }];
+    });
+    setSearchQuery("");
+    setIsOpen(false);
+  }, [addToRecentSearches]);
 
   const handleRecentSearchClick = (search: string) => {
     setSearchQuery(search);
@@ -327,23 +341,24 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
   };
 
   const handleSuggestionClick = (suggestion: Suggestion) => {
-    if (suggestion.type === "facet" || suggestion.type === "tag") {
+    if (suggestion.type === "search") {
+      handleAddSearchTerm(suggestion.value);
+    } else if (suggestion.type === "facet" || suggestion.type === "tag") {
       handleFacetToggle(suggestion.value, suggestion.type, suggestion.category || "Tag", suggestion.isAiGenerated);
       setSearchQuery("");
+      setIsOpen(false);
     } else if (suggestion.type === "creator") {
       // Add creator as a search term
-      setSearchQuery(suggestion.value);
+      handleAddSearchTerm(suggestion.value);
     } else if (suggestion.type === "asset") {
-      setSearchQuery(suggestion.value);
+      handleAddSearchTerm(suggestion.value);
     }
-    setIsOpen(false);
   };
 
-  const hasSuggestions = groupedSuggestions.recognizedPeople.length > 0 || 
+  const hasTagSuggestions = groupedSuggestions.recognizedPeople.length > 0 || 
                          groupedSuggestions.taggedPeople.length > 0 || 
                          groupedSuggestions.otherTags.length > 0;
-  const showTypeahead = isOpen && searchQuery.trim().length > 0 && hasSuggestions;
-  const showFacetsPreview = isOpen && searchQuery.trim().length === 0;
+  const showTypeahead = isOpen && (searchQuery.trim().length > 0 || recentSearches.length > 0);
 
   return (
     <div ref={containerRef} className="relative w-full">
@@ -370,25 +385,24 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
         )}
       </div>
 
-      {/* Selected Facets Pills */}
+      {/* Selected Facets/Search Pills */}
       {selectedFacets.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-2">
           {selectedFacets.map((facet) => {
             const isPeople = facet.category === "People";
+            const isSearch = facet.type === "search";
             const isAi = facet.isAiGenerated;
             
             return (
               <Badge
                 key={facet.value}
                 variant="secondary"
-                className={`gap-1.5 pr-1.5 cursor-pointer transition-colors ${
-                  isAi 
-                    ? "bg-slate-200 hover:bg-slate-300 text-slate-700" 
-                    : "hover:bg-secondary/80"
-                }`}
+                className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-secondary/80"
                 onClick={() => handleRemoveFacet(facet.value)}
               >
-                {isPeople ? (
+                {isSearch ? (
+                  <Search className="w-3.5 h-3.5" />
+                ) : isPeople ? (
                   <User className="w-3.5 h-3.5" />
                 ) : (
                   <Tag className="w-3.5 h-3.5" />
@@ -402,17 +416,54 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
         </div>
       )}
 
-      {/* Typeahead Suggestions Dropdown (shown when typing) */}
+      {/* Typeahead Suggestions Dropdown */}
       {showTypeahead && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-lg shadow-lg z-50">
           <ScrollArea className="max-h-[400px]">
             <div className="p-3">
-              <div className="text-xs font-medium text-muted-foreground mb-3">
-                Suggestions ({filteredAssets.length} results)
-              </div>
+              {/* Generic Search Option - shown when user is typing */}
+              {searchQuery.trim() && (
+                <div className="mb-4">
+                  <button
+                    onClick={() => handleAddSearchTerm(searchQuery.trim())}
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left rounded-lg hover:bg-accent transition-colors"
+                  >
+                    <Search className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-medium">{searchQuery}</span>
+                  </button>
+                </div>
+              )}
+              
+              {/* Recent Searches Section */}
+              {recentSearches.length > 0 && !searchQuery.trim() && (
+                <div className="mb-4">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                    Recent Searches
+                  </h4>
+                  <div className="flex flex-col gap-1">
+                    {recentSearches.map((search, idx) => (
+                      <button
+                        key={`recent-${idx}`}
+                        onClick={() => handleAddSearchTerm(search)}
+                        className="flex items-center gap-2 px-2 py-1.5 text-sm text-left rounded hover:bg-accent transition-colors"
+                      >
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        <span>{search}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Tag Suggestions Header - only show if we have suggestions and user is typing */}
+              {searchQuery.trim() && hasTagSuggestions && (
+                <div className="text-xs font-medium text-muted-foreground mb-3">
+                  Suggestions ({filteredAssets.length} results)
+                </div>
+              )}
               
               {/* Recognized People Section */}
-              {groupedSuggestions.recognizedPeople.length > 0 && (
+              {searchQuery.trim() && groupedSuggestions.recognizedPeople.length > 0 && (
                 <div className="mb-4">
                   <h4 className="text-sm font-semibold text-foreground mb-2">Recognized People</h4>
                   <div className="flex flex-col gap-2">
@@ -439,7 +490,7 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
               )}
               
               {/* Tagged People Section */}
-              {groupedSuggestions.taggedPeople.length > 0 && (
+              {searchQuery.trim() && groupedSuggestions.taggedPeople.length > 0 && (
                 <div className="mb-4">
                   <h4 className="text-sm font-semibold text-foreground mb-2">Tagged People</h4>
                   <div className="flex flex-col gap-2">
@@ -470,7 +521,7 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
               )}
               
               {/* Other Tags Section */}
-              {groupedSuggestions.otherTags.length > 0 && (
+              {searchQuery.trim() && groupedSuggestions.otherTags.length > 0 && (
                 <div>
                   <h4 className="text-sm font-semibold text-foreground mb-2">Tags</h4>
                   <div className="flex flex-col gap-2">
