@@ -295,16 +295,6 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
     return { recognizedPeople, taggedPeople, otherTags };
   }, [searchQuery, filteredAssets, selectedFacetValues, facetCounts]);
 
-  const handleFacetToggle = useCallback((facetValue: string, type: "tag" | "facet" | "search", category: string, isAiGenerated?: boolean) => {
-    setSelectedFacets((prev) => {
-      const exists = prev.some(f => f.value === facetValue);
-      if (exists) {
-        return prev.filter((f) => f.value !== facetValue);
-      } else {
-        return [...prev, { value: facetValue, type, category, isAiGenerated }];
-      }
-    });
-  }, []);
 
   const handleRemoveFacet = useCallback((facetValue: string) => {
     setSelectedFacets((prev) => prev.filter((f) => f.value !== facetValue));
@@ -369,11 +359,23 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
     setSelectedFacets([]);
   };
 
-  const handleSuggestionClick = (suggestion: Suggestion) => {
+  const handleSuggestionClick = useCallback((suggestion: Suggestion) => {
     if (suggestion.type === "search") {
       handleAddSearchTerm(suggestion.value);
     } else if (suggestion.type === "facet" || suggestion.type === "tag") {
-      handleFacetToggle(suggestion.value, suggestion.type, suggestion.category || "Tag", suggestion.isAiGenerated);
+      // Add the facet to selectedFacets - use functional update to preserve existing selections
+      setSelectedFacets((prev) => {
+        const exists = prev.some(f => f.value === suggestion.value);
+        if (exists) {
+          return prev.filter((f) => f.value !== suggestion.value);
+        }
+        return [...prev, { 
+          value: suggestion.value, 
+          type: suggestion.type as "tag" | "facet", 
+          category: suggestion.category || "Tag", 
+          isAiGenerated: suggestion.isAiGenerated 
+        }];
+      });
       setSearchQuery("");
       setIsOpen(false);
     } else if (suggestion.type === "creator") {
@@ -382,7 +384,7 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
     } else if (suggestion.type === "asset") {
       handleAddSearchTerm(suggestion.value);
     }
-  };
+  }, [handleAddSearchTerm]);
 
   const hasTagSuggestions = groupedSuggestions.recognizedPeople.length > 0 || 
                          groupedSuggestions.taggedPeople.length > 0 || 

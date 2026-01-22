@@ -781,10 +781,10 @@ export function searchAssets(assets: LibraryAsset[], filters: SearchFilters): Li
       if (!filters.status.includes(asset.status)) return false;
     }
 
-    // Tag filter - ALL tags must match (AND logic, case-insensitive)
+    // Tag filter - ANY tag must match (OR logic, case-insensitive)
     if (filters.tag?.length) {
       const lowerTags = asset.tags.map(t => t.toLowerCase());
-      if (!filters.tag.every((t) => lowerTags.includes(t.toLowerCase()))) return false;
+      if (!filters.tag.some((t) => lowerTags.includes(t.toLowerCase()))) return false;
     }
 
     return true;
