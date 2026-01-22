@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { folders, FolderItem } from "@/lib/mockFolderData";
+import { AI_GENERATED_TAGS } from "@/lib/mockLibraryData";
 
 interface FilterOption {
   label: string;
@@ -396,18 +397,24 @@ export function FilterBar({ onFilterChange, onCustomDateChange, hideFilters = []
                         <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider mt-1 first:mt-0">
                           {groupName}
                         </div>
-                        {options.map((option) => (
-                          <DropdownMenuCheckboxItem
-                            key={option.value}
-                            checked={selected.some(s => s.value === option.value)}
-                            onCheckedChange={(checked) =>
-                              handleMultiSelect(filter.id, option.value, option.label, checked)
-                            }
-                            className="flex items-center gap-2"
-                          >
-                            <span>{option.label}</span>
-                          </DropdownMenuCheckboxItem>
-                        ))}
+                        {options.map((option) => {
+                          const isAiGenerated = AI_GENERATED_TAGS.has(option.value) || AI_GENERATED_TAGS.has(option.label);
+                          return (
+                            <DropdownMenuCheckboxItem
+                              key={option.value}
+                              checked={selected.some(s => s.value === option.value)}
+                              onCheckedChange={(checked) =>
+                                handleMultiSelect(filter.id, option.value, option.label, checked)
+                              }
+                              className="flex items-center justify-between gap-2"
+                            >
+                              <span>{option.label}</span>
+                              {isAiGenerated && (
+                                <i className="bi bi-stars text-primary/70 text-xs" />
+                              )}
+                            </DropdownMenuCheckboxItem>
+                          );
+                        })}
                       </div>
                     ));
                   })()
