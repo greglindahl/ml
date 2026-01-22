@@ -23,6 +23,7 @@ interface FilterOption {
   value: string;
   depth?: number;
   type?: "folder" | "gallery";
+  group?: string; // Group name for grouped filters
 }
 
 interface FilterConfig {
@@ -32,6 +33,7 @@ interface FilterConfig {
   options: FilterOption[];
   multiSelect?: boolean;
   isTreeStructure?: boolean;
+  hasGroups?: boolean; // Whether options are grouped
 }
 
 // Helper to flatten folder tree into options with depth (folders only, no galleries)
@@ -74,34 +76,35 @@ const filters: FilterConfig[] = [
     label: "Tags",
     icon: null,
     multiSelect: true,
+    hasGroups: true,
     options: [
       // Sports
-      { label: "Basketball", value: "basketball" },
-      { label: "Football", value: "football" },
-      { label: "Baseball", value: "baseball" },
-      { label: "Esports", value: "esports" },
+      { label: "Basketball", value: "basketball", group: "Sports" },
+      { label: "Football", value: "football", group: "Sports" },
+      { label: "Baseball", value: "baseball", group: "Sports" },
+      { label: "Esports", value: "esports", group: "Sports" },
       // Teams
-      { label: "Lakers", value: "Lakers" },
-      { label: "Warriors", value: "Warriors" },
-      { label: "Celtics", value: "Celtics" },
-      { label: "Nets", value: "Nets" },
-      { label: "Bucks", value: "Bucks" },
-      { label: "Mavericks", value: "Mavericks" },
-      { label: "Suns", value: "Suns" },
-      { label: "Heat", value: "Heat" },
+      { label: "Lakers", value: "Lakers", group: "Teams" },
+      { label: "Warriors", value: "Warriors", group: "Teams" },
+      { label: "Celtics", value: "Celtics", group: "Teams" },
+      { label: "Nets", value: "Nets", group: "Teams" },
+      { label: "Bucks", value: "Bucks", group: "Teams" },
+      { label: "Mavericks", value: "Mavericks", group: "Teams" },
+      { label: "Suns", value: "Suns", group: "Teams" },
+      { label: "Heat", value: "Heat", group: "Teams" },
       // Categories
-      { label: "Marketing", value: "marketing" },
-      { label: "Product", value: "product" },
-      { label: "Social", value: "social" },
-      { label: "Brand", value: "brand" },
+      { label: "Marketing", value: "marketing", group: "Categories" },
+      { label: "Product", value: "product", group: "Categories" },
+      { label: "Social", value: "social", group: "Categories" },
+      { label: "Brand", value: "brand", group: "Categories" },
       // Shot types
-      { label: "Solo (1)", value: "solo (1)" },
-      { label: "Small Group (2-4)", value: "small group (2-4)" },
-      { label: "Team Shot (5+)", value: "team shot (5+)" },
-      { label: "Candid", value: "candid" },
-      { label: "Headshot", value: "headshot" },
-      { label: "Portrait", value: "portrait" },
-      { label: "Landscape", value: "landscape" },
+      { label: "Solo (1)", value: "solo (1)", group: "Shot Types" },
+      { label: "Small Group (2-4)", value: "small group (2-4)", group: "Shot Types" },
+      { label: "Team Shot (5+)", value: "team shot (5+)", group: "Shot Types" },
+      { label: "Candid", value: "candid", group: "Shot Types" },
+      { label: "Headshot", value: "headshot", group: "Shot Types" },
+      { label: "Portrait", value: "portrait", group: "Shot Types" },
+      { label: "Landscape", value: "landscape", group: "Shot Types" },
     ],
   },
   {
@@ -360,54 +363,98 @@ export function FilterBar({ onFilterChange, onCustomDateChange, hideFilters = []
                     AI-recognized face
                   </div>
                 )}
-                {/* Sub-header for Tags filter */}
-                {filter.id === "tags" && (
-                  <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                    <i className="bi bi-tag text-muted-foreground" />
-                    Manually added tags
-                  </div>
-                )}
-                {filter.options
-                  .filter(option => 
-                    option.label.toLowerCase().includes((searchQueries[filter.id] || "").toLowerCase())
-                  )
-                  .map((option) => {
-                    const isTreeItem = filter.isTreeStructure && option.depth !== undefined;
-                    const indent = isTreeItem ? option.depth! * 12 : 0;
-                    const Icon = option.type === "gallery" ? Images : Folder;
-                    
-                    return isMulti ? (
-                      <DropdownMenuCheckboxItem
-                        key={option.value}
-                        checked={selected.some(s => s.value === option.value)}
-                        onCheckedChange={(checked) => 
-                          handleMultiSelect(filter.id, option.value, option.label, checked)
-                        }
-                        style={{ paddingLeft: isTreeItem ? `${8 + indent}px` : undefined }}
-                        className="flex items-center gap-2"
-                      >
-                        {isTreeItem && (
-                          <Icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                        )}
-                        <span className={option.depth === 0 ? "font-medium" : ""}>{option.label}</span>
-                      </DropdownMenuCheckboxItem>
-                    ) : (
-                      <DropdownMenuCheckboxItem
-                        key={option.value}
-                        checked={selected.some(s => s.value === option.value)}
-                        onCheckedChange={() => handleSingleSelect(filter.id, option.value, option.label)}
-                      >
-                        {option.label}
-                      </DropdownMenuCheckboxItem>
+                {/* Grouped options for filters with hasGroups */}
+                {filter.hasGroups ? (
+                  (() => {
+                    const filteredOptions = filter.options.filter(option =>
+                      option.label.toLowerCase().includes((searchQueries[filter.id] || "").toLowerCase())
                     );
-                  })
-                }
-                {filter.options.filter(option => 
-                  option.label.toLowerCase().includes((searchQueries[filter.id] || "").toLowerCase())
-                ).length === 0 && (
-                  <div className="px-2 py-1.5 text-xs text-muted-foreground text-center">
-                    No results found
-                  </div>
+                    
+                    // Group options by their group property
+                    const groups = filteredOptions.reduce((acc, option) => {
+                      const group = option.group || "Other";
+                      if (!acc[group]) acc[group] = [];
+                      acc[group].push(option);
+                      return acc;
+                    }, {} as Record<string, FilterOption[]>);
+                    
+                    const groupOrder = ["Sports", "Teams", "Categories", "Shot Types", "Other"];
+                    const sortedGroups = Object.entries(groups).sort(
+                      ([a], [b]) => groupOrder.indexOf(a) - groupOrder.indexOf(b)
+                    );
+                    
+                    if (filteredOptions.length === 0) {
+                      return (
+                        <div className="px-2 py-1.5 text-xs text-muted-foreground text-center">
+                          No results found
+                        </div>
+                      );
+                    }
+                    
+                    return sortedGroups.map(([groupName, options]) => (
+                      <div key={groupName}>
+                        <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider mt-1 first:mt-0">
+                          {groupName}
+                        </div>
+                        {options.map((option) => (
+                          <DropdownMenuCheckboxItem
+                            key={option.value}
+                            checked={selected.some(s => s.value === option.value)}
+                            onCheckedChange={(checked) =>
+                              handleMultiSelect(filter.id, option.value, option.label, checked)
+                            }
+                            className="flex items-center gap-2"
+                          >
+                            <span>{option.label}</span>
+                          </DropdownMenuCheckboxItem>
+                        ))}
+                      </div>
+                    ));
+                  })()
+                ) : (
+                  <>
+                    {filter.options
+                      .filter(option =>
+                        option.label.toLowerCase().includes((searchQueries[filter.id] || "").toLowerCase())
+                      )
+                      .map((option) => {
+                        const isTreeItem = filter.isTreeStructure && option.depth !== undefined;
+                        const indent = isTreeItem ? option.depth! * 12 : 0;
+                        const Icon = option.type === "gallery" ? Images : Folder;
+
+                        return isMulti ? (
+                          <DropdownMenuCheckboxItem
+                            key={option.value}
+                            checked={selected.some(s => s.value === option.value)}
+                            onCheckedChange={(checked) =>
+                              handleMultiSelect(filter.id, option.value, option.label, checked)
+                            }
+                            style={{ paddingLeft: isTreeItem ? `${8 + indent}px` : undefined }}
+                            className="flex items-center gap-2"
+                          >
+                            {isTreeItem && (
+                              <Icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                            )}
+                            <span className={option.depth === 0 ? "font-medium" : ""}>{option.label}</span>
+                          </DropdownMenuCheckboxItem>
+                        ) : (
+                          <DropdownMenuCheckboxItem
+                            key={option.value}
+                            checked={selected.some(s => s.value === option.value)}
+                            onCheckedChange={() => handleSingleSelect(filter.id, option.value, option.label)}
+                          >
+                            {option.label}
+                          </DropdownMenuCheckboxItem>
+                        );
+                      })}
+                    {filter.options.filter(option =>
+                      option.label.toLowerCase().includes((searchQueries[filter.id] || "").toLowerCase())
+                    ).length === 0 && (
+                      <div className="px-2 py-1.5 text-xs text-muted-foreground text-center">
+                        No results found
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </DropdownMenuContent>
