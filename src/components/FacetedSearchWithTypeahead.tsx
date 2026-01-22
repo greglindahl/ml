@@ -522,11 +522,7 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
                             <TooltipTrigger asChild>
                               <button
                                 onClick={() => handleSuggestionClick(suggestion)}
-                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit ${
-                                  isAi 
-                                    ? "bg-slate-200 hover:bg-slate-300 text-slate-700" 
-                                    : "bg-secondary hover:bg-secondary/80"
-                                }`}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit bg-secondary hover:bg-secondary/80"
                               >
                                 <Tag className="w-4 h-4" />
                                 {isAi && <Sparkles className="w-3.5 h-3.5" />}
