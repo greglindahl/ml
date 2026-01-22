@@ -196,30 +196,16 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
     return <Folder className="w-4 h-4 text-muted-foreground" />;
   };
 
-  // Generate typeahead suggestions based on query
-  const suggestions = useMemo((): Suggestion[] => {
-    if (!searchQuery.trim()) return [];
+  // Generate grouped typeahead suggestions based on query
+  const groupedSuggestions = useMemo(() => {
+    if (!searchQuery.trim()) return { recognizedPeople: [], taggedPeople: [], otherTags: [] };
 
     const query = searchQuery.toLowerCase();
-    const results: Suggestion[] = [];
+    const recognizedPeople: Suggestion[] = [];
+    const taggedPeople: Suggestion[] = [];
+    const otherTags: Suggestion[] = [];
 
-    // Get unique creators from filtered assets
-    const creators = [...new Set(filteredAssets.map(a => a.creator))];
-    creators
-      .filter(c => c.toLowerCase().includes(query))
-      .slice(0, 3)
-      .forEach(creator => {
-        const count = filteredAssets.filter(a => a.creator === creator).length;
-        results.push({
-          type: "creator",
-          value: creator,
-          label: creator,
-          icon: <User className="w-4 h-4 text-muted-foreground" />,
-          count,
-        });
-      });
-
-    // Match "People" facets FIRST (before tags) - People are AI-recognized
+    // Match "People" facets - these are AI-recognized faces
     const peopleGroup = facetGroups.find(g => g.label === "People");
     if (peopleGroup) {
       peopleGroup.facets
@@ -228,62 +214,47 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
         .forEach(facet => {
           const count = facetCounts[facet] || 0;
           if (count > 0) {
-            results.push({
+            recognizedPeople.push({
               type: "facet",
               value: facet,
-              label: `People: ${facet}`,
-              icon: <User className="w-4 h-4 text-muted-foreground" />,
+              label: `${facet} (recognized)`,
+              icon: <User className="w-4 h-4" />,
               count,
               category: "People",
-              isAiGenerated: true, // People are always AI-recognized
+              isAiGenerated: true,
             });
           }
         });
     }
 
-    // Get unique tags from filtered assets
+    // Get unique tags from filtered assets - split into AI-tagged vs manual
     const allTags = [...new Set(filteredAssets.flatMap(a => a.tags))];
     allTags
       .filter(t => t.toLowerCase().includes(query))
-      .slice(0, 3)
+      .slice(0, 5)
       .forEach(tag => {
         const count = filteredAssets.filter(a => a.tags.includes(tag)).length;
         const isAi = AI_GENERATED_TAGS.has(tag);
-        results.push({
+        const suggestion: Suggestion = {
           type: "tag",
           value: tag,
-          label: `Tag: ${tag}`,
-          icon: <Tag className="w-4 h-4 text-muted-foreground" />,
+          label: `${tag} (tag)`,
+          icon: <Tag className="w-4 h-4" />,
           count,
           category: "Tag",
           isAiGenerated: isAi,
-        });
+        };
+        
+        // Check if this tag matches a person name (for "Tagged People" section)
+        const isPeopleName = peopleGroup?.facets.some(p => p.toLowerCase() === tag.toLowerCase());
+        if (isPeopleName) {
+          taggedPeople.push(suggestion);
+        } else {
+          otherTags.push(suggestion);
+        }
       });
 
-    // Match other facets (excluding People since we handled it above)
-    facetGroups
-      .filter(group => group.label !== "People")
-      .forEach(group => {
-        group.facets
-          .filter(f => f.toLowerCase().includes(query) && !selectedFacetValues.includes(f))
-          .slice(0, 2)
-          .forEach(facet => {
-            const count = facetCounts[facet] || 0;
-            if (count > 0) {
-              results.push({
-                type: "facet",
-                value: facet,
-                label: `${group.label}: ${facet}`,
-                icon: getIconForGroup(group.label),
-                count,
-                category: group.label,
-              });
-            }
-          });
-      });
-
-
-    return results.slice(0, 8);
+    return { recognizedPeople, taggedPeople, otherTags };
   }, [searchQuery, filteredAssets, selectedFacetValues, facetCounts]);
 
   const handleFacetToggle = useCallback((facetValue: string, type: "tag" | "facet", category: string, isAiGenerated?: boolean) => {
@@ -346,7 +317,10 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
     setIsOpen(false);
   };
 
-  const showTypeahead = isOpen && searchQuery.trim().length > 0 && suggestions.length > 0;
+  const hasSuggestions = groupedSuggestions.recognizedPeople.length > 0 || 
+                         groupedSuggestions.taggedPeople.length > 0 || 
+                         groupedSuggestions.otherTags.length > 0;
+  const showTypeahead = isOpen && searchQuery.trim().length > 0 && hasSuggestions;
   const showFacetsPreview = isOpen && searchQuery.trim().length === 0;
 
   return (
@@ -480,40 +454,84 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
       {/* Typeahead Suggestions Dropdown (shown when typing) */}
       {showTypeahead && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-lg shadow-lg z-50">
-          <ScrollArea className="max-h-[300px]">
-            <div className="p-2">
-              <div className="text-xs font-medium text-muted-foreground px-2 py-1 mb-1">
+          <ScrollArea className="max-h-[400px]">
+            <div className="p-3">
+              <div className="text-xs font-medium text-muted-foreground mb-3">
                 Suggestions ({filteredAssets.length} results)
               </div>
-              {suggestions.map((suggestion, idx) => {
-                const isPeople = suggestion.category === "People";
-                const isAi = suggestion.isAiGenerated;
-                
-                return (
-                  <button
-                    key={`${suggestion.type}-${suggestion.value}-${idx}`}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className="w-full flex items-center gap-2 px-2 py-2 text-sm text-left rounded hover:bg-accent transition-colors"
-                  >
-                    {isPeople ? (
-                      <User className="w-4 h-4 text-muted-foreground" />
-                    ) : suggestion.type === "tag" ? (
-                      <Tag className="w-4 h-4 text-muted-foreground" />
-                    ) : (
-                      suggestion.icon
-                    )}
-                    {isAi && <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />}
-                    <span className="truncate">
-                      {isPeople 
-                        ? `${suggestion.value} (recognized)`
-                        : suggestion.type === "tag"
-                          ? `${suggestion.value} (tag)`
-                          : suggestion.label
-                      }
-                    </span>
-                  </button>
-                );
-              })}
+              
+              {/* Recognized People Section */}
+              {groupedSuggestions.recognizedPeople.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-foreground mb-2">Recognized People</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {groupedSuggestions.recognizedPeople.map((suggestion, idx) => (
+                      <button
+                        key={`recognized-${suggestion.value}-${idx}`}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-secondary hover:bg-secondary/80 rounded-full text-sm transition-colors"
+                      >
+                        <User className="w-4 h-4" />
+                        <span>{suggestion.value} (recognized)</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Tagged People Section */}
+              {groupedSuggestions.taggedPeople.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-foreground mb-2">Tagged People</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {groupedSuggestions.taggedPeople.map((suggestion, idx) => {
+                      const isAi = suggestion.isAiGenerated;
+                      return (
+                        <button
+                          key={`tagged-${suggestion.value}-${idx}`}
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors ${
+                            isAi 
+                              ? "bg-slate-200 hover:bg-slate-300 text-slate-700" 
+                              : "bg-secondary hover:bg-secondary/80"
+                          }`}
+                        >
+                          <Tag className="w-4 h-4" />
+                          {isAi && <Sparkles className="w-3.5 h-3.5" />}
+                          <span>{suggestion.value} (tag)</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              
+              {/* Other Tags Section */}
+              {groupedSuggestions.otherTags.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground mb-2">Tags</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {groupedSuggestions.otherTags.map((suggestion, idx) => {
+                      const isAi = suggestion.isAiGenerated;
+                      return (
+                        <button
+                          key={`tag-${suggestion.value}-${idx}`}
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors ${
+                            isAi 
+                              ? "bg-slate-200 hover:bg-slate-300 text-slate-700" 
+                              : "bg-secondary hover:bg-secondary/80"
+                          }`}
+                        >
+                          <Tag className="w-4 h-4" />
+                          {isAi && <Sparkles className="w-3.5 h-3.5" />}
+                          <span>{suggestion.value} (tag)</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </ScrollArea>
         </div>
