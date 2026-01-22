@@ -529,7 +529,8 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
                           <TooltipTrigger asChild>
                             <button
                               onClick={() => handleSuggestionClick(suggestion)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-secondary hover:bg-secondary/80 rounded-full text-sm transition-colors w-fit"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit"
+                              style={{ backgroundColor: '#e0e0e0' }}
                             >
                               <User className="w-4 h-4" />
                               <span>{suggestion.value}</span>
