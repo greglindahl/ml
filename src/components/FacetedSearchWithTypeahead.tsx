@@ -3,6 +3,7 @@ import { Search, X, User, Tag, Folder, Clock, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { LibraryAsset, AI_GENERATED_TAGS } from "@/lib/mockLibraryData";
 
 interface FacetGroup {
@@ -485,16 +486,24 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
               {groupedSuggestions.recognizedPeople.length > 0 && (
                 <div className="mb-4">
                   <h4 className="text-sm font-semibold text-foreground mb-2">Recognized People</h4>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-col gap-2">
                     {groupedSuggestions.recognizedPeople.map((suggestion, idx) => (
-                      <button
-                        key={`recognized-${suggestion.value}-${idx}`}
-                        onClick={() => handleSuggestionClick(suggestion)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-secondary hover:bg-secondary/80 rounded-full text-sm transition-colors"
-                      >
-                        <User className="w-4 h-4" />
-                        <span>{suggestion.value}</span>
-                      </button>
+                      <TooltipProvider key={`recognized-${suggestion.value}-${idx}`} delayDuration={300}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => handleSuggestionClick(suggestion)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-secondary hover:bg-secondary/80 rounded-full text-sm transition-colors w-fit"
+                            >
+                              <User className="w-4 h-4" />
+                              <span>{suggestion.value}</span>
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">
+                            <p>AI-recognized face</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     ))}
                   </div>
                 </div>
@@ -504,23 +513,31 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
               {groupedSuggestions.taggedPeople.length > 0 && (
                 <div className="mb-4">
                   <h4 className="text-sm font-semibold text-foreground mb-2">Tagged People</h4>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-col gap-2">
                     {groupedSuggestions.taggedPeople.map((suggestion, idx) => {
                       const isAi = suggestion.isAiGenerated;
                       return (
-                        <button
-                          key={`tagged-${suggestion.value}-${idx}`}
-                          onClick={() => handleSuggestionClick(suggestion)}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors ${
-                            isAi 
-                              ? "bg-slate-200 hover:bg-slate-300 text-slate-700" 
-                              : "bg-secondary hover:bg-secondary/80"
-                          }`}
-                        >
-                          <Tag className="w-4 h-4" />
-                          {isAi && <Sparkles className="w-3.5 h-3.5" />}
-                          <span>{suggestion.value.replace(/__manual$/, '')}</span>
-                        </button>
+                        <TooltipProvider key={`tagged-${suggestion.value}-${idx}`} delayDuration={300}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => handleSuggestionClick(suggestion)}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit ${
+                                  isAi 
+                                    ? "bg-slate-200 hover:bg-slate-300 text-slate-700" 
+                                    : "bg-secondary hover:bg-secondary/80"
+                                }`}
+                              >
+                                <Tag className="w-4 h-4" />
+                                {isAi && <Sparkles className="w-3.5 h-3.5" />}
+                                <span>{suggestion.value.replace(/__manual$/, '')}</span>
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">
+                              <p>{isAi ? "AI-generated tag" : "Manual tag"}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       );
                     })}
                   </div>
@@ -531,23 +548,31 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
               {groupedSuggestions.otherTags.length > 0 && (
                 <div>
                   <h4 className="text-sm font-semibold text-foreground mb-2">Tags</h4>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-col gap-2">
                     {groupedSuggestions.otherTags.map((suggestion, idx) => {
                       const isAi = suggestion.isAiGenerated;
                       return (
-                        <button
-                          key={`tag-${suggestion.value}-${idx}`}
-                          onClick={() => handleSuggestionClick(suggestion)}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors ${
-                            isAi 
-                              ? "bg-slate-200 hover:bg-slate-300 text-slate-700" 
-                              : "bg-secondary hover:bg-secondary/80"
-                          }`}
-                        >
-                          <Tag className="w-4 h-4" />
-                          {isAi && <Sparkles className="w-3.5 h-3.5" />}
-                          <span>{suggestion.value}</span>
-                        </button>
+                        <TooltipProvider key={`tag-${suggestion.value}-${idx}`} delayDuration={300}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => handleSuggestionClick(suggestion)}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit ${
+                                  isAi 
+                                    ? "bg-slate-200 hover:bg-slate-300 text-slate-700" 
+                                    : "bg-secondary hover:bg-secondary/80"
+                                }`}
+                              >
+                                <Tag className="w-4 h-4" />
+                                {isAi && <Sparkles className="w-3.5 h-3.5" />}
+                                <span>{suggestion.value}</span>
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">
+                              <p>{isAi ? "AI-generated tag" : "Manual tag"}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       );
                     })}
                   </div>
