@@ -186,6 +186,14 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
     onSearch?.(searchQuery, selectedFacetValues);
   }, [searchQuery, selectedFacetValues, onSearch]);
 
+  // Helper to get icon for a facet group
+  const getIconForGroup = (groupLabel: string): React.ReactNode => {
+    if (groupLabel === "People") {
+      return <User className="w-4 h-4 text-muted-foreground" />;
+    }
+    return <Folder className="w-4 h-4 text-muted-foreground" />;
+  };
+
   // Generate typeahead suggestions based on query
   const suggestions = useMemo((): Suggestion[] => {
     if (!searchQuery.trim()) return [];
@@ -209,6 +217,27 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
         });
       });
 
+    // Match "People" facets FIRST (before tags)
+    const peopleGroup = facetGroups.find(g => g.label === "People");
+    if (peopleGroup) {
+      peopleGroup.facets
+        .filter(f => f.toLowerCase().includes(query) && !selectedFacetValues.includes(f))
+        .slice(0, 3)
+        .forEach(facet => {
+          const count = facetCounts[facet] || 0;
+          if (count > 0) {
+            results.push({
+              type: "facet",
+              value: facet,
+              label: `People: ${facet}`,
+              icon: <User className="w-4 h-4 text-muted-foreground" />,
+              count,
+              category: "People",
+            });
+          }
+        });
+    }
+
     // Get unique tags from filtered assets
     const allTags = [...new Set(filteredAssets.flatMap(a => a.tags))];
     allTags
@@ -226,25 +255,27 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
         });
       });
 
-    // Match facets
-    facetGroups.forEach(group => {
-      group.facets
-        .filter(f => f.toLowerCase().includes(query) && !selectedFacetValues.includes(f))
-        .slice(0, 2)
-        .forEach(facet => {
-          const count = facetCounts[facet] || 0;
-          if (count > 0) {
-            results.push({
-              type: "facet",
-              value: facet,
-              label: `${group.label}: ${facet}`,
-              icon: <Folder className="w-4 h-4 text-muted-foreground" />,
-              count,
-              category: group.label,
-            });
-          }
-        });
-    });
+    // Match other facets (excluding People since we handled it above)
+    facetGroups
+      .filter(group => group.label !== "People")
+      .forEach(group => {
+        group.facets
+          .filter(f => f.toLowerCase().includes(query) && !selectedFacetValues.includes(f))
+          .slice(0, 2)
+          .forEach(facet => {
+            const count = facetCounts[facet] || 0;
+            if (count > 0) {
+              results.push({
+                type: "facet",
+                value: facet,
+                label: `${group.label}: ${facet}`,
+                icon: getIconForGroup(group.label),
+                count,
+                category: group.label,
+              });
+            }
+          });
+      });
 
 
     return results.slice(0, 8);
