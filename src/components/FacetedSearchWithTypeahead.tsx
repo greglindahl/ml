@@ -83,31 +83,42 @@ interface FacetedSearchWithTypeaheadProps {
   assets?: LibraryAsset[];
 }
 
-// Helper to filter assets based on query and facets
-function filterAssets(assets: LibraryAsset[], query: string, selectedFacets: string[]): LibraryAsset[] {
+// Helper to filter assets based on query, facets, and search terms (with fuzzy matching)
+function filterAssets(
+  assets: LibraryAsset[], 
+  query: string, 
+  selectedFacets: SelectedFacet[]
+): LibraryAsset[] {
+  // Separate search terms from tag/facet filters
+  const searchTerms = selectedFacets.filter(f => f.type === "search").map(f => f.value.toLowerCase());
+  const tagFacets = selectedFacets.filter(f => f.type !== "search").map(f => f.value.toLowerCase().replace(/__manual$/, ''));
+
   return assets.filter(asset => {
-    // Text query match - each word in query must match somewhere
+    const nameLower = asset.name.toLowerCase();
+    const creatorLower = asset.creator.toLowerCase();
+    const tagsLower = asset.tags.map(t => t.toLowerCase());
+    const combinedText = `${nameLower} ${creatorLower} ${tagsLower.join(' ')}`;
+
+    // Text query match (from input box, not pills) - each word must match somewhere
     if (query) {
       const words = query.toLowerCase().split(/\s+/).filter(w => w.length > 0);
-      const nameLower = asset.name.toLowerCase();
-      const creatorLower = asset.creator.toLowerCase();
-      const tagsLower = asset.tags.map(t => t.toLowerCase());
-      
-      const allWordsMatch = words.every(word => {
-        const matchesName = nameLower.includes(word);
-        const matchesCreator = creatorLower.includes(word);
-        const matchesTags = tagsLower.some(t => t.includes(word));
-        return matchesName || matchesCreator || matchesTags;
-      });
-      
+      const allWordsMatch = words.every(word => combinedText.includes(word));
       if (!allWordsMatch) return false;
     }
 
-    // Facet match - ANY selected facet must match (OR logic)
-    if (selectedFacets.length > 0) {
-      const lowerFacets = selectedFacets.map(f => f.toLowerCase().replace(/__manual$/, ''));
-      const anyFacetMatches = lowerFacets.some(facet => {
-        const matchesTag = asset.tags.some(tag => tag.toLowerCase() === facet);
+    // Search term pills - fuzzy match with OR logic (any search term matches)
+    if (searchTerms.length > 0) {
+      const anySearchTermMatches = searchTerms.some(term => {
+        // Check if term matches anywhere in name, creator, or tags (partial/fuzzy)
+        return combinedText.includes(term);
+      });
+      if (!anySearchTermMatches) return false;
+    }
+
+    // Facet/Tag match - ANY selected facet must match (OR logic)
+    if (tagFacets.length > 0) {
+      const anyFacetMatches = tagFacets.some(facet => {
+        const matchesTag = tagsLower.some(tag => tag === facet);
         const matchesType = asset.type.toLowerCase() === facet;
         const matchesPhoto = facet === "photo" && asset.type === "image";
         const matchesVideo = facet === "video" && asset.type === "video";
@@ -165,8 +176,8 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
 
   // Filter assets based on current query and selected facets
   const filteredAssets = useMemo(() => {
-    return filterAssets(assets, searchQuery, selectedFacetValues);
-  }, [assets, searchQuery, selectedFacetValues]);
+    return filterAssets(assets, searchQuery, selectedFacets);
+  }, [assets, searchQuery, selectedFacets]);
 
   // Compute dynamic facet counts based on filtered assets
   const facetCounts = useMemo(() => {
