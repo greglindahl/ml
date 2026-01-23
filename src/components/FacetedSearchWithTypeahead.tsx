@@ -438,7 +438,7 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
                 ) : (
                   <Tag className="w-3.5 h-3.5" />
                 )}
-                {isAi && <Sparkles className="w-3 h-3" />}
+                {isAi && !isPeople && <Sparkles className="w-3 h-3" />}
                 {facet.value.replace(/__manual$/, '')}
                 <X className="w-3.5 h-3.5 ml-0.5" />
               </Badge>
