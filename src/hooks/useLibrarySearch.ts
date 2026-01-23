@@ -84,7 +84,16 @@ export function useLibrarySearch(): UseLibrarySearchResult {
       window.clearTimeout(timeoutRef.current);
     }
 
-    // Simulate API delay
+    // If no query and no facets, immediately return all assets (no delay)
+    if (!query.trim() && facets.length === 0) {
+      const allResults = [...mockLibraryAssets].sort((a, b) => b.dateCreated.getTime() - a.dateCreated.getTime());
+      setResults(allResults);
+      setTotalCount(allResults.length);
+      setIsLoading(false);
+      return;
+    }
+
+    // Simulate API delay for actual searches
     const delay = getRandomDelay();
 
     timeoutRef.current = window.setTimeout(() => {
