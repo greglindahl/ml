@@ -395,7 +395,7 @@ export function FacetedSearchWithTypeahead({
                     {groupedSuggestions.recognizedPeople.map((suggestion, idx) => <TooltipProvider key={`recognized-${suggestion.value}-${idx}`} delayDuration={300}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <button onClick={() => handleSuggestionClick(suggestion)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit" style={{
+                            <button onClick={() => handleSuggestionClick(suggestion)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit bg-gray-200 hover:bg-gray-100" style={{
                       backgroundColor: '#e0e0e0'
                     }}>
                               <User className="w-4 h-4" />
