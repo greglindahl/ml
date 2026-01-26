@@ -71,6 +71,9 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const [creatorFilter, setCreatorFilter] = useState<string[]>([]);
   const [aspectRatioFilter, setAspectRatioFilter] = useState<LibraryAsset["aspectRatio"][]>([]);
   const [peopleFilter, setPeopleFilter] = useState<string[]>([]);
+  const [sceneFilter, setSceneFilter] = useState<string[]>([]);
+  const [brandFilter, setBrandFilter] = useState<string[]>([]);
+  const [tagsFilter, setTagsFilter] = useState<string[]>([]);
   const [folderFilter, setFolderFilter] = useState<string[]>([]);
   const [dateRangeFilter, setDateRangeFilter] = useState<"today" | "week" | "month" | "quarter" | "year" | "custom" | null>(null);
   const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
@@ -136,6 +139,27 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         if (!matchesAny) return false;
       }
 
+      // Scene filter (check tags) - match any selected scene
+      if (sceneFilter.length) {
+        const lowerTags = asset.tags.map((t) => t.toLowerCase());
+        const matchesAny = sceneFilter.some((s) => lowerTags.includes(s.toLowerCase()));
+        if (!matchesAny) return false;
+      }
+
+      // Brand filter (check tags) - match any selected brand
+      if (brandFilter.length) {
+        const lowerTags = asset.tags.map((t) => t.toLowerCase());
+        const matchesAny = brandFilter.some((b) => lowerTags.includes(b.toLowerCase()));
+        if (!matchesAny) return false;
+      }
+
+      // Tags filter (check tags) - match any selected tag
+      if (tagsFilter.length) {
+        const lowerTags = asset.tags.map((t) => t.toLowerCase());
+        const matchesAny = tagsFilter.some((t) => lowerTags.includes(t.toLowerCase()));
+        if (!matchesAny) return false;
+      }
+
       // Date range filter
       if (dateRangeFilter) {
         const now = new Date();
@@ -185,6 +209,9 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
     creatorFilter,
     aspectRatioFilter,
     peopleFilter,
+    sceneFilter,
+    brandFilter,
+    tagsFilter,
     folderFilter,
     dateRangeFilter,
     customDateRange,
@@ -220,6 +247,15 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         break;
       case "people":
         setPeopleFilter(values);
+        break;
+      case "scene":
+        setSceneFilter(values);
+        break;
+      case "brand":
+        setBrandFilter(values);
+        break;
+      case "tags":
+        setTagsFilter(values);
         break;
       case "folders":
         setFolderFilter(values);
