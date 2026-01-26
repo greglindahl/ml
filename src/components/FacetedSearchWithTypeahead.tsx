@@ -258,9 +258,9 @@ export function FacetedSearchWithTypeahead({
       });
     }
 
-    // Get unique tags from filtered assets
+    // Get unique tags from filtered assets - show all tags present in results, not just query matches
     const allTags = [...new Set(filteredAssets.flatMap(a => a.tags))];
-    allTags.filter(t => t.toLowerCase().includes(query)).slice(0, 5).forEach(tag => {
+    allTags.slice(0, 10).forEach(tag => {
       const count = filteredAssets.filter(a => a.tags.includes(tag)).length;
       const isAi = AI_GENERATED_TAGS.has(tag);
 
@@ -268,7 +268,8 @@ export function FacetedSearchWithTypeahead({
       const isPeopleName = peopleGroup?.facets.some(p => p.toLowerCase() === tag.toLowerCase());
       const isSceneTag = sceneGroup?.facets.some(s => s.toLowerCase() === tag.toLowerCase());
       const isBrandTag = brandGroup?.facets.some(b => b.toLowerCase() === tag.toLowerCase());
-      if (!isPeopleName && !isSceneTag && !isBrandTag) {
+      // Also skip AI-generated tags - they should only appear in AI Identified
+      if (!isPeopleName && !isSceneTag && !isBrandTag && !isAi) {
         otherTags.push({
           type: "tag",
           value: tag,
@@ -276,7 +277,7 @@ export function FacetedSearchWithTypeahead({
           icon: <Tag className="w-4 h-4" />,
           count,
           category: "Tag",
-          isAiGenerated: isAi
+          isAiGenerated: false
         });
       }
     });
