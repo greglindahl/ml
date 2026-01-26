@@ -453,7 +453,7 @@ export function FacetedSearchWithTypeahead({
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit bg-gray-200 hover:bg-gray-100" 
                         style={{ backgroundColor: '#e0e0e0' }}
                       >
-                        {suggestion.category === "People" ? <User className="w-4 h-4" /> : <i className="bi bi-bounding-box-circles" />}
+                        {suggestion.category === "People" ? <User className="w-4 h-4" /> : suggestion.category === "Brand" ? <i className="bi bi-badge-tm" /> : <i className="bi bi-bounding-box-circles" />}
                         <span>{suggestion.value}</span>
                       </button>
                     ))}
