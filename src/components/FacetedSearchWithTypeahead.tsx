@@ -212,12 +212,14 @@ export function FacetedSearchWithTypeahead({
       });
     }
 
-    // Match "Scene" facets - these are also AI-identified
+    // Match "Scene" facets - show scenes that exist in filtered assets OR match query
     const sceneGroup = facetGroups.find(g => g.label === "Scene");
     if (sceneGroup) {
-      sceneGroup.facets.filter(f => f.toLowerCase().includes(query) && !selectedFacetValues.includes(f)).slice(0, 3).forEach(facet => {
-        const count = facetCounts[facet] || 0;
-        if (count > 0) {
+      sceneGroup.facets.filter(f => !selectedFacetValues.includes(f)).forEach(facet => {
+        const count = countAssetsForFacet(filteredAssets, facet);
+        const matchesQuery = facet.toLowerCase().includes(query);
+        // Show if it matches query OR if it exists in filtered results
+        if (count > 0 && (matchesQuery || filteredAssets.some(a => a.tags.some(t => t.toLowerCase() === facet.toLowerCase())))) {
           aiIdentified.push({
             type: "facet",
             value: facet,
@@ -231,12 +233,18 @@ export function FacetedSearchWithTypeahead({
       });
     }
 
-    // Match "Brand" facets - these are also AI-identified (logo detection)
+    // Match "Brand" facets - show brands that exist in filtered assets OR match query
     const brandGroup = facetGroups.find(g => g.label === "Brand");
     if (brandGroup) {
-      brandGroup.facets.filter(f => f.toLowerCase().includes(query) && !selectedFacetValues.includes(f)).slice(0, 3).forEach(facet => {
-        const count = facetCounts[facet] || 0;
-        if (count > 0) {
+      brandGroup.facets.filter(f => !selectedFacetValues.includes(f)).forEach(facet => {
+        // Check if any filtered asset has this brand tag
+        const assetsWithBrand = filteredAssets.filter(a => 
+          a.tags.some(t => t.toLowerCase() === facet.toLowerCase())
+        );
+        const count = assetsWithBrand.length;
+        const matchesQuery = facet.toLowerCase().includes(query);
+        // Show if it matches query OR if it exists in filtered results
+        if (count > 0 && (matchesQuery || assetsWithBrand.length > 0)) {
           aiIdentified.push({
             type: "facet",
             value: facet,
