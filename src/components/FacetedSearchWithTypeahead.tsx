@@ -395,21 +395,17 @@ export function FacetedSearchWithTypeahead({
               {searchQuery.trim() && groupedSuggestions.recognizedPeople.length > 0 && <div className="mb-4">
                   <h4 className="text-sm font-semibold text-foreground mb-2">AI Identified </h4>
                   <div className="flex flex-col gap-2">
-                    {groupedSuggestions.recognizedPeople.map((suggestion, idx) => <TooltipProvider key={`recognized-${suggestion.value}-${idx}`} delayDuration={300}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button onClick={() => handleSuggestionClick(suggestion)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit bg-gray-200 hover:bg-gray-100" style={{
-                      backgroundColor: '#e0e0e0'
-                    }}>
-                              <User className="w-4 h-4" />
-                              <span>{suggestion.value}</span>
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent side="right">
-                            <p>AI-recognized face</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>)}
+                    {groupedSuggestions.recognizedPeople.map((suggestion, idx) => (
+                      <button 
+                        key={`recognized-${suggestion.value}-${idx}`}
+                        onClick={() => handleSuggestionClick(suggestion)} 
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit bg-gray-200 hover:bg-gray-100" 
+                        style={{ backgroundColor: '#e0e0e0' }}
+                      >
+                        <User className="w-4 h-4" />
+                        <span>{suggestion.value}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>}
               
@@ -420,22 +416,18 @@ export function FacetedSearchWithTypeahead({
                   <h4 className="text-sm font-semibold text-foreground mb-2">Manually Tagged </h4>
                   <div className="flex flex-col gap-2">
                     {groupedSuggestions.otherTags.map((suggestion, idx) => {
-                const isAi = suggestion.isAiGenerated;
-                return <TooltipProvider key={`tag-${suggestion.value}-${idx}`} delayDuration={300}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button onClick={() => handleSuggestionClick(suggestion)} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit ${isAi ? "bg-slate-200 hover:bg-slate-300 text-slate-700" : "bg-gray-400 hover:bg-gray-500 text-white"}`}>
-                                <i className="bi bi-bounding-box-circles w-4 h-4" />
-                                {isAi}
-                                <span>{suggestion.value}</span>
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="right">
-                              <p>{isAi ? "AI-generated tag" : "Manual tag"}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>;
-              })}
+                      const isAi = suggestion.isAiGenerated;
+                      return (
+                        <button 
+                          key={`tag-${suggestion.value}-${idx}`}
+                          onClick={() => handleSuggestionClick(suggestion)} 
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit ${isAi ? "bg-slate-200 hover:bg-slate-300 text-slate-700" : "bg-gray-400 hover:bg-gray-500 text-white"}`}
+                        >
+                          <i className="bi bi-bounding-box-circles w-4 h-4" />
+                          <span>{suggestion.value}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>}
             </div>
