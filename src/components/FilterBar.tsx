@@ -90,6 +90,18 @@ const filters: FilterConfig[] = [
     ],
   },
   {
+    id: "brand",
+    label: "Brand",
+    icon: null,
+    multiSelect: true,
+    options: [
+      { label: "Nike", value: "nike" },
+      { label: "Adidas", value: "adidas" },
+      { label: "Under Armour", value: "under-armour" },
+      { label: "Puma", value: "puma" },
+    ],
+  },
+  {
     id: "tags",
     label: "Tags",
     icon: null,
