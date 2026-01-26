@@ -19,6 +19,9 @@ const facetGroups: FacetGroup[] = [{
   label: "People",
   facets: ["Lebron James", "Steph Curry", "Kevin Durant", "Giannis Antetokounmpo", "Luka Doncic"]
 }, {
+  label: "Scene",
+  facets: ["Dunk", "Celebration", "Arrival", "Interview", "Warm-up", "Timeout", "Huddle", "Victory", "Injury"]
+}, {
   label: "Media Type",
   facets: ["Photo", "Video"]
 }, {
