@@ -22,6 +22,9 @@ const facetGroups: FacetGroup[] = [{
   label: "Scene",
   facets: ["Dunk", "Celebration", "Arrival", "Interview", "Warm-up", "Timeout", "Huddle", "Victory", "Injury"]
 }, {
+  label: "Brand",
+  facets: ["Nike", "Adidas", "Under Armour", "Puma"]
+}, {
   label: "Media Type",
   facets: ["Photo", "Video"]
 }, {
@@ -228,16 +231,36 @@ export function FacetedSearchWithTypeahead({
       });
     }
 
+    // Match "Brand" facets - these are also AI-identified (logo detection)
+    const brandGroup = facetGroups.find(g => g.label === "Brand");
+    if (brandGroup) {
+      brandGroup.facets.filter(f => f.toLowerCase().includes(query) && !selectedFacetValues.includes(f)).slice(0, 3).forEach(facet => {
+        const count = facetCounts[facet] || 0;
+        if (count > 0) {
+          aiIdentified.push({
+            type: "facet",
+            value: facet,
+            label: facet,
+            icon: <Tag className="w-4 h-4" />,
+            count,
+            category: "Brand",
+            isAiGenerated: true
+          });
+        }
+      });
+    }
+
     // Get unique tags from filtered assets
     const allTags = [...new Set(filteredAssets.flatMap(a => a.tags))];
     allTags.filter(t => t.toLowerCase().includes(query)).slice(0, 5).forEach(tag => {
       const count = filteredAssets.filter(a => a.tags.includes(tag)).length;
       const isAi = AI_GENERATED_TAGS.has(tag);
 
-      // Skip people names and scene tags - they're already shown in AI Identified
+      // Skip people names, scene tags, and brand tags - they're already shown in AI Identified
       const isPeopleName = peopleGroup?.facets.some(p => p.toLowerCase() === tag.toLowerCase());
       const isSceneTag = sceneGroup?.facets.some(s => s.toLowerCase() === tag.toLowerCase());
-      if (!isPeopleName && !isSceneTag) {
+      const isBrandTag = brandGroup?.facets.some(b => b.toLowerCase() === tag.toLowerCase());
+      if (!isPeopleName && !isSceneTag && !isBrandTag) {
         otherTags.push({
           type: "tag",
           value: tag,
