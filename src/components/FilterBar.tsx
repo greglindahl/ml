@@ -73,6 +73,23 @@ const filters: FilterConfig[] = [
     ],
   },
   {
+    id: "scene",
+    label: "Scene",
+    icon: null,
+    multiSelect: true,
+    options: [
+      { label: "Dunk", value: "dunk" },
+      { label: "Celebration", value: "celebration" },
+      { label: "Arrival", value: "arrival" },
+      { label: "Interview", value: "interview" },
+      { label: "Warm-up", value: "warm-up" },
+      { label: "Timeout", value: "timeout" },
+      { label: "Huddle", value: "huddle" },
+      { label: "Victory", value: "victory" },
+      { label: "Injury", value: "injury" },
+    ],
+  },
+  {
     id: "tags",
     label: "Tags",
     icon: null,
