@@ -113,7 +113,7 @@ const filters: FilterConfig[] = [{
     value: "adidas"
   }, {
     label: "Under Armour",
-    value: "under-armour"
+    value: "under armour"
   }, {
     label: "Puma",
     value: "puma"
