@@ -386,11 +386,13 @@ export function FacetedSearchWithTypeahead({
       {selectedFacets.length > 0 && <div className="flex flex-wrap gap-2 mt-2">
           {selectedFacets.map(facet => {
         const isPeople = facet.category === "People";
+        const isBrand = facet.category === "Brand";
         const isSearch = facet.type === "search";
         const isAi = facet.isAiGenerated;
+        const showSparkle = isAi && !isPeople && !isBrand;
         return <Badge key={facet.value} variant="secondary" className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-secondary/80" onClick={() => handleRemoveFacet(facet.value)}>
                 {isSearch ? <Search className="w-3.5 h-3.5" /> : isPeople ? <User className="w-3.5 h-3.5" /> : <Tag className="w-3.5 h-3.5" />}
-                {isAi && !isPeople && <Sparkles className="w-3 h-3" />}
+                {showSparkle && <Sparkles className="w-3 h-3" />}
                 {facet.value.replace(/__manual$/, '')}
                 <X className="w-3.5 h-3.5 ml-0.5" />
               </Badge>;
