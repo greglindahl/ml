@@ -399,7 +399,8 @@ export function FacetedSearchWithTypeahead({
 
       {/* Typeahead Suggestions Dropdown */}
       {showTypeahead && <div className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-lg shadow-lg z-50">
-          <ScrollArea className="max-h-[400px]">
+          {/* ScrollArea Viewport uses h-full, so we must provide an explicit height here for scrolling */}
+          <ScrollArea className="h-[min(400px,60vh)]">
             <div className="p-3">
               {/* Generic Search Option - shown when user is typing */}
               {searchQuery.trim() && <div className="mb-4">
