@@ -70,6 +70,8 @@ export function LibraryScreenV4({ isMobile = false }: LibraryScreenV4Props) {
         if (filterId === "date-range") field = "date";
         if (filterId === "tags") field = "tag";
         if (filterId === "people") field = "tag"; // People are also tags
+        if (filterId === "scene") field = "tag"; // Scene tags are also tags
+        if (filterId === "brand") field = "tag"; // Brand tags are also tags
         
         filterFacetObjs.push({
           field,
