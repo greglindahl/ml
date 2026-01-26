@@ -194,36 +194,6 @@ const filters: FilterConfig[] = [{
     label: "Brand",
     value: "brand",
     group: "Categories"
-  },
-  // Shot types
-  {
-    label: "Solo (1)",
-    value: "solo (1)",
-    group: "Shot Types"
-  }, {
-    label: "Small Group (2-4)",
-    value: "small group (2-4)",
-    group: "Shot Types"
-  }, {
-    label: "Team Shot (5+)",
-    value: "team shot (5+)",
-    group: "Shot Types"
-  }, {
-    label: "Candid",
-    value: "candid",
-    group: "Shot Types"
-  }, {
-    label: "Headshot",
-    value: "headshot",
-    group: "Shot Types"
-  }, {
-    label: "Portrait",
-    value: "portrait",
-    group: "Shot Types"
-  }, {
-    label: "Landscape",
-    value: "landscape",
-    group: "Shot Types"
   }]
 }, {
   id: "creator",
