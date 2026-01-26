@@ -183,11 +183,11 @@ export function FacetedSearchWithTypeahead({
   // Generate grouped typeahead suggestions based on query
   const groupedSuggestions = useMemo(() => {
     if (!searchQuery.trim()) return {
-      recognizedPeople: [],
+      aiIdentified: [],
       otherTags: []
     };
     const query = searchQuery.toLowerCase();
-    const recognizedPeople: Suggestion[] = [];
+    const aiIdentified: Suggestion[] = [];
     const otherTags: Suggestion[] = [];
 
     // Match "People" facets - these are AI-recognized faces
@@ -196,7 +196,7 @@ export function FacetedSearchWithTypeahead({
       peopleGroup.facets.filter(f => f.toLowerCase().includes(query) && !selectedFacetValues.includes(f)).slice(0, 3).forEach(facet => {
         const count = facetCounts[facet] || 0;
         if (count > 0) {
-          recognizedPeople.push({
+          aiIdentified.push({
             type: "facet",
             value: facet,
             label: `${facet} (recognized)`,
@@ -209,15 +209,35 @@ export function FacetedSearchWithTypeahead({
       });
     }
 
+    // Match "Scene" facets - these are also AI-identified
+    const sceneGroup = facetGroups.find(g => g.label === "Scene");
+    if (sceneGroup) {
+      sceneGroup.facets.filter(f => f.toLowerCase().includes(query) && !selectedFacetValues.includes(f)).slice(0, 3).forEach(facet => {
+        const count = facetCounts[facet] || 0;
+        if (count > 0) {
+          aiIdentified.push({
+            type: "facet",
+            value: facet,
+            label: facet,
+            icon: <Tag className="w-4 h-4" />,
+            count,
+            category: "Scene",
+            isAiGenerated: true
+          });
+        }
+      });
+    }
+
     // Get unique tags from filtered assets
     const allTags = [...new Set(filteredAssets.flatMap(a => a.tags))];
     allTags.filter(t => t.toLowerCase().includes(query)).slice(0, 5).forEach(tag => {
       const count = filteredAssets.filter(a => a.tags.includes(tag)).length;
       const isAi = AI_GENERATED_TAGS.has(tag);
 
-      // Skip people names - they're already shown in Recognized People
+      // Skip people names and scene tags - they're already shown in AI Identified
       const isPeopleName = peopleGroup?.facets.some(p => p.toLowerCase() === tag.toLowerCase());
-      if (!isPeopleName) {
+      const isSceneTag = sceneGroup?.facets.some(s => s.toLowerCase() === tag.toLowerCase());
+      if (!isPeopleName && !isSceneTag) {
         otherTags.push({
           type: "tag",
           value: tag,
@@ -230,7 +250,7 @@ export function FacetedSearchWithTypeahead({
       }
     });
     return {
-      recognizedPeople,
+      aiIdentified,
       otherTags
     };
   }, [searchQuery, filteredAssets, selectedFacetValues, facetCounts]);
@@ -318,7 +338,7 @@ export function FacetedSearchWithTypeahead({
       handleAddSearchTerm(suggestion.value);
     }
   }, [handleAddSearchTerm]);
-  const hasTagSuggestions = groupedSuggestions.recognizedPeople.length > 0 || groupedSuggestions.otherTags.length > 0;
+  const hasTagSuggestions = groupedSuggestions.aiIdentified.length > 0 || groupedSuggestions.otherTags.length > 0;
   const showTypeahead = isOpen && (searchQuery.trim().length > 0 || recentSearches.length > 0);
   return <div ref={containerRef} className="relative w-full">
       {/* Search Input */}
@@ -391,18 +411,18 @@ export function FacetedSearchWithTypeahead({
                   Suggestions ({filteredAssets.length} results)
                 </div>}
               
-              {/* Recognized People Section */}
-              {searchQuery.trim() && groupedSuggestions.recognizedPeople.length > 0 && <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-foreground mb-2">AI Identified </h4>
+              {/* AI Identified Section (People + Scene) */}
+              {searchQuery.trim() && groupedSuggestions.aiIdentified.length > 0 && <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-foreground mb-2">AI Identified</h4>
                   <div className="flex flex-col gap-2">
-                    {groupedSuggestions.recognizedPeople.map((suggestion, idx) => (
+                    {groupedSuggestions.aiIdentified.map((suggestion, idx) => (
                       <button 
-                        key={`recognized-${suggestion.value}-${idx}`}
+                        key={`ai-${suggestion.value}-${idx}`}
                         onClick={() => handleSuggestionClick(suggestion)} 
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit bg-gray-200 hover:bg-gray-100" 
                         style={{ backgroundColor: '#e0e0e0' }}
                       >
-                        <User className="w-4 h-4" />
+                        {suggestion.category === "People" ? <User className="w-4 h-4" /> : <Tag className="w-4 h-4" />}
                         <span>{suggestion.value}</span>
                       </button>
                     ))}
