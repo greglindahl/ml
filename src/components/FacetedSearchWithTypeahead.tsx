@@ -444,49 +444,22 @@ export function FacetedSearchWithTypeahead({
                   Suggestions ({filteredAssets.length} results)
                 </div>}
               
-              {/* AI Identified Section (People + Scene + Brand) */}
+              {/* AI Identified Section (People + Scene) */}
               {searchQuery.trim() && groupedSuggestions.aiIdentified.length > 0 && <div className="mb-4">
-                  {/* People suggestions (no AI-Identified header) */}
-                  {groupedSuggestions.aiIdentified.filter(s => s.category === "People").length > 0 && (
-                    <div className="mb-3">
-                      <div className="flex flex-col gap-2">
-                        {groupedSuggestions.aiIdentified.filter(s => s.category === "People").map((suggestion, idx) => (
-                          <button 
-                            key={`ai-people-${suggestion.value}-${idx}`}
-                            onClick={() => handleSuggestionClick(suggestion)} 
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit bg-gray-200 hover:bg-gray-100" 
-                            style={{ backgroundColor: '#e0e0e0' }}
-                          >
-                            <User className="w-4 h-4" />
-                            <span>{suggestion.value}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Scene and Brand suggestions (with AI-Identified header) */}
-                  {groupedSuggestions.aiIdentified.filter(s => s.category === "Scene" || s.category === "Brand").length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <Sparkles className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm font-medium text-muted-foreground">AI-Identified</span>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        {groupedSuggestions.aiIdentified.filter(s => s.category === "Scene" || s.category === "Brand").map((suggestion, idx) => (
-                          <button 
-                            key={`ai-scene-brand-${suggestion.value}-${idx}`}
-                            onClick={() => handleSuggestionClick(suggestion)} 
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit bg-gray-200 hover:bg-gray-100" 
-                            style={{ backgroundColor: '#e0e0e0' }}
-                          >
-                            {suggestion.category === "Brand" ? <i className="bi bi-badge-tm" /> : <i className="bi bi-bounding-box-circles" />}
-                            <span>{suggestion.value}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <h4 className="text-sm font-semibold text-foreground mb-2">AI Identified</h4>
+                  <div className="flex flex-col gap-2">
+                    {groupedSuggestions.aiIdentified.map((suggestion, idx) => (
+                      <button 
+                        key={`ai-${suggestion.value}-${idx}`}
+                        onClick={() => handleSuggestionClick(suggestion)} 
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit bg-gray-200 hover:bg-gray-100" 
+                        style={{ backgroundColor: '#e0e0e0' }}
+                      >
+                        {suggestion.category === "People" ? <User className="w-4 h-4" /> : suggestion.category === "Brand" ? <i className="bi bi-badge-tm" /> : <i className="bi bi-bounding-box-circles" />}
+                        <span>{suggestion.value}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>}
               
               
