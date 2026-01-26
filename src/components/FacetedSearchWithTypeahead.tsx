@@ -215,11 +215,10 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
 
   // Generate grouped typeahead suggestions based on query
   const groupedSuggestions = useMemo(() => {
-    if (!searchQuery.trim()) return { recognizedPeople: [], taggedPeople: [], otherTags: [] };
+    if (!searchQuery.trim()) return { recognizedPeople: [], otherTags: [] };
 
     const query = searchQuery.toLowerCase();
     const recognizedPeople: Suggestion[] = [];
-    const taggedPeople: Suggestion[] = [];
     const otherTags: Suggestion[] = [];
 
     // Match "People" facets - these are AI-recognized faces
@@ -244,7 +243,7 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
         });
     }
 
-    // Get unique tags from filtered assets - split into AI-tagged vs manual
+    // Get unique tags from filtered assets
     const allTags = [...new Set(filteredAssets.flatMap(a => a.tags))];
     allTags
       .filter(t => t.toLowerCase().includes(query))
@@ -253,33 +252,9 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
         const count = filteredAssets.filter(a => a.tags.includes(tag)).length;
         const isAi = AI_GENERATED_TAGS.has(tag);
         
-        // Check if this tag matches a person name (for "Tagged People" section)
+        // Skip people names - they're already shown in Recognized People
         const isPeopleName = peopleGroup?.facets.some(p => p.toLowerCase() === tag.toLowerCase());
-        if (isPeopleName) {
-          // For people names as tags, show BOTH AI and manual versions
-          // AI-tagged version (with sparkle)
-          if (isAi) {
-            taggedPeople.push({
-              type: "tag",
-              value: tag,
-              label: tag,
-              icon: <Tag className="w-4 h-4" />,
-              count,
-              category: "Tag",
-              isAiGenerated: true,
-            });
-          }
-          // Manual tag version (without sparkle) - always add for people names
-          taggedPeople.push({
-            type: "tag",
-            value: `${tag}__manual`, // Use suffix to differentiate
-            label: tag,
-            icon: <Tag className="w-4 h-4" />,
-            count,
-            category: "Tag",
-            isAiGenerated: false,
-          });
-        } else {
+        if (!isPeopleName) {
           otherTags.push({
             type: "tag",
             value: tag,
@@ -292,7 +267,7 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
         }
       });
 
-    return { recognizedPeople, taggedPeople, otherTags };
+    return { recognizedPeople, otherTags };
   }, [searchQuery, filteredAssets, selectedFacetValues, facetCounts]);
 
 
@@ -387,7 +362,6 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
   }, [handleAddSearchTerm]);
 
   const hasTagSuggestions = groupedSuggestions.recognizedPeople.length > 0 || 
-                         groupedSuggestions.taggedPeople.length > 0 || 
                          groupedSuggestions.otherTags.length > 0;
   const showTypeahead = isOpen && (searchQuery.trim().length > 0 || recentSearches.length > 0);
 
@@ -546,36 +520,7 @@ export function FacetedSearchWithTypeahead({ onSearch, onFacetCountsChange, asse
                 </div>
               )}
               
-              {/* Tagged People Section */}
-              {searchQuery.trim() && groupedSuggestions.taggedPeople.length > 0 && (
-                <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-foreground mb-2">Tagged People</h4>
-                  <div className="flex flex-col gap-2">
-                    {groupedSuggestions.taggedPeople.map((suggestion, idx) => {
-                      const isAi = suggestion.isAiGenerated;
-                      return (
-                        <TooltipProvider key={`tagged-${suggestion.value}-${idx}`} delayDuration={300}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() => handleSuggestionClick(suggestion)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit bg-secondary hover:bg-secondary/80"
-                              >
-                                <Tag className="w-4 h-4" />
-                                {isAi && <Sparkles className="w-3.5 h-3.5" />}
-                                <span>{suggestion.value.replace(/__manual$/, '')}</span>
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="right">
-                              <p>{isAi ? "AI-generated tag" : "Manual tag"}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+              
               
               {/* Other Tags Section */}
               {searchQuery.trim() && groupedSuggestions.otherTags.length > 0 && (
