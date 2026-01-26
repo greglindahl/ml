@@ -474,7 +474,7 @@ export function FacetedSearchWithTypeahead({
                         <button 
                           key={`tag-${suggestion.value}-${idx}`}
                           onClick={() => handleSuggestionClick(suggestion)} 
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit ${isAi ? "bg-slate-200 hover:bg-slate-300 text-slate-700" : "bg-gray-400 hover:bg-gray-500 text-white"}`}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit bg-gray-200 hover:bg-gray-300 text-gray-900"
                         >
                           <i className="bi bi-bounding-box-circles w-4 h-4" />
                           <span>{suggestion.value}</span>
