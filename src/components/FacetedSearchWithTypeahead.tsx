@@ -476,7 +476,7 @@ export function FacetedSearchWithTypeahead({
                           onClick={() => handleSuggestionClick(suggestion)} 
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit bg-gray-200 hover:bg-gray-300 text-gray-900"
                         >
-                          <i className="bi bi-bounding-box-circles w-4 h-4" />
+                          <Tag className="w-4 h-4" />
                           <span>{suggestion.value}</span>
                         </button>
                       );
