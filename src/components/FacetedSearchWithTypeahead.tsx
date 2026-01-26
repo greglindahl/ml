@@ -421,7 +421,7 @@ export function FacetedSearchWithTypeahead({
                 return <TooltipProvider key={`tag-${suggestion.value}-${idx}`} delayDuration={300}>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <button onClick={() => handleSuggestionClick(suggestion)} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit ${isAi ? "bg-slate-200 hover:bg-slate-300 text-slate-700" : "bg-secondary hover:bg-secondary/80"}`}>
+                              <button onClick={() => handleSuggestionClick(suggestion)} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit ${isAi ? "bg-slate-200 hover:bg-slate-300 text-slate-700" : "bg-gray-400 hover:bg-gray-500 text-white"}`}>
                                 <Tag className="w-4 h-4" />
                                 {isAi && <Sparkles className="w-3.5 h-3.5" />}
                                 <span>{suggestion.value}</span>
