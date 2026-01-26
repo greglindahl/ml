@@ -514,9 +514,10 @@ export function FilterBar({
                         </div>
                         {options.map(option => {
                   const isAiGenerated = AI_GENERATED_TAGS.has(option.value) || AI_GENERATED_TAGS.has(option.label);
+                  const showSparkle = isAiGenerated && option.group !== "Sports";
                   return <DropdownMenuCheckboxItem key={option.value} checked={selected.some(s => s.value === option.value)} onCheckedChange={checked => handleMultiSelect(filter.id, option.value, option.label, checked)} className="flex items-center justify-between gap-2">
                               <span>{option.label}</span>
-                              {isAiGenerated && <i className="bi bi-stars text-primary/70 text-xs" />}
+                              {showSparkle && <i className="bi bi-stars text-primary/70 text-xs" />}
                             </DropdownMenuCheckboxItem>;
                 })}
                       </div>);
