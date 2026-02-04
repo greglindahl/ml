@@ -315,20 +315,6 @@ export function LibraryScreenV4({ isMobile = false }: LibraryScreenV4Props) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="gap-2">
-                    120 per Page
-                    <ChevronDown className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem>24 per Page</DropdownMenuItem>
-                  <DropdownMenuItem>48 per Page</DropdownMenuItem>
-                  <DropdownMenuItem>120 per Page</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2">
                     Sort
                     <ChevronDown className="w-4 h-4" />
                   </Button>
