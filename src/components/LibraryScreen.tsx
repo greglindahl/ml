@@ -520,10 +520,12 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-card">
-                  <Settings2 className="w-3.5 h-3.5" />
-                  Manage Columns
-                </Button>
+                {assetsViewMode === "list" && (
+                  <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-card">
+                    <Settings2 className="w-3.5 h-3.5" />
+                    Manage Columns
+                  </Button>
+                )}
 
                 <div className="flex items-center border rounded-md bg-card">
                   <Button 
@@ -674,10 +676,12 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-card">
-                  <Settings2 className="w-3.5 h-3.5" />
-                  Manage Columns
-                </Button>
+                {galleriesViewMode === "list" && (
+                  <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-card">
+                    <Settings2 className="w-3.5 h-3.5" />
+                    Manage Columns
+                  </Button>
+                )}
 
                 <div className="flex items-center border rounded-md bg-card">
                   <Button 
