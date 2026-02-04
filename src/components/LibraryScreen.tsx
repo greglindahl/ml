@@ -505,20 +505,6 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               <FilterBar onFilterChange={handleFilterChange} onCustomDateChange={handleCustomDateChange} />
 
               <div className="flex items-center gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-card">
-                      120 per Page
-                      <ChevronDown className="w-3 h-3 opacity-50" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-popover">
-                    <DropdownMenuItem>24 per Page</DropdownMenuItem>
-                    <DropdownMenuItem>48 per Page</DropdownMenuItem>
-                    <DropdownMenuItem>120 per Page</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
                 <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-card">
                   <Settings2 className="w-3.5 h-3.5" />
                   Manage Columns
@@ -658,20 +644,6 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               </div>
 
               <div className="flex items-center gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-card">
-                      40 per Page
-                      <ChevronDown className="w-3 h-3 opacity-50" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-popover">
-                    <DropdownMenuItem>24 per Page</DropdownMenuItem>
-                    <DropdownMenuItem>40 per Page</DropdownMenuItem>
-                    <DropdownMenuItem>120 per Page</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
                 <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-card">
                   <Settings2 className="w-3.5 h-3.5" />
                   Manage Columns
