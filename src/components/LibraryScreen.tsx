@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Folder, ChevronDown, Plus, Upload, Grid3X3, List, CheckSquare, Image, Images, FileText, Music, Video, Loader2, Settings2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Folder, ChevronDown, Plus, Upload, Grid3X3, List, CheckSquare, Image, Images, FileText, Music, Video, Loader2, Settings2, Heart, Palette } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
@@ -78,6 +78,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const [folderFilter, setFolderFilter] = useState<string[]>([]);
   const [dateRangeFilter, setDateRangeFilter] = useState<"today" | "week" | "month" | "quarter" | "year" | "custom" | null>(null);
   const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
+  const [isFavoritesActive, setIsFavoritesActive] = useState(false);
+  const [isBrandedActive, setIsBrandedActive] = useState(false);
 
   // Use the library search hook
   const { results, allAssets, isLoading, totalCount, search } = useLibrarySearch();
@@ -201,6 +203,12 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         if (!asset.folderId || !allowedFromDropdown.has(asset.folderId)) return false;
       }
 
+      // Favorites filter
+      if (isFavoritesActive && !asset.isFavorite) return false;
+
+      // Branded filter
+      if (isBrandedActive && !asset.isBranded) return false;
+
       return true;
     });
   }, [
@@ -216,6 +224,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
     folderFilter,
     dateRangeFilter,
     customDateRange,
+    isFavoritesActive,
+    isBrandedActive,
   ]);
 
   // Compute dynamic filter counts based on current results
@@ -503,7 +513,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
 
             {/* Filters and Controls - Single Row */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-              <FilterBar onFilterChange={handleFilterChange} onCustomDateChange={handleCustomDateChange} />
+              <FilterBar onFilterChange={handleFilterChange} onCustomDateChange={handleCustomDateChange} onFavoritesToggle={setIsFavoritesActive} onBrandedToggle={setIsBrandedActive} />
 
               <div className="flex items-center gap-2">
                 <DropdownMenu>
@@ -579,6 +589,17 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     {/* Thumbnail area */}
                     <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center relative">
                       <AssetTypeIcon type={asset.type} className="w-10 h-10 text-muted-foreground/40" />
+                      {/* Favorite/Branded icons overlay */}
+                      {((isFavoritesActive && asset.isFavorite) || (isBrandedActive && asset.isBranded)) && (
+                        <div className="absolute top-2 right-2 flex flex-col gap-1">
+                          {isFavoritesActive && asset.isFavorite && (
+                            <Heart className="w-4 h-4 text-primary fill-primary" />
+                          )}
+                          {isBrandedActive && asset.isBranded && (
+                            <Palette className="w-4 h-4 text-primary" />
+                          )}
+                        </div>
+                      )}
                       {/* Metadata badges */}
                       <div className="absolute bottom-2 right-2 flex items-center gap-1.5">
                         {asset.aspectRatio && (
