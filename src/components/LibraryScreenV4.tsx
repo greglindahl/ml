@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Folder, ChevronDown, Plus, Upload, Grid3X3, List, CheckSquare, Image, Images, Video, Loader2 } from "lucide-react";
+import { useState, useCallback, useEffect, useMemo } from "react";
+import { ChevronLeft, ChevronRight, Folder, ChevronDown, Plus, Upload, Grid3X3, List, CheckSquare, Image, Images, Video, Loader2, Heart, Palette } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { FacetedSearchWithDropdown } from "@/components/FacetedSearchWithDropdown";
@@ -46,8 +46,21 @@ export function LibraryScreenV4({ isMobile = false }: LibraryScreenV4Props) {
     setIsFolderSidebarExpanded(activeTab === "folders");
   }, [activeTab]);
   
+  // Favorites and Branded toggle state
+  const [isFavoritesActive, setIsFavoritesActive] = useState(false);
+  const [isBrandedActive, setIsBrandedActive] = useState(false);
+
   // Use the library search hook
   const { results, allAssets, isLoading, totalCount, search } = useLibrarySearch();
+
+  // Filter results based on favorites/branded toggles
+  const filteredResults = useMemo(() => {
+    return results.filter(asset => {
+      if (isFavoritesActive && !asset.isFavorite) return false;
+      if (isBrandedActive && !asset.isBranded) return false;
+      return true;
+    });
+  }, [results, isFavoritesActive, isBrandedActive]);
 
   // Combined search that merges search facets with filter bar state
   const triggerSearch = useCallback((query: string, facets: string[], filters: Record<string, string[]>) => {
@@ -307,7 +320,11 @@ export function LibraryScreenV4({ isMobile = false }: LibraryScreenV4Props) {
 
             {/* Filters */}
             <div className="mb-4">
-              <FilterBar onFilterChange={handleFilterChange} />
+              <FilterBar
+                onFilterChange={handleFilterChange}
+                onFavoritesToggle={setIsFavoritesActive}
+                onBrandedToggle={setIsBrandedActive}
+              />
             </div>
 
             {/* Row 2: Asset Controls */}
@@ -351,7 +368,7 @@ export function LibraryScreenV4({ isMobile = false }: LibraryScreenV4Props) {
                   </div>
                 ))}
               </div>
-            ) : results.length === 0 ? (
+            ) : filteredResults.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <Image className="w-12 h-12 text-muted-foreground/30 mb-4" />
                 <h3 className="text-lg font-medium mb-1">No assets found</h3>
@@ -359,7 +376,7 @@ export function LibraryScreenV4({ isMobile = false }: LibraryScreenV4Props) {
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {results.map((asset) => (
+                {filteredResults.map((asset) => (
                   <div key={asset.id} className="group cursor-pointer">
                     <div className="aspect-[4/3] border rounded-lg bg-muted/30 flex flex-col items-center justify-center mb-2 hover:border-primary/50 transition-colors relative overflow-hidden">
                       <AssetTypeIcon type={asset.type} className="w-8 h-8 text-muted-foreground/50" />
@@ -369,6 +386,17 @@ export function LibraryScreenV4({ isMobile = false }: LibraryScreenV4Props) {
                       {asset.duration && (
                         <span className="absolute bottom-2 right-2 text-[10px] bg-background/80 px-1 rounded">{asset.duration}</span>
                       )}
+                      {/* Favorite/Branded icons overlay */}
+                      {(isFavoritesActive && asset.isFavorite) || (isBrandedActive && asset.isBranded) ? (
+                        <div className="absolute top-2 right-2 flex flex-col gap-1">
+                          {isFavoritesActive && asset.isFavorite && (
+                            <Heart className="w-4 h-4 text-primary fill-primary" />
+                          )}
+                          {isBrandedActive && asset.isBranded && (
+                            <Palette className="w-4 h-4 text-primary" />
+                          )}
+                        </div>
+                      ) : null}
                     </div>
                     <div className="flex items-center gap-1.5 text-sm">
                       <AssetTypeIcon type={asset.type} className="w-4 h-4 text-muted-foreground flex-shrink-0" />

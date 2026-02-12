@@ -21,6 +21,8 @@ export interface LibraryAsset {
   dimensions?: string;
   duration?: string;
   folderId?: string; // Which folder/gallery this asset belongs to
+  isFavorite?: boolean;
+  isBranded?: boolean;
 }
 
 // Define which tags are AI-generated (recognized by AI) vs manual
@@ -679,7 +681,19 @@ export const mockLibraryAssets: LibraryAsset[] = (() => {
   }));
   
   // Combine fixed assets with generated ones
-  return [...fixedAssetsWithFolders, ...Array.from({ length: 80 }, (_, i) => generateSeededAsset(i + 1))];
+  const allAssets = [...fixedAssetsWithFolders, ...Array.from({ length: 80 }, (_, i) => generateSeededAsset(i + 1))];
+  
+  // Assign isFavorite and isBranded deterministically (~35% each)
+  let favSeed = 54321;
+  const favRandom = () => {
+    favSeed = (favSeed * 16807) % 2147483647;
+    return (favSeed - 1) / 2147483646;
+  };
+  return allAssets.map(asset => ({
+    ...asset,
+    isFavorite: favRandom() < 0.35,
+    isBranded: favRandom() < 0.35,
+  }));
 })();
 
 // Helper to get relative time string
