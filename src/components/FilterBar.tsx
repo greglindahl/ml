@@ -382,11 +382,15 @@ interface FilterBarProps {
   onFilterChange?: (filterId: string, values: string[]) => void;
   onCustomDateChange?: (range: CustomDateRange) => void;
   hideFilters?: string[];
+  onFavoritesToggle?: (active: boolean) => void;
+  onBrandedToggle?: (active: boolean) => void;
 }
 export function FilterBar({
   onFilterChange,
   onCustomDateChange,
-  hideFilters = []
+  hideFilters = [],
+  onFavoritesToggle,
+  onBrandedToggle,
 }: FilterBarProps) {
   // Filter out hidden filters
   const visibleFilters = filters.filter(f => !hideFilters.includes(f.id));
@@ -630,7 +634,11 @@ export function FilterBar({
           "h-8 w-8 flex-shrink-0",
           isFavoritesActive && "bg-primary/10 border-primary text-primary"
         )}
-        onClick={() => setIsFavoritesActive(prev => !prev)}
+        onClick={() => {
+          const next = !isFavoritesActive;
+          setIsFavoritesActive(next);
+          onFavoritesToggle?.(next);
+        }}
       >
         <Heart className={cn("h-4 w-4", isFavoritesActive && "fill-current")} />
       </Button>
@@ -643,7 +651,11 @@ export function FilterBar({
           "h-8 w-8 flex-shrink-0",
           isBrandedActive && "bg-primary/10 border-primary text-primary"
         )}
-        onClick={() => setIsBrandedActive(prev => !prev)}
+        onClick={() => {
+          const next = !isBrandedActive;
+          setIsBrandedActive(next);
+          onBrandedToggle?.(next);
+        }}
       >
         <Palette className={cn("h-4 w-4", isBrandedActive && "fill-current")} />
       </Button>
