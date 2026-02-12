@@ -62,6 +62,7 @@ interface FacetedSearchWithTypeaheadProps {
   onSearch?: (query: string, selectedFacets: string[]) => void;
   onFacetCountsChange?: (counts: Record<string, number>) => void;
   assets?: LibraryAsset[];
+  placeholder?: string;
 }
 
 // Helper to filter assets based on query, facets, and search terms (with fuzzy matching)
@@ -116,7 +117,8 @@ const MAX_RECENT_SEARCHES = 5;
 export function FacetedSearchWithTypeahead({
   onSearch,
   onFacetCountsChange,
-  assets = []
+  assets = [],
+  placeholder = "Search by people, tags, filenames…"
 }: FacetedSearchWithTypeaheadProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -376,7 +378,7 @@ export function FacetedSearchWithTypeahead({
       {/* Search Input */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input ref={inputRef} type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onFocus={handleInputFocus} onKeyDown={handleKeyDown} placeholder="Search by people, tags, filenames…" className="pl-10 pr-10 w-full bg-white" />
+        <Input ref={inputRef} type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onFocus={handleInputFocus} onKeyDown={handleKeyDown} placeholder={placeholder} className="pl-10 pr-10 w-full bg-white" />
         {(searchQuery || selectedFacets.length > 0) && <button onClick={handleClearAll} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-accent rounded transition-colors">
             <X className="w-4 h-4 text-muted-foreground" />
           </button>}

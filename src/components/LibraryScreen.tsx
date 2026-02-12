@@ -624,7 +624,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           <TabsContent value="galleries" className="flex-1 py-6 mt-0">
             {/* Faceted Search */}
             <div className="mb-4">
-              <FacetedSearchWithTypeahead />
+              <FacetedSearchWithTypeahead placeholder="Search" />
             </div>
 
             {/* Filters and Controls */}
@@ -737,7 +737,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           <TabsContent value="folders" className="flex-1 py-6 mt-0">
             {/* Faceted Search */}
             <div className="mb-4">
-              <FacetedSearchWithTypeahead />
+              <FacetedSearchWithTypeahead placeholder="Search" />
             </div>
 
             {/* Filters and Controls */}
