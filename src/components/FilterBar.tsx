@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { folders, FolderItem } from "@/lib/mockFolderData";
@@ -271,6 +271,109 @@ const filters: FilterConfig[] = [{
     value: "9:16"
   }]
 }];
+// "More" filter categories with mock options
+const moreFilterCategories = [
+  { id: "more-sport", label: "Sport", options: ["Basketball", "Football", "Soccer", "Baseball", "Hockey", "Tennis", "Golf"] },
+  { id: "more-competition", label: "Competition / League", options: ["NBA", "NFL", "MLB", "NHL", "MLS", "Premier League", "La Liga"] },
+  { id: "more-composition", label: "Composition", options: ["Close-up", "Wide Shot", "Medium Shot", "Aerial", "Portrait", "Landscape"] },
+  { id: "more-jersey", label: "Jersey Number", options: ["23", "30", "7", "10", "24", "3", "11", "13"] },
+  { id: "more-location", label: "Physical Location", options: ["Los Angeles", "New York", "Chicago", "Miami", "Dallas", "Boston", "San Francisco"] },
+  { id: "more-venue", label: "Venue", options: ["Staples Center", "Madison Square Garden", "United Center", "Chase Center", "Barclays Center"] },
+  { id: "more-event", label: "Event", options: ["Regular Season", "Playoffs", "Finals", "All-Star Game", "Draft", "Preseason"] },
+];
+
+function MoreFiltersDropdown({
+  activeFilters,
+  onToggle,
+  onClearFilter,
+  onRemoveValue,
+}: {
+  activeFilters: Record<string, { value: string; label: string }[]>;
+  onToggle: (filterId: string, value: string, label: string, checked: boolean) => void;
+  onClearFilter: (filterId: string) => void;
+  onRemoveValue: (filterId: string, value: string) => void;
+}) {
+  // Collect all active "more" selections
+  const moreSelections = moreFilterCategories.flatMap(cat => 
+    (activeFilters[cat.id] || []).map(s => ({ ...s, catId: cat.id }))
+  );
+  const hasActive = moreSelections.length > 0;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        {hasActive ? (
+          <div className="inline-flex items-center gap-1 h-8 px-1.5 border border-input rounded-md bg-white min-w-[80px] max-w-[320px]">
+            <div className="flex flex-wrap gap-1 flex-1">
+              {moreSelections.map(item => (
+                <span key={`${item.catId}-${item.value}`} className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted rounded text-xs">
+                  <button
+                    type="button"
+                    onPointerDown={e => e.stopPropagation()}
+                    onClick={e => { e.stopPropagation(); onRemoveValue(item.catId, item.value); }}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                  {item.label}
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center gap-1 ml-auto pl-1">
+              <button
+                type="button"
+                onPointerDown={e => e.stopPropagation()}
+                onClick={e => {
+                  e.stopPropagation();
+                  moreFilterCategories.forEach(cat => onClearFilter(cat.id));
+                }}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+              <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+            </div>
+          </div>
+        ) : (
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-white">
+            <span>More</span>
+            <ChevronDown className="w-3 h-3 opacity-50" />
+          </Button>
+        )}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="bg-white z-50 min-w-[220px]" onCloseAutoFocus={e => e.preventDefault()}>
+        <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground">More Filters</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {moreFilterCategories.map(cat => {
+          const selected = activeFilters[cat.id] || [];
+          return (
+            <DropdownMenuSub key={cat.id}>
+              <DropdownMenuSubTrigger className="flex items-center justify-between text-sm">
+                <span>{cat.label}</span>
+                {selected.length > 0 && (
+                  <span className="ml-2 text-xs text-primary font-medium">{selected.length}</span>
+                )}
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="bg-white z-50 min-w-[180px]">
+                {cat.options.map(opt => (
+                  <DropdownMenuCheckboxItem
+                    key={opt}
+                    checked={selected.some(s => s.value === opt)}
+                    onCheckedChange={checked => onToggle(cat.id, opt, opt, checked)}
+                    onSelect={e => e.preventDefault()}
+                  >
+                    {opt}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export interface CustomDateRange {
   from: Date | undefined;
   to: Date | undefined;
@@ -513,6 +616,9 @@ export function FilterBar({
             </DropdownMenuContent>
           </DropdownMenu>;
     })}
+
+      {/* More Filters Dropdown */}
+      <MoreFiltersDropdown activeFilters={activeFilters} onToggle={handleMultiSelect} onClearFilter={clearFilter} onRemoveValue={handleRemoveValue} />
 
       {/* Custom Date Range Popover */}
       <Popover open={customDateOpen} onOpenChange={setCustomDateOpen}>
