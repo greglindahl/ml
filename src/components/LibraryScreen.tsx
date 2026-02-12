@@ -18,6 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { GalleryFilterBar } from "@/components/GalleryFilterBar";
 
 // Icon component for asset types
 function AssetTypeIcon({ type, className }: { type: LibraryAsset["type"]; className?: string }) {
@@ -629,36 +630,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
 
             {/* Filters and Controls */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-              <div className="flex flex-wrap items-center gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="gap-2">
-                      Creator
-                      <ChevronDown className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem>All Creators</DropdownMenuItem>
-                    <DropdownMenuItem>Creator 1</DropdownMenuItem>
-                    <DropdownMenuItem>Creator 2</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="gap-2">
-                      Date Range
-                      <ChevronDown className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem>All Time</DropdownMenuItem>
-                    <DropdownMenuItem>Last 7 Days</DropdownMenuItem>
-                    <DropdownMenuItem>Last 30 Days</DropdownMenuItem>
-                    <DropdownMenuItem>Last Year</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              <GalleryFilterBar />
 
               <div className="flex items-center gap-2">
                 <DropdownMenu>
