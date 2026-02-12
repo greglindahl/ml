@@ -1,33 +1,43 @@
 
 
-## Add Favorites and Branded Toggle Buttons to Assets Tab
+## Wire Up Favorites and Branded Toggles with Asset Card Icons
 
-Add two icon toggle buttons after the "More" filter dropdown on the Assets tab filter bar: a heart toggle for favorites and a palette toggle for branded assets.
+### Overview
 
-### What They Look Like
+Connect the heart and palette toggle buttons to data filtering, and display corresponding icons on asset cards when each toggle is active.
 
-- Two icon-only buttons placed inline after the "More" dropdown, before any "Clear all" button
-- **Heart toggle**: A heart icon that toggles on/off (filled/outlined state)
-- **Palette toggle**: A palette/gear icon that toggles on/off
-- When toggled on, the button gets a highlighted/active visual state (matching the filter bar aesthetic)
-- When toggled off, the button returns to its default outline state
+### Data Changes
 
-### What They Do
+**File: `src/lib/mockLibraryData.ts`**
 
-- Visual/interaction only -- toggling does not actually filter the data
-- Each button independently toggles between active and inactive states
-- They do not show pills or dropdown menus -- just a simple on/off toggle
+- Add `isFavorite: boolean` and `isBranded: boolean` fields to the `LibraryAsset` interface
+- Randomly assign `isFavorite` and `isBranded` to existing mock assets (roughly 30-40% of assets get each flag) so there's a meaningful subset to filter
 
-### Technical Details
+### FilterBar Changes
 
 **File: `src/components/FilterBar.tsx`**
 
-1. Add `Heart` and `Palette` imports from `lucide-react`
-2. Add two boolean state variables: `isFavoritesActive` and `isBrandedActive`
-3. After the `MoreFiltersDropdown` component (line 621), render two `Button` components:
-   - Heart button: toggles `isFavoritesActive`, uses `Heart` icon, filled style when active
-   - Palette button: toggles `isBrandedActive`, uses `Palette` icon, highlighted style when active
-4. Active state styling: use a distinct background/border (e.g., `bg-primary/10 border-primary text-primary`) to match the filter bar's visual language
-5. Both buttons use `variant="outline"` and `size="icon"` with `h-8 w-8` sizing to match the filter button heights
+- Add two new optional callback props: `onFavoritesToggle?: (active: boolean) => void` and `onBrandedToggle?: (active: boolean) => void`
+- Call these callbacks when the respective toggle buttons are clicked, passing the new state up to the parent
 
-No other files need to change.
+### LibraryScreenV4 Changes
+
+**File: `src/components/LibraryScreenV4.tsx`**
+
+- Add `isFavoritesActive` and `isBrandedActive` state variables
+- Pass `onFavoritesToggle` and `onBrandedToggle` callbacks to `<FilterBar />`
+- Filter `results` based on these toggles before rendering:
+  - When favorites is active, only show assets where `isFavorite === true`
+  - When branded is active, only show assets where `isBranded === true`
+  - Both can be active simultaneously (AND logic)
+- On each asset card's thumbnail area (the `aspect-[4/3]` div), conditionally render:
+  - A `Heart` icon (filled, small) in the top-right corner when `isFavoritesActive` is true and the asset has `isFavorite === true`
+  - A `Palette` icon (small) in the top-right corner when `isBrandedActive` is true and the asset has `isBranded === true`
+  - If both are showing, stack them vertically (heart on top, palette below)
+
+### Files Changed
+
+1. `src/lib/mockLibraryData.ts` -- add fields to interface and mock data
+2. `src/components/FilterBar.tsx` -- expose toggle callbacks via props
+3. `src/components/LibraryScreenV4.tsx` -- filter logic and icon overlays on cards
+
