@@ -408,7 +408,7 @@ export function FacetedSearchWithTypeahead({
           onChange={e => setSearchQuery(e.target.value)}
           onFocus={handleInputFocus}
           onKeyDown={handleKeyDown}
-          placeholder={selectedFacets.length === 0 ? placeholder : "Add filter..."}
+          placeholder={selectedFacets.length === 0 ? placeholder : ""}
           className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm h-7"
         />
         {(searchQuery || selectedFacets.length > 0) && (
