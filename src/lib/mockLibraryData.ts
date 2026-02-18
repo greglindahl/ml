@@ -13,6 +13,7 @@ export interface LibraryAsset {
   creatorId: string;
   type: "image" | "video";
   dateCreated: Date;
+  captureDate: Date;
   aspectRatio: "1:1" | "16:9" | "9:16" | "4:3";
   status: "approved" | "pending" | "draft";
   tags: string[];
@@ -23,6 +24,14 @@ export interface LibraryAsset {
   folderId?: string; // Which folder/gallery this asset belongs to
   isFavorite?: boolean;
   isBranded?: boolean;
+  downloads: number;
+  shares: number;
+  galleries: number;
+  viewers: number;
+  publicViews: number;
+  publicDownloads: number;
+  favorites: number;
+  lastDownloadDate: Date | null;
 }
 
 // Define which tags are AI-generated (recognized by AI) vs manual
@@ -190,7 +199,7 @@ function randomFromArray<T>(arr: T[]): T {
 }
 
 // Fixed assets for user testing scenarios
-const fixedAssets: LibraryAsset[] = [
+const fixedAssets: Omit<LibraryAsset, 'downloads' | 'shares' | 'galleries' | 'viewers' | 'publicViews' | 'publicDownloads' | 'favorites' | 'lastDownloadDate' | 'captureDate'>[] = [
   // Task A1: Known-Item, Time-Sensitive - Lebron from last night
   {
     id: "asset-hero-1",
@@ -671,7 +680,11 @@ export const mockLibraryAssets: LibraryAsset[] = (() => {
       dimensions: type === "image" || type === "video" ? seededFromArray(dimensions[aspectRatio]) : undefined,
       duration: type === "video" ? seededFromArray(durations) : undefined,
       folderId,
-    };
+      // Placeholder values — will be overwritten by the deterministic pass below
+      downloads: 0, shares: 0, galleries: 0, viewers: 0, publicViews: 0,
+      publicDownloads: 0, favorites: 0, lastDownloadDate: null,
+      captureDate: new Date(),
+    } as LibraryAsset;
   };
   
   // Assign folder IDs to fixed assets based on their content
@@ -683,17 +696,41 @@ export const mockLibraryAssets: LibraryAsset[] = (() => {
   // Combine fixed assets with generated ones
   const allAssets = [...fixedAssetsWithFolders, ...Array.from({ length: 80 }, (_, i) => generateSeededAsset(i + 1))];
   
-  // Assign isFavorite and isBranded deterministically (~35% each)
+  // Assign extra fields deterministically
   let favSeed = 54321;
   const favRandom = () => {
     favSeed = (favSeed * 16807) % 2147483647;
     return (favSeed - 1) / 2147483646;
   };
-  return allAssets.map(asset => ({
-    ...asset,
-    isFavorite: favRandom() < 0.35,
-    isBranded: favRandom() < 0.35,
-  }));
+  return allAssets.map(asset => {
+    const downloads = Math.floor(favRandom() * 500);
+    const shares = Math.floor(favRandom() * 100);
+    const galleries = Math.floor(favRandom() * 8);
+    const viewers = Math.floor(favRandom() * 300);
+    const publicViews = Math.floor(favRandom() * 1000);
+    const publicDownloads = Math.floor(favRandom() * 200);
+    const favorites = Math.floor(favRandom() * 50);
+    const hasLastDownload = favRandom() > 0.2;
+    const lastDownloadDate = hasLastDownload
+      ? (() => { const d = new Date(); d.setDate(d.getDate() - Math.floor(favRandom() * 60)); return d; })()
+      : null;
+    // captureDate is always before dateCreated
+    const captureDate = new Date(asset.dateCreated.getTime() - Math.floor(favRandom() * 30 + 1) * 86400000);
+    return {
+      ...asset,
+      isFavorite: favRandom() < 0.35,
+      isBranded: favRandom() < 0.35,
+      downloads,
+      shares,
+      galleries,
+      viewers,
+      publicViews,
+      publicDownloads,
+      favorites,
+      lastDownloadDate,
+      captureDate,
+    };
+  });
 })();
 
 // Helper to get relative time string
