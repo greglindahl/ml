@@ -1,43 +1,64 @@
 
 
-## Wire Up Favorites and Branded Toggles with Asset Card Icons
+## Make Tags Filter a Flat, Contextual List Sorted by Count
 
-### Overview
+### What Changes
 
-Connect the heart and palette toggle buttons to data filtering, and display corresponding icons on asset cards when each toggle is active.
+The Tags filter dropdown currently shows tags organized into hardcoded groups (Sports, Teams, Categories) with a fixed set of options. This will change to:
 
-### Data Changes
+- A **flat list** (no group headers) of tags pulled directly from the dataset
+- Each tag shows a **count** of how many assets have that tag
+- Tags are **sorted by count** from most to least
+- Only tags that **actually exist** in the mock asset data are shown
 
-**File: `src/lib/mockLibraryData.ts`**
+### How It Will Look
 
-- Add `isFavorite: boolean` and `isBranded: boolean` fields to the `LibraryAsset` interface
-- Randomly assign `isFavorite` and `isBranded` to existing mock assets (roughly 30-40% of assets get each flag) so there's a meaningful subset to filter
+Instead of:
+```
+SPORTS
+  Basketball
+  Football
+  ...
+TEAMS
+  Lakers
+  Warriors
+  ...
+```
 
-### FilterBar Changes
+It will look like:
+```
+basketball (28)
+NBA (25)
+Lakers (12)
+Nike (11)
+action (9)
+...
+```
+
+Each row is a checkbox item with the tag name on the left and the count on the right, sorted descending by count.
+
+### Technical Details
 
 **File: `src/components/FilterBar.tsx`**
 
-- Add two new optional callback props: `onFavoritesToggle?: (active: boolean) => void` and `onBrandedToggle?: (active: boolean) => void`
-- Call these callbacks when the respective toggle buttons are clicked, passing the new state up to the parent
+1. Add a new prop `assets?: LibraryAsset[]` to `FilterBarProps` so the component can compute tag counts from the actual dataset
+2. Import `mockLibraryAssets` from `@/lib/mockLibraryData` as a fallback (or use it directly since assets are static)
+3. Change the Tags filter config:
+   - Set `hasGroups: false` (or remove it)
+   - Instead of hardcoded options, dynamically compute tags from the assets array:
+     - Collect all tags across all assets
+     - Count occurrences of each tag
+     - Sort by count descending
+     - Map to `FilterOption[]` format (no `group` property)
+4. In the dropdown rendering for the Tags filter, display the count next to each tag label (e.g., as a muted text on the right side of each row)
 
-### LibraryScreenV4 Changes
+**File: `src/components/LibraryScreen.tsx`**
 
-**File: `src/components/LibraryScreenV4.tsx`**
+- Pass the `allAssets` array to `FilterBar` via the new `assets` prop so tags stay contextual
 
-- Add `isFavoritesActive` and `isBrandedActive` state variables
-- Pass `onFavoritesToggle` and `onBrandedToggle` callbacks to `<FilterBar />`
-- Filter `results` based on these toggles before rendering:
-  - When favorites is active, only show assets where `isFavorite === true`
-  - When branded is active, only show assets where `isBranded === true`
-  - Both can be active simultaneously (AND logic)
-- On each asset card's thumbnail area (the `aspect-[4/3]` div), conditionally render:
-  - A `Heart` icon (filled, small) in the top-right corner when `isFavoritesActive` is true and the asset has `isFavorite === true`
-  - A `Palette` icon (small) in the top-right corner when `isBrandedActive` is true and the asset has `isBranded === true`
-  - If both are showing, stack them vertically (heart on top, palette below)
+Since the assets are static mock data, an alternative simpler approach is to import `mockLibraryAssets` directly inside `FilterBar.tsx` and compute the tags there without needing a new prop. This keeps the change minimal. The plan will use this simpler approach.
 
-### Files Changed
+### Summary of Changes
 
-1. `src/lib/mockLibraryData.ts` -- add fields to interface and mock data
-2. `src/components/FilterBar.tsx` -- expose toggle callbacks via props
-3. `src/components/LibraryScreenV4.tsx` -- filter logic and icon overlays on cards
+- `src/components/FilterBar.tsx`: Replace the hardcoded grouped Tags options with dynamically computed flat options from mock data, including counts, sorted by count descending. Add count display in the dropdown items.
 
