@@ -47,78 +47,53 @@ function flattenFolderTree(items: FolderItem[], depth = 0): FilterOption[] {
   return result;
 }
 const folderOptions = flattenFolderTree(folders);
+// Known filter values to match against asset tags
+const PEOPLE_NAMES = ["Lebron James", "Steph Curry", "Kevin Durant", "Giannis Antetokounmpo", "Luka Doncic"];
+const SCENE_VALUES: Record<string, string> = {
+  "dunk": "Dunk", "celebration": "Celebration", "arrival": "Arrival",
+  "interview": "Interview", "warm-up": "Warm-up", "timeout": "Timeout",
+  "huddle": "Huddle", "victory": "Victory", "injury": "Injury",
+};
+const BRAND_VALUES: Record<string, string> = {
+  "nike": "Nike", "adidas": "Adidas", "under armour": "Under Armour", "puma": "Puma",
+};
+const CREATOR_MAP: Record<string, string> = { john: "John Smith", jane: "Jane Doe", alex: "Alex Johnson" };
+
+function computeTagMatchCounts(values: string[], labelMap?: Record<string, string>): FilterOption[] {
+  const counts: Record<string, number> = {};
+  values.forEach(v => { counts[v] = 0; });
+  mockLibraryAssets.forEach(asset => {
+    asset.tags.forEach(tag => {
+      const lower = tag.toLowerCase();
+      values.forEach(v => {
+        if (lower === v.toLowerCase()) counts[v] = (counts[v] || 0) + 1;
+      });
+    });
+  });
+  return Object.entries(counts)
+    .filter(([, c]) => c > 0)
+    .sort(([, a], [, b]) => b - a)
+    .map(([v, count]) => ({ label: labelMap ? labelMap[v] || v : v, value: v, count }));
+}
+
 const filters: FilterConfig[] = [{
   id: "people",
   label: "People",
   icon: null,
   multiSelect: true,
-  options: [{
-    label: "Lebron James",
-    value: "Lebron James"
-  }, {
-    label: "Steph Curry",
-    value: "Steph Curry"
-  }, {
-    label: "Kevin Durant",
-    value: "Kevin Durant"
-  }, {
-    label: "Giannis Antetokounmpo",
-    value: "Giannis Antetokounmpo"
-  }, {
-    label: "Luka Doncic",
-    value: "Luka Doncic"
-  }]
+  options: computeTagMatchCounts(PEOPLE_NAMES),
 }, {
   id: "scene",
   label: "Scene",
   icon: null,
   multiSelect: true,
-  options: [{
-    label: "Dunk",
-    value: "dunk"
-  }, {
-    label: "Celebration",
-    value: "celebration"
-  }, {
-    label: "Arrival",
-    value: "arrival"
-  }, {
-    label: "Interview",
-    value: "interview"
-  }, {
-    label: "Warm-up",
-    value: "warm-up"
-  }, {
-    label: "Timeout",
-    value: "timeout"
-  }, {
-    label: "Huddle",
-    value: "huddle"
-  }, {
-    label: "Victory",
-    value: "victory"
-  }, {
-    label: "Injury",
-    value: "injury"
-  }]
+  options: computeTagMatchCounts(Object.keys(SCENE_VALUES), SCENE_VALUES),
 }, {
   id: "brand",
   label: "Brand",
   icon: null,
   multiSelect: true,
-  options: [{
-    label: "Nike",
-    value: "nike"
-  }, {
-    label: "Adidas",
-    value: "adidas"
-  }, {
-    label: "Under Armour",
-    value: "under armour"
-  }, {
-    label: "Puma",
-    value: "puma"
-  }]
+  options: computeTagMatchCounts(Object.keys(BRAND_VALUES), BRAND_VALUES),
 }, {
   id: "tags",
   label: "Tags",
@@ -145,28 +120,30 @@ const filters: FilterConfig[] = [{
   label: "Creator",
   icon: null,
   multiSelect: true,
-  options: [{
-    label: "John Smith",
-    value: "john"
-  }, {
-    label: "Jane Doe",
-    value: "jane"
-  }, {
-    label: "Alex Johnson",
-    value: "alex"
-  }]
+  options: (() => {
+    const counts: Record<string, number> = {};
+    mockLibraryAssets.forEach(asset => {
+      counts[asset.creatorId] = (counts[asset.creatorId] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .filter(([, c]) => c > 0)
+      .sort(([, a], [, b]) => b - a)
+      .map(([id, count]) => ({ label: CREATOR_MAP[id] || id, value: id, count }));
+  })(),
 }, {
   id: "content-type",
   label: "Type",
   icon: null,
   multiSelect: true,
-  options: [{
-    label: "Image",
-    value: "image"
-  }, {
-    label: "Video",
-    value: "video"
-  }]
+  options: (() => {
+    const counts: Record<string, number> = {};
+    mockLibraryAssets.forEach(asset => {
+      counts[asset.type] = (counts[asset.type] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .sort(([, a], [, b]) => b - a)
+      .map(([type, count]) => ({ label: type.charAt(0).toUpperCase() + type.slice(1), value: type, count }));
+  })(),
 }, {
   id: "folders",
   label: "Folders",
@@ -202,19 +179,15 @@ const filters: FilterConfig[] = [{
   label: "Ratio",
   icon: null,
   multiSelect: true,
-  options: [{
-    label: "1:1",
-    value: "1:1"
-  }, {
-    label: "16:9",
-    value: "16:9"
-  }, {
-    label: "4:3",
-    value: "4:3"
-  }, {
-    label: "9:16",
-    value: "9:16"
-  }]
+  options: (() => {
+    const counts: Record<string, number> = {};
+    mockLibraryAssets.forEach(asset => {
+      counts[asset.aspectRatio] = (counts[asset.aspectRatio] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .sort(([, a], [, b]) => b - a)
+      .map(([ratio, count]) => ({ label: ratio, value: ratio, count }));
+  })(),
 }];
 
 export interface CustomDateRange {
