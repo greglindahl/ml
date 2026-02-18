@@ -59,7 +59,7 @@ function getOrientation(aspectRatio: LibraryAsset["aspectRatio"]): string {
 
 export function AssetTableView({ assets, isLoading = false }: AssetTableViewProps) {
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
-  const [sortField, setSortField] = useState<SortField>(null);
+  const [sortField, setSortField] = useState<SortField>("dateCreated");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   const handleSelectAll = (checked: boolean) => {
