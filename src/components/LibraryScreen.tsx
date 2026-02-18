@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Folder, ChevronDown, Plus, Upload, Grid3X3, 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
+import type { SelectedFacet } from "@/components/FacetedSearchWithTypeahead";
 import { FilterBar } from "@/components/FilterBar";
 import { GalleryDetailsView } from "@/components/GalleryDetailsView";
 import { FolderDetailsView } from "@/components/FolderDetailsView";
@@ -79,6 +80,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const [dateRangeFilter, setDateRangeFilter] = useState<"today" | "week" | "month" | "quarter" | "year" | "custom" | null>(null);
   const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
   const [isBrandedActive, setIsBrandedActive] = useState(false);
+  const [searchSelectedFacets, setSearchSelectedFacets] = useState<SelectedFacet[]>([]);
 
   // Sort state
   type SortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "publicDownloads" | "status" | "favorites" | "lastDownloadDate" | null;
@@ -562,12 +564,12 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           <TabsContent value="assets" className="flex-1 py-6 mt-0">
             {/* Faceted Search */}
             <div className="mb-4">
-              <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} />
+              <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} onSelectedFacetsChange={setSearchSelectedFacets} />
             </div>
 
             {/* Filters and Controls - Single Row */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-              <FilterBar onFilterChange={handleFilterChange} onCustomDateChange={handleCustomDateChange} onBrandedToggle={setIsBrandedActive} />
+              <FilterBar onFilterChange={handleFilterChange} onCustomDateChange={handleCustomDateChange} onBrandedToggle={setIsBrandedActive} disabledValues={searchSelectedFacets.filter(f => f.type !== "search").map(f => ({ value: f.value, category: f.category }))} />
 
               <div className="flex items-center gap-2">
                 <DropdownMenu>
