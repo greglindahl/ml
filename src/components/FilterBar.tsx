@@ -199,12 +199,14 @@ interface FilterBarProps {
   onCustomDateChange?: (range: CustomDateRange) => void;
   hideFilters?: string[];
   onBrandedToggle?: (active: boolean) => void;
+  disabledValues?: { value: string; category: string }[];
 }
 export function FilterBar({
   onFilterChange,
   onCustomDateChange,
   hideFilters = [],
   onBrandedToggle,
+  disabledValues = [],
 }: FilterBarProps) {
   // Filter out hidden filters
   const visibleFilters = filters.filter(f => !hideFilters.includes(f.id));
@@ -418,9 +420,13 @@ export function FilterBar({
                 const isTreeItem = filter.isTreeStructure && option.depth !== undefined;
                 const indent = isTreeItem ? option.depth! * 12 : 0;
                 const Icon = option.type === "gallery" ? Images : Folder;
-                return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.some(s => s.value === option.value)} onCheckedChange={checked => handleMultiSelect(filter.id, option.value, option.label, checked)} style={{
+                const categoryMap: Record<string, string> = { people: "People", scene: "Scene", brand: "Brand", tags: "Tag" };
+                const isDisabledBySearch = disabledValues.some(
+                  dv => dv.value.toLowerCase() === option.value.toLowerCase() && dv.category.toLowerCase() === (categoryMap[filter.id] || "").toLowerCase()
+                );
+                return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.some(s => s.value === option.value)} onCheckedChange={checked => { if (!isDisabledBySearch) handleMultiSelect(filter.id, option.value, option.label, checked); }} style={{
                   paddingLeft: isTreeItem ? `${8 + indent}px` : undefined
-                }} className="flex items-center gap-2" onSelect={e => e.preventDefault()}>
+                }} className={`flex items-center gap-2 ${isDisabledBySearch ? "opacity-50 pointer-events-none" : ""}`} onSelect={e => e.preventDefault()}>
                             {isTreeItem && <Icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
                             <span className={cn("flex-1", option.depth === 0 ? "font-medium" : "")}>{option.label}</span>
                             {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>}

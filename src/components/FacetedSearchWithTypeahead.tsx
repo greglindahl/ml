@@ -58,9 +58,12 @@ interface SelectedFacet {
   category: string; // e.g., "Tag", "People", "Teams", "Search", etc.
   isAiGenerated?: boolean;
 }
+export type { SelectedFacet };
+
 interface FacetedSearchWithTypeaheadProps {
   onSearch?: (query: string, selectedFacets: string[]) => void;
   onFacetCountsChange?: (counts: Record<string, number>) => void;
+  onSelectedFacetsChange?: (facets: SelectedFacet[]) => void;
   assets?: LibraryAsset[];
   placeholder?: string;
 }
@@ -117,6 +120,7 @@ const MAX_RECENT_SEARCHES = 5;
 export function FacetedSearchWithTypeahead({
   onSearch,
   onFacetCountsChange,
+  onSelectedFacetsChange,
   assets = [],
   placeholder = "Search by people, tags, filenames…"
 }: FacetedSearchWithTypeaheadProps) {
@@ -166,6 +170,11 @@ export function FacetedSearchWithTypeahead({
   useEffect(() => {
     onFacetCountsChange?.(facetCounts);
   }, [facetCounts, onFacetCountsChange]);
+
+  // Notify parent of selected facets changes
+  useEffect(() => {
+    onSelectedFacetsChange?.(selectedFacets);
+  }, [selectedFacets, onSelectedFacetsChange]);
 
   // Trigger search when query or facets change
   // Combine searchQuery with search-type pills for fuzzy matching
