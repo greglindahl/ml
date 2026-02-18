@@ -1,28 +1,23 @@
 
 
-## Remove Heart (Favorites) Toggle from Filter Bar
+## Remove "More" Filter Dropdown from Filter Bar
 
 ### What Changes
 
-Remove the heart/favorites toggle button from the Assets tab filter bar, along with its associated state and callback prop.
+Remove the "More" filter dropdown button and its associated code from the Assets tab filter bar. This feature will be revisited in a future iteration.
 
 ### Files to Change
 
-**1. `src/components/FilterBar.tsx`**
-- Remove the `isFavoritesActive` state variable
-- Remove the `onFavoritesToggle` prop from `FilterBarProps`
-- Remove the Heart toggle button block (lines 575-590)
-- Remove `Heart` from the lucide-react imports (if no longer used elsewhere in this file)
+**`src/components/FilterBar.tsx`**
 
-**2. `src/components/LibraryScreen.tsx`**
-- Remove the `isFavoritesActive` state variable
-- Remove the `onFavoritesToggle` prop passed to `<FilterBar />`
-- Remove any filtering logic that checks `isFavoritesActive` / `asset.isFavorite`
-- Remove the Heart icon overlay on asset cards (the conditional rendering of `<Heart>` in the card thumbnail)
-
-**3. `src/components/LibraryScreenV4.tsx`**
-- Same cleanup: remove `isFavoritesActive` state, the `onFavoritesToggle` prop, the favorites filtering in `filteredResults`, and the Heart icon overlay on cards
+1. Remove the `moreFilterCategories` array (lines ~219-228) containing the hardcoded filter options for Sport, Competition, Composition, etc.
+2. Remove the entire `MoreFiltersDropdown` component function (lines ~230-340 approximately)
+3. Remove the `<MoreFiltersDropdown ... />` usage in the filter bar JSX (line ~570)
+4. Clean up any imports that become unused after removal (e.g., `DropdownMenuLabel` if only used there)
 
 ### What Stays
-- The `isFavorite` field on the data model (`LibraryAsset`) stays -- it's not harmful and could be used later
-- The Branded (palette) toggle remains fully functional
+
+- All other filter dropdowns (People, Brand, Tags, etc.) remain unchanged
+- The Branded (palette) toggle remains
+- The active filter state management (`activeFilters`, `handleMultiSelect`, etc.) stays since it's shared infrastructure
+
