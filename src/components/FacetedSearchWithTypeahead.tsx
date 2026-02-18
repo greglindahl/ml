@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Search, X, User, Tag, Folder, Clock, Sparkles } from "lucide-react";
-import { Input } from "@/components/ui/input";
+
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -375,31 +375,48 @@ export function FacetedSearchWithTypeahead({
   const hasTagSuggestions = groupedSuggestions.aiIdentified.length > 0 || groupedSuggestions.otherTags.length > 0;
   const showTypeahead = isOpen && (searchQuery.trim().length > 0 || recentSearches.length > 0);
   return <div ref={containerRef} className="relative w-full">
-      {/* Search Input */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input ref={inputRef} type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onFocus={handleInputFocus} onKeyDown={handleKeyDown} placeholder={placeholder} className="pl-10 pr-10 w-full bg-white" />
-        {(searchQuery || selectedFacets.length > 0) && <button onClick={handleClearAll} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-accent rounded transition-colors">
+      {/* Search Input with inline pills */}
+      <div
+        className="flex flex-wrap items-center gap-1.5 min-h-[40px] px-3 py-1.5 border rounded-md bg-white focus-within:ring-2 focus-within:ring-ring cursor-text"
+        onClick={() => inputRef.current?.focus()}
+      >
+        <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+        {selectedFacets.map(facet => {
+          const isPeople = facet.category === "People";
+          const isBrand = facet.category === "Brand";
+          const isSearch = facet.type === "search";
+          const isAi = facet.isAiGenerated;
+          const showSparkle = isAi && !isPeople && !isBrand;
+          return (
+            <Badge
+              key={facet.value}
+              variant="secondary"
+              className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-secondary/80 flex-shrink-0"
+              onClick={(e) => { e.stopPropagation(); handleRemoveFacet(facet.value); }}
+            >
+              {isSearch ? <Search className="w-3.5 h-3.5" /> : isPeople ? <User className="w-3.5 h-3.5" /> : isBrand ? <i className="bi bi-badge-tm text-sm" /> : <Tag className="w-3.5 h-3.5" />}
+              {showSparkle && <Sparkles className="w-3 h-3" />}
+              {facet.value.replace(/__manual$/, '')}
+              <X className="w-3.5 h-3.5 ml-0.5" />
+            </Badge>
+          );
+        })}
+        <input
+          ref={inputRef}
+          type="text"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          onFocus={handleInputFocus}
+          onKeyDown={handleKeyDown}
+          placeholder={selectedFacets.length === 0 ? placeholder : "Add filter..."}
+          className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm h-7"
+        />
+        {(searchQuery || selectedFacets.length > 0) && (
+          <button onClick={handleClearAll} className="p-1 hover:bg-accent rounded transition-colors flex-shrink-0">
             <X className="w-4 h-4 text-muted-foreground" />
-          </button>}
+          </button>
+        )}
       </div>
-
-      {/* Selected Facets/Search Pills */}
-      {selectedFacets.length > 0 && <div className="flex flex-wrap gap-2 mt-2">
-          {selectedFacets.map(facet => {
-        const isPeople = facet.category === "People";
-        const isBrand = facet.category === "Brand";
-        const isSearch = facet.type === "search";
-        const isAi = facet.isAiGenerated;
-        const showSparkle = isAi && !isPeople && !isBrand;
-        return <Badge key={facet.value} variant="secondary" className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-secondary/80" onClick={() => handleRemoveFacet(facet.value)}>
-                {isSearch ? <Search className="w-3.5 h-3.5" /> : isPeople ? <User className="w-3.5 h-3.5" /> : isBrand ? <i className="bi bi-badge-tm text-sm" /> : <Tag className="w-3.5 h-3.5" />}
-                {showSparkle && <Sparkles className="w-3 h-3" />}
-                {facet.value.replace(/__manual$/, '')}
-                <X className="w-3.5 h-3.5 ml-0.5" />
-              </Badge>;
-      })}
-        </div>}
 
       {/* Typeahead Suggestions Dropdown */}
       {showTypeahead && <div className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-lg shadow-lg z-50">
