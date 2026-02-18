@@ -85,7 +85,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   // Sort state
   type SortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "publicDownloads" | "status" | "favorites" | "lastDownloadDate" | null;
   type SortDir = "asc" | "desc";
-  const [sortField, setSortField] = useState<SortField>(null);
+  const [sortField, setSortField] = useState<SortField>("dateCreated");
   const [sortDirection, setSortDirection] = useState<SortDir>("desc");
 
   const SORT_OPTIONS: { value: NonNullable<SortField>; label: string }[] = [
