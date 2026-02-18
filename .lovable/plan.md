@@ -1,29 +1,46 @@
 
 
-## Add Extended Sort Options and Mock Data ✅ COMPLETED
+## Move Search Pills Inside the Input Field
 
-Added sorting capability for 13 fields across both grid view (Sort dropdown) and table view, backed by new mock data fields on each asset.
+### What Changes
 
-### New Fields Added to LibraryAsset
+The selected facet pills (Badges) will move from their current position below the search input into the input container itself, creating an inline "chips-in-input" pattern like email To fields.
 
-| Field | Type |
-|-------|------|
-| `downloads` | `number` |
-| `shares` | `number` |
-| `galleries` | `number` |
-| `viewers` | `number` |
-| `publicViews` | `number` |
-| `publicDownloads` | `number` |
-| `favorites` | `number` |
-| `lastDownloadDate` | `Date \| null` |
-| `captureDate` | `Date` |
+### How It Will Look
 
-### Sort Options (13 total)
+Before:
+```
+[magnifier Search by people, tags, filenames...        ]
+[Lebron James x] [Nike x]
+```
 
-Creator, Added Date, Capture Date, Downloads, Shares, Galleries, Tags, Viewers, Public Views, Public Downloads, Approval Status, Favorites, Last Download Date
+After:
+```
+[magnifier [Lebron James x] [Nike x] Search by people, tags...  x]
+```
 
-### Files Changed
+The placeholder text appears only when no pills are selected and no text is typed.
 
-- `src/lib/mockLibraryData.ts` — interface + deterministic mock data generation
-- `src/components/LibraryScreenV4.tsx` — sort dropdown with 13 options + sorting logic
-- `src/components/AssetTableView.tsx` — expanded sort fields, removed mock `getDownloadCount`
+### Technical Details
+
+**File: `src/components/FacetedSearchWithTypeahead.tsx`**
+
+**1. Replace the input section (lines 379-402)** with a single flex-wrap container:
+
+- Remove the `<Input>` component and the separate pills `<div>` below it
+- Create a single container div styled as an input field:
+  ```
+  flex flex-wrap items-center gap-1.5 min-h-[40px] px-3 py-1.5
+  border rounded-md bg-white
+  focus-within:ring-2 focus-within:ring-ring
+  ```
+- Inside the container, render in order:
+  1. Search icon (flex-shrink-0)
+  2. Selected facet pills (the existing Badge components, same styling)
+  3. A plain `<input>` element (not the shadcn Input) with `flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm`
+  4. Clear-all X button (when pills or text exist)
+
+**2. Dynamic placeholder**: The `<input>` placeholder will be set to the full placeholder text only when `selectedFacets.length === 0`, otherwise it shows "Add filter..." (shorter, since pills take up space).
+
+**3. No behavior changes**: All keyboard handling, dropdown positioning, click-to-remove on pills, clear all, and typeahead dropdown remain exactly the same.
+
