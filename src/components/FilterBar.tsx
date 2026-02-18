@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, Calendar as CalendarIcon, X, Search, ChevronRight, Folder, Images, Heart, Palette } from "lucide-react";
+import { ChevronDown, Calendar as CalendarIcon, X, Search, ChevronRight, Folder, Images, Palette } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -327,14 +327,12 @@ interface FilterBarProps {
   onFilterChange?: (filterId: string, values: string[]) => void;
   onCustomDateChange?: (range: CustomDateRange) => void;
   hideFilters?: string[];
-  onFavoritesToggle?: (active: boolean) => void;
   onBrandedToggle?: (active: boolean) => void;
 }
 export function FilterBar({
   onFilterChange,
   onCustomDateChange,
   hideFilters = [],
-  onFavoritesToggle,
   onBrandedToggle,
 }: FilterBarProps) {
   // Filter out hidden filters
@@ -343,7 +341,6 @@ export function FilterBar({
     value: string;
     label: string;
   }[]>>({});
-  const [isFavoritesActive, setIsFavoritesActive] = useState(false);
   const [isBrandedActive, setIsBrandedActive] = useState(false);
   const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
   const [customDateRange, setCustomDateRange] = useState<CustomDateRange>({
@@ -571,23 +568,6 @@ export function FilterBar({
 
       {/* More Filters Dropdown */}
       <MoreFiltersDropdown activeFilters={activeFilters} onToggle={handleMultiSelect} onClearFilter={clearFilter} onRemoveValue={handleRemoveValue} />
-
-      {/* Favorites Toggle */}
-      <Button
-        variant="outline"
-        size="icon"
-        className={cn(
-          "h-8 w-8 flex-shrink-0",
-          isFavoritesActive && "bg-primary/10 border-primary text-primary"
-        )}
-        onClick={() => {
-          const next = !isFavoritesActive;
-          setIsFavoritesActive(next);
-          onFavoritesToggle?.(next);
-        }}
-      >
-        <Heart className={cn("h-4 w-4", isFavoritesActive && "fill-current")} />
-      </Button>
 
       {/* Branded Toggle */}
       <Button
