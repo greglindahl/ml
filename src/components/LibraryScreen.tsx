@@ -80,6 +80,39 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
   const [isBrandedActive, setIsBrandedActive] = useState(false);
 
+  // Sort state
+  type SortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "publicDownloads" | "status" | "favorites" | "lastDownloadDate" | null;
+  type SortDir = "asc" | "desc";
+  const [sortField, setSortField] = useState<SortField>(null);
+  const [sortDirection, setSortDirection] = useState<SortDir>("desc");
+
+  const SORT_OPTIONS: { value: NonNullable<SortField>; label: string }[] = [
+    { value: "creator", label: "Creator" },
+    { value: "dateCreated", label: "Added Date" },
+    { value: "captureDate", label: "Capture Date" },
+    { value: "downloads", label: "Downloads" },
+    { value: "shares", label: "Shares" },
+    { value: "galleries", label: "Galleries" },
+    { value: "tags", label: "Tags" },
+    { value: "viewers", label: "Viewers" },
+    { value: "publicViews", label: "Public Views" },
+    { value: "publicDownloads", label: "Public Downloads" },
+    { value: "status", label: "Approval Status" },
+    { value: "favorites", label: "Favorites" },
+    { value: "lastDownloadDate", label: "Last Download Date" },
+  ];
+
+  const SORT_LABELS: Record<string, string> = Object.fromEntries(SORT_OPTIONS.map(o => [o.value, o.label]));
+
+  const handleSortChange = useCallback((field: NonNullable<SortField>) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("desc");
+    }
+  }, [sortField]);
+
   // Use the library search hook
   const { results, allAssets, isLoading, totalCount, search } = useLibrarySearch();
 
@@ -222,6 +255,32 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
     customDateRange,
     isBrandedActive,
   ]);
+
+  // Sort filtered results
+  const sortedResults = useMemo(() => {
+    if (!sortField) return filteredResults;
+    return [...filteredResults].sort((a, b) => {
+      let cmp = 0;
+      switch (sortField) {
+        case "creator": cmp = a.creator.localeCompare(b.creator); break;
+        case "dateCreated": cmp = a.dateCreated.getTime() - b.dateCreated.getTime(); break;
+        case "captureDate": cmp = a.captureDate.getTime() - b.captureDate.getTime(); break;
+        case "downloads": cmp = a.downloads - b.downloads; break;
+        case "shares": cmp = a.shares - b.shares; break;
+        case "galleries": cmp = a.galleries - b.galleries; break;
+        case "tags": cmp = a.tags.length - b.tags.length; break;
+        case "viewers": cmp = a.viewers - b.viewers; break;
+        case "publicViews": cmp = a.publicViews - b.publicViews; break;
+        case "publicDownloads": cmp = a.publicDownloads - b.publicDownloads; break;
+        case "status": cmp = a.status.localeCompare(b.status); break;
+        case "favorites": cmp = a.favorites - b.favorites; break;
+        case "lastDownloadDate":
+          cmp = (a.lastDownloadDate?.getTime() ?? 0) - (b.lastDownloadDate?.getTime() ?? 0);
+          break;
+      }
+      return sortDirection === "asc" ? cmp : -cmp;
+    });
+  }, [filteredResults, sortField, sortDirection]);
 
   // Compute dynamic filter counts based on current results
   const filterCounts = useMemo(() => computeFilterCounts(filteredResults), [filteredResults]);
@@ -514,15 +573,17 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-card">
-                      Sort
+                      Sort{sortField ? `: ${SORT_LABELS[sortField]}` : ""}
                       <ChevronDown className="w-3 h-3 opacity-50" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-popover">
-                    <DropdownMenuItem>Date (Newest)</DropdownMenuItem>
-                    <DropdownMenuItem>Date (Oldest)</DropdownMenuItem>
-                    <DropdownMenuItem>Name (A-Z)</DropdownMenuItem>
-                    <DropdownMenuItem>Name (Z-A)</DropdownMenuItem>
+                  <DropdownMenuContent className="bg-popover w-48">
+                    {SORT_OPTIONS.map(opt => (
+                      <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
+                        {opt.label}
+                        {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
+                      </DropdownMenuItem>
+                    ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
 
@@ -560,7 +621,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             {/* Assets Grid/Table with Loading State */}
             <div className="min-h-[400px]">
             {assetsViewMode === "list" ? (
-              <AssetTableView assets={filteredResults} isLoading={isLoading} />
+              <AssetTableView assets={sortedResults} isLoading={isLoading} />
             ) : isLoading ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {Array.from({ length: 10 }).map((_, i) => (
@@ -571,7 +632,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   </div>
                 ))}
               </div>
-            ) : filteredResults.length === 0 ? (
+            ) : sortedResults.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <Image className="w-12 h-12 text-muted-foreground/30 mb-4" />
                 <h3 className="text-lg font-medium mb-1">No assets found</h3>
@@ -579,7 +640,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {filteredResults.map((asset) => (
+                {sortedResults.map((asset) => (
                   <div key={asset.id} className="group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow">
                     {/* Thumbnail area */}
                     <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center relative">
@@ -647,15 +708,17 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-card">
-                      Sort
+                      Sort{sortField ? `: ${SORT_LABELS[sortField]}` : ""}
                       <ChevronDown className="w-3 h-3 opacity-50" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-popover">
-                    <DropdownMenuItem>Date (Newest)</DropdownMenuItem>
-                    <DropdownMenuItem>Date (Oldest)</DropdownMenuItem>
-                    <DropdownMenuItem>Name (A-Z)</DropdownMenuItem>
-                    <DropdownMenuItem>Name (Z-A)</DropdownMenuItem>
+                  <DropdownMenuContent className="bg-popover w-48">
+                    {SORT_OPTIONS.map(opt => (
+                      <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
+                        {opt.label}
+                        {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
+                      </DropdownMenuItem>
+                    ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
 
@@ -760,15 +823,17 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="gap-2">
-                      Sort
+                      Sort{sortField ? `: ${SORT_LABELS[sortField]}` : ""}
                       <ChevronDown className="w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem>Date (Newest)</DropdownMenuItem>
-                    <DropdownMenuItem>Date (Oldest)</DropdownMenuItem>
-                    <DropdownMenuItem>Name (A-Z)</DropdownMenuItem>
-                    <DropdownMenuItem>Name (Z-A)</DropdownMenuItem>
+                  <DropdownMenuContent className="w-48">
+                    {SORT_OPTIONS.map(opt => (
+                      <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
+                        {opt.label}
+                        {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
+                      </DropdownMenuItem>
+                    ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
 
