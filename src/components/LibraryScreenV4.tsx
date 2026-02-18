@@ -29,6 +29,27 @@ interface LibraryScreenV4Props {
   isMobile?: boolean;
 }
 
+type GridSortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "publicDownloads" | "status" | "favorites" | "lastDownloadDate" | null;
+type SortDirection = "asc" | "desc";
+
+const SORT_OPTIONS: { value: NonNullable<GridSortField>; label: string }[] = [
+  { value: "creator", label: "Creator" },
+  { value: "dateCreated", label: "Added Date" },
+  { value: "captureDate", label: "Capture Date" },
+  { value: "downloads", label: "Downloads" },
+  { value: "shares", label: "Shares" },
+  { value: "galleries", label: "Galleries" },
+  { value: "tags", label: "Tags" },
+  { value: "viewers", label: "Viewers" },
+  { value: "publicViews", label: "Public Views" },
+  { value: "publicDownloads", label: "Public Downloads" },
+  { value: "status", label: "Approval Status" },
+  { value: "favorites", label: "Favorites" },
+  { value: "lastDownloadDate", label: "Last Download Date" },
+];
+
+const SORT_LABELS: Record<string, string> = Object.fromEntries(SORT_OPTIONS.map(o => [o.value, o.label]));
+
 export function LibraryScreenV4({ isMobile = false }: LibraryScreenV4Props) {
   const [activeTab, setActiveTab] = useState("assets");
   // Default expanded on folders tab, collapsed on other tabs
@@ -49,16 +70,55 @@ export function LibraryScreenV4({ isMobile = false }: LibraryScreenV4Props) {
   // Branded toggle state
   const [isBrandedActive, setIsBrandedActive] = useState(false);
 
+  // Sort state
+  const [sortField, setSortField] = useState<GridSortField>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+
+  const handleSortChange = useCallback((field: NonNullable<GridSortField>) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("desc");
+    }
+  }, [sortField]);
+
   // Use the library search hook
   const { results, allAssets, isLoading, totalCount, search } = useLibrarySearch();
 
-  // Filter results based on favorites/branded toggles
+  // Filter and sort results
   const filteredResults = useMemo(() => {
-    return results.filter(asset => {
+    let filtered = results.filter(asset => {
       if (isBrandedActive && !asset.isBranded) return false;
       return true;
     });
-  }, [results, isBrandedActive]);
+
+    if (sortField) {
+      filtered = [...filtered].sort((a, b) => {
+        let comparison = 0;
+        switch (sortField) {
+          case "creator": comparison = a.creator.localeCompare(b.creator); break;
+          case "dateCreated": comparison = a.dateCreated.getTime() - b.dateCreated.getTime(); break;
+          case "captureDate": comparison = a.captureDate.getTime() - b.captureDate.getTime(); break;
+          case "downloads": comparison = a.downloads - b.downloads; break;
+          case "shares": comparison = a.shares - b.shares; break;
+          case "galleries": comparison = a.galleries - b.galleries; break;
+          case "tags": comparison = a.tags.length - b.tags.length; break;
+          case "viewers": comparison = a.viewers - b.viewers; break;
+          case "publicViews": comparison = a.publicViews - b.publicViews; break;
+          case "publicDownloads": comparison = a.publicDownloads - b.publicDownloads; break;
+          case "status": comparison = a.status.localeCompare(b.status); break;
+          case "favorites": comparison = a.favorites - b.favorites; break;
+          case "lastDownloadDate":
+            comparison = (a.lastDownloadDate?.getTime() ?? 0) - (b.lastDownloadDate?.getTime() ?? 0);
+            break;
+        }
+        return sortDirection === "asc" ? comparison : -comparison;
+      });
+    }
+
+    return filtered;
+  }, [results, isBrandedActive, sortField, sortDirection]);
 
   // Combined search that merges search facets with filter bar state
   const triggerSearch = useCallback((query: string, facets: string[], filters: Record<string, string[]>) => {
@@ -329,15 +389,25 @@ export function LibraryScreenV4({ isMobile = false }: LibraryScreenV4Props) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="gap-2">
-                    Sort
+                    Sort{sortField ? `: ${SORT_LABELS[sortField]}` : ""}
                     <ChevronDown className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem>Date (Newest)</DropdownMenuItem>
-                  <DropdownMenuItem>Date (Oldest)</DropdownMenuItem>
-                  <DropdownMenuItem>Name (A-Z)</DropdownMenuItem>
-                  <DropdownMenuItem>Name (Z-A)</DropdownMenuItem>
+                <DropdownMenuContent className="w-48">
+                  {SORT_OPTIONS.map(opt => (
+                    <DropdownMenuItem
+                      key={opt.value}
+                      onClick={() => handleSortChange(opt.value)}
+                      className="flex items-center justify-between"
+                    >
+                      {opt.label}
+                      {sortField === opt.value && (
+                        <span className="text-xs text-muted-foreground ml-2">
+                          {sortDirection === "desc" ? "↓" : "↑"}
+                        </span>
+                      )}
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
 
