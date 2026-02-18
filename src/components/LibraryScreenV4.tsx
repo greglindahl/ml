@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Folder, ChevronDown, Plus, Upload, Grid3X3, List, CheckSquare, Image, Images, Video, Loader2, Heart, Palette } from "lucide-react";
+import { ChevronLeft, ChevronRight, Folder, ChevronDown, Plus, Upload, Grid3X3, List, CheckSquare, Image, Images, Video, Loader2, Palette } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { FacetedSearchWithDropdown } from "@/components/FacetedSearchWithDropdown";
@@ -46,8 +46,7 @@ export function LibraryScreenV4({ isMobile = false }: LibraryScreenV4Props) {
     setIsFolderSidebarExpanded(activeTab === "folders");
   }, [activeTab]);
   
-  // Favorites and Branded toggle state
-  const [isFavoritesActive, setIsFavoritesActive] = useState(false);
+  // Branded toggle state
   const [isBrandedActive, setIsBrandedActive] = useState(false);
 
   // Use the library search hook
@@ -56,11 +55,10 @@ export function LibraryScreenV4({ isMobile = false }: LibraryScreenV4Props) {
   // Filter results based on favorites/branded toggles
   const filteredResults = useMemo(() => {
     return results.filter(asset => {
-      if (isFavoritesActive && !asset.isFavorite) return false;
       if (isBrandedActive && !asset.isBranded) return false;
       return true;
     });
-  }, [results, isFavoritesActive, isBrandedActive]);
+  }, [results, isBrandedActive]);
 
   // Combined search that merges search facets with filter bar state
   const triggerSearch = useCallback((query: string, facets: string[], filters: Record<string, string[]>) => {
@@ -322,7 +320,6 @@ export function LibraryScreenV4({ isMobile = false }: LibraryScreenV4Props) {
             <div className="mb-4">
               <FilterBar
                 onFilterChange={handleFilterChange}
-                onFavoritesToggle={setIsFavoritesActive}
                 onBrandedToggle={setIsBrandedActive}
               />
             </div>
@@ -386,15 +383,10 @@ export function LibraryScreenV4({ isMobile = false }: LibraryScreenV4Props) {
                       {asset.duration && (
                         <span className="absolute bottom-2 right-2 text-[10px] bg-background/80 px-1 rounded">{asset.duration}</span>
                       )}
-                      {/* Favorite/Branded icons overlay */}
-                      {(isFavoritesActive && asset.isFavorite) || (isBrandedActive && asset.isBranded) ? (
+                      {/* Branded icon overlay */}
+                      {isBrandedActive && asset.isBranded ? (
                         <div className="absolute top-2 right-2 flex flex-col gap-1">
-                          {isFavoritesActive && asset.isFavorite && (
-                            <Heart className="w-4 h-4 text-primary fill-primary" />
-                          )}
-                          {isBrandedActive && asset.isBranded && (
-                            <Palette className="w-4 h-4 text-primary" />
-                          )}
+                          <Palette className="w-4 h-4 text-primary" />
                         </div>
                       ) : null}
                     </div>
