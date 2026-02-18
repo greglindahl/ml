@@ -8,13 +8,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMe
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { folders, FolderItem } from "@/lib/mockFolderData";
-import { AI_GENERATED_TAGS } from "@/lib/mockLibraryData";
+import { AI_GENERATED_TAGS, mockLibraryAssets } from "@/lib/mockLibraryData";
 interface FilterOption {
   label: string;
   value: string;
   depth?: number;
   type?: "folder" | "gallery";
-  group?: string; // Group name for grouped filters
+  group?: string;
+  count?: number;
 }
 interface FilterConfig {
   id: string;
@@ -123,78 +124,22 @@ const filters: FilterConfig[] = [{
   label: "Tags",
   icon: null,
   multiSelect: true,
-  hasGroups: true,
-  options: [
-  // Sports
-  {
-    label: "Basketball",
-    value: "basketball",
-    group: "Sports"
-  }, {
-    label: "Football",
-    value: "football",
-    group: "Sports"
-  }, {
-    label: "Baseball",
-    value: "baseball",
-    group: "Sports"
-  }, {
-    label: "Esports",
-    value: "esports",
-    group: "Sports"
-  },
-  // Teams
-  {
-    label: "Lakers",
-    value: "Lakers",
-    group: "Teams"
-  }, {
-    label: "Warriors",
-    value: "Warriors",
-    group: "Teams"
-  }, {
-    label: "Celtics",
-    value: "Celtics",
-    group: "Teams"
-  }, {
-    label: "Nets",
-    value: "Nets",
-    group: "Teams"
-  }, {
-    label: "Bucks",
-    value: "Bucks",
-    group: "Teams"
-  }, {
-    label: "Mavericks",
-    value: "Mavericks",
-    group: "Teams"
-  }, {
-    label: "Suns",
-    value: "Suns",
-    group: "Teams"
-  }, {
-    label: "Heat",
-    value: "Heat",
-    group: "Teams"
-  },
-  // Categories
-  {
-    label: "Marketing",
-    value: "marketing",
-    group: "Categories"
-  }, {
-    label: "Product",
-    value: "product",
-    group: "Categories"
-  }, {
-    label: "Social",
-    value: "social",
-    group: "Categories"
-  }, {
-    label: "Brand",
-    value: "brand",
-    group: "Categories"
-  }]
+  hasGroups: false,
+  options: (() => {
+    const tagCounts: Record<string, number> = {};
+    mockLibraryAssets.forEach(asset => {
+      asset.tags.forEach(tag => {
+        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+      });
+    });
+    return Object.entries(tagCounts)
+      .sort(([, a], [, b]) => b - a)
+      .map(([tag, count]) => ({
+        label: tag,
+        value: tag,
+        count,
+      }));
+  })(),
 }, {
   id: "creator",
   label: "Creator",
@@ -607,9 +552,10 @@ export function FilterBar({
                 const Icon = option.type === "gallery" ? Images : Folder;
                 return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.some(s => s.value === option.value)} onCheckedChange={checked => handleMultiSelect(filter.id, option.value, option.label, checked)} style={{
                   paddingLeft: isTreeItem ? `${8 + indent}px` : undefined
-                }} className="flex items-center gap-2">
+                }} className="flex items-center gap-2" onSelect={e => e.preventDefault()}>
                             {isTreeItem && <Icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
-                            <span className={option.depth === 0 ? "font-medium" : ""}>{option.label}</span>
+                            <span className={cn("flex-1", option.depth === 0 ? "font-medium" : "")}>{option.label}</span>
+                            {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>}
                           </DropdownMenuCheckboxItem> : <DropdownMenuCheckboxItem key={option.value} checked={selected.some(s => s.value === option.value)} onCheckedChange={() => handleSingleSelect(filter.id, option.value, option.label)}>
                             {option.label}
                           </DropdownMenuCheckboxItem>;
