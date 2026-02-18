@@ -1,51 +1,54 @@
 
 
-## Add Contextual Counts to Filter Dropdowns
+## Add Extended Sort Options and Mock Data
 
 ### What Changes
 
-Six filter dropdowns (People, Scene, Brand, Creator, Type, Ratio) will be updated to show counts derived from the actual dataset, sorted from most to least -- matching how Tags already works.
+Add sorting capability for 13 fields across both grid view (Sort dropdown) and table view, backed by new mock data fields on each asset.
 
-Each dropdown option will show the count on the right side (e.g., "Lebron James  12", "Image  45").
+### New Fields on LibraryAsset
 
-### How It Will Look
+The following fields will be added to the `LibraryAsset` interface in `src/lib/mockLibraryData.ts`:
 
-Instead of:
-```
-Lebron James
-Steph Curry
-Kevin Durant
-```
+| Field | Type | Description |
+|-------|------|-------------|
+| `downloads` | `number` | Total download count |
+| `shares` | `number` | Times shared |
+| `galleries` | `number` | Number of galleries containing this asset |
+| `tags` | (already exists) | Will sort by tag count |
+| `viewers` | `number` | Unique viewers |
+| `publicViews` | `number` | Public/external view count |
+| `publicDownloads` | `number` | Public download count |
+| `approvalStatus` | (use existing `status`) | Already exists as `status` |
+| `favorites` | `number` | Number of org users who favorited |
+| `lastDownloadDate` | `Date \| null` | When the asset was last downloaded |
+| `captureDate` | `Date` | When the content was originally captured |
 
-It will look like:
-```
-Lebron James    18
-Steph Curry     15
-Kevin Durant    12
-```
+### Files to Change
 
-Options with zero matches in the dataset will not appear. Options are sorted by count, highest first.
+**1. `src/lib/mockLibraryData.ts`**
+- Add new fields to the `LibraryAsset` interface
+- Generate deterministic mock values for each new field using the existing seeded random approach
+- `captureDate` will be set to a date before `dateCreated`
+- `lastDownloadDate` will be null for ~20% of assets, otherwise a recent date
+- Numeric fields (downloads, shares, etc.) will have realistic ranges
 
-### Technical Details
+**2. `src/components/LibraryScreenV4.tsx`**
+- Replace the simple Sort dropdown with a full list of 13 sort options
+- Add sort state (`sortField` and `sortDirection`)
+- Apply sorting to `filteredResults` before rendering the grid
+- Sort options: Creator, Added Date, Capture Date, Downloads, Shares, Galleries, Tags, Viewers, Public Views, Public Downloads, Approval Status, Favorites, Last Download Date
+- Each option toggles ascending/descending on repeated click
 
-**File: `src/components/FilterBar.tsx`**
+**3. `src/components/AssetTableView.tsx`**
+- Expand the `SortField` type to include all 13 sort options
+- Update the sorting logic in `sortedAssets` to handle each new field
+- Remove the local `getDownloadCount` hash function (replaced by real mock data)
 
-For each of the six filters, replace the hardcoded options array with a dynamically computed one (same pattern as Tags), using `mockLibraryAssets`:
+### Sort Behavior
 
-1. **People** -- count assets where `asset.tags` includes the person's name, sorted by count descending. Only people that appear in the dataset are shown.
+- Clicking a sort option applies it as descending (highest first / newest first)
+- Clicking the same option again toggles to ascending
+- The active sort option shows a directional arrow indicator
+- Default sort remains by Added Date (newest first) when no sort is selected
 
-2. **Scene** -- count assets where `asset.tags` includes the scene value (e.g., "dunk", "celebration"), sorted by count descending. Only scenes found in the data are shown.
-
-3. **Brand** -- count assets where `asset.tags` includes the brand value (case-insensitive match against tags like "Nike", "adidas"), sorted by count descending.
-
-4. **Creator** -- count assets by `asset.creatorId`, map to creator name using the known creator list. Sorted by count descending.
-
-5. **Type** (content-type) -- count assets by `asset.type` ("image" / "video"). Sorted by count descending.
-
-6. **Ratio** (aspect-ratio) -- count assets by `asset.aspectRatio` ("1:1", "16:9", etc.). Sorted by count descending.
-
-The count display already works in the dropdown rendering -- the existing code shows `option.count` on the right side of each checkbox item. We just need to add the `count` property to each filter's options.
-
-### Implementation Approach
-
-Each filter's `options` array will use an immediately-invoked function (like Tags already does) to compute options from `mockLibraryAssets`. The known filter values (people names, scene types, etc.) will be matched against asset data to get counts, then sorted descending and filtered to only include values with count > 0.
