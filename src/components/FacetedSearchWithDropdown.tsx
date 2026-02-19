@@ -142,6 +142,13 @@ export function FacetedSearchWithDropdown({ onSearch, assets = [] }: FacetedSear
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onFocus={handleInputFocus}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              setIsOpen(false);
+              setActiveFieldSearch(null);
+            }
+          }}
           placeholder="Search by keyword, tag, player, team, season etc."
           className="pl-10 pr-10 w-full bg-background"
         />
