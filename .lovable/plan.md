@@ -1,26 +1,42 @@
 
 
-## Limit Tags Dropdown to Top 20
+## Keep Search Text as Plain Text on Enter (No Chips)
 
 ### What Changes
 
-The Tags filter dropdown currently shows all unique tags from the dataset sorted by frequency. This will be limited to only the **top 20 tags** (by count) to better represent what real users will see.
+1. **Add Enter key handling** to the search input so pressing Enter closes the dropdown (feels like "submitting") while keeping the typed text visible in the input field -- no conversion to a pill/chip.
+2. The search already fires live on every keystroke, so no additional search trigger is needed on Enter.
 
 ### Technical Details
 
-**File: `src/components/FilterBar.tsx`**
+**File: `src/components/FacetedSearchWithDropdown.tsx`**
 
-A single change on line 110-116: add `.slice(0, 20)` after the `.sort()` and before `.map()`:
+Add an `onKeyDown` handler to the `Input` component (line 139-146):
 
 ```tsx
-return Object.entries(tagCounts)
-  .sort(([, a], [, b]) => b - a)
-  .slice(0, 20)
-  .map(([tag, count]) => ({
-    label: tag,
-    value: tag,
-    count,
-  }));
+<Input
+  ref={inputRef}
+  type="text"
+  value={searchQuery}
+  onChange={(e) => setSearchQuery(e.target.value)}
+  onFocus={handleInputFocus}
+  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      setIsOpen(false);
+      setActiveFieldSearch(null);
+    }
+  }}
+  placeholder="Search by keyword, tag, player, team, season etc."
+  className="pl-10 pr-10 w-full bg-background"
+/>
 ```
 
-One line added, no other changes needed.
+This ensures:
+- Typing "LeBron" and pressing Enter keeps "LeBron" as plain text in the input
+- The dropdown closes on Enter so it feels like a search submission
+- No chip/pill is created
+- The live search continues to work as before
+
+One file, one small change.
+
