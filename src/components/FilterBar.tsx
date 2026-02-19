@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, Calendar as CalendarIcon, X, Search, ChevronRight, Folder, Images, Palette } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -195,12 +195,19 @@ export interface CustomDateRange {
   from: Date | undefined;
   to: Date | undefined;
 }
+export interface FilterBarHandle {
+  removeValue: (filterId: string, value: string) => void;
+  clearAll: () => void;
+}
+
 interface FilterBarProps {
   onFilterChange?: (filterId: string, values: string[]) => void;
   onCustomDateChange?: (range: CustomDateRange) => void;
   hideFilters?: string[];
   onBrandedToggle?: (active: boolean) => void;
   disabledValues?: { value: string; category: string }[];
+  compactMode?: boolean;
+  handleRef?: React.MutableRefObject<FilterBarHandle | null>;
 }
 export function FilterBar({
   onFilterChange,
@@ -208,6 +215,8 @@ export function FilterBar({
   hideFilters = [],
   onBrandedToggle,
   disabledValues = [],
+  compactMode = false,
+  handleRef,
 }: FilterBarProps) {
   // Filter out hidden filters
   const visibleFilters = filters.filter(f => !hideFilters.includes(f.id));
@@ -334,6 +343,17 @@ export function FilterBar({
       to: undefined
     });
   };
+
+  // Expose imperative handle for parent chip removal
+  useEffect(() => {
+    if (handleRef) {
+      handleRef.current = {
+        removeValue: handleRemoveValue,
+        clearAll: clearAllFilters,
+      };
+    }
+  });
+
   const activeFilterCount = Object.keys(activeFilters).length;
   return <div className="flex flex-wrap items-center gap-1.5">
       {visibleFilters.map(filter => {
@@ -342,7 +362,12 @@ export function FilterBar({
       const isMulti = filter.multiSelect;
       return <DropdownMenu key={filter.id}>
             <DropdownMenuTrigger asChild>
-              {isActive ? <div className="inline-flex items-center gap-1 h-8 px-1.5 border border-input rounded-md bg-white min-w-[120px] max-w-[280px]">
+              {isActive ? (compactMode ? (
+                <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-primary/10 border-primary text-primary">
+                  <span>{filter.label} ({selected.length})</span>
+                  <ChevronDown className="w-3 h-3 opacity-50" />
+                </Button>
+              ) : <div className="inline-flex items-center gap-1 h-8 px-1.5 border border-input rounded-md bg-white min-w-[120px] max-w-[280px]">
                   <div className="flex flex-wrap gap-1 flex-1">
                     {selected.map(item => <span key={item.value} className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted rounded text-xs">
                         <button type="button" onPointerDown={e => e.stopPropagation()} onClick={e => {
@@ -363,7 +388,7 @@ export function FilterBar({
                     </button>
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                   </div>
-                </div> : <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-white">
+                </div>) : <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-white">
                   <span>{filter.label}</span>
                   <ChevronDown className="w-3 h-3 opacity-50" />
                 </Button>}
