@@ -1,24 +1,24 @@
 
-## Default Sort to "Added Date" (Newest First)
+
+## Hide Result Count from Search Suggestions
 
 ### What Changes
 
-The sort control will default to "Added Date" (descending) instead of having no sort selected. Both the grid view and table view will show results sorted by Added Date on initial load, and the sort button will display "Sort: Added Date" with a down arrow.
+The "Suggestions (26 results)" line in the search typeahead dropdown will be simplified to just "Suggestions" -- removing the dynamic count.
 
 ### Technical Details
 
-**Two files need one-line changes each:**
+**File: `src/components/FacetedSearchWithTypeahead.tsx` (line 474)**
 
-**1. `src/components/LibraryScreen.tsx` (line 88)**
-Change the default sort state from `null` to `"dateCreated"`:
+Change:
 ```
-const [sortField, setSortField] = useState<SortField>("dateCreated");
-```
-
-**2. `src/components/AssetTableView.tsx` (line 62)**
-Same change for the table view's internal sort state:
-```
-const [sortField, setSortField] = useState<SortField>("dateCreated");
+Suggestions ({filteredAssets.length} results)
 ```
 
-Both already default `sortDirection` to `"desc"`, so newest-first is automatic. The sort button label and the table header arrow indicator will reflect the active sort immediately on load.
+To:
+```
+Suggestions
+```
+
+One-line text change.
+
