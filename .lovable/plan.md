@@ -1,28 +1,37 @@
 
-
-## Add Counts to Suggestion Tags in Search Typeahead
+## Add "More" Dropdown with Source and Status Flyout Filters
 
 ### What Changes
 
-Each tag pill in the "AI Identified" and "Manually Tagged" sections of the search suggestions dropdown will show a count number to the right, indicating how many matching assets exist for that tag.
+A "More" button will be added to the filter bar (after the Ratio filter). Clicking it reveals a dropdown with two sub-menu items -- "Source" and "Status" -- each flying out into a multi-select checkbox list.
+
+**Source options:**
+- Posted Content
+- Imported Content
+- Published Content
+- Uploaded Content
+- Engage Content
+- Requested Content
+
+**Status options:**
+- Pending
+- Approved
+- Rejected
 
 ### Technical Details
 
-**File: `src/components/FacetedSearchWithTypeahead.tsx`**
+**File: `src/components/FilterBar.tsx`**
 
-The `suggestion.count` data is already computed but not rendered. Two button templates need updating:
+1. **Import `DropdownMenuSub`, `DropdownMenuSubTrigger`, `DropdownMenuSubContent`** from the existing dropdown-menu component (already exported, just not imported here).
 
-**1. AI Identified pills (~line 489):** Add `{suggestion.count}` after the label span:
-```tsx
-<span>{suggestion.value}</span>
-<span className="text-muted-foreground ml-1">({suggestion.count})</span>
-```
+2. **Add the "More" dropdown** between the Branded toggle button and the Custom Date Range Popover (after line 445, before line 447). It will be a `DropdownMenu` with:
+   - Trigger: a `Button` labeled "More" with a chevron icon
+   - Content containing two `DropdownMenuSub` items:
+     - **Source** sub-trigger that flies out to show 6 `DropdownMenuCheckboxItem` options
+     - **Status** sub-trigger that flies out to show 3 `DropdownMenuCheckboxItem` options
 
-**2. Manually Tagged pills (~line 509):** Same change:
-```tsx
-<span>{suggestion.value}</span>
-<span className="text-muted-foreground ml-1">({suggestion.count})</span>
-```
+3. **Integrate with existing filter state**: Reuse the existing `activeFilters`, `handleMultiSelect`, `handleRemoveValue`, and `clearFilter` functions with filter IDs `"source"` and `"status"`. The active pill display and "Clear all" functionality will work automatically since they already iterate over `activeFilters`.
 
-Two small additions -- the count data is already available, just needs to be displayed.
+4. **Active state on the More button**: When either source or status has selections, the More button will show an active indicator (count badge or highlighted style), consistent with the existing filter button patterns.
 
+No new components or dependencies needed -- this uses the existing `DropdownMenuSub` pattern already available in the dropdown-menu UI component.
