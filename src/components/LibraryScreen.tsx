@@ -616,7 +616,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               };
 
               const handleClearAllChips = () => {
-                searchHandleRef.current?.clearAll();
+                searchHandleRef.current?.clearFacetsOnly();
                 filterBarHandleRef.current?.clearAll();
               };
 
