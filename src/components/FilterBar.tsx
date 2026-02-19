@@ -447,22 +447,22 @@ export function FilterBar({
       {/* More Dropdown with Source & Status flyouts */}
       {(() => {
         const sourceOptions = [
-          { label: "Posted Content", value: "posted-content" },
-          { label: "Imported Content", value: "imported-content" },
-          { label: "Published Content", value: "published-content" },
-          { label: "Uploaded Content", value: "uploaded-content" },
-          { label: "Engage Content", value: "engage-content" },
-          { label: "Requested Content", value: "requested-content" },
+          { label: "Posted Content", value: "posted-content", count: 12 },
+          { label: "Imported Content", value: "imported-content", count: 8 },
+          { label: "Published Content", value: "published-content", count: 15 },
+          { label: "Uploaded Content", value: "uploaded-content", count: 22 },
+          { label: "Engage Content", value: "engage-content", count: 5 },
+          { label: "Requested Content", value: "requested-content", count: 3 },
         ];
         const statusOptions = [
-          { label: "Pending", value: "pending" },
-          { label: "Approved", value: "approved" },
-          { label: "Rejected", value: "rejected" },
+          { label: "Pending", value: "pending", count: 14 },
+          { label: "Approved", value: "approved", count: 38 },
+          { label: "Rejected", value: "rejected", count: 7 },
         ];
         const orgStatusOptions = [
-          { label: "All", value: "all" },
-          { label: "Organized", value: "organized" },
-          { label: "Unorganized", value: "unorganized" },
+          { label: "All", value: "all", count: 65 },
+          { label: "Organized", value: "organized", count: 42 },
+          { label: "Unorganized", value: "unorganized", count: 23 },
         ];
         const sourceSelected = activeFilters["source"] || [];
         const statusSelected = activeFilters["status"] || [];
@@ -488,7 +488,8 @@ export function FilterBar({
                       onCheckedChange={(checked) => handleMultiSelect("source", opt.value, opt.label, !!checked)}
                       onSelect={e => e.preventDefault()}
                     >
-                      {opt.label}
+                      <span className="flex-1">{opt.label}</span>
+                      <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuSubContent>
@@ -503,7 +504,8 @@ export function FilterBar({
                       onCheckedChange={(checked) => handleMultiSelect("status", opt.value, opt.label, !!checked)}
                       onSelect={e => e.preventDefault()}
                     >
-                      {opt.label}
+                      <span className="flex-1">{opt.label}</span>
+                      <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuSubContent>
@@ -518,7 +520,8 @@ export function FilterBar({
                       onCheckedChange={(checked) => handleMultiSelect("organization-status", opt.value, opt.label, !!checked)}
                       onSelect={e => e.preventDefault()}
                     >
-                      {opt.label}
+                      <span className="flex-1">{opt.label}</span>
+                      <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuSubContent>
