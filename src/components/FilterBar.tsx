@@ -109,6 +109,7 @@ const filters: FilterConfig[] = [{
     });
     return Object.entries(tagCounts)
       .sort(([, a], [, b]) => b - a)
+      .slice(0, 20)
       .map(([tag, count]) => ({
         label: tag,
         value: tag,
