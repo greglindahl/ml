@@ -60,12 +60,18 @@ interface SelectedFacet {
 }
 export type { SelectedFacet };
 
+export interface FacetedSearchWithTypeaheadHandle {
+  removeFacet: (value: string) => void;
+  clearAll: () => void;
+}
+
 interface FacetedSearchWithTypeaheadProps {
   onSearch?: (query: string, selectedFacets: string[]) => void;
   onFacetCountsChange?: (counts: Record<string, number>) => void;
   onSelectedFacetsChange?: (facets: SelectedFacet[]) => void;
   assets?: LibraryAsset[];
   placeholder?: string;
+  handleRef?: React.MutableRefObject<FacetedSearchWithTypeaheadHandle | null>;
 }
 
 // Helper to filter assets based on query, facets, and search terms (with fuzzy matching)
@@ -122,7 +128,8 @@ export function FacetedSearchWithTypeahead({
   onFacetCountsChange,
   onSelectedFacetsChange,
   assets = [],
-  placeholder = "Search by people, tags, filenames…"
+  placeholder = "Search by people, tags, filenames…",
+  handleRef,
 }: FacetedSearchWithTypeaheadProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -354,6 +361,16 @@ export function FacetedSearchWithTypeahead({
     setSearchQuery("");
     setSelectedFacets([]);
   };
+
+  // Expose imperative handle for parent to remove facets
+  useEffect(() => {
+    if (handleRef) {
+      handleRef.current = {
+        removeFacet: handleRemoveFacet,
+        clearAll: handleClearAll,
+      };
+    }
+  });
   const handleSuggestionClick = useCallback((suggestion: Suggestion) => {
     if (suggestion.type === "search") {
       handleAddSearchTerm(suggestion.value);
@@ -383,32 +400,12 @@ export function FacetedSearchWithTypeahead({
   const hasTagSuggestions = groupedSuggestions.aiIdentified.length > 0 || groupedSuggestions.otherTags.length > 0;
   const showTypeahead = isOpen && (searchQuery.trim().length > 0 || recentSearches.length > 0);
   return <div ref={containerRef} className="relative w-full">
-      {/* Search Input with inline pills */}
+      {/* Search Input - pills rendered by parent */}
       <div
-        className="flex flex-wrap items-center gap-1.5 min-h-[40px] px-3 py-1.5 border rounded-md bg-white focus-within:ring-2 focus-within:ring-ring cursor-text"
+        className="flex items-center gap-1.5 min-h-[40px] px-3 py-1.5 border rounded-md bg-white focus-within:ring-2 focus-within:ring-ring cursor-text"
         onClick={() => inputRef.current?.focus()}
       >
         <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-        {selectedFacets.map(facet => {
-          const isPeople = facet.category === "People";
-          const isBrand = facet.category === "Brand";
-          const isSearch = facet.type === "search";
-          const isAi = facet.isAiGenerated;
-          const showSparkle = isAi && !isPeople && !isBrand;
-          return (
-            <Badge
-              key={facet.value}
-              variant="secondary"
-              className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-secondary/80 flex-shrink-0"
-              onClick={(e) => { e.stopPropagation(); handleRemoveFacet(facet.value); }}
-            >
-              {isSearch ? <Search className="w-3.5 h-3.5" /> : isPeople ? <User className="w-3.5 h-3.5" /> : isBrand ? <i className="bi bi-badge-tm text-sm" /> : <Tag className="w-3.5 h-3.5" />}
-              {showSparkle && <Sparkles className="w-3 h-3" />}
-              {facet.value.replace(/__manual$/, '')}
-              <X className="w-3.5 h-3.5 ml-0.5" />
-            </Badge>
-          );
-        })}
         <input
           ref={inputRef}
           type="text"

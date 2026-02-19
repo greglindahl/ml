@@ -1,10 +1,12 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Folder, ChevronDown, Plus, Upload, Grid3X3, List, CheckSquare, Image, Images, FileText, Music, Video, Loader2, Settings2, Palette } from "lucide-react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { ChevronLeft, ChevronRight, Folder, ChevronDown, Plus, Upload, Grid3X3, List, CheckSquare, Image, Images, FileText, Music, Video, Loader2, Settings2, Palette, X, User, Tag, Sparkles, Search } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
-import type { SelectedFacet } from "@/components/FacetedSearchWithTypeahead";
+import type { SelectedFacet, FacetedSearchWithTypeaheadHandle } from "@/components/FacetedSearchWithTypeahead";
 import { FilterBar } from "@/components/FilterBar";
+import type { FilterBarHandle } from "@/components/FilterBar";
 import { GalleryDetailsView } from "@/components/GalleryDetailsView";
 import { FolderDetailsView } from "@/components/FolderDetailsView";
 import { AssetTableView } from "@/components/AssetTableView";
@@ -81,6 +83,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
   const [isBrandedActive, setIsBrandedActive] = useState(false);
   const [searchSelectedFacets, setSearchSelectedFacets] = useState<SelectedFacet[]>([]);
+  const searchHandleRef = useRef<FacetedSearchWithTypeaheadHandle | null>(null);
+  const filterBarHandleRef = useRef<FilterBarHandle | null>(null);
 
   // Sort state
   type SortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "publicDownloads" | "status" | "favorites" | "lastDownloadDate" | null;
@@ -563,13 +567,86 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
 
           <TabsContent value="assets" className="flex-1 py-6 mt-0">
             {/* Faceted Search */}
-            <div className="mb-4">
-              <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} onSelectedFacetsChange={setSearchSelectedFacets} />
+            <div className="mb-2">
+              <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} onSelectedFacetsChange={setSearchSelectedFacets} handleRef={searchHandleRef} />
             </div>
+
+            {/* Unified Applied Filter Chips */}
+            {(() => {
+              // Build chip objects from all sources
+              const chips: { label: string; value: string; sourceId: string; icon: React.ReactNode }[] = [];
+              
+              // Search facets
+              searchSelectedFacets.forEach(f => {
+                const isPeople = f.category === "People";
+                const isBrand = f.category === "Brand";
+                const isSearch = f.type === "search";
+                const isAi = f.isAiGenerated;
+                chips.push({
+                  label: f.value.replace(/__manual$/, ''),
+                  value: f.value,
+                  sourceId: "search",
+                  icon: isSearch ? <Search className="w-3.5 h-3.5" /> : isPeople ? <User className="w-3.5 h-3.5" /> : isBrand ? <i className="bi bi-badge-tm text-sm" /> : isAi ? <Sparkles className="w-3.5 h-3.5" /> : <Tag className="w-3.5 h-3.5" />,
+                });
+              });
+
+              // FilterBar filters
+              peopleFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "people", icon: <User className="w-3.5 h-3.5" /> }));
+              sceneFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "scene", icon: <Sparkles className="w-3.5 h-3.5" /> }));
+              brandFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "brand", icon: <i className="bi bi-badge-tm text-sm" /> }));
+              tagsFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "tags", icon: <Tag className="w-3.5 h-3.5" /> }));
+              creatorFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "creator", icon: <User className="w-3.5 h-3.5" /> }));
+              contentTypeFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "content-type", icon: <Image className="w-3.5 h-3.5" /> }));
+              aspectRatioFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "aspect-ratio", icon: <Tag className="w-3.5 h-3.5" /> }));
+              if (dateRangeFilter) {
+                const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 Days", month: "Last 30 Days", quarter: "Last 90 Days", year: "Last Year", custom: "Custom Date" };
+                chips.push({ label: dateLabels[dateRangeFilter] || dateRangeFilter, value: dateRangeFilter, sourceId: "date-range", icon: <Tag className="w-3.5 h-3.5" /> });
+              }
+              folderFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "folders", icon: <Folder className="w-3.5 h-3.5" /> }));
+
+              if (chips.length === 0) return null;
+
+              const handleRemoveChip = (chip: typeof chips[0]) => {
+                if (chip.sourceId === "search") {
+                  searchHandleRef.current?.removeFacet(chip.value);
+                } else {
+                  // Use FilterBar's imperative handle to sync internal state
+                  filterBarHandleRef.current?.removeValue(chip.sourceId, chip.value);
+                }
+              };
+
+              const handleClearAllChips = () => {
+                searchHandleRef.current?.clearAll();
+                filterBarHandleRef.current?.clearAll();
+              };
+
+              return (
+                <div className="flex flex-wrap items-center gap-1.5 mb-3">
+                  {chips.map((chip, i) => (
+                    <Badge
+                      key={`${chip.sourceId}-${chip.value}-${i}`}
+                      variant="secondary"
+                      className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-secondary/80"
+                      onClick={() => handleRemoveChip(chip)}
+                    >
+                      {chip.icon}
+                      {chip.label}
+                      <X className="w-3.5 h-3.5 ml-0.5" />
+                    </Badge>
+                  ))}
+                  <button
+                    onClick={handleClearAllChips}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+                  >
+                    Clear all
+                  </button>
+                </div>
+              );
+            })()}
 
             {/* Filters and Controls - Single Row */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-              <FilterBar onFilterChange={handleFilterChange} onCustomDateChange={handleCustomDateChange} onBrandedToggle={setIsBrandedActive} disabledValues={searchSelectedFacets.filter(f => f.type !== "search").map(f => ({ value: f.value, category: f.category }))} />
+              <FilterBar onFilterChange={handleFilterChange} onCustomDateChange={handleCustomDateChange} onBrandedToggle={setIsBrandedActive} compactMode={true} handleRef={filterBarHandleRef} disabledValues={searchSelectedFacets.filter(f => f.type !== "search").map(f => ({ value: f.value, category: f.category }))} />
 
               <div className="flex items-center gap-2">
                 <DropdownMenu>
