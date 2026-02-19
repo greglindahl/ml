@@ -324,10 +324,9 @@ export function FacetedSearchWithTypeahead({
     localStorage.removeItem(RECENT_SEARCHES_KEY);
   }, []);
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && searchQuery.trim()) {
+    if (e.key === "Enter") {
       e.preventDefault();
-      // Add search term as a pill
-      handleAddSearchTerm(searchQuery.trim());
+      setIsOpen(false);
     }
   };
   const handleAddSearchTerm = useCallback((term: string) => {
