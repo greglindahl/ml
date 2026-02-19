@@ -459,9 +459,15 @@ export function FilterBar({
           { label: "Approved", value: "approved" },
           { label: "Rejected", value: "rejected" },
         ];
+        const orgStatusOptions = [
+          { label: "All", value: "all" },
+          { label: "Organized", value: "organized" },
+          { label: "Unorganized", value: "unorganized" },
+        ];
         const sourceSelected = activeFilters["source"] || [];
         const statusSelected = activeFilters["status"] || [];
-        const moreCount = sourceSelected.length + statusSelected.length;
+        const orgStatusSelected = activeFilters["organization-status"] || [];
+        const moreCount = sourceSelected.length + statusSelected.length + orgStatusSelected.length;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -488,13 +494,28 @@ export function FilterBar({
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
               <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="text-sm">Status</DropdownMenuSubTrigger>
+                <DropdownMenuSubTrigger className="text-sm">Approval Status</DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="bg-white z-50 min-w-[180px]">
                   {statusOptions.map(opt => (
                     <DropdownMenuCheckboxItem
                       key={opt.value}
                       checked={statusSelected.some(s => s.value === opt.value)}
                       onCheckedChange={(checked) => handleMultiSelect("status", opt.value, opt.label, !!checked)}
+                      onSelect={e => e.preventDefault()}
+                    >
+                      {opt.label}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="text-sm">Status</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="bg-white z-50 min-w-[180px]">
+                  {orgStatusOptions.map(opt => (
+                    <DropdownMenuCheckboxItem
+                      key={opt.value}
+                      checked={orgStatusSelected.some(s => s.value === opt.value)}
+                      onCheckedChange={(checked) => handleMultiSelect("organization-status", opt.value, opt.label, !!checked)}
                       onSelect={e => e.preventDefault()}
                     >
                       {opt.label}
