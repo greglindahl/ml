@@ -487,6 +487,7 @@ export function FacetedSearchWithTypeahead({
                       >
                         {suggestion.category === "People" ? <User className="w-4 h-4" /> : suggestion.category === "Brand" ? <i className="bi bi-badge-tm" /> : <i className="bi bi-bounding-box-circles" />}
                         <span>{suggestion.value}</span>
+                        <span className="text-muted-foreground ml-1">({suggestion.count})</span>
                       </button>
                     ))}
                   </div>
@@ -508,6 +509,7 @@ export function FacetedSearchWithTypeahead({
                         >
                           <Tag className="w-4 h-4" />
                           <span>{suggestion.value}</span>
+                          <span className="text-muted-foreground ml-1">({suggestion.count})</span>
                         </button>
                       );
                     })}
