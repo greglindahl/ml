@@ -1,37 +1,55 @@
 
-## Add "More" Dropdown with Source and Status Flyout Filters
+
+## Update "More" Dropdown: Rename Status to Approval Status, Add New Status Filter
 
 ### What Changes
 
-A "More" button will be added to the filter bar (after the Ratio filter). Clicking it reveals a dropdown with two sub-menu items -- "Source" and "Status" -- each flying out into a multi-select checkbox list.
-
-**Source options:**
-- Posted Content
-- Imported Content
-- Published Content
-- Uploaded Content
-- Engage Content
-- Requested Content
-
-**Status options:**
-- Pending
-- Approved
-- Rejected
+1. **Rename** the existing "Status" sub-menu to **"Approval Status"** (keeping Pending, Approved, Rejected options and the `"status"` filter ID).
+2. **Add a new "Status" sub-menu** with options: All, Organized, Unorganized (multi-select, using filter ID `"organization-status"`).
+3. Update the **More button badge count** to include selections from the new filter.
 
 ### Technical Details
 
 **File: `src/components/FilterBar.tsx`**
 
-1. **Import `DropdownMenuSub`, `DropdownMenuSubTrigger`, `DropdownMenuSubContent`** from the existing dropdown-menu component (already exported, just not imported here).
+1. **Rename the sub-trigger label** on line 491 from `Status` to `Approval Status`.
 
-2. **Add the "More" dropdown** between the Branded toggle button and the Custom Date Range Popover (after line 445, before line 447). It will be a `DropdownMenu` with:
-   - Trigger: a `Button` labeled "More" with a chevron icon
-   - Content containing two `DropdownMenuSub` items:
-     - **Source** sub-trigger that flies out to show 6 `DropdownMenuCheckboxItem` options
-     - **Status** sub-trigger that flies out to show 3 `DropdownMenuCheckboxItem` options
+2. **Add new options array** alongside the existing ones (~line 461):
+```tsx
+const orgStatusOptions = [
+  { label: "All", value: "all" },
+  { label: "Organized", value: "organized" },
+  { label: "Unorganized", value: "unorganized" },
+];
+```
 
-3. **Integrate with existing filter state**: Reuse the existing `activeFilters`, `handleMultiSelect`, `handleRemoveValue`, and `clearFilter` functions with filter IDs `"source"` and `"status"`. The active pill display and "Clear all" functionality will work automatically since they already iterate over `activeFilters`.
+3. **Add state reader** for the new filter (~line 463):
+```tsx
+const orgStatusSelected = activeFilters["organization-status"] || [];
+```
 
-4. **Active state on the More button**: When either source or status has selections, the More button will show an active indicator (count badge or highlighted style), consistent with the existing filter button patterns.
+4. **Update moreCount** to include new filter selections:
+```tsx
+const moreCount = sourceSelected.length + statusSelected.length + orgStatusSelected.length;
+```
 
-No new components or dependencies needed -- this uses the existing `DropdownMenuSub` pattern already available in the dropdown-menu UI component.
+5. **Add new `DropdownMenuSub`** after the Approval Status sub-menu (after line 503):
+```tsx
+<DropdownMenuSub>
+  <DropdownMenuSubTrigger className="text-sm">Status</DropdownMenuSubTrigger>
+  <DropdownMenuSubContent className="bg-white z-50 min-w-[180px]">
+    {orgStatusOptions.map(opt => (
+      <DropdownMenuCheckboxItem
+        key={opt.value}
+        checked={orgStatusSelected.some(s => s.value === opt.value)}
+        onCheckedChange={(checked) => handleMultiSelect("organization-status", opt.value, opt.label, !!checked)}
+        onSelect={e => e.preventDefault()}
+      >
+        {opt.label}
+      </DropdownMenuCheckboxItem>
+    ))}
+  </DropdownMenuSubContent>
+</DropdownMenuSub>
+```
+
+No new dependencies or components needed.
