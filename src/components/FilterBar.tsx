@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { folders, FolderItem } from "@/lib/mockFolderData";
@@ -443,6 +443,69 @@ export function FilterBar({
           </DropdownMenu>;
     })}
 
+
+      {/* More Dropdown with Source & Status flyouts */}
+      {(() => {
+        const sourceOptions = [
+          { label: "Posted Content", value: "posted-content" },
+          { label: "Imported Content", value: "imported-content" },
+          { label: "Published Content", value: "published-content" },
+          { label: "Uploaded Content", value: "uploaded-content" },
+          { label: "Engage Content", value: "engage-content" },
+          { label: "Requested Content", value: "requested-content" },
+        ];
+        const statusOptions = [
+          { label: "Pending", value: "pending" },
+          { label: "Approved", value: "approved" },
+          { label: "Rejected", value: "rejected" },
+        ];
+        const sourceSelected = activeFilters["source"] || [];
+        const statusSelected = activeFilters["status"] || [];
+        const moreCount = sourceSelected.length + statusSelected.length;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className={cn("h-8 gap-1.5 px-2.5 text-xs font-medium bg-white", moreCount > 0 && "bg-primary/10 border-primary text-primary")}>
+                <span>More</span>
+                {moreCount > 0 && <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">{moreCount}</span>}
+                <ChevronDown className="w-3 h-3 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="bg-white z-50 min-w-[180px]">
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="text-sm">Source</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
+                  {sourceOptions.map(opt => (
+                    <DropdownMenuCheckboxItem
+                      key={opt.value}
+                      checked={sourceSelected.some(s => s.value === opt.value)}
+                      onCheckedChange={(checked) => handleMultiSelect("source", opt.value, opt.label, !!checked)}
+                      onSelect={e => e.preventDefault()}
+                    >
+                      {opt.label}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="text-sm">Status</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="bg-white z-50 min-w-[180px]">
+                  {statusOptions.map(opt => (
+                    <DropdownMenuCheckboxItem
+                      key={opt.value}
+                      checked={statusSelected.some(s => s.value === opt.value)}
+                      onCheckedChange={(checked) => handleMultiSelect("status", opt.value, opt.label, !!checked)}
+                      onSelect={e => e.preventDefault()}
+                    >
+                      {opt.label}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      })()}
 
       {/* Branded Toggle */}
       <Button
