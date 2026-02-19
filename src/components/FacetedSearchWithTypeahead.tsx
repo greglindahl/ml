@@ -63,6 +63,7 @@ export type { SelectedFacet };
 export interface FacetedSearchWithTypeaheadHandle {
   removeFacet: (value: string) => void;
   clearAll: () => void;
+  clearFacetsOnly: () => void;
 }
 
 interface FacetedSearchWithTypeaheadProps {
@@ -368,6 +369,7 @@ export function FacetedSearchWithTypeahead({
       handleRef.current = {
         removeFacet: handleRemoveFacet,
         clearAll: handleClearAll,
+        clearFacetsOnly: () => setSelectedFacets([]),
       };
     }
   });
