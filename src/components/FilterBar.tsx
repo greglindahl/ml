@@ -206,6 +206,7 @@ interface FilterBarProps {
   hideFilters?: string[];
   onBrandedToggle?: (active: boolean) => void;
   disabledValues?: { value: string; category: string }[];
+  onRemoveDisabledValue?: (value: string, category: string) => void;
   compactMode?: boolean;
   handleRef?: React.MutableRefObject<FilterBarHandle | null>;
 }
@@ -215,6 +216,7 @@ export function FilterBar({
   hideFilters = [],
   onBrandedToggle,
   disabledValues = [],
+  onRemoveDisabledValue,
   compactMode = false,
   handleRef,
 }: FilterBarProps) {
@@ -450,9 +452,15 @@ export function FilterBar({
                 const isDisabledBySearch = disabledValues.some(
                   dv => dv.value.toLowerCase() === option.value.toLowerCase() && dv.category.toLowerCase() === (categoryMap[filter.id] || "").toLowerCase()
                 );
-                return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.some(s => s.value === option.value) || isDisabledBySearch} onCheckedChange={checked => { if (!isDisabledBySearch) handleMultiSelect(filter.id, option.value, option.label, checked); }} style={{
+return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.some(s => s.value === option.value) || isDisabledBySearch} onCheckedChange={checked => {
+                  if (isDisabledBySearch) {
+                    onRemoveDisabledValue?.(option.value, categoryMap[filter.id] || "");
+                  } else {
+                    handleMultiSelect(filter.id, option.value, option.label, checked);
+                  }
+                }} style={{
                   paddingLeft: isTreeItem ? `${8 + indent}px` : undefined
-                }} className={`flex items-center gap-2 ${isDisabledBySearch ? "opacity-50 pointer-events-none" : ""}`} onSelect={e => e.preventDefault()}>
+                }} className="flex items-center gap-2" onSelect={e => e.preventDefault()}>
                             {isTreeItem && <Icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
                             <span className={cn("flex-1", option.depth === 0 ? "font-medium" : "")}>{option.label}</span>
                             {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>}
