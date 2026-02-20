@@ -1,49 +1,28 @@
 
 
-## Make "Clear All" Only Clear Filters, Not Search Text
+## Add Checkmark to Search-Disabled Filter Items
 
 ### What Changes
 
-The "Clear all" button next to the applied filter chips will only clear the filter chips (search facets + filter bar selections) while preserving whatever text is typed in the search input.
+When a user selects a tag (like "LeBron") from the search typeahead dropdown, it currently appears disabled (grayed out) in the corresponding filter dropdown (e.g., People). This change adds a checkmark next to those disabled items so they visually match manually-selected filters.
 
 ### Technical Details
 
-**File: `src/components/FacetedSearchWithTypeahead.tsx`**
+**File: `src/components/FilterBar.tsx`**
 
-Add a new method `clearFacetsOnly` to the imperative handle that clears selected facets without touching the search query:
-
-```tsx
-export interface FacetedSearchWithTypeaheadHandle {
-  removeFacet: (value: string) => void;
-  clearAll: () => void;
-  clearFacetsOnly: () => void;  // new
-}
-```
-
-The new method:
-```tsx
-const clearFacetsOnly = () => {
-  setSelectedFacets([]);
-};
-```
-
-Expose it on the handle ref alongside the existing methods.
-
-**File: `src/components/LibraryScreen.tsx`**
-
-Update `handleClearAllChips` (line 618-621) to call `clearFacetsOnly` instead of `clearAll`:
+On line 453, update the `checked` prop of the `DropdownMenuCheckboxItem` to also be `true` when the item is disabled by a search selection:
 
 ```tsx
-const handleClearAllChips = () => {
-  searchHandleRef.current?.clearFacetsOnly();
-  filterBarHandleRef.current?.clearAll();
-};
+// Before
+checked={selected.some(s => s.value === option.value)}
+
+// After
+checked={selected.some(s => s.value === option.value) || isDisabledBySearch}
 ```
 
-This keeps "lebron" in the search input while removing all applied chips (dunk, scene filters, etc.).
+This is a one-line change. The item will show both the checkmark AND remain disabled/grayed out, making it clear that the filter is active (via search) and not independently toggleable.
 
 ### Files Changed
 
-- `src/components/FacetedSearchWithTypeahead.tsx` -- Add `clearFacetsOnly` method to handle
-- `src/components/LibraryScreen.tsx` -- Call `clearFacetsOnly` instead of `clearAll` in the chip row's Clear All button
+- `src/components/FilterBar.tsx` -- Add `|| isDisabledBySearch` to the `checked` condition (line 453)
 
