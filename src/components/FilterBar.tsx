@@ -450,7 +450,7 @@ export function FilterBar({
                 const isDisabledBySearch = disabledValues.some(
                   dv => dv.value.toLowerCase() === option.value.toLowerCase() && dv.category.toLowerCase() === (categoryMap[filter.id] || "").toLowerCase()
                 );
-                return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.some(s => s.value === option.value)} onCheckedChange={checked => { if (!isDisabledBySearch) handleMultiSelect(filter.id, option.value, option.label, checked); }} style={{
+                return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.some(s => s.value === option.value) || isDisabledBySearch} onCheckedChange={checked => { if (!isDisabledBySearch) handleMultiSelect(filter.id, option.value, option.label, checked); }} style={{
                   paddingLeft: isTreeItem ? `${8 + indent}px` : undefined
                 }} className={`flex items-center gap-2 ${isDisabledBySearch ? "opacity-50 pointer-events-none" : ""}`} onSelect={e => e.preventDefault()}>
                             {isTreeItem && <Icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
