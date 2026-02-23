@@ -396,16 +396,6 @@ export function FilterBar({
                 </Button>}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="bg-white z-50 min-w-[200px]" onCloseAutoFocus={e => e.preventDefault()}>
-              {/* Search input */}
-              <div className="px-2 py-1.5">
-                <div className="relative">
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                  <Input placeholder={`Search ${filter.label.toLowerCase()}...`} value={searchQueries[filter.id] || ""} onChange={e => setSearchQueries(prev => ({
-                ...prev,
-                [filter.id]: e.target.value
-              }))} className="h-7 pl-7 text-xs bg-white" onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()} />
-                </div>
-              </div>
               <div className="max-h-[280px] overflow-y-auto">
                 {/* Sub-header for People, Scene, Brand filters */}
                 {(filter.id === "people" || filter.id === "scene" || filter.id === "brand") && <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5 bg-muted/30">
@@ -414,7 +404,7 @@ export function FilterBar({
                   </div>}
                 {/* Grouped options for filters with hasGroups */}
                 {filter.hasGroups ? (() => {
-              const filteredOptions = filter.options.filter(option => option.label.toLowerCase().includes((searchQueries[filter.id] || "").toLowerCase()));
+              const filteredOptions = filter.options;
 
               // Group options by their group property
               const groups = filteredOptions.reduce((acc, option) => {
@@ -444,7 +434,7 @@ export function FilterBar({
                 })}
                       </div>);
             })() : <>
-                    {filter.options.filter(option => option.label.toLowerCase().includes((searchQueries[filter.id] || "").toLowerCase())).map(option => {
+                    {filter.options.map(option => {
                 const isTreeItem = filter.isTreeStructure && option.depth !== undefined;
                 const indent = isTreeItem ? option.depth! * 12 : 0;
                 const Icon = option.type === "gallery" ? Images : Folder;
