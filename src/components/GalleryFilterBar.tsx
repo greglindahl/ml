@@ -207,33 +207,8 @@ export function GalleryFilterBar() {
               className="bg-popover z-50 min-w-[200px]"
               onCloseAutoFocus={(e) => e.preventDefault()}
             >
-              {/* Search input */}
-              <div className="px-2 py-1.5">
-                <div className="relative">
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                  <Input
-                    placeholder={`Search ${filter.label.toLowerCase()}...`}
-                    value={searchQueries[filter.id] || ""}
-                    onChange={(e) =>
-                      setSearchQueries((prev) => ({
-                        ...prev,
-                        [filter.id]: e.target.value,
-                      }))
-                    }
-                    className="h-7 pl-7 text-xs bg-background"
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
-                  />
-                </div>
-              </div>
               <div className="max-h-[280px] overflow-y-auto">
-                {filter.options
-                  .filter((option) =>
-                    option.label
-                      .toLowerCase()
-                      .includes((searchQueries[filter.id] || "").toLowerCase())
-                  )
-                  .map((option) =>
+                {filter.options.map((option) =>
                     isMulti ? (
                       <DropdownMenuCheckboxItem
                         key={option.value}
