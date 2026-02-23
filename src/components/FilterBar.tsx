@@ -494,13 +494,14 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
           </DropdownMenu>;
 
       if (isDateFilter) {
-        return <div key={filter.id} className="relative">
-          {dropdownMenu}
-          <Popover open={customDateOpen} onOpenChange={setCustomDateOpen}>
+        return <Popover key={filter.id} open={customDateOpen} onOpenChange={setCustomDateOpen}>
+          <div className="relative">
             <PopoverTrigger asChild>
-              <span className="sr-only">Custom date trigger</span>
+              <div className="absolute inset-0 pointer-events-none" aria-hidden="true" />
             </PopoverTrigger>
-            <PopoverContent
+            {dropdownMenu}
+          </div>
+          <PopoverContent
               className="w-auto p-0 bg-white z-50 rounded-lg shadow-lg border"
               align="start"
               side="bottom"
@@ -559,8 +560,7 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
                 </Button>
               </div>
             </PopoverContent>
-          </Popover>
-        </div>;
+        </Popover>;
       }
 
       return dropdownMenu;
