@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { ChevronDown, Calendar as CalendarIcon, X, Search, ChevronRight, Folder, Images, Palette, Image as ImageIcon, Video, RectangleHorizontal, Square, RectangleVertical, Proportions, type LucideIcon } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ChevronDown, Calendar as CalendarIcon, X, Search, ChevronRight, Folder, Images, Palette, Image as ImageIcon, Video, RectangleHorizontal, Square, RectangleVertical, Proportions, Info, type LucideIcon } from "lucide-react";
+import type { DateRange } from "react-day-picker";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
 import { folders, FolderItem } from "@/lib/mockFolderData";
 import { AI_GENERATED_TAGS, mockLibraryAssets } from "@/lib/mockLibraryData";
 interface FilterOption {
@@ -238,7 +240,9 @@ export function FilterBar({
     from: undefined,
     to: undefined
   });
+  const [tempDateRange, setTempDateRange] = useState<DateRange | undefined>(undefined);
   const [customDateOpen, setCustomDateOpen] = useState(false);
+  const dateFilterRef = useRef<HTMLButtonElement>(null);
   const handleMultiSelect = (filterId: string, value: string, label: string, checked: boolean) => {
     setActiveFilters(prev => {
       const current = prev[filterId] || [];
@@ -268,6 +272,7 @@ export function FilterBar({
   };
   const handleSingleSelect = (filterId: string, value: string, label: string) => {
     if (filterId === "date-range" && value === "custom") {
+      setTempDateRange(customDateRange.from ? { from: customDateRange.from, to: customDateRange.to } : undefined);
       setCustomDateOpen(true);
       return;
     }
@@ -289,8 +294,11 @@ export function FilterBar({
     });
   };
   const handleCustomDateApply = () => {
-    if (customDateRange.from && customDateRange.to) {
-      const label = `${format(customDateRange.from, "MMM d, yyyy")} - ${format(customDateRange.to, "MMM d, yyyy")}`;
+    if (tempDateRange?.from) {
+      const from = tempDateRange.from;
+      const to = tempDateRange.to || tempDateRange.from;
+      const label = `${format(from, "MMM d, yyyy")} - ${format(to, "MMM d, yyyy")}`;
+      setCustomDateRange({ from, to });
       setActiveFilters(prev => ({
         ...prev,
         "date-range": [{
@@ -299,9 +307,20 @@ export function FilterBar({
         }]
       }));
       onFilterChange?.("date-range", ["custom"]);
-      onCustomDateChange?.(customDateRange);
+      onCustomDateChange?.({ from, to });
       setCustomDateOpen(false);
     }
+  };
+  const handleCustomDateClear = () => {
+    setTempDateRange(undefined);
+    setCustomDateRange({ from: undefined, to: undefined });
+    setActiveFilters(prev => {
+      const newFilters = { ...prev };
+      delete newFilters["date-range"];
+      onFilterChange?.("date-range", []);
+      return newFilters;
+    });
+    setCustomDateOpen(false);
   };
   const handleRemoveValue = (filterId: string, value: string) => {
     if (filterId === "date-range" && value === "custom") {
@@ -368,7 +387,8 @@ export function FilterBar({
       const selected = activeFilters[filter.id] || [];
       const isActive = selected.length > 0;
       const isMulti = filter.multiSelect;
-      return <DropdownMenu key={filter.id}>
+      const isDateFilter = filter.id === "date-range";
+      const dropdownMenu = <DropdownMenu key={filter.id}>
             <DropdownMenuTrigger asChild>
               {isActive ? (compactMode ? (
                 <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-primary/10 border-primary text-primary">
@@ -396,7 +416,7 @@ export function FilterBar({
                     </button>
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                   </div>
-                </div>) : <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-white">
+                </div>) : <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-white" ref={isDateFilter ? dateFilterRef : undefined}>
                   <span>{filter.label}</span>
                   <ChevronDown className="w-3 h-3 opacity-50" />
                 </Button>}
@@ -472,6 +492,78 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
               </div>
             </DropdownMenuContent>
           </DropdownMenu>;
+
+      if (isDateFilter) {
+        return <div key={filter.id} className="relative">
+          {dropdownMenu}
+          <Popover open={customDateOpen} onOpenChange={setCustomDateOpen}>
+            <PopoverTrigger asChild>
+              <span className="sr-only">Custom date trigger</span>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-auto p-0 bg-white z-50 rounded-lg shadow-lg border"
+              align="start"
+              side="bottom"
+              sideOffset={4}
+              onOpenAutoFocus={e => e.preventDefault()}
+            >
+              <div className="p-4 pb-0">
+                <Calendar
+                  mode="range"
+                  selected={tempDateRange}
+                  onSelect={setTempDateRange}
+                  disabled={date => date > new Date()}
+                  showOutsideDays
+                  className="pointer-events-auto"
+                  classNames={{
+                    months: "flex flex-col",
+                    month: "space-y-3",
+                    caption: "flex justify-center pt-1 relative items-center",
+                    caption_label: "text-sm font-semibold",
+                    nav: "space-x-1 flex items-center",
+                    nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 inline-flex items-center justify-center rounded-md border border-input",
+                    nav_button_previous: "absolute left-1",
+                    nav_button_next: "absolute right-1",
+                    table: "w-full border-collapse",
+                    head_row: "flex",
+                    head_cell: "text-muted-foreground rounded-md w-10 font-normal text-xs",
+                    row: "flex w-full mt-1",
+                    cell: "h-10 w-10 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                    day: "h-10 w-10 p-0 font-normal aria-selected:opacity-100 hover:bg-accent rounded-md inline-flex items-center justify-center",
+                    day_range_end: "day-range-end",
+                    day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                    day_today: "ring-1 ring-primary text-primary font-semibold",
+                    day_outside: "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
+                    day_disabled: "text-muted-foreground opacity-50",
+                    day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+                    day_hidden: "invisible",
+                  }}
+                />
+                <div className="text-center mt-3">
+                  <span className="text-xs text-primary font-medium">Choose a Date Range</span>
+                </div>
+                <div className="flex items-start gap-1.5 mt-3 px-1">
+                  <Info className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                  <span className="text-xs text-muted-foreground">
+                    For optimal performance, limit your search selection to 12 months.
+                  </span>
+                </div>
+              </div>
+              <Separator className="mt-4" />
+              <div className="flex items-center justify-between p-3">
+                <Button variant="ghost" size="sm" className="text-xs" onClick={handleCustomDateClear}>
+                  Clear
+                </Button>
+                <Button size="sm" className="text-xs px-6" onClick={handleCustomDateApply} disabled={!tempDateRange?.from}>
+                  Save
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>;
+      }
+
+      return dropdownMenu;
     })}
 
 
@@ -579,61 +671,6 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
         <Palette className={cn("h-4 w-4", isBrandedActive && "fill-current")} />
       </Button>
 
-      {/* Custom Date Range Popover */}
-      <Popover open={customDateOpen} onOpenChange={setCustomDateOpen}>
-        <PopoverTrigger asChild>
-          <span className="sr-only">Custom date picker trigger</span>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-4 bg-white z-50" align="start">
-          <div className="space-y-4">
-            <div className="text-sm font-medium">Select Date Range</div>
-            <div className="flex gap-4">
-              <div className="space-y-2">
-                <label className="text-xs text-muted-foreground">Start Date</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-[140px] justify-start text-left font-normal text-xs", !customDateRange.from && "text-muted-foreground")}>
-                      <CalendarIcon className="mr-2 h-3 w-3" />
-                      {customDateRange.from ? format(customDateRange.from, "MMM d, yyyy") : "Pick date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-white z-[60]" align="start">
-                    <Calendar mode="single" selected={customDateRange.from} onSelect={date => setCustomDateRange(prev => ({
-                    ...prev,
-                    from: date
-                  }))} disabled={date => date > new Date() || (customDateRange.to ? date > customDateRange.to : false)} initialFocus />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs text-muted-foreground">End Date</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-[140px] justify-start text-left font-normal text-xs", !customDateRange.to && "text-muted-foreground")}>
-                      <CalendarIcon className="mr-2 h-3 w-3" />
-                      {customDateRange.to ? format(customDateRange.to, "MMM d, yyyy") : "Pick date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-white z-[60]" align="start">
-                    <Calendar mode="single" selected={customDateRange.to} onSelect={date => setCustomDateRange(prev => ({
-                    ...prev,
-                    to: date
-                  }))} disabled={date => date > new Date() || (customDateRange.from ? date < customDateRange.from : false)} initialFocus />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => setCustomDateOpen(false)}>
-                Cancel
-              </Button>
-              <Button size="sm" onClick={handleCustomDateApply} disabled={!customDateRange.from || !customDateRange.to}>
-                Apply
-              </Button>
-            </div>
-          </div>
-        </PopoverContent>
-      </Popover>
 
       {/* Clear All */}
       {activeFilterCount > 0 && <Button variant="ghost" size="sm" onClick={clearAllFilters} className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground">
