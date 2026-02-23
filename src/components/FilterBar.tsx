@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronDown, Calendar as CalendarIcon, X, Search, ChevronRight, Folder, Images, Palette } from "lucide-react";
+import { ChevronDown, Calendar as CalendarIcon, X, Search, ChevronRight, Folder, Images, Palette, Image as ImageIcon, Video, RectangleHorizontal, Square, RectangleVertical, Proportions, type LucideIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ interface FilterOption {
   type?: "folder" | "gallery";
   group?: string;
   count?: number;
+  icon?: LucideIcon;
 }
 interface FilterConfig {
   id: string;
@@ -141,9 +142,10 @@ const filters: FilterConfig[] = [{
     mockLibraryAssets.forEach(asset => {
       counts[asset.type] = (counts[asset.type] || 0) + 1;
     });
+    const typeIcons: Record<string, LucideIcon> = { image: ImageIcon, video: Video };
     return Object.entries(counts)
       .sort(([, a], [, b]) => b - a)
-      .map(([type, count]) => ({ label: type.charAt(0).toUpperCase() + type.slice(1), value: type, count }));
+      .map(([type, count]) => ({ label: type.charAt(0).toUpperCase() + type.slice(1), value: type, count, icon: typeIcons[type] }));
   })(),
 }, {
   id: "folders",
@@ -157,19 +159,22 @@ const filters: FilterConfig[] = [{
   label: "Date",
   icon: null,
   options: [{
-    label: "Today",
-    value: "today"
-  }, {
-    label: "Last 7 Days",
+    label: "Last 7 days",
     value: "week"
   }, {
-    label: "Last 30 Days",
+    label: "Last 14 days",
+    value: "two-weeks"
+  }, {
+    label: "Last 30 days",
     value: "month"
   }, {
-    label: "Last 90 Days",
+    label: "Month to Date",
+    value: "mtd"
+  }, {
+    label: "Last 90 days",
     value: "quarter"
   }, {
-    label: "Last Year",
+    label: "Last 12 months",
     value: "year"
   }, {
     label: "Custom",
@@ -185,9 +190,10 @@ const filters: FilterConfig[] = [{
     mockLibraryAssets.forEach(asset => {
       counts[asset.aspectRatio] = (counts[asset.aspectRatio] || 0) + 1;
     });
+    const ratioIcons: Record<string, LucideIcon> = { "16:9": RectangleHorizontal, "1:1": Square, "9:16": RectangleVertical, "4:3": Proportions };
     return Object.entries(counts)
       .sort(([, a], [, b]) => b - a)
-      .map(([ratio, count]) => ({ label: ratio, value: ratio, count }));
+      .map(([ratio, count]) => ({ label: ratio, value: ratio, count, icon: ratioIcons[ratio] }));
   })(),
 }];
 
@@ -452,6 +458,7 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
                   paddingLeft: isTreeItem ? `${8 + indent}px` : undefined
                 }} className="flex items-center gap-2" onSelect={e => e.preventDefault()}>
                             {isTreeItem && <Icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
+                            {option.icon && !isTreeItem && <option.icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
                             <span className={cn("flex-1", option.depth === 0 ? "font-medium" : "")}>{option.label}</span>
                             {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>}
                           </DropdownMenuCheckboxItem> : <DropdownMenuCheckboxItem key={option.value} checked={selected.some(s => s.value === option.value)} onCheckedChange={() => handleSingleSelect(filter.id, option.value, option.label)}>
