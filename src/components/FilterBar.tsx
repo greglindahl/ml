@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { folders, FolderItem } from "@/lib/mockFolderData";
@@ -495,12 +495,11 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
 
       if (isDateFilter) {
         return <Popover key={filter.id} open={customDateOpen} onOpenChange={setCustomDateOpen}>
-          <div className="relative">
-            <PopoverTrigger asChild>
-              <div className="absolute inset-0 pointer-events-none" aria-hidden="true" />
-            </PopoverTrigger>
-            {dropdownMenu}
-          </div>
+          <PopoverAnchor asChild>
+            <div className="inline-block">
+              {dropdownMenu}
+            </div>
+          </PopoverAnchor>
           <PopoverContent
               className="w-auto p-0 bg-white z-50 rounded-lg shadow-lg border"
               align="start"
