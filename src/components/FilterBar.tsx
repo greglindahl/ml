@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
+// Popover removed — custom date uses a plain positioned div
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { folders, FolderItem } from "@/lib/mockFolderData";
@@ -494,74 +494,67 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
           </DropdownMenu>;
 
       if (isDateFilter) {
-        return <Popover key={filter.id} open={customDateOpen} onOpenChange={(open) => { if (!open) return; setCustomDateOpen(open); }}>
-          <PopoverAnchor asChild>
-            <div className="inline-block">
-              {dropdownMenu}
-            </div>
-          </PopoverAnchor>
-          <PopoverContent
-              className="w-auto p-0 bg-white z-50 rounded-lg shadow-lg border"
-              align="start"
-              side="bottom"
-              sideOffset={4}
-              onOpenAutoFocus={e => e.preventDefault()}
-              onInteractOutside={() => setCustomDateOpen(false)}
-              onEscapeKeyDown={() => setCustomDateOpen(false)}
-            >
-              <div className="p-4 pb-0">
-                <Calendar
-                  mode="range"
-                  selected={tempDateRange}
-                  onSelect={setTempDateRange}
-                  disabled={date => date > new Date()}
-                  showOutsideDays
-                  className="pointer-events-auto"
-                  classNames={{
-                    months: "flex flex-col",
-                    month: "space-y-3",
-                    caption: "flex justify-center pt-1 relative items-center",
-                    caption_label: "text-sm font-semibold",
-                    nav: "space-x-1 flex items-center",
-                    nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 inline-flex items-center justify-center rounded-md border border-input",
-                    nav_button_previous: "absolute left-1",
-                    nav_button_next: "absolute right-1",
-                    table: "w-full border-collapse",
-                    head_row: "flex",
-                    head_cell: "text-muted-foreground rounded-md w-10 font-normal text-xs",
-                    row: "flex w-full mt-1",
-                    cell: "h-10 w-10 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                    day: "h-10 w-10 p-0 font-normal aria-selected:opacity-100 hover:bg-accent rounded-md inline-flex items-center justify-center",
-                    day_range_end: "day-range-end",
-                    day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                    day_today: "ring-1 ring-primary text-primary font-semibold",
-                    day_outside: "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
-                    day_disabled: "text-muted-foreground opacity-50",
-                    day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
-                    day_hidden: "invisible",
-                  }}
-                />
-                <div className="text-center mt-3">
-                  <span className="text-xs text-primary font-medium">Choose a Date Range</span>
+        return <div key={filter.id} className="relative">
+          {dropdownMenu}
+          {customDateOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setCustomDateOpen(false)} />
+              <div className="absolute top-full left-0 mt-1 z-50 w-auto p-0 bg-white rounded-lg shadow-lg border animate-in fade-in-0 zoom-in-95">
+                <div className="p-4 pb-0">
+                  <Calendar
+                    mode="range"
+                    selected={tempDateRange}
+                    onSelect={setTempDateRange}
+                    disabled={date => date > new Date()}
+                    showOutsideDays
+                    className="pointer-events-auto"
+                    classNames={{
+                      months: "flex flex-col",
+                      month: "space-y-3",
+                      caption: "flex justify-center pt-1 relative items-center",
+                      caption_label: "text-sm font-semibold",
+                      nav: "space-x-1 flex items-center",
+                      nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 inline-flex items-center justify-center rounded-md border border-input",
+                      nav_button_previous: "absolute left-1",
+                      nav_button_next: "absolute right-1",
+                      table: "w-full border-collapse",
+                      head_row: "flex",
+                      head_cell: "text-muted-foreground rounded-md w-10 font-normal text-xs",
+                      row: "flex w-full mt-1",
+                      cell: "h-10 w-10 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                      day: "h-10 w-10 p-0 font-normal aria-selected:opacity-100 hover:bg-accent rounded-md inline-flex items-center justify-center",
+                      day_range_end: "day-range-end",
+                      day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                      day_today: "ring-1 ring-primary text-primary font-semibold",
+                      day_outside: "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
+                      day_disabled: "text-muted-foreground opacity-50",
+                      day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+                      day_hidden: "invisible",
+                    }}
+                  />
+                  <div className="text-center mt-3">
+                    <span className="text-xs text-primary font-medium">Choose a Date Range</span>
+                  </div>
+                  <div className="flex items-start gap-1.5 mt-3 px-1">
+                    <Info className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                    <span className="text-xs text-muted-foreground">
+                      For optimal performance, limit your search selection to 12 months.
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-start gap-1.5 mt-3 px-1">
-                  <Info className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                  <span className="text-xs text-muted-foreground">
-                    For optimal performance, limit your search selection to 12 months.
-                  </span>
+                <Separator className="mt-4" />
+                <div className="flex items-center justify-between p-3">
+                  <Button variant="ghost" size="sm" className="text-xs" onClick={handleCustomDateClear}>
+                    Clear
+                  </Button>
+                  <Button size="sm" className="text-xs px-6" onClick={handleCustomDateApply} disabled={!tempDateRange?.from}>
+                    Save
+                  </Button>
                 </div>
               </div>
-              <Separator className="mt-4" />
-              <div className="flex items-center justify-between p-3">
-                <Button variant="ghost" size="sm" className="text-xs" onClick={handleCustomDateClear}>
-                  Clear
-                </Button>
-                <Button size="sm" className="text-xs px-6" onClick={handleCustomDateApply} disabled={!tempDateRange?.from}>
-                  Save
-                </Button>
-              </div>
-            </PopoverContent>
-        </Popover>;
+            </>
+          )}
+        </div>;
       }
 
       return dropdownMenu;
