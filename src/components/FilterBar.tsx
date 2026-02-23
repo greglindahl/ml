@@ -494,7 +494,7 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
           </DropdownMenu>;
 
       if (isDateFilter) {
-        return <Popover key={filter.id} open={customDateOpen} onOpenChange={setCustomDateOpen}>
+        return <Popover key={filter.id} open={customDateOpen} onOpenChange={(open) => { if (!open) return; setCustomDateOpen(open); }}>
           <PopoverAnchor asChild>
             <div className="inline-block">
               {dropdownMenu}
@@ -506,6 +506,8 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
               side="bottom"
               sideOffset={4}
               onOpenAutoFocus={e => e.preventDefault()}
+              onInteractOutside={() => setCustomDateOpen(false)}
+              onEscapeKeyDown={() => setCustomDateOpen(false)}
             >
               <div className="p-4 pb-0">
                 <Calendar
