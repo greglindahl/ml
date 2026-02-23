@@ -1,41 +1,67 @@
 
 
-## Update Date Filter Options and Add Icons for Ratio and Type
+## Move Custom Date Range Picker Under Date Filter and Restyle Calendar
 
-### 1. Update Date Filter Options
+### What Changes
 
-Replace the current date filter options (Today, Last 7 Days, Last 30 Days, Last 90 Days, Last Year, Custom) with the values from the screenshot:
+1. **Move the custom date picker inline under the Date filter dropdown** -- Instead of opening as a separate popover, when "Custom" is selected from the Date dropdown, a panel will appear directly below the Date filter button (anchored to it), showing the calendar UI.
 
-- Last 7 days
-- Last 14 days
-- Last 30 days
-- Month to Date
-- Last 90 days
-- Last 12 months
-- Custom
-
-### 2. Add Icons for Type and Ratio Filters
-
-Add small Lucide icons to the Type and Ratio filter dropdown items:
-
-- **Type filter**: Use `ImageIcon` for "Image" and `Video` for "Video" (from lucide-react)
-- **Ratio filter**: Use `RectangleHorizontal` for 16:9, `Square` for 1:1, `RectangleVertical` for 9:16, and a generic `Monitor` or `Proportions` for 4:3
-
-These icons will render inline next to each option label within the dropdown.
+2. **Restyle the calendar to match the screenshot** -- The calendar panel will feature:
+   - A single calendar (not two separate Start/End date pickers)
+   - "Choose a Date Range" text link below the calendar grid
+   - An info message: "For optimal performance, limit your search selection to 12 months."
+   - "Clear" button (left) and "Save" button (right, blue) at the bottom
+   - Clean, spacious styling matching the screenshot
 
 ### Technical Details
 
 **File: `src/components/FilterBar.tsx`**
 
-1. **Date filter** (lines 156-177): Replace the options array with the new values matching the screenshot.
+1. **Remove the standalone Popover** (lines 583-636) -- Delete the separate `<Popover>` at the bottom of the component that currently renders the custom date range picker with two nested calendar popovers.
 
-2. **Type filter icons**: Add an `icon` field to each Type option and render it in the dropdown item. Map type values to Lucide icons (`Image`, `Video`).
+2. **Replace with inline Popover anchored to the Date filter** -- When "Custom" is selected in the Date dropdown, instead of opening a separate floating popover, render a `<Popover>` directly around/after the Date filter's `<DropdownMenu>`. The popover will contain:
+   - A `<Calendar>` component in `range` mode (react-day-picker supports `mode="range"` for selecting a date range on a single calendar)
+   - "Choose a Date Range" label below the calendar
+   - Info text with an info icon
+   - A footer with "Clear" and "Save" buttons
 
-3. **Ratio filter icons**: Add an `icon` field to each Ratio option. Map ratio values to appropriate Lucide shape icons (`RectangleHorizontal`, `Square`, `RectangleVertical`, `Proportions`).
+3. **Calendar styling** -- Style the calendar to be more spacious and match the screenshot:
+   - Larger day cells
+   - Clean month/year header with chevron navigation
+   - Today highlighted with a circle outline
+   - Selected range shown with filled background
+   - Future dates disabled/grayed out
 
-4. Update the `FilterOption` interface to include an optional `icon` field, and update the dropdown rendering to show icons next to labels when present.
+4. **State changes**:
+   - Use `customDateOpen` state to control the new popover visibility
+   - When "Custom" is clicked in the date dropdown, close the dropdown and open the calendar popover
+   - "Save" applies the range and closes the popover
+   - "Clear" resets the date range and closes the popover
+
+### Approximate Layout of the New Calendar Panel
+
+```text
++-----------------------------------+
+|  < February v 2026                |
+|                                   |
+|  Sun Mon Tue Wed Thu Fri Sat      |
+|   1   2   3   4   5   6   7      |
+|   8   9  10  11  12  13  14      |
+|  15  16  17  18  19  20  21      |
+|  22 (23) 24  25  26  27  28      |
+|                                   |
+|     Choose a Date Range           |
+|                                   |
+|  (i) For optimal performance,     |
+|      limit your search selection  |
+|      to 12 months.                |
+|                                   |
+|  ------separator------            |
+|  Clear               [Save]      |
++-----------------------------------+
+```
 
 ### Files Changed
 
-- `src/components/FilterBar.tsx` -- Update date options, add icon mappings for Type and Ratio, render icons in dropdown items
+- `src/components/FilterBar.tsx` -- Remove old custom date popover, add new inline calendar popover anchored under the Date filter button with redesigned UI matching the screenshot
 
