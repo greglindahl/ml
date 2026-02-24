@@ -1,29 +1,29 @@
 
 
-## Changes: Rename "Public Views" → "Views" and Remove "Public Downloads" from Sort
+## Changes: Remove Counts from Suggestions & Add LeBron Manual Tags
 
-Simple label and option removal across 3 files where sort options are defined:
+### 1. Remove hit counts from typeahead suggestions
 
-### Files to Change
+**File: `src/components/FacetedSearchWithTypeahead.tsx`**
 
-**`src/components/LibraryScreen.tsx`** (line 104-105)
-- Change `{ value: "publicViews", label: "Public Views" }` → `{ value: "publicViews", label: "Views" }`
-- Remove the `{ value: "publicDownloads", label: "Public Downloads" }` entry
+Remove the `(count)` display from both the AI Identified and Manually Tagged suggestion buttons. There are two spots:
 
-**`src/components/LibraryScreenV4.tsx`** (line 44-45)
-- Same changes as above
+- AI Identified buttons (around line 293): remove `<span className="text-muted-foreground ml-1">({suggestion.count})</span>`
+- Manually Tagged buttons (around line 311): remove the same count span
 
-**`src/components/AssetTableView.tsx`** (line 26)
-- Remove `"publicDownloads"` from the `SortField` type union
-- Remove the `case "publicDownloads"` sort handler (line 122)
+### 2. Add LeBron-prefixed manual tags to mock data
 
-**`src/components/LibraryScreen.tsx`** (line 90)
-- Remove `"publicDownloads"` from the `SortField` type union
-- Remove the `case "publicDownloads"` sort handler (line 280)
+**File: `src/lib/mockLibraryData.ts`**
 
-**`src/components/LibraryScreenV4.tsx`** (line 32)
-- Remove `"publicDownloads"` from the `GridSortField` type union
-- Remove the `case "publicDownloads"` sort handler (line 109)
+Add the following manual tags to various LeBron assets so they appear in the "Manually Tagged" section when searching "lebron":
 
-The underlying data field `publicViews` remains unchanged — only the display label and the removal of the "Public Downloads" sort option are affected.
+- `"Lebron Dunks"` — add to assets that have dunk-related content
+- `"Lebron Highlights"` — add to a couple of LeBron assets
+- `"Lebron Lakers"` — add to LeBron Lakers assets
+
+These tags are NOT added to `AI_GENERATED_TAGS`, so they'll correctly appear under "Manually Tagged."
+
+### Files Changed
+- `src/components/FacetedSearchWithTypeahead.tsx` — remove count displays
+- `src/lib/mockLibraryData.ts` — add manual tags to LeBron assets
 
