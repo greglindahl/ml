@@ -300,6 +300,23 @@ export function FacetedSearchWithTypeahead({
         });
       }
     });
+    // Inject "Lebron James" into manual tags if query matches and not already selected
+    if (searchQuery && "lebron james".includes(searchQuery.toLowerCase()) && !selectedFacetValues.includes("Lebron James")) {
+      const alreadyInOther = otherTags.some(t => t.value === "Lebron James");
+      if (!alreadyInOther) {
+        const count = filteredAssets.filter(a => a.tags.includes("Lebron James")).length;
+        otherTags.unshift({
+          type: "tag",
+          value: "Lebron James",
+          label: "Lebron James",
+          icon: <Tag className="w-4 h-4" />,
+          count,
+          category: "Tag",
+          isAiGenerated: false
+        });
+      }
+    }
+
     return {
       aiIdentified,
       otherTags
