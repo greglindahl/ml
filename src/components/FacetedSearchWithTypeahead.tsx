@@ -279,7 +279,7 @@ export function FacetedSearchWithTypeahead({
 
     // Get unique tags from filtered assets - show all tags present in results, not just query matches
     const allTags = [...new Set(filteredAssets.flatMap(a => a.tags))];
-    allTags.slice(0, 10).forEach(tag => {
+    allTags.filter(tag => tag.toLowerCase().includes(query)).slice(0, 10).forEach(tag => {
       const count = filteredAssets.filter(a => a.tags.includes(tag)).length;
       const isAi = AI_GENERATED_TAGS.has(tag);
 
