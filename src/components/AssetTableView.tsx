@@ -23,7 +23,7 @@ interface AssetTableViewProps {
   isLoading?: boolean;
 }
 
-type SortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "publicDownloads" | "status" | "favorites" | "lastDownloadDate" | null;
+type SortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "status" | "favorites" | "lastDownloadDate" | null;
 type SortDirection = "asc" | "desc";
 
 // Icon component for asset types
@@ -119,7 +119,6 @@ export function AssetTableView({ assets, isLoading = false }: AssetTableViewProp
       case "tags": comparison = a.tags.length - b.tags.length; break;
       case "viewers": comparison = a.viewers - b.viewers; break;
       case "publicViews": comparison = a.publicViews - b.publicViews; break;
-      case "publicDownloads": comparison = a.publicDownloads - b.publicDownloads; break;
       case "status": comparison = a.status.localeCompare(b.status); break;
       case "favorites": comparison = a.favorites - b.favorites; break;
       case "lastDownloadDate":
