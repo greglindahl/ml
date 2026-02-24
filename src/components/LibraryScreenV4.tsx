@@ -29,7 +29,7 @@ interface LibraryScreenV4Props {
   isMobile?: boolean;
 }
 
-type GridSortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "publicDownloads" | "status" | "favorites" | "lastDownloadDate" | null;
+type GridSortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "status" | "favorites" | "lastDownloadDate" | null;
 type SortDirection = "asc" | "desc";
 
 const SORT_OPTIONS: { value: NonNullable<GridSortField>; label: string }[] = [
@@ -41,8 +41,7 @@ const SORT_OPTIONS: { value: NonNullable<GridSortField>; label: string }[] = [
   { value: "galleries", label: "Galleries" },
   { value: "tags", label: "Tags" },
   { value: "viewers", label: "Viewers" },
-  { value: "publicViews", label: "Public Views" },
-  { value: "publicDownloads", label: "Public Downloads" },
+  { value: "publicViews", label: "Views" },
   { value: "status", label: "Approval Status" },
   { value: "favorites", label: "Favorites" },
   { value: "lastDownloadDate", label: "Last Download Date" },
@@ -105,8 +104,7 @@ export function LibraryScreenV4({ isMobile = false }: LibraryScreenV4Props) {
           case "galleries": comparison = a.galleries - b.galleries; break;
           case "tags": comparison = a.tags.length - b.tags.length; break;
           case "viewers": comparison = a.viewers - b.viewers; break;
-          case "publicViews": comparison = a.publicViews - b.publicViews; break;
-          case "publicDownloads": comparison = a.publicDownloads - b.publicDownloads; break;
+        case "publicViews": comparison = a.publicViews - b.publicViews; break;
           case "status": comparison = a.status.localeCompare(b.status); break;
           case "favorites": comparison = a.favorites - b.favorites; break;
           case "lastDownloadDate":

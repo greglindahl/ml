@@ -87,7 +87,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const filterBarHandleRef = useRef<FilterBarHandle | null>(null);
 
   // Sort state
-  type SortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "publicDownloads" | "status" | "favorites" | "lastDownloadDate" | null;
+  type SortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "status" | "favorites" | "lastDownloadDate" | null;
   type SortDir = "asc" | "desc";
   const [sortField, setSortField] = useState<SortField>("dateCreated");
   const [sortDirection, setSortDirection] = useState<SortDir>("desc");
@@ -101,8 +101,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
     { value: "galleries", label: "Galleries" },
     { value: "tags", label: "Tags" },
     { value: "viewers", label: "Viewers" },
-    { value: "publicViews", label: "Public Views" },
-    { value: "publicDownloads", label: "Public Downloads" },
+    { value: "publicViews", label: "Views" },
     { value: "status", label: "Approval Status" },
     { value: "favorites", label: "Favorites" },
     { value: "lastDownloadDate", label: "Last Download Date" },
@@ -276,8 +275,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         case "galleries": cmp = a.galleries - b.galleries; break;
         case "tags": cmp = a.tags.length - b.tags.length; break;
         case "viewers": cmp = a.viewers - b.viewers; break;
-        case "publicViews": cmp = a.publicViews - b.publicViews; break;
-        case "publicDownloads": cmp = a.publicDownloads - b.publicDownloads; break;
+      case "publicViews": cmp = a.publicViews - b.publicViews; break;
         case "status": cmp = a.status.localeCompare(b.status); break;
         case "favorites": cmp = a.favorites - b.favorites; break;
         case "lastDownloadDate":
