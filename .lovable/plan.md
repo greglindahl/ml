@@ -1,27 +1,29 @@
 
 
-## Changes: Update Manual Tags for LeBron Search Results
+## Changes: Filter Manual Tags to Only Show Query Matches
 
 ### Problem
-When searching "lebr", the Manually Tagged section shows unwanted tags: "Lakers", "King James", "game action", "NBA". These need to be removed and replaced with "Lebron James" (as a manual tag alongside the AI-identified one).
+The "Manually Tagged" section currently shows all tags from filtered assets (line 282), regardless of whether they contain the search term. Tags like "action" and "Sponsor Y" appear because they exist on LeBron assets, even though they don't contain "lebron".
 
-### Changes
+### Fix
 
-**`src/lib/mockLibraryData.ts`**
-- Remove `"Lakers"`, `"King James"`, `"game action"`, and `"NBA"` from the tags arrays of all LeBron assets (3 assets around lines 218, 256, 274)
-- Add `"Lebron James"` as a manual tag — done by adding a `__manual` suffixed version like we won't do that. Instead, we'll simply add a `"Lebron James"` entry to the manual tags list
+**File: `src/components/FacetedSearchWithTypeahead.tsx`** (line 282)
 
-Actually, the simpler approach: since the code at line 291 skips any tag in `AI_GENERATED_TAGS` from the manual section, "Lebron James" won't appear there. To show it in both sections, I'll add a dedicated `"Lebron James"` entry directly into the `otherTags` array in the typeahead logic when it matches the query.
+Add a filter so that manual tags only appear if they contain the search query text:
 
-**`src/components/FacetedSearchWithTypeahead.tsx`** (around line 280-302)
-- After building `otherTags` from asset tags, add explicit logic: if query matches "lebron james" and it's not already selected, push a `"Lebron James"` entry into `otherTags` with `isAiGenerated: false`
+```tsx
+// Current (line 282):
+allTags.slice(0, 10).forEach(tag => {
 
-**`src/lib/mockLibraryData.ts`** (lines 218, 256, 274)
-- Remove tags: `"Lakers"`, `"King James"`, `"game action"`, `"NBA"` from the 3 LeBron asset tag arrays
-- Keep all other tags including `"Lebron Dunks"`, `"Lebron Highlights"`, `"Lebron Lakers"`
+// Updated:
+allTags.filter(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 10).forEach(tag => {
+```
+
+This single-line change ensures only tags matching the search input (e.g., containing "lebron") show in the Manually Tagged section. The injected "Lebron James" entry below (line 304) already checks for query match, so no changes needed there.
 
 ### Result
-Searching "lebr" will show:
-- **AI Identified**: Lebron James (with user icon), Victory, Nike, Adidas
-- **Manually Tagged**: Lebron James (with tag icon), Lebron Dunks, Lebron Highlights, Lebron Lakers
+Searching "lebron" will show:
+- **AI Identified**: Dunk, Celebration, Victory, Nike (contextual AI tags)
+- **Manually Tagged**: Lebron James, Lebron Dunks, Lebron Highlights (all contain "lebron")
+- "action" and "Sponsor Y" will no longer appear
 
