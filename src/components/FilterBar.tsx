@@ -397,7 +397,8 @@ export function FilterBar({
             <DropdownMenuTrigger asChild>
               {isActive ? (compactMode ? (
                 <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-primary/10 border-primary text-primary">
-                  <span>{filter.label} ({totalActiveCount})</span>
+                  <span>{filter.label}</span>
+                  <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">{totalActiveCount}</span>
                   <ChevronDown className="w-3 h-3 opacity-50" />
                 </Button>
               ) : <div className="inline-flex items-center gap-1 h-8 px-1.5 border border-input rounded-md bg-white min-w-[120px] max-w-[280px]">
