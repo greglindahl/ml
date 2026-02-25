@@ -1,23 +1,31 @@
 
 
-## Add Sparkle Icon to AI Identified Tags
+## Rename: "Status" submenu to "Sorted" with updated option labels
 
-### Change
+Based on the screenshot annotations, three label changes are needed in the "More" filter dropdown:
 
-**File: `src/components/FacetedSearchWithTypeahead.tsx`** (~lines 497-507)
+### Changes
 
-Add a `Sparkles` icon (already imported) to the right of the text in each AI Identified suggestion button:
+**File: `src/components/FilterBar.tsx`**
 
-Current:
-```tsx
-<span>{suggestion.value}</span>
+1. **Line 584-588** - Rename the `orgStatusOptions` labels:
+   - "Organized" → "Sorted"
+   - "Unorganized" → "Unsorted"
+
+2. **Line 636** - Rename the submenu trigger label:
+   - "Status" → "Sorted"
+
+### Technical Details
+
+```
+orgStatusOptions:
+  "All" stays as-is
+  "Organized" → "Sorted"
+  "Unorganized" → "Unsorted"
+
+SubTrigger label:
+  "Status" → "Sorted"
 ```
 
-Updated:
-```tsx
-<span>{suggestion.value}</span>
-<Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
-```
-
-This keeps the existing left icon (User for People, bounding-box for Scene, badge-tm for Brand) and adds the sparkle on the right side of the label text. Single change, one file.
+Three string replacements, single file, no logic changes.
 
