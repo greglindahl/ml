@@ -511,7 +511,7 @@ export function FacetedSearchWithTypeahead({
               
               {/* Other Tags Section */}
               {searchQuery.trim() && groupedSuggestions.otherTags.length > 0 && <div>
-                  <h4 className="text-sm font-semibold text-foreground mb-2">Manually Tagged </h4>
+                  <h4 className="text-sm font-semibold text-foreground mb-2">Tags</h4>
                   <div className="flex flex-col gap-2">
                     {groupedSuggestions.otherTags.map((suggestion, idx) => {
                       const isAi = suggestion.isAiGenerated;
