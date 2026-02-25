@@ -502,6 +502,7 @@ export function FacetedSearchWithTypeahead({
                       >
                         {suggestion.category === "People" ? <User className="w-4 h-4" /> : suggestion.category === "Brand" ? <i className="bi bi-badge-tm" /> : <i className="bi bi-bounding-box-circles" />}
                         <span>{suggestion.value}</span>
+                        <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
                       </button>
                     ))}
                   </div>
