@@ -104,7 +104,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
     { value: "galleries", label: "Galleries" },
     { value: "tags", label: "Tags" },
     { value: "viewers", label: "Viewers" },
-    { value: "publicViews", label: "Views" },
+    
     { value: "status", label: "Approval Status" },
     { value: "favorites", label: "Favorites" },
     { value: "lastDownloadDate", label: "Last Download Date" },
