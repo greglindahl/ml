@@ -385,14 +385,19 @@ export function FilterBar({
   return <div className="flex flex-wrap items-center gap-1.5">
       {visibleFilters.map(filter => {
       const selected = activeFilters[filter.id] || [];
-      const isActive = selected.length > 0;
+      const categoryMap: Record<string, string> = { people: "People", scene: "Scene", brand: "Brand", tags: "Tag" };
+      const disabledForFilter = disabledValues.filter(
+        dv => dv.category.toLowerCase() === (categoryMap[filter.id] || "").toLowerCase()
+      );
+      const totalActiveCount = selected.length + disabledForFilter.length;
+      const isActive = totalActiveCount > 0;
       const isMulti = filter.multiSelect;
       const isDateFilter = filter.id === "date-range";
       const dropdownMenu = <DropdownMenu key={filter.id}>
             <DropdownMenuTrigger asChild>
               {isActive ? (compactMode ? (
                 <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-primary/10 border-primary text-primary">
-                  <span>{filter.label} ({selected.length})</span>
+                  <span>{filter.label} ({totalActiveCount})</span>
                   <ChevronDown className="w-3 h-3 opacity-50" />
                 </Button>
               ) : <div className="inline-flex items-center gap-1 h-8 px-1.5 border border-input rounded-md bg-white min-w-[120px] max-w-[280px]">
