@@ -1,29 +1,48 @@
 
 
-## Changes: Filter Manual Tags to Only Show Query Matches
+## Fix: People Filter Active State When Search Facet Selected
 
 ### Problem
-The "Manually Tagged" section currently shows all tags from filtered assets (line 282), regardless of whether they contain the search term. Tags like "action" and "Sponsor Y" appear because they exist on LeBron assets, even though they don't contain "lebron".
+When selecting "Lebron James" from the search typeahead, the Scene filter correctly shows the active treatment (e.g., "Scene (1)" with blue styling) when "Dunk" is selected, but the People filter does not. The checkmark appears inside the dropdown, but the button itself stays in its default inactive state.
+
+### Root Cause
+The filter button's active state is determined by `selected.length > 0` (line 388), where `selected` comes from `activeFilters[filter.id]`. However, search-originated facets are passed as `disabledValues` — they only affect the checkbox state inside the dropdown (line 468-471), not the `activeFilters` state that drives the button appearance.
+
+The Scene filter likely works because the category mapping aligns differently. Let me trace: `disabledValues` are passed from LibraryScreen as facets with `category: f.category`. For "Dunk", the category is "Scene"; for "Lebron James" from AI Identified, the category is "People". The `categoryMap` on line 467 maps `people → "People"` and `scene → "Scene"`, so the matching should work for both. The issue is purely that `disabledValues` don't count toward the button's active treatment.
 
 ### Fix
 
-**File: `src/components/FacetedSearchWithTypeahead.tsx`** (line 282)
+**File: `src/components/FilterBar.tsx`** (lines 387-388, 393-395)
 
-Add a filter so that manual tags only appear if they contain the search query text:
+Count `disabledValues` that belong to each filter when determining the active state and display count:
 
 ```tsx
-// Current (line 282):
-allTags.slice(0, 10).forEach(tag => {
+// Current:
+const selected = activeFilters[filter.id] || [];
+const isActive = selected.length > 0;
 
 // Updated:
-allTags.filter(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 10).forEach(tag => {
+const selected = activeFilters[filter.id] || [];
+const categoryMap: Record<string, string> = { people: "People", scene: "Scene", brand: "Brand", tags: "Tag" };
+const disabledForFilter = disabledValues.filter(
+  dv => dv.category.toLowerCase() === (categoryMap[filter.id] || "").toLowerCase()
+);
+const totalActiveCount = selected.length + disabledForFilter.length;
+const isActive = totalActiveCount > 0;
 ```
 
-This single-line change ensures only tags matching the search input (e.g., containing "lebron") show in the Manually Tagged section. The injected "Lebron James" entry below (line 304) already checks for query match, so no changes needed there.
+Then update the compact mode button to show the combined count:
 
-### Result
-Searching "lebron" will show:
-- **AI Identified**: Dunk, Celebration, Victory, Nike (contextual AI tags)
-- **Manually Tagged**: Lebron James, Lebron Dunks, Lebron Highlights (all contain "lebron")
-- "action" and "Sponsor Y" will no longer appear
+```tsx
+// Current (line 395):
+<span>{filter.label} ({selected.length})</span>
+
+// Updated:
+<span>{filter.label} ({totalActiveCount})</span>
+```
+
+This ensures any filter with search-originated facets (via `disabledValues`) gets the same blue active treatment and count display as filters with directly-selected values.
+
+### Files Changed
+- `src/components/FilterBar.tsx` — incorporate `disabledValues` count into active state and button label
 
