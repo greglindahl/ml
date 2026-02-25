@@ -82,6 +82,9 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const [dateRangeFilter, setDateRangeFilter] = useState<"today" | "week" | "month" | "quarter" | "year" | "custom" | null>(null);
   const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
   const [isBrandedActive, setIsBrandedActive] = useState(false);
+  const [sourceFilter, setSourceFilter] = useState<string[]>([]);
+  const [approvalStatusFilter, setApprovalStatusFilter] = useState<string[]>([]);
+  const [orgStatusFilter, setOrgStatusFilter] = useState<string[]>([]);
   const [searchSelectedFacets, setSearchSelectedFacets] = useState<SelectedFacet[]>([]);
   const searchHandleRef = useRef<FacetedSearchWithTypeaheadHandle | null>(null);
   const filterBarHandleRef = useRef<FilterBarHandle | null>(null);
@@ -331,6 +334,15 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         break;
       case "date-range":
         setDateRangeFilter((values[0] as "today" | "week" | "month" | "quarter" | "year" | "custom") ?? null);
+        break;
+      case "source":
+        setSourceFilter(values);
+        break;
+      case "status":
+        setApprovalStatusFilter(values);
+        break;
+      case "organization-status":
+        setOrgStatusFilter(values);
         break;
     }
   }, []);
@@ -601,6 +613,9 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 chips.push({ label: dateLabels[dateRangeFilter] || dateRangeFilter, value: dateRangeFilter, sourceId: "date-range", icon: <Tag className="w-3.5 h-3.5" /> });
               }
               folderFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "folders", icon: <Folder className="w-3.5 h-3.5" /> }));
+              sourceFilter.forEach(v => chips.push({ label: v.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), value: v, sourceId: "source", icon: <Upload className="w-3.5 h-3.5" /> }));
+              approvalStatusFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "status", icon: <CheckSquare className="w-3.5 h-3.5" /> }));
+              orgStatusFilter.forEach(v => chips.push({ label: v === "organized" ? "Sorted" : v === "unorganized" ? "Unsorted" : v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "organization-status", icon: <Settings2 className="w-3.5 h-3.5" /> }));
 
               if (chips.length === 0) return null;
 
