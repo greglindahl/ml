@@ -1,22 +1,23 @@
 
 
-## Change: Rename "Manually Tagged" to "Tags"
+## Add Sparkle Icon to AI Identified Tags
 
-### Problem
-The label "Manually Tagged" in the search typeahead dropdown should simply read "Tags".
+### Change
 
-### Fix
+**File: `src/components/FacetedSearchWithTypeahead.tsx`** (~lines 497-507)
 
-**File: `src/components/FacetedSearchWithTypeahead.tsx`** (line ~316)
+Add a `Sparkles` icon (already imported) to the right of the text in each AI Identified suggestion button:
 
-Change:
+Current:
 ```tsx
-<h4 className="text-sm font-semibold text-foreground mb-2">Manually Tagged </h4>
-```
-To:
-```tsx
-<h4 className="text-sm font-semibold text-foreground mb-2">Tags</h4>
+<span>{suggestion.value}</span>
 ```
 
-Single line change, no other files affected.
+Updated:
+```tsx
+<span>{suggestion.value}</span>
+<Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
+```
+
+This keeps the existing left icon (User for People, bounding-box for Scene, badge-tm for Brand) and adds the sparkle on the right side of the label text. Single change, one file.
 
