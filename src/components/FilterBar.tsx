@@ -583,8 +583,8 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
         ];
         const orgStatusOptions = [
           { label: "All", value: "all", count: 65 },
-          { label: "Organized", value: "organized", count: 42 },
-          { label: "Unorganized", value: "unorganized", count: 23 },
+          { label: "Sorted", value: "organized", count: 42 },
+          { label: "Unsorted", value: "unorganized", count: 23 },
         ];
         const sourceSelected = activeFilters["source"] || [];
         const statusSelected = activeFilters["status"] || [];
@@ -633,7 +633,7 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
               <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="text-sm">Status</DropdownMenuSubTrigger>
+                <DropdownMenuSubTrigger className="text-sm">Sorted</DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="bg-white z-50 min-w-[180px]">
                   {orgStatusOptions.map(opt => (
                     <DropdownMenuCheckboxItem
