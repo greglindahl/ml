@@ -35,7 +35,7 @@ export function NewGalleryDialog({ open, onOpenChange, onCreateGallery, flattene
   const [description, setDescription] = useState("");
   const [instructions, setInstructions] = useState("");
   const [folderId, setFolderId] = useState<string | null>(defaultFolderId ?? null);
-  const [sharing, setSharing] = useState<string[]>(["Current User"]);
+  const [sharing, setSharing] = useState<string[]>([]);
   const [sharingInput, setSharingInput] = useState("");
   const [viewOnly, setViewOnly] = useState(false);
   const [allowUpload, setAllowUpload] = useState(false);
@@ -47,7 +47,7 @@ export function NewGalleryDialog({ open, onOpenChange, onCreateGallery, flattene
     setDescription("");
     setInstructions("");
     setFolderId(defaultFolderId ?? null);
-    setSharing(["Current User"]);
+    setSharing([]);
     setSharingInput("");
     setViewOnly(false);
     setAllowUpload(false);
@@ -148,9 +148,9 @@ export function NewGalleryDialog({ open, onOpenChange, onCreateGallery, flattene
           {/* Add to Folder */}
           <div className="space-y-1.5">
             <Label>Add to Folder</Label>
-            <Select value={folderId ?? "none"} onValueChange={(v) => setFolderId(v === "none" ? null : v)}>
+            <Select value={folderId ?? ""} onValueChange={(v) => setFolderId(v === "" ? null : v)}>
               <SelectTrigger>
-                <SelectValue placeholder="None" />
+                <SelectValue placeholder="Select Folder" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">None</SelectItem>
@@ -186,9 +186,9 @@ export function NewGalleryDialog({ open, onOpenChange, onCreateGallery, flattene
           {/* Schedule */}
           <div className="space-y-1.5">
             <Label>Schedule</Label>
-            <Select defaultValue="immediate">
+            <Select>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Select schedule" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="immediate">Immediate</SelectItem>

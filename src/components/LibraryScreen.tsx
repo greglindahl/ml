@@ -1022,10 +1022,10 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             {/* Galleries Grid/Table */}
             <div className="min-h-[400px]">
               {galleriesViewMode === "list" ? (
-                <GalleryTableView galleries={mockGalleries} />
+                <GalleryTableView galleries={galleryList} />
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {mockGalleries.map((gallery) => (
+                  {galleryList.map((gallery) => (
                     <div 
                       key={gallery.id} 
                       className="group cursor-pointer border rounded-lg p-4 hover:border-primary/50 transition-colors"
