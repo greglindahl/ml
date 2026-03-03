@@ -658,8 +658,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               <p className="text-sm text-muted-foreground max-w-sm mb-8">
                 You can add existing content or create something new. Nothing outside this folder is affected.
               </p>
-              <Button className="mb-3 bg-foreground text-background hover:bg-foreground/90">Add Galleries</Button>
-              <button className="text-sm font-medium text-foreground hover:underline">New Folder</button>
+              <Button className="mb-3 bg-foreground text-background hover:bg-foreground/90" onClick={() => setAddGalleryDialogOpen(true)}>Add Galleries</Button>
+              <button className="text-sm font-medium text-foreground hover:underline" onClick={() => setNewFolderDialogOpen(true)}>New Folder</button>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">

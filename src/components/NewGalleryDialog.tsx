@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,13 @@ export function NewGalleryDialog({ open, onOpenChange, onCreateGallery, flattene
   const [instructions, setInstructions] = useState("");
   const [folderId, setFolderId] = useState<string | null>(defaultFolderId ?? null);
   const [sharing, setSharing] = useState<string[]>([]);
+
+  // Sync folderId when dialog opens or defaultFolderId changes
+  React.useEffect(() => {
+    if (open) {
+      setFolderId(defaultFolderId ?? null);
+    }
+  }, [open, defaultFolderId]);
   const [sharingInput, setSharingInput] = useState("");
   const [viewOnly, setViewOnly] = useState(false);
   const [allowUpload, setAllowUpload] = useState(false);
@@ -148,7 +155,7 @@ export function NewGalleryDialog({ open, onOpenChange, onCreateGallery, flattene
           {/* Add to Folder */}
           <div className="space-y-1.5">
             <Label>Add to Folder</Label>
-            <Select value={folderId ?? ""} onValueChange={(v) => setFolderId(v === "" ? null : v)}>
+            <Select value={folderId ?? "none"} onValueChange={(v) => setFolderId(v === "none" ? null : v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select Folder" />
               </SelectTrigger>
