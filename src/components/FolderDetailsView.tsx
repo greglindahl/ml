@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, MoreVertical, Upload, Settings2, FolderOpen, Pencil, Move, Archive, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, MoreVertical, Upload, Settings2, FolderOpen, Pencil, Move, Archive, Trash2, Folder, Plus } from "lucide-react";
 import { AssetTableView } from "@/components/AssetTableView";
 import { GalleryTableView, GalleryTableItem } from "@/components/GalleryTableView";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,7 +8,10 @@ import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeah
 import { FilterBar } from "@/components/FilterBar";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
-import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries } from "@/lib/mockFolderData";
+import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries, Gallery, FlattenedFolder } from "@/lib/mockFolderData";
+import { AddGalleryDialog } from "@/components/AddGalleryDialog";
+import { NewGalleryDialog, type NewGalleryData } from "@/components/NewGalleryDialog";
+import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
@@ -62,9 +65,14 @@ interface FolderDetailsViewProps {
   onMoveFolder?: (folderId: string, targetLocationId: string | null) => void;
   onArchiveFolder?: (folderId: string) => void;
   onDeleteFolder?: (folderId: string) => void;
+  onCreateGallery?: (data: NewGalleryData) => void;
+  onAddGalleriesToFolder?: (galleryIds: string[], targetFolderId: string | null) => void;
+  onCreateFolder?: (data: NewFolderData) => void;
+  galleryList?: Gallery[];
+  flattenedFolders?: FlattenedFolder[];
 }
 
-export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = false, folderTree, onEditFolder, onMoveFolder, onArchiveFolder, onDeleteFolder }: FolderDetailsViewProps) {
+export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = false, folderTree, onEditFolder, onMoveFolder, onArchiveFolder, onDeleteFolder, onCreateGallery, onAddGalleriesToFolder, onCreateFolder, galleryList, flattenedFolders }: FolderDetailsViewProps) {
   const [activeTab, setActiveTab] = useState("assets");
   
   // Dialog states
@@ -72,6 +80,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   const [moveOpen, setMoveOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [addGalleryDialogOpen, setAddGalleryDialogOpen] = useState(false);
+  const [newGalleryDialogOpen, setNewGalleryDialogOpen] = useState(false);
+  const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
   
   // View mode state (grid vs list) - independent for assets and galleries
   const [assetsViewMode, setAssetsViewMode] = useState<"grid" | "list">("grid");
@@ -226,7 +237,28 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
       <div className="flex items-start justify-between mb-6">
         <h1 className="text-2xl font-semibold">{folder.name}</h1>
         <div className="flex items-center gap-2">
-          <Button variant="outline">New</Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                New
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setNewFolderDialogOpen(true)}>
+                <Folder className="w-4 h-4 mr-2" />
+                New Folder
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setNewGalleryDialogOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                New Gallery
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setAddGalleryDialogOpen(true)}>
+                <Images className="w-4 h-4 mr-2" />
+                Add Existing Gallery
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button className="gap-2">
             <Upload className="w-4 h-4" />
             Upload
@@ -700,6 +732,37 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           toast({ title: "Folder deleted", description: `"${folder.name}" has been permanently deleted.`, variant: "destructive" });
         }}
         folder={folder}
+      />
+      <AddGalleryDialog
+        open={addGalleryDialogOpen}
+        onOpenChange={setAddGalleryDialogOpen}
+        galleries={galleryList ?? mockGalleries}
+        onSelectGalleries={(ids) => {
+          onAddGalleriesToFolder?.(ids, folderId);
+          setAddGalleryDialogOpen(false);
+        }}
+        onCreateNew={() => setNewGalleryDialogOpen(true)}
+      />
+      <NewGalleryDialog
+        open={newGalleryDialogOpen}
+        onOpenChange={setNewGalleryDialogOpen}
+        onCreateGallery={(data) => {
+          onCreateGallery?.({ ...data, folderId: data.folderId ?? folderId });
+          setNewGalleryDialogOpen(false);
+        }}
+        flattenedFolders={flattenedFolders ?? flattenFolders(folderTree)}
+        defaultFolderId={folderId}
+      />
+      <NewFolderDialog
+        open={newFolderDialogOpen}
+        onOpenChange={setNewFolderDialogOpen}
+        onCreateFolder={(data) => {
+          const folderData = { ...data, locationId: data.locationId ?? folderId };
+          onCreateFolder?.(folderData);
+          setNewFolderDialogOpen(false);
+        }}
+        flattenedFolders={flattenedFolders ?? flattenFolders(folderTree)}
+        galleries={galleryList ?? mockGalleries}
       />
     </div>
   );

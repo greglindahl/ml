@@ -15,6 +15,8 @@ import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
 import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, getAllDescendantIds, flattenFolders } from "@/lib/mockFolderData";
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
+import { AddGalleryDialog } from "@/components/AddGalleryDialog";
+import { NewGalleryDialog, type NewGalleryData } from "@/components/NewGalleryDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
@@ -65,6 +67,9 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const [galleriesViewMode, setGalleriesViewMode] = useState<"grid" | "list">("grid");
   const [folderTree, setFolderTree] = useState<FolderItem[]>(initialFolders);
   const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
+  const [addGalleryDialogOpen, setAddGalleryDialogOpen] = useState(false);
+  const [newGalleryDialogOpen, setNewGalleryDialogOpen] = useState(false);
+  const [galleryList, setGalleryList] = useState(mockGalleries);
 
   const flatFolders = useMemo(() => flattenFolders(folderTree), [folderTree]);
 
@@ -188,6 +193,52 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
     setFolderTree(prev => removeFolderById(prev, folderId));
     setActiveFolder("all");
   }, [removeFolderById]);
+
+  // --- Gallery handlers ---
+  const handleCreateGallery = useCallback((data: NewGalleryData) => {
+    const newGalleryId = `gallery-${Date.now()}`;
+    const newGallery = {
+      id: newGalleryId,
+      name: data.name,
+      assetCount: 0,
+      timeAgo: "Just now",
+    };
+    setGalleryList(prev => [...prev, newGallery]);
+
+    // If a folder was selected, add gallery as child of that folder
+    if (data.folderId) {
+      const galleryNode: FolderItem = {
+        id: newGalleryId,
+        name: data.name,
+        type: "gallery",
+        count: 0,
+        countType: "assets",
+      };
+      setFolderTree(prev => insertFolderAt(prev, data.folderId, galleryNode));
+    }
+    setNewGalleryDialogOpen(false);
+  }, [insertFolderAt]);
+
+  const handleAddGalleriesToFolder = useCallback((galleryIds: string[], targetFolderId: string | null) => {
+    if (!targetFolderId) return;
+    setFolderTree(prev => {
+      let tree = prev;
+      galleryIds.forEach(gId => {
+        const gallery = galleryList.find(g => g.id === gId);
+        if (!gallery) return;
+        const galleryNode: FolderItem = {
+          id: gId,
+          name: gallery.name,
+          type: "gallery",
+          count: gallery.assetCount,
+          countType: "assets",
+        };
+        tree = insertFolderAt(tree, targetFolderId, galleryNode);
+      });
+      return tree;
+    });
+    setAddGalleryDialogOpen(false);
+  }, [galleryList, insertFolderAt]);
 
   // Auto-expand/collapse sidebar based on active tab
   useEffect(() => {
@@ -633,6 +684,11 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           onMoveFolder={handleMoveFolder}
           onArchiveFolder={handleArchiveFolder}
           onDeleteFolder={handleDeleteFolder}
+          onCreateGallery={handleCreateGallery}
+          onAddGalleriesToFolder={handleAddGalleriesToFolder}
+          onCreateFolder={handleCreateFolder}
+          galleryList={galleryList}
+          flattenedFolders={flatFolders}
         />
       ) : (
       <div className={`flex-1 flex flex-col min-w-0 px-4 md:px-8 xl:px-16 pb-12 ${isMobile ? "pt-[58px]" : "pt-20"}`}>
@@ -652,7 +708,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <Folder className="w-4 h-4 mr-2" />
                   New Folder
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setNewGalleryDialogOpen(true)}>
                   <Plus className="w-4 h-4 mr-2" />
                   New Gallery
                 </DropdownMenuItem>
@@ -1098,7 +1154,20 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         onOpenChange={setNewFolderDialogOpen}
         onCreateFolder={handleCreateFolder}
         flattenedFolders={flatFolders}
-        galleries={mockGalleries}
+        galleries={galleryList}
+      />
+      <AddGalleryDialog
+        open={addGalleryDialogOpen}
+        onOpenChange={setAddGalleryDialogOpen}
+        galleries={galleryList}
+        onSelectGalleries={(ids) => handleAddGalleriesToFolder(ids, activeFolder !== "all" ? activeFolder : null)}
+        onCreateNew={() => setNewGalleryDialogOpen(true)}
+      />
+      <NewGalleryDialog
+        open={newGalleryDialogOpen}
+        onOpenChange={setNewGalleryDialogOpen}
+        onCreateGallery={handleCreateGallery}
+        flattenedFolders={flatFolders}
       />
     </div>
   );
