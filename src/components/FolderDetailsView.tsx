@@ -222,24 +222,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         </div>
       </div>
 
-      {/* Empty State or Tabs */}
-      {(!folder.children || folder.children.length === 0) && filteredResults.length === 0 && !isLoading ? (
-        <div className="flex-1 flex flex-col items-center justify-center py-20 text-center">
-          <div className="relative mb-6">
-            <FolderOpen className="h-16 w-16 text-muted-foreground/30" />
-            <Images className="h-6 w-6 text-muted-foreground/40 absolute -bottom-1 -right-2" />
-          </div>
-          <h3 className="text-xl font-semibold mb-2">This folder is empty</h3>
-          <p className="text-sm text-muted-foreground max-w-sm mb-1">
-            Folders help you group galleries and other folders by season, event, campaign, or purpose.
-          </p>
-          <p className="text-sm text-muted-foreground max-w-sm mb-8">
-            You can add existing content or create something new. Nothing outside this folder is affected.
-          </p>
-          <Button className="mb-3 bg-foreground text-background hover:bg-foreground/90">Add Galleries</Button>
-          <button className="text-sm font-medium text-foreground hover:underline">New Folder</button>
-        </div>
-      ) : (
+      {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
         <div className="border-b">
           <TabsList className="bg-transparent h-auto p-0 gap-6">
@@ -254,6 +237,12 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
             >
               Galleries
+            </TabsTrigger>
+            <TabsTrigger
+              value="folders"
+              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+            >
+              Folders
             </TabsTrigger>
           </TabsList>
         </div>
@@ -569,8 +558,67 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             </div>
           )}
         </TabsContent>
+
+        {/* Folders Tab */}
+        <TabsContent value="folders" className="flex-1 py-6 mt-0">
+          {/* Controls row */}
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                <input type="checkbox" className="rounded border-input" />
+                Archived Only
+              </label>
+            </div>
+            <div className="flex items-center border rounded-md bg-background">
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-r-none bg-muted">
+                <Grid3X3 className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-l-none border-l">
+                <List className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Empty state or folder children */}
+          {(!folder.children || folder.children.filter(c => c.type === "folder").length === 0) ? (
+            <div className="flex-1 flex flex-col items-center justify-center py-16 text-center">
+              <div className="relative mb-6">
+                <FolderOpen className="h-16 w-16 text-muted-foreground/30" />
+                <Images className="h-6 w-6 text-muted-foreground/40 absolute -bottom-1 -right-2" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">This folder is empty</h3>
+              <p className="text-sm text-muted-foreground max-w-sm mb-1">
+                Folders help you group galleries and other folders by season, event, campaign, or purpose.
+              </p>
+              <p className="text-sm text-muted-foreground max-w-sm mb-8">
+                You can add existing content or create something new. Nothing outside this folder is affected.
+              </p>
+              <Button className="mb-3 bg-foreground text-background hover:bg-foreground/90">Add Galleries</Button>
+              <button className="text-sm font-medium text-foreground hover:underline">New Folder</button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {folder.children.filter(c => c.type === "folder").map((child) => (
+                <button
+                  key={child.id}
+                  onClick={() => onNavigate(child.id)}
+                  className="group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow text-left"
+                >
+                  <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center">
+                    <FolderOpen className="w-10 h-10 text-muted-foreground/40" />
+                  </div>
+                  <div className="p-3">
+                    <div className="font-medium text-sm truncate mb-1">{child.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {child.children?.length || 0} items
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </TabsContent>
       </Tabs>
-      )}
     </div>
   );
 }
