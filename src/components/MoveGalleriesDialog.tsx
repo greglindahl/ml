@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Info } from "lucide-react";
+import { Info, Images } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -16,14 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FlattenedFolder } from "@/lib/mockFolderData";
 
@@ -58,6 +50,18 @@ export function MoveGalleriesDialog({
     }));
   };
 
+  const handleApplyToAll = (sourceGalleryId: string) => {
+    const sourceValue = targets[sourceGalleryId];
+    if (sourceValue === undefined) return;
+    setTargets((prev) => {
+      const next: Record<string, string | null> = {};
+      galleries.forEach((g) => {
+        next[g.id] = sourceValue;
+      });
+      return next;
+    });
+  };
+
   const handleMove = () => {
     onMove(targets);
     setTargets({});
@@ -80,44 +84,54 @@ export function MoveGalleriesDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[340px] overflow-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="uppercase text-xs tracking-wider">Gallery</TableHead>
-                <TableHead className="uppercase text-xs tracking-wider">Current Location</TableHead>
-                <TableHead className="uppercase text-xs tracking-wider">Location</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {galleries.map((gallery) => (
-                <TableRow key={gallery.id}>
-                  <TableCell className="font-medium text-sm">{gallery.name}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {gallery.currentLocation}
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={targets[gallery.id] ?? ""}
-                      onValueChange={(val) => handleTargetChange(gallery.id, val)}
+        <div className="max-h-[400px] overflow-auto space-y-3 py-2">
+          {galleries.map((gallery) => {
+            const hasTarget = targets[gallery.id] !== undefined;
+            return (
+              <div key={gallery.id} className="flex items-center gap-3 px-1">
+                {/* Gallery thumbnail placeholder */}
+                <div className="w-10 h-10 rounded bg-muted/50 border flex items-center justify-center flex-shrink-0">
+                  <Images className="w-4 h-4 text-muted-foreground/50" />
+                </div>
+
+                {/* Name + current path stacked */}
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">{gallery.name}</div>
+                  <div className="text-xs text-muted-foreground truncate">{gallery.currentLocation}</div>
+                </div>
+
+                {/* Target folder selector + Apply to All */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Select
+                    value={targets[gallery.id] === null ? "all" : (targets[gallery.id] ?? "")}
+                    onValueChange={(val) => handleTargetChange(gallery.id, val)}
+                  >
+                    <SelectTrigger className="w-[180px] h-8 text-sm">
+                      <SelectValue placeholder="Select folder" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Media</SelectItem>
+                      {flattenedFolders.map((f) => (
+                        <SelectItem key={f.id} value={f.id}>
+                          {f.displayName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {hasTarget && galleries.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleApplyToAll(gallery.id)}
+                      className="text-xs text-primary hover:text-primary/80 whitespace-nowrap font-medium"
                     >
-                      <SelectTrigger className="w-[180px] h-8 text-sm">
-                        <SelectValue placeholder="Select folder" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Media</SelectItem>
-                        {flattenedFolders.map((f) => (
-                          <SelectItem key={f.id} value={f.id}>
-                            {f.displayName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                      + Apply to All
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         <Alert className="bg-muted/50 border-muted">

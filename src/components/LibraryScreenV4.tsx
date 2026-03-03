@@ -1,13 +1,16 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Folder, ChevronDown, Plus, Upload, Grid3X3, List, CheckSquare, Image, Images, Video, Loader2, Palette } from "lucide-react";
+import { ChevronLeft, ChevronRight, Folder, ChevronDown, Plus, Upload, Grid3X3, List, CheckSquare, Image, Images, Video, Loader2, Palette, MoreHorizontal, FolderInput, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { FacetedSearchWithDropdown } from "@/components/FacetedSearchWithDropdown";
 import { FilterBar } from "@/components/FilterBar";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
-import { folders, mockGalleries, mockFolderCards, FolderItem } from "@/lib/mockFolderData";
+import { folders, mockGalleries, mockFolderCards, FolderItem, flattenFolders, getGalleryLocationDisplay } from "@/lib/mockFolderData";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
+import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleriesDialog";
+import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,6 +75,53 @@ export function LibraryScreenV4({ isMobile = false }: LibraryScreenV4Props) {
   // Sort state
   const [sortField, setSortField] = useState<GridSortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+
+  // Gallery selection state
+  const [selectedGalleries, setSelectedGalleries] = useState<Set<string>>(new Set());
+  const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
+  const { toast } = useToast();
+
+  const isAnyGallerySelected = selectedGalleries.size > 0;
+  const allGalleriesSelected = mockGalleries.length > 0 && selectedGalleries.size === mockGalleries.length;
+
+  const toggleGallerySelection = useCallback((galleryId: string) => {
+    setSelectedGalleries(prev => {
+      const next = new Set(prev);
+      if (next.has(galleryId)) next.delete(galleryId);
+      else next.add(galleryId);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAllGalleries = useCallback(() => {
+    if (allGalleriesSelected) {
+      setSelectedGalleries(new Set());
+    } else {
+      setSelectedGalleries(new Set(mockGalleries.map(g => g.id)));
+    }
+  }, [allGalleriesSelected]);
+
+  const handleMoveGalleries = useCallback((moves: Record<string, string | null>) => {
+    const count = Object.keys(moves).length;
+    setIsMoveDialogOpen(false);
+    setSelectedGalleries(new Set());
+    toast({
+      title: "Galleries moved",
+      description: `${count} ${count === 1 ? "gallery" : "galleries"} moved successfully.`,
+    });
+  }, [toast]);
+
+  const flattenedFolderList = useMemo(() => flattenFolders(folders), []);
+
+  const selectedMoveItems: MoveGalleryItem[] = useMemo(() => {
+    return mockGalleries
+      .filter(g => selectedGalleries.has(g.id))
+      .map(g => ({
+        id: g.id,
+        name: g.name,
+        currentLocation: getGalleryLocationDisplay(g.id, folders),
+      }));
+  }, [selectedGalleries]);
 
   const handleSortChange = useCallback((field: NonNullable<GridSortField>) => {
     if (sortField === field) {
@@ -476,22 +526,80 @@ export function LibraryScreenV4({ isMobile = false }: LibraryScreenV4Props) {
           </TabsContent>
 
           <TabsContent value="galleries" className="flex-1 py-6 mt-0">
+            {/* Bulk Action Bar */}
+            {isAnyGallerySelected && (
+              <div className="flex items-center justify-between mb-4 px-3 py-2 bg-muted/50 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    checked={allGalleriesSelected}
+                    onCheckedChange={toggleSelectAllGalleries}
+                  />
+                  <span className="text-sm font-medium">{selectedGalleries.size} selected</span>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setIsMoveDialogOpen(true)}>
+                      <FolderInput className="w-4 h-4 mr-2" />
+                      Move
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="text-destructive">
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+
             {/* Galleries Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {mockGalleries.map((gallery) => (
-                <div key={gallery.id} className="group cursor-pointer">
-                  <div className="aspect-square border rounded-lg bg-muted/30 flex items-center justify-center mb-2 hover:border-primary/50 transition-colors">
-                    <Images className="w-8 h-8 text-muted-foreground/50" />
+              {mockGalleries.map((gallery) => {
+                const isSelected = selectedGalleries.has(gallery.id);
+                const locationDisplay = getGalleryLocationDisplay(gallery.id, folders);
+                return (
+                  <div
+                    key={gallery.id}
+                    className={`group cursor-pointer relative ${isSelected ? "ring-2 ring-primary rounded-lg" : ""}`}
+                    onClick={() => toggleGallerySelection(gallery.id)}
+                  >
+                    {/* Checkbox overlay */}
+                    <div className={`absolute top-2 left-2 z-10 transition-opacity ${isSelected || isAnyGallerySelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleGallerySelection(gallery.id)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                    <div className="aspect-square border rounded-lg bg-muted/30 flex items-center justify-center mb-2 hover:border-primary/50 transition-colors">
+                      <Images className="w-8 h-8 text-muted-foreground/50" />
+                    </div>
+                    <span className="text-sm truncate block">{gallery.name}</span>
+                    {locationDisplay !== "Not in a folder" && (
+                      <span className="text-xs text-muted-foreground truncate block">{locationDisplay}</span>
+                    )}
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>{gallery.assetCount} assets</span>
+                      <span>{gallery.timeAgo}</span>
+                    </div>
                   </div>
-                  <span className="text-sm truncate block">{gallery.name}</span>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{gallery.assetCount} assets</span>
-                    <span>{gallery.timeAgo}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </TabsContent>
+
+          {/* Move Galleries Dialog */}
+          <MoveGalleriesDialog
+            open={isMoveDialogOpen}
+            onOpenChange={setIsMoveDialogOpen}
+            galleries={selectedMoveItems}
+            flattenedFolders={flattenedFolderList}
+            onMove={handleMoveGalleries}
+          />
 
           <TabsContent value="folders" className="flex-1 py-6 mt-0">
             {/* Folders Grid */}
