@@ -68,6 +68,34 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
 
   const flatFolders = useMemo(() => flattenFolders(folderTree), [folderTree]);
 
+  // --- Tree mutation helpers ---
+  const removeFolderById = useCallback((tree: FolderItem[], id: string): FolderItem[] => {
+    return tree
+      .filter(item => item.id !== id)
+      .map(item => item.children ? { ...item, children: removeFolderById(item.children, id) } : item);
+  }, []);
+
+  const insertFolderAt = useCallback((tree: FolderItem[], targetId: string | null, folder: FolderItem): FolderItem[] => {
+    if (targetId === null) return [...tree, folder];
+    return tree.map(item => {
+      if (item.id === targetId) {
+        return { ...item, children: [...(item.children ?? []), folder] };
+      }
+      if (item.children) {
+        return { ...item, children: insertFolderAt(item.children, targetId, folder) };
+      }
+      return item;
+    });
+  }, []);
+
+  const updateFolderInTree = useCallback((tree: FolderItem[], id: string, updates: Partial<FolderItem>): FolderItem[] => {
+    return tree.map(item => {
+      if (item.id === id) return { ...item, ...updates };
+      if (item.children) return { ...item, children: updateFolderInTree(item.children, id, updates) };
+      return item;
+    });
+  }, []);
+
   const handleCreateFolder = useCallback((data: NewFolderData) => {
     const newFolder: FolderItem = {
       id: `folder-${Date.now()}`,
@@ -92,20 +120,74 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
     if (!data.locationId) {
       setFolderTree(prev => [...prev, newFolder]);
     } else {
-      const insertInto = (items: FolderItem[]): FolderItem[] =>
-        items.map(item => {
-          if (item.id === data.locationId) {
-            return { ...item, children: [...(item.children ?? []), newFolder] };
-          }
-          if (item.children) {
-            return { ...item, children: insertInto(item.children) };
-          }
-          return item;
-        });
-      setFolderTree(prev => insertInto(prev));
+      setFolderTree(prev => insertFolderAt(prev, data.locationId, newFolder));
     }
     setNewFolderDialogOpen(false);
-  }, []);
+  }, [insertFolderAt]);
+
+  const handleEditFolder = useCallback((folderId: string, data: { name: string; locationId: string | null; galleryIds: string[] }) => {
+    setFolderTree(prev => {
+      // First update the name
+      let tree = updateFolderInTree(prev, folderId, { name: data.name });
+
+      // Find the folder to check if location changed
+      const folder = findFolderById(tree, folderId);
+      if (!folder) return tree;
+
+      // Update gallery children
+      if (data.galleryIds.length > 0) {
+        const galleryChildren: FolderItem[] = data.galleryIds.map(gId => {
+          const existing = folder.children?.find(c => c.id === gId);
+          if (existing) return existing;
+          const gallery = mockGalleries.find(g => g.id === gId);
+          return {
+            id: gId,
+            name: gallery?.name ?? gId,
+            type: "gallery" as const,
+            count: gallery?.assetCount ?? 0,
+            countType: "assets" as const,
+          };
+        });
+        const nonGalleryChildren = folder.children?.filter(c => c.type === "folder") ?? [];
+        tree = updateFolderInTree(tree, folderId, {
+          children: [...nonGalleryChildren, ...galleryChildren],
+          count: galleryChildren.length,
+          countType: "galleries",
+        });
+      }
+
+      // Handle location change if locationId differs from current parent
+      if (data.locationId !== undefined) {
+        const updatedFolder = findFolderById(tree, folderId);
+        if (updatedFolder) {
+          tree = removeFolderById(tree, folderId);
+          tree = insertFolderAt(tree, data.locationId, updatedFolder);
+        }
+      }
+
+      return tree;
+    });
+  }, [updateFolderInTree, removeFolderById, insertFolderAt]);
+
+  const handleMoveFolder = useCallback((folderId: string, targetLocationId: string | null) => {
+    setFolderTree(prev => {
+      const folder = findFolderById(prev, folderId);
+      if (!folder) return prev;
+      let tree = removeFolderById(prev, folderId);
+      tree = insertFolderAt(tree, targetLocationId, folder);
+      return tree;
+    });
+  }, [removeFolderById, insertFolderAt]);
+
+  const handleArchiveFolder = useCallback((folderId: string) => {
+    setFolderTree(prev => removeFolderById(prev, folderId));
+    setActiveFolder("all");
+  }, [removeFolderById]);
+
+  const handleDeleteFolder = useCallback((folderId: string) => {
+    setFolderTree(prev => removeFolderById(prev, folderId));
+    setActiveFolder("all");
+  }, [removeFolderById]);
 
   // Auto-expand/collapse sidebar based on active tab
   useEffect(() => {
@@ -547,6 +629,10 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           onNavigate={handleNavigate}
           isMobile={isMobile}
           folderTree={folderTree}
+          onEditFolder={handleEditFolder}
+          onMoveFolder={handleMoveFolder}
+          onArchiveFolder={handleArchiveFolder}
+          onDeleteFolder={handleDeleteFolder}
         />
       ) : (
       <div className={`flex-1 flex flex-col min-w-0 px-4 md:px-8 xl:px-16 pb-12 ${isMobile ? "pt-[58px]" : "pt-20"}`}>
