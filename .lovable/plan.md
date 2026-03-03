@@ -1,39 +1,31 @@
 
 
-## Add "New Folder" Dialog
+## New Folder Dialog Fixes
 
-### What We're Building
+### Changes to `src/components/NewFolderDialog.tsx`
 
-A modal dialog triggered by clicking "New Folder" from the existing New dropdown on the Library page. Based on the reference screenshot, the dialog has:
+**1. Location dropdown**
+- Change placeholder from `"Root (top level)"` to `"Select location..."`
+- Change the default value logic: don't pre-select root; let it start unselected
+- Rename root option from `"Root (top level)"` to `"All Media"`
 
-- **Title**: "New Folder"
-- **Name** (required): Text input
-- **Location** (optional): Select dropdown populated from the existing folder tree (replaces "Parent" from the mockup — more user-friendly)
-- **Add Galleries** (optional): Multi-select dropdown populated from existing galleries
-- **Cancel / Create** buttons
+**2. Add Galleries — search + scroll fix**
+- Add a `gallerySearch` state variable
+- Add a search `Input` at the top of the `PopoverContent` (above the checkbox list)
+- Filter displayed galleries by the search term
+- Fix scrolling: the search input should be sticky/outside the scrollable area, and the checkbox list should scroll independently beneath it
 
-On create, a new folder is added to the mock folder tree in state.
+### Specific Edits
 
-### Technical Details
+**Lines 50-53**: Add `gallerySearch` state, reset it in `resetForm`
 
-**New file: `src/components/NewFolderDialog.tsx`**
-- Dialog component using existing `Dialog`, `Input`, `Select`, `Button` UI primitives
-- Props: `open`, `onOpenChange`, `onCreateFolder`, `folders` (for location options), `galleries` (for gallery options)
-- Name field with required validation
-- Location dropdown: flattened folder tree (indented names to show hierarchy), defaults to root
-- Add Galleries: multi-select from available galleries using checkboxes in a dropdown/popover
-- Cancel closes dialog, Create validates name is non-empty then calls `onCreateFolder`
+**Lines 132-147** (Location Select):
+- Remove default value `locationId ?? "root"` — use `locationId ?? ""`
+- Change `<SelectValue placeholder="Root (top level)" />` → `<SelectValue placeholder="Select location..." />`
+- Change `<SelectItem value="root">Root (top level)</SelectItem>` → `<SelectItem value="root">All Media</SelectItem>`
 
-**Modified: `src/components/LibraryScreen.tsx`**
-- Add state: `newFolderDialogOpen`
-- Wire "New Folder" `DropdownMenuItem` onClick to open the dialog
-- Add `handleCreateFolder` callback that inserts the new folder into the folder tree state (currently `folders` is imported statically — we'll need to lift it to component state)
-- Render `<NewFolderDialog>` in the component tree
-
-**Modified: `src/lib/mockFolderData.ts`**
-- Add a helper `flattenFolders(folders, depth)` that returns a flat list with depth info for the location dropdown display
-
-### Dialog Styling
-- Matches the reference: clean layout, rounded inputs, "Cancel" as outline button, "Create" as primary dark button
-- Uses existing shadcn Dialog, Input, Select, and Button components
+**Lines 165-179** (Popover content):
+- Add search input above the scrollable list
+- Filter galleries by search term
+- Structure: fixed search input + scrollable checkbox list below
 
