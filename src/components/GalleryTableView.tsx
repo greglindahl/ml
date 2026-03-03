@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MoreHorizontal, Images, Video, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { MoreHorizontal, Images, Video, ArrowUpDown, ArrowUp, ArrowDown, Move } from "lucide-react";
 import { Gallery } from "@/lib/mockFolderData";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,7 @@ interface GalleryTableViewProps {
   galleries: GalleryTableItem[];
   isLoading?: boolean;
   onNavigate?: (galleryId: string) => void;
+  onMoveGalleries?: (galleryIds: string[]) => void;
 }
 
 type SortField = "name" | "description" | "creator" | "created" | "lastAdded" | "sharing" | "downloads" | "totalAssets" | null;
@@ -78,7 +79,7 @@ function enrichGallery(gallery: Gallery, index: number): GalleryTableItem {
   };
 }
 
-export function GalleryTableView({ galleries, isLoading = false, onNavigate }: GalleryTableViewProps) {
+export function GalleryTableView({ galleries, isLoading = false, onNavigate, onMoveGalleries }: GalleryTableViewProps) {
   const [selectedGalleries, setSelectedGalleries] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>("created");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
@@ -220,6 +221,23 @@ export function GalleryTableView({ galleries, isLoading = false, onNavigate }: G
 
   return (
     <div className="border rounded-lg bg-card">
+      {/* Bulk action bar */}
+      {selectedGalleries.size > 0 && onMoveGalleries && (
+        <div className="flex items-center gap-3 px-4 py-2 bg-muted/50 border-b">
+          <span className="text-sm text-muted-foreground">
+            {selectedGalleries.size} selected
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 gap-1.5 text-xs"
+            onClick={() => onMoveGalleries(Array.from(selectedGalleries))}
+          >
+            <Move className="w-3 h-3" />
+            Move
+          </Button>
+        </div>
+      )}
       <Table>
         <TableHeader>
           <TableRow>
@@ -410,6 +428,7 @@ export function GalleryTableView({ galleries, isLoading = false, onNavigate }: G
                     <DropdownMenuItem>View Gallery</DropdownMenuItem>
                     <DropdownMenuItem>Edit Details</DropdownMenuItem>
                     <DropdownMenuItem>Share</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onMoveGalleries?.([gallery.id])}>Move</DropdownMenuItem>
                     <DropdownMenuItem>Download All</DropdownMenuItem>
                     <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
                   </DropdownMenuContent>
