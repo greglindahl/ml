@@ -451,15 +451,6 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           <span className={`truncate ${isActive ? "font-medium" : ""}`}>{folder.name}</span>
         </button>
         
-        {/* Count displayed below the name */}
-        {folder.count !== undefined && folder.countType && !isAllFiles && (
-          <div 
-            className="text-xs text-muted-foreground"
-            style={{ paddingLeft: `${12 + depth * 16 + (hasExpandableContent ? 24 : 24)}px` }}
-          >
-            {folder.count} {folder.countType}
-          </div>
-        )}
         
         {/* Children */}
         {hasChildren && isExpanded && (
