@@ -658,18 +658,26 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <FolderOpen className="h-16 w-16 text-muted-foreground/30" />
                 <Images className="h-6 w-6 text-muted-foreground/40 absolute -bottom-1 -right-2" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">This folder is empty</h3>
-              <p className="text-sm text-muted-foreground max-w-sm mb-1">
-                {canCreateSubfolder
-                  ? "Folders help you group galleries and other folders by season, event, campaign, or purpose."
-                  : "Add galleries to organize your content in this folder."}
-              </p>
-              <p className="text-sm text-muted-foreground max-w-sm mb-8">
-                You can add existing content or create something new. Nothing outside this folder is affected.
-              </p>
-              <Button className="mb-3 bg-foreground text-background hover:bg-foreground/90" onClick={() => setAddGalleryDialogOpen(true)}>Add Galleries</Button>
-              {canCreateSubfolder && (
-                <button className="text-sm font-medium text-foreground hover:underline" onClick={() => setNewFolderDialogOpen(true)}>New Folder</button>
+              {canCreateSubfolder ? (
+                <>
+                  <h3 className="text-xl font-semibold mb-2">This folder is empty</h3>
+                  <p className="text-sm text-muted-foreground max-w-sm mb-1">
+                    Folders help you group galleries and other folders by season, event, campaign, or purpose.
+                  </p>
+                  <p className="text-sm text-muted-foreground max-w-sm mb-8">
+                    You can add existing content or create something new. Nothing outside this folder is affected.
+                  </p>
+                  <Button className="mb-3 bg-foreground text-background hover:bg-foreground/90" onClick={() => setAddGalleryDialogOpen(true)}>Add Galleries</Button>
+                  <button className="text-sm font-medium text-foreground hover:underline" onClick={() => setNewFolderDialogOpen(true)}>New Folder</button>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-xl font-semibold mb-2">Folder limit reached</h3>
+                  <p className="text-sm text-muted-foreground max-w-sm mb-8">
+                    Folders can only be nested three levels deep. You can still add galleries to organize content in this folder.
+                  </p>
+                  <Button className="bg-foreground text-background hover:bg-foreground/90" onClick={() => setAddGalleryDialogOpen(true)}>Add Galleries</Button>
+                </>
               )}
             </div>
           ) : (
