@@ -1,26 +1,25 @@
 
 
-## Fix Empty State Buttons + Gallery Folder Assignment Bug
+## Enforce Folder Depth Constraint (Max 3 Levels of Folders)
 
-### Issue 1: Empty state buttons not wired
-In `FolderDetailsView.tsx` lines 661-662, the "Add Galleries" button and "New Folder" link in the empty folder state are static — they don't open any dialogs.
+Folders can nest up to 3 levels deep. Level 4 can only contain galleries, not folders. This affects the "New" dropdown, the empty state, and the "New Folder" dialog.
 
-**Fix**: Wire them to open the existing dialogs:
-- "Add Galleries" → `setAddGalleryDialogOpen(true)`
-- "New Folder" → `setNewFolderDialogOpen(true)`
+### How depth is determined
+The `breadcrumbPath` in `FolderDetailsView` already includes "All Media" + ancestors + current folder. A folder at depth 3 has `breadcrumbPath.length === 4`. We compute `folderDepth = breadcrumbPath.length - 1` (excluding "All Media" root).
 
-### Issue 2: Gallery not added to correct folder level
-Two bugs in `NewGalleryDialog.tsx`:
+### Changes
 
-**Bug A**: The "None" SelectItem has `value="none"` but the null-check compares against `""`. When user selects "None", `folderId` becomes the string `"none"` instead of `null`. Then `insertFolderAt` looks for a folder with id `"none"` and finds nothing.
+#### `src/components/FolderDetailsView.tsx`
+1. Compute `folderDepth` from `breadcrumbPath.length - 1`
+2. Define `canCreateSubfolder = folderDepth < 3`
+3. **New dropdown (line 248)**: Conditionally render the "New Folder" menu item only when `canCreateSubfolder`
+4. **Empty state (line 662)**: Conditionally render "New Folder" link only when `canCreateSubfolder`
+5. When `!canCreateSubfolder`, the empty state text could say "Add galleries to this folder" instead of mentioning folders
 
-**Fix**: Change `<SelectItem value="none">` to match the null mapping, or change the `onValueChange` to check for `"none"`.
-
-**Bug B**: `useState(defaultFolderId ?? null)` only runs on first mount. Since `NewGalleryDialog` is always rendered (just toggled via `open`), navigating to a different folder doesn't update the dialog's internal `folderId` state.
-
-**Fix**: Add a `useEffect` that syncs `folderId` state when `defaultFolderId` prop changes, or when `open` becomes `true`.
+#### `src/components/NewFolderDialog.tsx`
+The "Location" dropdown in the New Folder dialog should also exclude folders at depth 3 from being valid parent locations. This requires filtering `flattenedFolders` to only include folders where placing a new child wouldn't exceed depth 3. (This may already be partially handled — will verify and fix if needed.)
 
 ### Files to modify
-- `src/components/FolderDetailsView.tsx` — wire empty state buttons (lines 661-662)
-- `src/components/NewGalleryDialog.tsx` — fix "none" value mapping + sync defaultFolderId on open
+- `src/components/FolderDetailsView.tsx` — hide "New Folder" options at depth 3
+- `src/components/NewFolderDialog.tsx` — filter location options by depth (if not already constrained)
 
