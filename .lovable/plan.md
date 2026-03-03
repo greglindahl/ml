@@ -1,52 +1,36 @@
 
 
-## Move Galleries Dialog
+## Bulk Actions for Gallery Selection + Enhanced Move Dialog
 
-Based on the mockup, this is a multi-gallery move dialog where each selected gallery shows its name, current location (folder path or "Not in a folder"), and an independent location picker. This is different from the existing single-location `MoveFolderDialog`.
+Based on the mockups, there are several pieces to implement:
 
-### Key observations from the mockup
-- Title: "Move Galleries" (plural, with count: "You're about to move [X] galleries")
-- Subtitle explains sharing/assets/access are not affected
-- Table layout: Gallery | Current Location | Location (select dropdown per row)
-- Info banner about background processing + searchability
-- Cancel / Move buttons
+### 1. Add "Apply to All" to `MoveGalleriesDialog.tsx`
+Each row's location selector gets a "+ Apply to All" link/button. Clicking it copies that row's selected folder to every other gallery in the dialog. This is a small addition to the existing component.
 
-### What needs to happen
+### 2. Bulk selection mode for gallery grid in `LibraryScreenV4.tsx`
+The Galleries tab currently renders a simple grid with no selection. Need to add:
+- **Selection state** tracking which gallery IDs are selected
+- **Checkbox overlay** on each gallery card (visible on hover or when any are selected)
+- **Bulk action bar** that appears above the grid when 1+ galleries are selected, showing "{N} selected" with a three-dot menu containing **Move** and **Delete** actions
 
-#### 1. Create `MoveGalleriesDialog.tsx`
-A new dialog component that:
-- Accepts a list of selected galleries (with their current folder paths)
-- Renders a table with one row per gallery: name, current location breadcrumb (or "Not in a folder"), and a per-row `Select` dropdown for the target location
-- Location dropdown options: "All Media" (root) + all folders from `flattenedFolders`, filtered to respect depth (galleries can go up to level 4)
-- Info banner matching the mockup text
-- Cancel / Move footer buttons
-- Move button calls back with a mapping of gallery ID to target location
+### 3. Wire Move dialog into `LibraryScreenV4.tsx`
+When "Move" is clicked from the bulk action bar:
+- Build `MoveGalleryItem[]` from selected galleries (current location = "Not in a folder" at root level)
+- Open `MoveGalleriesDialog` with the flattened folder tree
+- Show success toast on completion
 
-#### 2. Wire it into `GalleryTableView.tsx`
-- The table already has multi-select (checkboxes + `selectedGalleries` state)
-- Add a "Move" action that appears when galleries are selected (bulk action bar or dropdown)
-- Pass selected gallery data + folder context up to trigger the dialog
+### 4. Success toast
+After moving, show a toast like "Galleries moved — {N} galleries moved successfully."
 
-#### 3. Helper: resolve gallery's current folder path
-- Need a utility to find which folder (if any) contains a given gallery ID, and build its breadcrumb path string (e.g., "Folder Name > Folder Name" or "Not in a folder")
+### Files to modify
 
-### Complexity concern
-Right now `GalleryTableView` doesn't know about the folder tree — it just receives a flat list of galleries. The current location of each gallery requires traversing the folder tree. We have two options:
+| File | Change |
+|------|--------|
+| `src/components/MoveGalleriesDialog.tsx` | Add "+ Apply to All" button per row that copies that row's target to all others |
+| `src/components/LibraryScreenV4.tsx` | Add gallery selection state, checkbox overlays on gallery cards, bulk action bar with three-dot menu (Move, Delete), wire up MoveGalleriesDialog |
 
-**Option A**: Pass the folder tree into `GalleryTableView` and compute paths there
-**Option B**: Lift the move action to `FolderDetailsView` (which already has the folder tree), and have `GalleryTableView` just emit the selected IDs upward
-
-Option B is cleaner — keeps `GalleryTableView` presentation-focused.
-
-### Proposed approach (Option B)
-
-1. **`GalleryTableView`**: Expose `selectedGalleries` state upward via a callback prop (`onSelectionChange`) or expose a "Move" action callback (`onMoveGalleries(ids: string[])`)
-2. **`FolderDetailsView`**: Handle the move dialog state, compute current locations for each selected gallery from the folder tree, and render `MoveGalleriesDialog`
-3. **`MoveGalleriesDialog`**: New component matching the mockup layout
-
-### Files to create/modify
-- **Create** `src/components/MoveGalleriesDialog.tsx` — the dialog matching the mockup
-- **Modify** `src/components/GalleryTableView.tsx` — add `onMoveGalleries` callback prop, surface bulk "Move" action
-- **Modify** `src/components/FolderDetailsView.tsx` — wire up the dialog with folder tree context
-- **Modify** `src/lib/mockFolderData.ts` — add helper to find a gallery's parent folder path
+### Bulk action bar design
+Matches the pattern from `GalleryTableView` but as a standalone bar above the gallery grid:
+- Left: checkbox (for select all) + "{N} selected" text
+- Right: three-dot `MoreHorizontal` menu with Move and Delete options
 
