@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, MoreVertical, Upload, Settings2, FolderOpen } from "lucide-react";
+import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, MoreVertical, Upload, Settings2, FolderOpen, Pencil, Move, Archive, Trash2 } from "lucide-react";
 import { AssetTableView } from "@/components/AssetTableView";
 import { GalleryTableView, GalleryTableItem } from "@/components/GalleryTableView";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,7 +8,7 @@ import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeah
 import { FilterBar } from "@/components/FilterBar";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
-import { FolderItem, getAllDescendantIds } from "@/lib/mockFolderData";
+import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries } from "@/lib/mockFolderData";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
@@ -16,6 +16,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { EditFolderDialog } from "@/components/EditFolderDialog";
+import { MoveFolderDialog } from "@/components/MoveFolderDialog";
+import { ArchiveFolderDialog } from "@/components/ArchiveFolderDialog";
+import { DeleteFolderDialog } from "@/components/DeleteFolderDialog";
+import { toast } from "@/hooks/use-toast";
 
 // Icon component for asset types
 function AssetTypeIcon({ type, className }: { type: LibraryAsset["type"]; className?: string }) {
@@ -57,6 +62,12 @@ interface FolderDetailsViewProps {
 
 export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = false, folderTree }: FolderDetailsViewProps) {
   const [activeTab, setActiveTab] = useState("assets");
+  
+  // Dialog states
+  const [editOpen, setEditOpen] = useState(false);
+  const [moveOpen, setMoveOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   
   // View mode state (grid vs list) - independent for assets and galleries
   const [assetsViewMode, setAssetsViewMode] = useState<"grid" | "list">("grid");
@@ -216,9 +227,27 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             <Upload className="w-4 h-4" />
             Upload
           </Button>
-          <Button variant="ghost" size="icon">
-            <MoreVertical className="w-4 h-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                <Pencil className="w-4 h-4 mr-2" /> Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setMoveOpen(true)}>
+                <Move className="w-4 h-4 mr-2" /> Move
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setArchiveOpen(true)}>
+                <Archive className="w-4 h-4 mr-2" /> Archive
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setDeleteOpen(true)} className="text-destructive focus:text-destructive">
+                <Trash2 className="w-4 h-4 mr-2" /> Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -619,6 +648,51 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Folder Action Dialogs */}
+      <EditFolderDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSave={(data) => {
+          setEditOpen(false);
+          toast({ title: "Folder updated", description: `"${data.name}" has been saved.` });
+        }}
+        folder={folder}
+        currentLocationId={null}
+        currentGalleryIds={[]}
+        flattenedFolders={flattenFolders(folderTree)}
+        galleries={mockGalleries}
+      />
+      <MoveFolderDialog
+        open={moveOpen}
+        onOpenChange={setMoveOpen}
+        onMove={(targetId) => {
+          setMoveOpen(false);
+          toast({ title: "Folder moved", description: `"${folder.name}" has been moved.` });
+        }}
+        folder={folder}
+        breadcrumbPath={breadcrumbPath.map(b => b.name).join(" > ")}
+        flattenedFolders={flattenFolders(folderTree)}
+        folderTree={folderTree}
+      />
+      <ArchiveFolderDialog
+        open={archiveOpen}
+        onOpenChange={setArchiveOpen}
+        onArchive={() => {
+          setArchiveOpen(false);
+          toast({ title: "Folder archived", description: `"${folder.name}" has been archived.` });
+        }}
+        folderName={folder.name}
+      />
+      <DeleteFolderDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onDelete={() => {
+          setDeleteOpen(false);
+          toast({ title: "Folder deleted", description: `"${folder.name}" has been permanently deleted.`, variant: "destructive" });
+        }}
+        folder={folder}
+      />
     </div>
   );
 }
