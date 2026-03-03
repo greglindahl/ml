@@ -209,6 +209,32 @@ export function flattenFolders(items: FolderItem[], depth = 0): FlattenedFolder[
   return result;
 }
 
+// Get the max depth of nested children below a folder (1 = leaf, 2 = has children, etc.)
+export function getMaxDepth(folder: FolderItem): number {
+  if (!folder.children || folder.children.length === 0) return 1;
+  const childFolders = folder.children.filter(c => c.type === "folder");
+  if (childFolders.length === 0) return 1;
+  return 1 + Math.max(...childFolders.map(getMaxDepth));
+}
+
+// Get the depth of a folder in the tree (root level = 1)
+export function getFolderDepth(folderId: string, tree: FolderItem[], currentDepth = 1): number {
+  for (const item of tree) {
+    if (item.id === folderId) return currentDepth;
+    if (item.children) {
+      const found = getFolderDepth(folderId, item.children, currentDepth + 1);
+      if (found > 0) return found;
+    }
+  }
+  return 0;
+}
+
+// Count sub-folders (direct children only that are folders)
+export function countSubFolders(folder: FolderItem): number {
+  if (!folder.children) return 0;
+  return folder.children.filter(c => c.type === "folder").length;
+}
+
 export const mockFolderCards: FolderCard[] = [
   { id: "season-2025", name: "Season 25-26", galleryCount: 8, timeAgo: "1 day ago" },
   { id: "season-2024", name: "Season 24-25", galleryCount: 8, timeAgo: "3 days ago" },
