@@ -1,53 +1,55 @@
 
 
-## Make Folder Actions Persist (In-Memory State)
+## Add Gallery Creation Flow
 
-Currently, `LibraryScreen.tsx` already manages a mutable `folderTree` state (line 66) and handles `handleCreateFolder`. However, the action dialogs in `FolderDetailsView` only show toasts — they don't mutate the tree. We need to lift the mutation logic up.
+Two new components and wiring changes to support creating galleries from both the top-level Library view and from within a folder.
 
-### Approach
+### New Components
 
-Since there's no backend, all persistence will be **in-memory React state** within `LibraryScreen.tsx` (the parent that owns `folderTree`). This is sufficient for user testing within a session.
+#### 1. `src/components/AddGalleryDialog.tsx` — Select existing galleries
+Based on screenshot 1:
+- Title: "Add Gallery"
+- Search input to filter existing galleries
+- "+ New Gallery" button that opens the New Gallery dialog
+- List of existing galleries (from `mockGalleries`), each with a thumbnail placeholder, name, and a "Select" button
+- Cancel and Save buttons
+- Props: `open`, `onOpenChange`, `galleries`, `onSelectGalleries`, `onCreateNew`
 
-### Changes
+#### 2. `src/components/NewGalleryDialog.tsx` — Create a new gallery
+Based on screenshot 2:
+- Title: "New Gallery" with a "Create Multiple Galleries" link/button (non-functional for now)
+- Fields: Name (required), Make Gallery Public checkbox, Description (textarea), Instructions (textarea), Add to Folder (select from folder tree), Sharing (multi-select with user chips — mock a default user), Schedule (select — placeholder), View Only checkbox, Allow Upload checkbox, Archive Date (input — placeholder)
+- Cancel and Save buttons
+- On save: create a new gallery entry in mock data and optionally add it to the selected folder
+- Props: `open`, `onOpenChange`, `onCreateGallery`, `flattenedFolders`
 
-#### 1. `FolderDetailsView.tsx` — Add callback props instead of local-only toasts
+### Wiring Changes
 
-Add new callback props to the interface:
-- `onEditFolder: (folderId: string, data: { name: string; locationId: string | null; galleryIds: string[] }) => void`
-- `onMoveFolder: (folderId: string, targetLocationId: string | null) => void`
-- `onArchiveFolder: (folderId: string) => void`
-- `onDeleteFolder: (folderId: string) => void`
+#### `src/components/LibraryScreen.tsx`
+- Add state for `addGalleryDialogOpen` and `newGalleryDialogOpen`
+- Wire the existing "New Gallery" dropdown item (line 655) to open `AddGalleryDialog` (when at top level) or `NewGalleryDialog` directly
+- Add `handleCreateGallery` that creates a new gallery item in the mock data and optionally inserts it into the folder tree
+- Render both dialog components
 
-Wire each dialog's `onSave`/`onMove`/`onArchive`/`onDelete` to call these props (keeping the toast notifications).
+#### `src/components/FolderDetailsView.tsx`
+- The existing "New" button (line 229) needs to become a dropdown with "New Folder" and "New Gallery" options (same pattern as the top-level Library header)
+- Add props: `onCreateGallery`, `onAddGalleryToFolder`
+- Add state for `addGalleryDialogOpen` and `newGalleryDialogOpen`
+- Render both dialog components
 
-#### 2. `LibraryScreen.tsx` — Add tree mutation handlers
+#### `src/lib/mockFolderData.ts`
+- Add a `setMockGalleries` or make `mockGalleries` mutable, or manage gallery state in `LibraryScreen` (preferred — keep gallery list in React state like `folderTree`)
 
-Add four handler functions that immutably update `folderTree`:
+### Data Flow
+- Gallery list managed as React state in `LibraryScreen` (initialized from `mockGalleries`)
+- When a new gallery is created from within a folder, it gets added to both the gallery list and as a child of that folder in `folderTree`
+- When an existing gallery is selected via "Add Gallery", it gets inserted as a child of the current folder
 
-- **Edit**: Walk the tree, find the folder by ID, update its `name`. If `locationId` changed, remove from old parent and insert at new parent. If `galleryIds` changed, update children.
-- **Move**: Remove the folder from its current parent, insert it under the target folder (or root if null). Depth validation already happens in the dialog.
-- **Archive**: Remove the folder from the tree (or mark it with an `archived: true` flag and filter it from display). Simplest for user testing: just remove it.
-- **Delete**: Recursively remove the folder and all descendants from the tree.
-
-Pass these handlers as props to `FolderDetailsView`. After delete/archive, navigate back to "all" (reset `activeFolder`).
-
-#### 3. `LibraryScreen.tsx` — Pass handlers to `FolderDetailsView`
-
-Update the `<FolderDetailsView>` render (around line 544) to pass the four new callback props.
-
-#### 4. `mockFolderData.ts` — Add `archived` field (optional)
-
-Add an optional `archived?: boolean` field to `FolderItem` if we want to support toggling archive state rather than removing. For user testing, simple removal is fine — skip this unless preferred.
-
-### Helper utilities needed (in `LibraryScreen.tsx` or `mockFolderData.ts`)
-
-- `removeFolderById(tree, id)` — returns new tree with folder removed
-- `insertFolderAt(tree, targetId, folder)` — inserts folder as child of target (or root if null)
-- `updateFolderInTree(tree, id, updates)` — updates folder properties in place
+### Files to create
+- `src/components/AddGalleryDialog.tsx`
+- `src/components/NewGalleryDialog.tsx`
 
 ### Files to modify
-- `src/components/FolderDetailsView.tsx` — add callback props, wire dialogs
-- `src/components/LibraryScreen.tsx` — add mutation handlers, pass as props
-
-No new files needed.
+- `src/components/LibraryScreen.tsx` — gallery state, handlers, dropdown wiring, dialog rendering
+- `src/components/FolderDetailsView.tsx` — New button dropdown, gallery dialog integration
 
