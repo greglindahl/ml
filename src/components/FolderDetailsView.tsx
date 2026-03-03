@@ -104,7 +104,12 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
     const path = buildBreadcrumbPath(folderId, folderTree);
     // Include "All Media" at the start
     return path ? [{ id: "all", name: "All Media", type: "folder" as const }, ...path.filter(p => p.id !== "all")] : [];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [folderId, folderTree]);
+
+  // Depth constraint: folders allowed at levels 1-3, level 4 is galleries only
+  const folderDepth = breadcrumbPath.length - 1; // exclude "All Media" root
+  const canCreateSubfolder = folderDepth < 3;
 
   // Get child galleries for the Galleries tab
   const childGalleries = useMemo(() => getChildGalleries(folder), [folder]);
@@ -245,10 +250,12 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setNewFolderDialogOpen(true)}>
-                <Folder className="w-4 h-4 mr-2" />
-                New Folder
-              </DropdownMenuItem>
+              {canCreateSubfolder && (
+                <DropdownMenuItem onClick={() => setNewFolderDialogOpen(true)}>
+                  <Folder className="w-4 h-4 mr-2" />
+                  New Folder
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={() => setNewGalleryDialogOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 New Gallery
@@ -653,13 +660,17 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               </div>
               <h3 className="text-xl font-semibold mb-2">This folder is empty</h3>
               <p className="text-sm text-muted-foreground max-w-sm mb-1">
-                Folders help you group galleries and other folders by season, event, campaign, or purpose.
+                {canCreateSubfolder
+                  ? "Folders help you group galleries and other folders by season, event, campaign, or purpose."
+                  : "Add galleries to organize your content in this folder."}
               </p>
               <p className="text-sm text-muted-foreground max-w-sm mb-8">
                 You can add existing content or create something new. Nothing outside this folder is affected.
               </p>
               <Button className="mb-3 bg-foreground text-background hover:bg-foreground/90" onClick={() => setAddGalleryDialogOpen(true)}>Add Galleries</Button>
-              <button className="text-sm font-medium text-foreground hover:underline" onClick={() => setNewFolderDialogOpen(true)}>New Folder</button>
+              {canCreateSubfolder && (
+                <button className="text-sm font-medium text-foreground hover:underline" onClick={() => setNewFolderDialogOpen(true)}>New Folder</button>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
