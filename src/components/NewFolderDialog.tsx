@@ -51,12 +51,14 @@ export function NewFolderDialog({
   const [locationId, setLocationId] = useState<string | null>(null);
   const [selectedGalleryIds, setSelectedGalleryIds] = useState<string[]>([]);
   const [nameError, setNameError] = useState(false);
+  const [gallerySearch, setGallerySearch] = useState("");
 
   const resetForm = useCallback(() => {
     setName("");
     setLocationId(null);
     setSelectedGalleryIds([]);
     setNameError(false);
+    setGallerySearch("");
   }, []);
 
   const handleOpenChange = useCallback(
@@ -130,14 +132,14 @@ export function NewFolderDialog({
           <div className="space-y-2">
             <Label>Location</Label>
             <Select
-              value={locationId ?? "root"}
+              value={locationId ?? ""}
               onValueChange={(v) => setLocationId(v === "root" ? null : v)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Root (top level)" />
+                <SelectValue placeholder="Select location..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="root">Root (top level)</SelectItem>
+                <SelectItem value="root">All Media</SelectItem>
                 {flattenedFolders.map((f) => (
                   <SelectItem key={f.id} value={f.id}>
                     {f.displayName}
@@ -162,20 +164,32 @@ export function NewFolderDialog({
                   <ChevronDown className="h-4 w-4 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2" align="start">
-                <div className="max-h-48 overflow-y-auto space-y-1">
-                  {galleries.map((gallery) => (
-                    <label
-                      key={gallery.id}
-                      className="flex items-center gap-2 px-2 py-1.5 rounded-sm text-sm hover:bg-accent cursor-pointer"
-                    >
-                      <Checkbox
-                        checked={selectedGalleryIds.includes(gallery.id)}
-                        onCheckedChange={() => toggleGallery(gallery.id)}
-                      />
-                      <span className="truncate">{gallery.name}</span>
-                    </label>
-                  ))}
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                <div className="p-2 border-b">
+                  <Input
+                    placeholder="Search galleries..."
+                    value={gallerySearch}
+                    onChange={(e) => setGallerySearch(e.target.value)}
+                    className="h-8 text-sm"
+                  />
+                </div>
+                <div className="max-h-48 overflow-y-auto p-2 space-y-1">
+                  {galleries
+                    .filter((g) =>
+                      g.name.toLowerCase().includes(gallerySearch.toLowerCase())
+                    )
+                    .map((gallery) => (
+                      <label
+                        key={gallery.id}
+                        className="flex items-center gap-2 px-2 py-1.5 rounded-sm text-sm hover:bg-accent cursor-pointer"
+                      >
+                        <Checkbox
+                          checked={selectedGalleryIds.includes(gallery.id)}
+                          onCheckedChange={() => toggleGallery(gallery.id)}
+                        />
+                        <span className="truncate">{gallery.name}</span>
+                      </label>
+                    ))}
                 </div>
               </PopoverContent>
             </Popover>
