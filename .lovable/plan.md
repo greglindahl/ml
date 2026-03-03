@@ -1,31 +1,27 @@
 
 
-## New Folder Dialog Fixes
+## Three Changes
 
-### Changes to `src/components/NewFolderDialog.tsx`
+### 1. Rename "Folders" label to "Library" in the sidebar header
+**File: `src/components/LibraryScreen.tsx` (line 507)**
+- Change `"Folders"` → `"Library"`
 
-**1. Location dropdown**
-- Change placeholder from `"Root (top level)"` to `"Select location..."`
-- Change the default value logic: don't pre-select root; let it start unselected
-- Rename root option from `"Root (top level)"` to `"All Media"`
+### 2. Rename "All Files" to "All Media" everywhere
+**File: `src/lib/mockFolderData.ts` (line 50)**
+- Change `name: "All Files"` → `name: "All Media"` in the root folder definition
 
-**2. Add Galleries — search + scroll fix**
-- Add a `gallerySearch` state variable
-- Add a search `Input` at the top of the `PopoverContent` (above the checkbox list)
-- Filter displayed galleries by the search term
-- Fix scrolling: the search input should be sticky/outside the scrollable area, and the checkbox list should scroll independently beneath it
+**File: `src/components/GalleryDetailsView.tsx` (line 72)**
+- Change the hardcoded `"All Files"` breadcrumb text → `"All Media"`
 
-### Specific Edits
+**File: `src/components/FolderDetailsView.tsx` (line 79)**
+- Change the hardcoded `"All Files"` breadcrumb text → `"All Media"`
 
-**Lines 50-53**: Add `gallerySearch` state, reset it in `resetForm`
+### 3. Fix breadcrumbs for newly created folders
+The breadcrumb functions in `GalleryDetailsView` and `FolderDetailsView` use the static `folders` import from `mockFolderData.ts`. When a new folder is created, the `folderTree` state in `LibraryScreen` updates but these components still reference the stale static data.
 
-**Lines 132-147** (Location Select):
-- Remove default value `locationId ?? "root"` — use `locationId ?? ""`
-- Change `<SelectValue placeholder="Root (top level)" />` → `<SelectValue placeholder="Select location..." />`
-- Change `<SelectItem value="root">Root (top level)</SelectItem>` → `<SelectItem value="root">All Media</SelectItem>`
+**Fix: Pass `folderTree` as a prop to both detail views.**
 
-**Lines 165-179** (Popover content):
-- Add search input above the scrollable list
-- Filter galleries by search term
-- Structure: fixed search input + scrollable checkbox list below
+- **`src/components/GalleryDetailsView.tsx`**: Add `folderTree` prop, use it in `buildBreadcrumbPath` instead of the static `folders` import
+- **`src/components/FolderDetailsView.tsx`**: Same — add `folderTree` prop, use it for breadcrumb building
+- **`src/components/LibraryScreen.tsx`**: Pass `folderTree` to both `<GalleryDetailsView>` and `<FolderDetailsView>`
 
