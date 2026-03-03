@@ -8,7 +8,7 @@ import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeah
 import { FilterBar } from "@/components/FilterBar";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
-import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries, Gallery, FlattenedFolder } from "@/lib/mockFolderData";
+import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries, Gallery, FlattenedFolder, getGalleryLocationDisplay } from "@/lib/mockFolderData";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
 import { NewGalleryDialog, type NewGalleryData } from "@/components/NewGalleryDialog";
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
@@ -23,6 +23,7 @@ import { EditFolderDialog } from "@/components/EditFolderDialog";
 import { MoveFolderDialog } from "@/components/MoveFolderDialog";
 import { ArchiveFolderDialog } from "@/components/ArchiveFolderDialog";
 import { DeleteFolderDialog } from "@/components/DeleteFolderDialog";
+import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleriesDialog";
 import { toast } from "@/hooks/use-toast";
 
 // Icon component for asset types
@@ -83,6 +84,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   const [addGalleryDialogOpen, setAddGalleryDialogOpen] = useState(false);
   const [newGalleryDialogOpen, setNewGalleryDialogOpen] = useState(false);
   const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
+  const [moveGalleriesOpen, setMoveGalleriesOpen] = useState(false);
+  const [moveGalleryItems, setMoveGalleryItems] = useState<MoveGalleryItem[]>([]);
   
   // View mode state (grid vs list) - independent for assets and galleries
   const [assetsViewMode, setAssetsViewMode] = useState<"grid" | "list">("grid");
@@ -216,6 +219,19 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   const handleCustomDateChange = useCallback((range: { from: Date | undefined; to: Date | undefined }) => {
     setCustomDateRange(range);
   }, []);
+
+  const handleMoveGalleries = useCallback((galleryIds: string[]) => {
+    const items: MoveGalleryItem[] = galleryIds.map((id) => {
+      const gallery = childGalleries.find((g) => g.id === id);
+      return {
+        id,
+        name: gallery?.name || id,
+        currentLocation: getGalleryLocationDisplay(id, folderTree),
+      };
+    });
+    setMoveGalleryItems(items);
+    setMoveGalleriesOpen(true);
+  }, [childGalleries, folderTree]);
 
   return (
     <div className={`flex-1 flex flex-col min-w-0 px-4 md:px-8 xl:px-16 pb-12 ${isMobile ? "pt-[58px]" : "pt-8"}`}>
@@ -593,7 +609,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 assetCount: g.count || 0, 
                 timeAgo: "2 days ago" 
               }))} 
-              onNavigate={onNavigate} 
+              onNavigate={onNavigate}
+              onMoveGalleries={handleMoveGalleries}
             />
           ) : childGalleries.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -782,6 +799,17 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         }}
         flattenedFolders={flattenedFolders ?? flattenFolders(folderTree)}
         galleries={galleryList ?? mockGalleries}
+      />
+      <MoveGalleriesDialog
+        open={moveGalleriesOpen}
+        onOpenChange={setMoveGalleriesOpen}
+        galleries={moveGalleryItems}
+        flattenedFolders={flattenedFolders ?? flattenFolders(folderTree)}
+        onMove={(moves) => {
+          setMoveGalleriesOpen(false);
+          const count = Object.keys(moves).length;
+          toast({ title: "Galleries moved", description: `${count} ${count === 1 ? "gallery" : "galleries"} moved successfully.` });
+        }}
       />
     </div>
   );

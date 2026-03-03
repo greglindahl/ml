@@ -235,6 +235,34 @@ export function countSubFolders(folder: FolderItem): number {
   return folder.children.filter(c => c.type === "folder").length;
 }
 
+// Find the parent folder path for a gallery by its ID
+// Returns an array of folder names from root to parent, or null if not found
+export function findGalleryParentPath(
+  galleryId: string,
+  items: FolderItem[],
+  path: string[] = []
+): string[] | null {
+  for (const item of items) {
+    if (item.type === "gallery" && item.id === galleryId) {
+      return path.length > 0 ? path : null;
+    }
+    if (item.children) {
+      const found = findGalleryParentPath(galleryId, item.children, [...path, item.name]);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+// Get the display string for a gallery's current location
+export function getGalleryLocationDisplay(galleryId: string, folderTree: FolderItem[]): string {
+  const path = findGalleryParentPath(galleryId, folderTree);
+  if (!path) return "Not in a folder";
+  // Filter out "All Media" from display
+  const filtered = path.filter(p => p !== "All Media");
+  return filtered.length > 0 ? filtered.join(" > ") : "Not in a folder";
+}
+
 export const mockFolderCards: FolderCard[] = [
   { id: "season-2025", name: "Season 25-26", galleryCount: 8, timeAgo: "1 day ago" },
   { id: "season-2024", name: "Season 24-25", galleryCount: 8, timeAgo: "3 days ago" },
