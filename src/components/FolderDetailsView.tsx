@@ -58,9 +58,13 @@ interface FolderDetailsViewProps {
   onNavigate: (folderId: string) => void;
   isMobile?: boolean;
   folderTree: FolderItem[];
+  onEditFolder?: (folderId: string, data: { name: string; locationId: string | null; galleryIds: string[] }) => void;
+  onMoveFolder?: (folderId: string, targetLocationId: string | null) => void;
+  onArchiveFolder?: (folderId: string) => void;
+  onDeleteFolder?: (folderId: string) => void;
 }
 
-export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = false, folderTree }: FolderDetailsViewProps) {
+export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = false, folderTree, onEditFolder, onMoveFolder, onArchiveFolder, onDeleteFolder }: FolderDetailsViewProps) {
   const [activeTab, setActiveTab] = useState("assets");
   
   // Dialog states
@@ -655,6 +659,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         onOpenChange={setEditOpen}
         onSave={(data) => {
           setEditOpen(false);
+          onEditFolder?.(folderId, data);
           toast({ title: "Folder updated", description: `"${data.name}" has been saved.` });
         }}
         folder={folder}
@@ -668,6 +673,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         onOpenChange={setMoveOpen}
         onMove={(targetId) => {
           setMoveOpen(false);
+          onMoveFolder?.(folderId, targetId);
           toast({ title: "Folder moved", description: `"${folder.name}" has been moved.` });
         }}
         folder={folder}
@@ -680,6 +686,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         onOpenChange={setArchiveOpen}
         onArchive={() => {
           setArchiveOpen(false);
+          onArchiveFolder?.(folderId);
           toast({ title: "Folder archived", description: `"${folder.name}" has been archived.` });
         }}
         folderName={folder.name}
@@ -689,6 +696,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         onOpenChange={setDeleteOpen}
         onDelete={() => {
           setDeleteOpen(false);
+          onDeleteFolder?.(folderId);
           toast({ title: "Folder deleted", description: `"${folder.name}" has been permanently deleted.`, variant: "destructive" });
         }}
         folder={folder}
