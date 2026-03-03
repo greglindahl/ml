@@ -1,56 +1,53 @@
 
 
-## Folder Actions: Edit, Move, Archive, Delete
+## Make Folder Actions Persist (In-Memory State)
 
-Add four folder action dialogs accessible from the "more" (three-dot) menu on the folder details header.
+Currently, `LibraryScreen.tsx` already manages a mutable `folderTree` state (line 66) and handles `handleCreateFolder`. However, the action dialogs in `FolderDetailsView` only show toasts — they don't mutate the tree. We need to lift the mutation logic up.
 
-### 1. Edit Folder Dialog (`src/components/EditFolderDialog.tsx`)
-- Reuse the same layout as `NewFolderDialog` but with title "Edit Folder", pre-populated name/location/galleries, and a "Save" button instead of "Create"
-- Accept the current folder as a prop to pre-fill fields
+### Approach
 
-### 2. Move Folder Dialog (`src/components/MoveFolderDialog.tsx`)
-Based on the screenshot (Option 2 style):
-- Title: "Move Folder"
-- Description text: "Choose a new location for this folder. Moving a folder changes its location in the hierarchy. Nested folders and galleries move with it."
-- Show the folder being moved: folder icon, name, and current breadcrumb path
-- "Location" dropdown (Select component) listing all valid folders, excluding the folder itself and its descendants
-- **4-level depth validation**: Calculate the depth of the folder being moved (including its deepest nested child). If placing it at the selected location would exceed 4 levels total, show a red error: "This move would exceed the 4-level folder limit. Choose a different location." and disable the Move button
-- Info banner: "This move will affect X media items and may take some time to complete. The move will continue in the background. **Content will not be searchable until the move is finished.**"
-- Cancel and Move buttons
+Since there's no backend, all persistence will be **in-memory React state** within `LibraryScreen.tsx` (the parent that owns `folderTree`). This is sufficient for user testing within a session.
 
-### 3. Archive Folder Dialog (`src/components/ArchiveFolderDialog.tsx`)
-- Simple confirmation dialog
-- Title: "Archive Folder"
-- Description explaining that archiving hides the folder from the main view
-- Cancel and Archive buttons
+### Changes
 
-### 4. Delete Folder Dialog (`src/components/DeleteFolderDialog.tsx`)
-Based on the screenshot:
-- Title: "Delete Folder"
-- Text: "This will permanently delete this folder and any nested folders inside it."
-- Table showing: Folder name | Sub Folders count
-- Checkbox confirmation: "I understand deleting a folder is permanent. Galleries, images and videos that were in a deleted folder will remain in your library."
-- Delete button disabled until checkbox is checked
-- Cancel and Delete buttons
+#### 1. `FolderDetailsView.tsx` — Add callback props instead of local-only toasts
 
-### 5. Wire actions in `src/components/FolderDetailsView.tsx`
-- Replace the existing `MoreVertical` ghost button with a `DropdownMenu` containing: Edit, Move, Archive, Delete items
-- Add state for each dialog's open/closed status
-- Render all four dialog components
-- Pass folder data, breadcrumb path, and flattened folder tree as needed
+Add new callback props to the interface:
+- `onEditFolder: (folderId: string, data: { name: string; locationId: string | null; galleryIds: string[] }) => void`
+- `onMoveFolder: (folderId: string, targetLocationId: string | null) => void`
+- `onArchiveFolder: (folderId: string) => void`
+- `onDeleteFolder: (folderId: string) => void`
 
-### Helper: Depth calculation (`src/lib/mockFolderData.ts`)
-- Add `getMaxDepth(folder)` — returns the max nesting depth below a folder (1 = leaf, 2 = has children, etc.)
-- Add `getFolderDepth(folderId, tree)` — returns how deep a folder is in the tree (root = 1)
-- Move validation: `targetDepth + getMaxDepth(movingFolder) > 4` → error
+Wire each dialog's `onSave`/`onMove`/`onArchive`/`onDelete` to call these props (keeping the toast notifications).
 
-### Files to create
-- `src/components/EditFolderDialog.tsx`
-- `src/components/MoveFolderDialog.tsx`
-- `src/components/ArchiveFolderDialog.tsx`
-- `src/components/DeleteFolderDialog.tsx`
+#### 2. `LibraryScreen.tsx` — Add tree mutation handlers
+
+Add four handler functions that immutably update `folderTree`:
+
+- **Edit**: Walk the tree, find the folder by ID, update its `name`. If `locationId` changed, remove from old parent and insert at new parent. If `galleryIds` changed, update children.
+- **Move**: Remove the folder from its current parent, insert it under the target folder (or root if null). Depth validation already happens in the dialog.
+- **Archive**: Remove the folder from the tree (or mark it with an `archived: true` flag and filter it from display). Simplest for user testing: just remove it.
+- **Delete**: Recursively remove the folder and all descendants from the tree.
+
+Pass these handlers as props to `FolderDetailsView`. After delete/archive, navigate back to "all" (reset `activeFolder`).
+
+#### 3. `LibraryScreen.tsx` — Pass handlers to `FolderDetailsView`
+
+Update the `<FolderDetailsView>` render (around line 544) to pass the four new callback props.
+
+#### 4. `mockFolderData.ts` — Add `archived` field (optional)
+
+Add an optional `archived?: boolean` field to `FolderItem` if we want to support toggling archive state rather than removing. For user testing, simple removal is fine — skip this unless preferred.
+
+### Helper utilities needed (in `LibraryScreen.tsx` or `mockFolderData.ts`)
+
+- `removeFolderById(tree, id)` — returns new tree with folder removed
+- `insertFolderAt(tree, targetId, folder)` — inserts folder as child of target (or root if null)
+- `updateFolderInTree(tree, id, updates)` — updates folder properties in place
 
 ### Files to modify
-- `src/components/FolderDetailsView.tsx` — add dropdown menu and dialog state
-- `src/lib/mockFolderData.ts` — add depth helper functions
+- `src/components/FolderDetailsView.tsx` — add callback props, wire dialogs
+- `src/components/LibraryScreen.tsx` — add mutation handlers, pass as props
+
+No new files needed.
 
