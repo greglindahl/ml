@@ -47,7 +47,7 @@ export interface FolderCard {
 }
 
 export const folders: FolderItem[] = [
-  { id: "all", name: "All Files", type: "folder" },
+  { id: "all", name: "All Media", type: "folder" },
   {
     id: "season-2025",
     name: "Season 25-26",

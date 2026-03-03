@@ -504,7 +504,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           <>
             {/* Sidebar Header - Expanded */}
             <div className="p-4 border-b flex items-center justify-between min-w-64">
-              <span className="font-medium text-sm">Folders</span>
+              <span className="font-medium text-sm">Library</span>
               <button
                 onClick={() => setIsFolderSidebarExpanded(false)}
                 className="p-1 hover:bg-accent rounded transition-colors"
@@ -547,6 +547,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           gallery={activeGallery} 
           onNavigate={handleNavigate}
           isMobile={isMobile}
+          folderTree={folderTree}
         />
       ) : activeFolderItem ? (
         <FolderDetailsView 
@@ -554,6 +555,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           folder={activeFolderItem} 
           onNavigate={handleNavigate}
           isMobile={isMobile}
+          folderTree={folderTree}
         />
       ) : (
       <div className={`flex-1 flex flex-col min-w-0 px-4 md:px-8 xl:px-16 pb-12 ${isMobile ? "pt-[58px]" : "pt-20"}`}>

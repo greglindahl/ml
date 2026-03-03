@@ -8,7 +8,7 @@ import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeah
 import { FilterBar } from "@/components/FilterBar";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
-import { FolderItem, getAllDescendantIds, folders } from "@/lib/mockFolderData";
+import { FolderItem, getAllDescendantIds } from "@/lib/mockFolderData";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
@@ -46,9 +46,10 @@ interface GalleryDetailsViewProps {
   gallery: FolderItem;
   onNavigate: (folderId: string) => void;
   isMobile?: boolean;
+  folderTree: FolderItem[];
 }
 
-export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = false }: GalleryDetailsViewProps) {
+export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = false, folderTree }: GalleryDetailsViewProps) {
   const [activeTab, setActiveTab] = useState("assets");
   
   // View mode state (grid vs list)
@@ -67,10 +68,10 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
 
   // Build breadcrumb path
   const breadcrumbPath = useMemo(() => {
-    const path = buildBreadcrumbPath(galleryId, folders);
-    // Include "All Files" at the start
-    return path ? [{ id: "all", name: "All Files", type: "folder" as const }, ...path.filter(p => p.id !== "all")] : [];
-  }, [galleryId]);
+    const path = buildBreadcrumbPath(galleryId, folderTree);
+    // Include "All Media" at the start
+    return path ? [{ id: "all", name: "All Media", type: "folder" as const }, ...path.filter(p => p.id !== "all")] : [];
+  }, [galleryId, folderTree]);
 
   // Get allowed folder IDs (the gallery itself)
   const allowedFolderIds = useMemo(() => {
