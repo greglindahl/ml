@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, MoreVertical, Upload, Settings2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, MoreVertical, Upload, Settings2, FolderOpen } from "lucide-react";
 import { AssetTableView } from "@/components/AssetTableView";
 import { GalleryTableView, GalleryTableItem } from "@/components/GalleryTableView";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -222,7 +222,24 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Empty State or Tabs */}
+      {(!folder.children || folder.children.length === 0) && filteredResults.length === 0 && !isLoading ? (
+        <div className="flex-1 flex flex-col items-center justify-center py-20 text-center">
+          <div className="relative mb-6">
+            <FolderOpen className="h-16 w-16 text-muted-foreground/30" />
+            <Images className="h-6 w-6 text-muted-foreground/40 absolute -bottom-1 -right-2" />
+          </div>
+          <h3 className="text-xl font-semibold mb-2">This folder is empty</h3>
+          <p className="text-sm text-muted-foreground max-w-sm mb-1">
+            Folders help you group galleries and other folders by season, event, campaign, or purpose.
+          </p>
+          <p className="text-sm text-muted-foreground max-w-sm mb-8">
+            You can add existing content or create something new. Nothing outside this folder is affected.
+          </p>
+          <Button className="mb-3 bg-foreground text-background hover:bg-foreground/90">Add Galleries</Button>
+          <button className="text-sm font-medium text-foreground hover:underline">New Folder</button>
+        </div>
+      ) : (
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
         <div className="border-b">
           <TabsList className="bg-transparent h-auto p-0 gap-6">
@@ -553,6 +570,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           )}
         </TabsContent>
       </Tabs>
+      )}
     </div>
   );
 }
