@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, Share, Upload, MoreVertical, Settings2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, Share, Upload, MoreVertical, Settings2, Move, Trash2 } from "lucide-react";
 import { AssetTableView } from "@/components/AssetTableView";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeah
 import { FilterBar } from "@/components/FilterBar";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
-import { FolderItem, getAllDescendantIds } from "@/lib/mockFolderData";
+import { FolderItem, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay } from "@/lib/mockFolderData";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
@@ -16,6 +16,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleriesDialog";
+import { toast } from "@/hooks/use-toast";
 
 // Icon component for asset types
 function AssetTypeIcon({ type, className }: { type: LibraryAsset["type"]; className?: string }) {
@@ -51,7 +53,7 @@ interface GalleryDetailsViewProps {
 
 export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = false, folderTree }: GalleryDetailsViewProps) {
   const [activeTab, setActiveTab] = useState("assets");
-  
+  const [moveGalleriesOpen, setMoveGalleriesOpen] = useState(false);
   // View mode state (grid vs list)
   const [assetsViewMode, setAssetsViewMode] = useState<"grid" | "list">("grid");
   
@@ -221,9 +223,21 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             <Upload className="w-4 h-4" />
             Upload
           </Button>
-          <Button variant="ghost" size="icon">
-            <MoreVertical className="w-4 h-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setMoveGalleriesOpen(true)}>
+                <Move className="w-4 h-4 mr-2" /> Move
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive focus:text-destructive">
+                <Trash2 className="w-4 h-4 mr-2" /> Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -444,6 +458,21 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           </div>
         </TabsContent>
       </Tabs>
+
+      <MoveGalleriesDialog
+        open={moveGalleriesOpen}
+        onOpenChange={setMoveGalleriesOpen}
+        galleries={[{
+          id: galleryId,
+          name: gallery.name,
+          currentLocation: getGalleryLocationDisplay(galleryId, folderTree),
+        }]}
+        flattenedFolders={flattenFolders(folderTree)}
+        onMove={(moves) => {
+          setMoveGalleriesOpen(false);
+          toast({ title: "Gallery moved", description: `"${gallery.name}" has been moved successfully.` });
+        }}
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, MoreVertical, Upload, Settings2, FolderOpen, Pencil, Move, Archive, Trash2, Folder, Plus } from "lucide-react";
+import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, MoreVertical, MoreHorizontal, Upload, Settings2, FolderOpen, Pencil, Move, Archive, Trash2, Folder, Plus } from "lucide-react";
 import { AssetTableView } from "@/components/AssetTableView";
 import { GalleryTableView, GalleryTableItem } from "@/components/GalleryTableView";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,6 +25,7 @@ import { ArchiveFolderDialog } from "@/components/ArchiveFolderDialog";
 import { DeleteFolderDialog } from "@/components/DeleteFolderDialog";
 import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleriesDialog";
 import { toast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Icon component for asset types
 function AssetTypeIcon({ type, className }: { type: LibraryAsset["type"]; className?: string }) {
@@ -86,6 +87,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
   const [moveGalleriesOpen, setMoveGalleriesOpen] = useState(false);
   const [moveGalleryItems, setMoveGalleryItems] = useState<MoveGalleryItem[]>([]);
+  
+  // Gallery selection state for grid view bulk actions
+  const [selectedGalleries, setSelectedGalleries] = useState<Set<string>>(new Set());
   
   // View mode state (grid vs list) - independent for assets and galleries
   const [assetsViewMode, setAssetsViewMode] = useState<"grid" | "list">("grid");
@@ -232,6 +236,31 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
     setMoveGalleryItems(items);
     setMoveGalleriesOpen(true);
   }, [childGalleries, folderTree]);
+
+  // Gallery selection helpers
+  const isAnyGallerySelected = selectedGalleries.size > 0;
+  const allGalleriesSelected = childGalleries.length > 0 && selectedGalleries.size === childGalleries.length;
+
+  const toggleGallerySelection = useCallback((id: string) => {
+    setSelectedGalleries(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAllGalleries = useCallback(() => {
+    if (allGalleriesSelected) {
+      setSelectedGalleries(new Set());
+    } else {
+      setSelectedGalleries(new Set(childGalleries.map(g => g.id)));
+    }
+  }, [allGalleriesSelected, childGalleries]);
+
+  const handleBulkMoveGalleries = useCallback(() => {
+    handleMoveGalleries(Array.from(selectedGalleries));
+  }, [selectedGalleries, handleMoveGalleries]);
 
   return (
     <div className={`flex-1 flex flex-col min-w-0 px-4 md:px-8 xl:px-16 pb-12 ${isMobile ? "pt-[58px]" : "pt-8"}`}>
@@ -600,6 +629,34 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             </div>
           </div>
 
+          {/* Bulk Action Bar */}
+          {isAnyGallerySelected && galleriesViewMode === "grid" && (
+            <div className="flex items-center justify-between mb-4 px-3 py-2 bg-muted/50 border rounded-lg">
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  checked={allGalleriesSelected}
+                  onCheckedChange={toggleSelectAllGalleries}
+                />
+                <span className="text-sm font-medium">{selectedGalleries.size} selected</span>
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleBulkMoveGalleries}>
+                    <Move className="w-4 h-4 mr-2" /> Move
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-destructive focus:text-destructive">
+                    <Trash2 className="w-4 h-4 mr-2" /> Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
+
           {/* Gallery Cards Grid or Table */}
           {galleriesViewMode === "list" ? (
             <GalleryTableView 
@@ -620,30 +677,42 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {childGalleries.map((gallery) => (
-                <button
-                  key={gallery.id}
-                  onClick={() => onNavigate(gallery.id)}
-                  className="group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow text-left"
-                >
-                  {/* Thumbnail area */}
-                  <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center">
-                    <Images className="w-10 h-10 text-muted-foreground/40" />
-                  </div>
-                  {/* Card info */}
-                  <div className="p-3">
-                    <div className="font-medium text-sm truncate mb-1">{gallery.name}</div>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs text-muted-foreground">
-                        {gallery.count || 0} Assets
-                      </span>
-                      <span className="text-xs text-primary flex-shrink-0">
-                        2 days ago
-                      </span>
+              {childGalleries.map((gallery) => {
+                const isSelected = selectedGalleries.has(gallery.id);
+                return (
+                  <div
+                    key={gallery.id}
+                    className={`group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow text-left relative ${isSelected ? "ring-2 ring-primary" : ""}`}
+                  >
+                    {/* Checkbox overlay */}
+                    <div
+                      className={`absolute top-2 left-2 z-10 ${isAnyGallerySelected || isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
+                      onClick={(e) => { e.stopPropagation(); toggleGallerySelection(gallery.id); }}
+                    >
+                      <Checkbox checked={isSelected} />
+                    </div>
+                    {/* Thumbnail area */}
+                    <div
+                      className="aspect-[4/3] bg-muted/50 flex items-center justify-center"
+                      onClick={() => onNavigate(gallery.id)}
+                    >
+                      <Images className="w-10 h-10 text-muted-foreground/40" />
+                    </div>
+                    {/* Card info */}
+                    <div className="p-3" onClick={() => onNavigate(gallery.id)}>
+                      <div className="font-medium text-sm truncate mb-1">{gallery.name}</div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs text-muted-foreground">
+                          {gallery.count || 0} Assets
+                        </span>
+                        <span className="text-xs text-primary flex-shrink-0">
+                          2 days ago
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </button>
-              ))}
+                );
+              })}
             </div>
           )}
         </TabsContent>
