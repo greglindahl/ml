@@ -1,36 +1,40 @@
 
 
-## Bulk Actions for Gallery Selection + Enhanced Move Dialog
+## Debug: Missing Bulk Actions + Gallery Details Move
 
-Based on the mockups, there are several pieces to implement:
+### Issues Found
 
-### 1. Add "Apply to All" to `MoveGalleriesDialog.tsx`
-Each row's location selector gets a "+ Apply to All" link/button. Clicking it copies that row's selected folder to every other gallery in the dialog. This is a small addition to the existing component.
+1. **FolderDetailsView galleries grid (non-list mode)** — The grid view (lines 622-648) has no selection checkboxes or bulk action bar. Only the list view (`GalleryTableView`) has move support via `onMoveGalleries`. The grid cards are plain buttons with no selection state.
 
-### 2. Bulk selection mode for gallery grid in `LibraryScreenV4.tsx`
-The Galleries tab currently renders a simple grid with no selection. Need to add:
-- **Selection state** tracking which gallery IDs are selected
-- **Checkbox overlay** on each gallery card (visible on hover or when any are selected)
-- **Bulk action bar** that appears above the grid when 1+ galleries are selected, showing "{N} selected" with a three-dot menu containing **Move** and **Delete** actions
+2. **GalleryDetailsView three-dot menu** — The `MoreVertical` button (line 224-226) is just a plain button with no dropdown menu. It needs a `DropdownMenu` with Move (and other actions like Delete).
 
-### 3. Wire Move dialog into `LibraryScreenV4.tsx`
-When "Move" is clicked from the bulk action bar:
-- Build `MoveGalleryItem[]` from selected galleries (current location = "Not in a folder" at root level)
-- Open `MoveGalleriesDialog` with the flattened folder tree
-- Show success toast on completion
+3. **LibraryScreenV4 galleries tab** — This one actually works (lines 528-602) with bulk action bar and checkboxes. However, it only shows when `isAnyGallerySelected` is true, so the user needs to click a gallery card to select it first (checkbox appears on hover).
 
-### 4. Success toast
-After moving, show a toast like "Galleries moved — {N} galleries moved successfully."
+### Plan
+
+#### 1. FolderDetailsView — Add gallery selection + bulk actions to grid view
+
+Add the same selection pattern used in `LibraryScreenV4`:
+- Add `selectedGalleries` state (Set), toggle functions, select-all
+- Add checkbox overlays on gallery grid cards (visible on hover or when any selected)
+- Add bulk action bar above gallery grid with three-dot menu containing Move and Delete
+- Wire Move to existing `handleMoveGalleries` / `MoveGalleriesDialog`
+
+#### 2. GalleryDetailsView — Add Move to three-dot menu
+
+Replace the plain `MoreVertical` button with a `DropdownMenu` containing:
+- Move — opens `MoveGalleriesDialog` for the single gallery
+- Delete (placeholder)
+
+This requires:
+- Import `DropdownMenu` components, `MoveGalleriesDialog`, `FolderInput`, `Trash2`
+- Add state for move dialog open + gallery item data
+- Add `flattenedFolders` prop or compute from `folderTree`
+- Render `MoveGalleriesDialog` in the component
 
 ### Files to modify
-
 | File | Change |
 |------|--------|
-| `src/components/MoveGalleriesDialog.tsx` | Add "+ Apply to All" button per row that copies that row's target to all others |
-| `src/components/LibraryScreenV4.tsx` | Add gallery selection state, checkbox overlays on gallery cards, bulk action bar with three-dot menu (Move, Delete), wire up MoveGalleriesDialog |
-
-### Bulk action bar design
-Matches the pattern from `GalleryTableView` but as a standalone bar above the gallery grid:
-- Left: checkbox (for select all) + "{N} selected" text
-- Right: three-dot `MoreHorizontal` menu with Move and Delete options
+| `src/components/FolderDetailsView.tsx` | Add selection state, checkbox overlays, bulk action bar to galleries grid view |
+| `src/components/GalleryDetailsView.tsx` | Replace plain MoreVertical with DropdownMenu containing Move + Delete, wire up MoveGalleriesDialog |
 
