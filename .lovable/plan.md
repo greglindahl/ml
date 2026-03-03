@@ -1,27 +1,26 @@
 
 
-## Three Changes
+## Add Empty State for Folders
 
-### 1. Rename "Folders" label to "Library" in the sidebar header
-**File: `src/components/LibraryScreen.tsx` (line 507)**
-- Change `"Folders"` → `"Library"`
+When a folder has no children (no sub-folders and no galleries) and no assets, show an empty state matching the reference screenshot instead of the search/filter/grid UI.
 
-### 2. Rename "All Files" to "All Media" everywhere
-**File: `src/lib/mockFolderData.ts` (line 50)**
-- Change `name: "All Files"` → `name: "All Media"` in the root folder definition
+### Changes to `src/components/FolderDetailsView.tsx`
 
-**File: `src/components/GalleryDetailsView.tsx` (line 72)**
-- Change the hardcoded `"All Files"` breadcrumb text → `"All Media"`
+**Detect empty folder**: Check if `folder.children` is empty/undefined AND `filteredResults` is empty (no assets). When both are true, the folder is empty.
 
-**File: `src/components/FolderDetailsView.tsx` (line 79)**
-- Change the hardcoded `"All Files"` breadcrumb text → `"All Media"`
+**Replace tab content with empty state**: When the folder is empty, skip rendering the tabs entirely and show:
+- An illustration area (folder icon with smaller image icons, using existing Lucide icons like `FolderOpen` + `Images`)
+- **"This folder is empty"** heading
+- Two lines of descriptive text:
+  - "Folders help you group galleries and other folders by season, event, campaign, or purpose."
+  - "You can add existing content or create something new. Nothing outside this folder is affected."
+- **"Add Galleries"** primary button (dark, matching the screenshot)
+- **"New Folder"** text link below it
 
-### 3. Fix breadcrumbs for newly created folders
-The breadcrumb functions in `GalleryDetailsView` and `FolderDetailsView` use the static `folders` import from `mockFolderData.ts`. When a new folder is created, the `folderTree` state in `LibraryScreen` updates but these components still reference the stale static data.
+The "Add Galleries" and "New Folder" buttons can be non-functional placeholders for now (or wire "New Folder" to the existing dialog if the parent passes a callback).
 
-**Fix: Pass `folderTree` as a prop to both detail views.**
-
-- **`src/components/GalleryDetailsView.tsx`**: Add `folderTree` prop, use it in `buildBreadcrumbPath` instead of the static `folders` import
-- **`src/components/FolderDetailsView.tsx`**: Same — add `folderTree` prop, use it for breadcrumb building
-- **`src/components/LibraryScreen.tsx`**: Pass `folderTree` to both `<GalleryDetailsView>` and `<FolderDetailsView>`
+### Scope
+- Single file edit: `src/components/FolderDetailsView.tsx`
+- Condition: `(!folder.children || folder.children.length === 0) && filteredResults.length === 0 && !isLoading`
+- The empty state replaces everything below the folder header (breadcrumb + header stay visible)
 
