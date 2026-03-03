@@ -13,7 +13,8 @@ import { AssetTableView } from "@/components/AssetTableView";
 import { GalleryTableView } from "@/components/GalleryTableView";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
-import { folders, mockGalleries, mockFolderCards, FolderItem, findFolderById, getAllDescendantIds } from "@/lib/mockFolderData";
+import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, getAllDescendantIds, flattenFolders } from "@/lib/mockFolderData";
+import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
@@ -57,13 +58,54 @@ interface LibraryScreenProps {
 
 export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const [activeTab, setActiveTab] = useState("assets");
-  // Default expanded on folders tab, collapsed on other tabs
   const [isFolderSidebarExpanded, setIsFolderSidebarExpanded] = useState(false);
   const [activeFolder, setActiveFolder] = useState("all");
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
-  // View mode: 'grid' | 'list' for each tab
   const [assetsViewMode, setAssetsViewMode] = useState<"grid" | "list">("grid");
   const [galleriesViewMode, setGalleriesViewMode] = useState<"grid" | "list">("grid");
+  const [folderTree, setFolderTree] = useState<FolderItem[]>(initialFolders);
+  const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
+
+  const flatFolders = useMemo(() => flattenFolders(folderTree), [folderTree]);
+
+  const handleCreateFolder = useCallback((data: NewFolderData) => {
+    const newFolder: FolderItem = {
+      id: `folder-${Date.now()}`,
+      name: data.name,
+      type: "folder",
+      count: data.galleryIds.length,
+      countType: data.galleryIds.length > 0 ? "galleries" : undefined,
+      children: data.galleryIds.length > 0
+        ? data.galleryIds.map(gId => {
+            const gallery = mockGalleries.find(g => g.id === gId);
+            return {
+              id: gId,
+              name: gallery?.name ?? gId,
+              type: "gallery" as const,
+              count: gallery?.assetCount ?? 0,
+              countType: "assets" as const,
+            };
+          })
+        : undefined,
+    };
+
+    if (!data.locationId) {
+      setFolderTree(prev => [...prev, newFolder]);
+    } else {
+      const insertInto = (items: FolderItem[]): FolderItem[] =>
+        items.map(item => {
+          if (item.id === data.locationId) {
+            return { ...item, children: [...(item.children ?? []), newFolder] };
+          }
+          if (item.children) {
+            return { ...item, children: insertInto(item.children) };
+          }
+          return item;
+        });
+      setFolderTree(prev => insertInto(prev));
+    }
+    setNewFolderDialogOpen(false);
+  }, []);
 
   // Auto-expand/collapse sidebar based on active tab
   useEffect(() => {
@@ -153,7 +195,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   // Get allowed folder IDs based on activeFolder selection
   const allowedFolderIds = useMemo(() => {
     if (activeFolder === "all") return null; // null means show all
-    const folder = findFolderById(folders, activeFolder);
+    const folder = findFolderById(folderTree, activeFolder);
     if (!folder) return null;
     return getAllDescendantIds(folder);
   }, [activeFolder]);
@@ -235,7 +277,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         // Collect all allowed folder IDs from selected folders and their descendants
         const allowedFromDropdown = new Set<string>();
         folderFilter.forEach((fId) => {
-          const folder = findFolderById(folders, fId);
+          const folder = findFolderById(folderTree, fId);
           if (folder) {
             getAllDescendantIds(folder).forEach((id) => allowedFromDropdown.add(id));
           }
@@ -435,15 +477,15 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   // Check if active folder is a gallery or a folder (not "all")
   const activeGallery = useMemo(() => {
     if (activeFolder === "all") return null;
-    const folder = findFolderById(folders, activeFolder);
+    const folder = findFolderById(folderTree, activeFolder);
     return folder?.type === "gallery" ? folder : null;
-  }, [activeFolder]);
+  }, [activeFolder, folderTree]);
 
   const activeFolderItem = useMemo(() => {
     if (activeFolder === "all") return null;
-    const folder = findFolderById(folders, activeFolder);
+    const folder = findFolderById(folderTree, activeFolder);
     return folder?.type === "folder" ? folder : null;
-  }, [activeFolder]);
+  }, [activeFolder, folderTree]);
 
   // Handle navigation from folder/gallery view
   const handleNavigate = useCallback((folderId: string) => {
@@ -474,7 +516,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
 
             {/* Folder List */}
             <div className="flex-1 p-2 overflow-y-auto min-w-64">
-              {folders.map((folder) => renderFolder(folder))}
+              {folderTree.map((folder) => renderFolder(folder))}
             </div>
           </>
         ) : (
@@ -527,7 +569,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setNewFolderDialogOpen(true)}>
                   <Folder className="w-4 h-4 mr-2" />
                   New Folder
                 </DropdownMenuItem>
@@ -972,6 +1014,13 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         </Tabs>
       </div>
       )}
+      <NewFolderDialog
+        open={newFolderDialogOpen}
+        onOpenChange={setNewFolderDialogOpen}
+        onCreateFolder={handleCreateFolder}
+        flattenedFolders={flatFolders}
+        galleries={mockGalleries}
+      />
     </div>
   );
 }

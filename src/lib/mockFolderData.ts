@@ -182,6 +182,33 @@ export const mockGalleries: Gallery[] = [
   { id: "big-moments-2024", name: "Big Moments 24-25", assetCount: 48, timeAgo: "1 month ago" },
 ];
 
+// Flatten folder tree for dropdown display (only folders, not galleries)
+export interface FlattenedFolder {
+  id: string;
+  name: string;
+  depth: number;
+  displayName: string; // indented name for display
+}
+
+export function flattenFolders(items: FolderItem[], depth = 0): FlattenedFolder[] {
+  const result: FlattenedFolder[] = [];
+  for (const item of items) {
+    if (item.type === "folder" && item.id !== "all") {
+      const indent = "\u00A0\u00A0".repeat(depth);
+      result.push({
+        id: item.id,
+        name: item.name,
+        depth,
+        displayName: `${indent}${item.name}`,
+      });
+      if (item.children) {
+        result.push(...flattenFolders(item.children, depth + 1));
+      }
+    }
+  }
+  return result;
+}
+
 export const mockFolderCards: FolderCard[] = [
   { id: "season-2025", name: "Season 25-26", galleryCount: 8, timeAgo: "1 day ago" },
   { id: "season-2024", name: "Season 24-25", galleryCount: 8, timeAgo: "3 days ago" },
