@@ -140,11 +140,13 @@ export function NewFolderDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="root">All Media</SelectItem>
-                {flattenedFolders.map((f) => (
-                  <SelectItem key={f.id} value={f.id}>
-                    {f.displayName}
-                  </SelectItem>
-                ))}
+                {flattenedFolders
+                  .filter((f) => f.depth < 2) // Only allow folders at depth 0-1 as parents (max 3 levels)
+                  .map((f) => (
+                    <SelectItem key={f.id} value={f.id}>
+                      {f.displayName}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
