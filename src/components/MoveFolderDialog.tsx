@@ -99,7 +99,7 @@ export function MoveFolderDialog({
     return target ? target.depth + 2 : 1; // depth is 0-indexed, +1 for 1-indexed, +1 for being a child
   }, [targetLocationId, flattenedFolders]);
 
-  const exceedsDepthLimit = targetDepth + movingDepth - 1 > 4;
+  const exceedsDepthLimit = targetDepth + movingDepth - 1 > 3;
   const hasSelected = targetLocationId !== undefined;
 
   const nestedRows = useMemo(() => collectNestedFolders(folder, breadcrumbPath), [folder, breadcrumbPath]);
