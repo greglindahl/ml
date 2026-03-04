@@ -1,19 +1,19 @@
 
 
-## Add "Apply to All" Action to Move Galleries Dialog
+## Add Folder Path to All Gallery Cards
 
-### What changes
+Add a breadcrumb-style folder path line beneath each gallery card's metadata row, matching the uploaded mockup. Uses the existing `getGalleryLocationDisplay` helper which returns "Not in a folder" for unassigned galleries.
 
-**`src/components/MoveGalleriesDialog.tsx`**
+### Changes
 
-When a user selects a location for any gallery row, show a small "+ Apply to all" text button directly below that row's dropdown. Clicking it copies that selection to all other galleries in the list.
+**`src/components/LibraryScreen.tsx`**
+- After the `assetCount` / `timeAgo` row (line ~1152), add a new line showing `getGalleryLocationDisplay(gallery.id, folderTree)` in `text-xs text-muted-foreground` styling
+- `getGalleryLocationDisplay` is already imported
 
-- Add a helper `handleApplyToAll` that takes a value and sets it as the target for every gallery
-- After each `Select` in the table cell, conditionally render a small "+ Apply to all" link when that row has a selection and there are multiple galleries
-- Style it as a small text button (text-xs, pink/rose color matching the mockup) positioned below the select dropdown
-- Only show it on the first row that has a selection (to avoid cluttering every row)
+**`src/components/FolderDetailsView.tsx`**
+- After the asset count / time row (line ~711), add the same folder path line using `getGalleryLocationDisplay(gallery.id, folderTree)`
+- `getGalleryLocationDisplay` is already imported
+- `folderTree` is available as a prop
 
-### Implementation detail
-
-Track which gallery was most recently changed. Show "+ Apply to all" beneath that row's Location cell only. On click, apply that row's target value to all galleries.
+Both render a small muted text line like: `Season 25-26 > In-Game` or `Not in a folder`
 
