@@ -1,5 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, Folder, ChevronDown, Plus, Upload, Grid3X3, List, CheckSquare, Image, Images, FileText, Music, Video, Loader2, Settings2, Palette, X, User, Tag, Sparkles, Search, MoreHorizontal, FolderInput, Trash2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -1158,71 +1160,11 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           </TabsContent>
 
           <TabsContent value="folders" className="flex-1 py-6 mt-0">
-            {/* Faceted Search */}
-            <div className="mb-4">
-              <FacetedSearchWithTypeahead placeholder="Search" />
-            </div>
-
-            {/* Filters and Controls */}
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-              <div className="flex flex-wrap items-center gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="gap-2">
-                      Creator
-                      <ChevronDown className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem>All Creators</DropdownMenuItem>
-                    <DropdownMenuItem>Creator 1</DropdownMenuItem>
-                    <DropdownMenuItem>Creator 2</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="gap-2">
-                      Date Range
-                      <ChevronDown className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem>All Time</DropdownMenuItem>
-                    <DropdownMenuItem>Last 7 Days</DropdownMenuItem>
-                    <DropdownMenuItem>Last 30 Days</DropdownMenuItem>
-                    <DropdownMenuItem>Last Year</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="gap-2">
-                      Sort{sortField ? `: ${SORT_LABELS[sortField]}` : ""}
-                      <ChevronDown className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-48">
-                    {SORT_OPTIONS.map(opt => (
-                      <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
-                        {opt.label}
-                        {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                <div className="flex items-center border rounded-md">
-                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-r-none">
-                    <Grid3X3 className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-l-none">
-                    <List className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
+            <div className="flex items-center justify-end gap-2 mb-6">
+              <Label htmlFor="archived-folders" className="text-sm text-muted-foreground">
+                Archived Only
+              </Label>
+              <Switch id="archived-folders" />
             </div>
 
             {/* Folders Grid */}

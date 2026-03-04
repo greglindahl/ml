@@ -1,5 +1,6 @@
 
 
+
 ## Remove Controls from Folders Tab (Keep Only Archived Toggle)
 
 On the All Media level Folders tab, remove the search bar, Creator filter, Date Range filter, Sort dropdown, and grid/list toggle. Replace them with just an "Archived Only" toggle.
@@ -24,4 +25,3 @@ In the `<TabsContent value="folders">` section (lines 1160-1226):
 ```
 
 This keeps the Folders grid unchanged — only the toolbar above it is simplified.
-
