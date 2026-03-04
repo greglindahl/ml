@@ -1,25 +1,19 @@
 
 
-## Update Move Galleries Dialog to Table Layout (Hybrid Mockup)
+## Add "Apply to All" Action to Move Galleries Dialog
 
 ### What changes
 
 **`src/components/MoveGalleriesDialog.tsx`**
 
-Replace the current row-based layout (thumbnail + stacked name/path + dropdown) with a three-column table layout matching the uploaded mockup:
+When a user selects a location for any gallery row, show a small "+ Apply to all" text button directly below that row's dropdown. Clicking it copies that selection to all other galleries in the list.
 
-| Gallery | Current Location | Location |
-|---------|-----------------|----------|
-| Gallery Name | Folder > Folder | Select Location dropdown |
+- Add a helper `handleApplyToAll` that takes a value and sets it as the target for every gallery
+- After each `Select` in the table cell, conditionally render a small "+ Apply to all" link when that row has a selection and there are multiple galleries
+- Style it as a small text button (text-xs, pink/rose color matching the mockup) positioned below the select dropdown
+- Only show it on the first row that has a selection (to avoid cluttering every row)
 
-Key changes:
-- Remove the gallery thumbnail icon
-- Use a `Table` with three columns: **Gallery**, **Current Location**, **Location**
-- Each row shows gallery name, its current breadcrumb path, and a `Select` dropdown for the target location
-- Remove the "+ Apply to All" button (not in the mockup)
-- Update description text to match mockup: split into two lines — "You're about to move [X] galleries to a new location." then "This changes where they appear in the folder hierarchy." then "Sharing, assets, and access are not affected"
-- Update info banner text to match mockup: "This move will affect 10,000 media items and may take some time to complete. The move will continue in the background. **Content will not be searchable until the move is finished.**"
-- Update select placeholder from "Select folder" to "Select Location"
+### Implementation detail
 
-### No other files change
+Track which gallery was most recently changed. Show "+ Apply to all" beneath that row's Location cell only. On click, apply that row's target value to all galleries.
 
