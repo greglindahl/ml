@@ -29,23 +29,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import type { FolderItem, FlattenedFolder } from "@/lib/mockFolderData";
 import { getMaxDepth, getAllDescendantIds } from "@/lib/mockFolderData";
 
-interface NestedFolderRow {
-  name: string;
-  path: string;
-}
-
-function collectNestedFolders(folder: FolderItem, parentPath: string): NestedFolderRow[] {
-  const rows: NestedFolderRow[] = [{ name: folder.name, path: parentPath }];
-  if (folder.children) {
-    const childPath = parentPath ? `${parentPath} > ${folder.name}` : folder.name;
-    for (const child of folder.children) {
-      if (child.type === "folder") {
-        rows.push(...collectNestedFolders(child, childPath));
-      }
-    }
-  }
-  return rows;
-}
+import { collectNestedFolders } from "@/lib/mockFolderData";
 
 function countTotalAssets(folder: FolderItem): number {
   let total = 0;

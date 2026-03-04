@@ -960,7 +960,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           onArchiveFolder?.(folderId);
           toast({ title: "Folder archived", description: `"${folder.name}" has been archived.` });
         }}
-        folderName={folder.name}
+        folder={folder}
+        breadcrumbPath={breadcrumbPath.map(b => b.name).join(" > ")}
       />
       <DeleteFolderDialog
         open={deleteOpen}
