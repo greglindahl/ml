@@ -644,6 +644,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   };
 
   const renderFolder = (folder: FolderItem, depth = 0) => {
+    if (folder.archived === true && folder.id !== "all") return null;
+
     const visibleChildren = folder.children?.filter(child => child.archived !== true) || [];
     const hasChildren = visibleChildren.length > 0;
     const isExpanded = expandedFolders.has(folder.id);
@@ -694,7 +696,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         {/* Children */}
         {hasChildren && isExpanded && (
           <div className="mt-1">
-            {folder.children!.filter(child => child.archived !== true).map((child) => renderFolder(child, depth + 1))}
+            {visibleChildren.map((child) => renderFolder(child, depth + 1))}
           </div>
         )}
       </div>
@@ -746,7 +748,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
 
             {/* Folder List */}
             <div className="flex-1 p-2 overflow-y-auto min-w-64">
-              {folderTree.map((folder) => renderFolder(folder))}
+              {folderTree.filter(folder => folder.id === "all" || folder.archived !== true).map((folder) => renderFolder(folder))}
             </div>
           </>
         ) : (
