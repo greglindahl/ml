@@ -1,20 +1,20 @@
 
 
-## Default Location in New Folder Dialog to Current Folder
+## Replace Galleries Empty State with Actionable CTA
 
-Add a `defaultLocationId` prop to `NewFolderDialog` so it pre-selects the current folder as the location. At All Media level, it stays as "Select location...".
+### What changes
 
-### Changes
+**`src/components/FolderDetailsView.tsx`**
 
-**`src/components/NewFolderDialog.tsx`**
-- Add optional `defaultLocationId?: string | null` to props interface
-- Initialize `locationId` state from `defaultLocationId` instead of `null`
-- Reset to `defaultLocationId` (not `null`) in `resetForm`
-- Use `useEffect` to sync when `defaultLocationId` changes or dialog opens
+1. **Galleries tab empty state** (lines 688-693): Replace the passive "No galleries found / This folder doesn't contain any galleries" message with the same empty-state pattern used in the Folders tab — an illustration, descriptive text, and an "Add Galleries" button that opens the `AddGalleryDialog` (gallery selector). This lets users immediately select existing galleries or create new ones.
 
-**`src/components/FolderDetailsView.tsx`** (line ~880)
-- Pass `defaultLocationId={folderId}` to `NewFolderDialog`
+2. **Button color change** — update all "Add Galleries" buttons from black (`bg-foreground text-background`) to blue (`bg-primary text-primary-foreground hover:bg-primary/90`) across three locations:
+   - The new galleries-tab empty state (line ~689)
+   - The folders-tab empty state at levels 1-2 (line ~775)
+   - The folders-tab empty state at level 3 / nesting limit (line ~784)
 
-**`src/components/LibraryScreen.tsx`** (line ~1219)
-- No change needed — omitting the prop defaults to `null`, which keeps "Select location..." as placeholder at All Media level
+### Summary of behavior
+- Inside a folder on the Galleries tab with no galleries → shows illustration + "Add Galleries" blue button
+- Clicking "Add Galleries" opens the existing `AddGalleryDialog` (the gallery selector with search, select, and "+ New Gallery")
+- All "Add Galleries" CTAs across the app become blue-styled for consistency
 
