@@ -1,34 +1,25 @@
 
 
-## Bug: Archived Folders Don't Appear in "Archived Only" View
+## Hide Archived Items from Nav and Content
 
-### Root Cause
+Understood. When a folder or gallery is archived (`archived: true`), it should be hidden from:
 
-The Folders tab grid at the "All Media" level renders from `mockFolderCards` — a **static array** imported from `mockFolderData.ts`. When you create a new folder (like "Archive") it gets added to the `folderTree` state, but **never** to `mockFolderCards`. The filtering logic iterates `mockFolderCards` and looks up each card's ID in `folderTree` to check `archived` status. Since the new folder isn't in `mockFolderCards`, it's never rendered — archived or not.
+1. **Sidebar folder tree** — archived folders/galleries should not render in the left nav tree
+2. **Main content area** — archived folders/galleries should not appear in the grid/table unless "Archived Only" is toggled on
+3. **Only visible** when the "Archived Only" toggle is active on the respective tab
 
-### Fix
+Currently, archived items still show in the sidebar tree and may still appear in content areas. The fix involves filtering out archived items in both rendering paths.
 
-**`src/components/LibraryScreen.tsx`** (lines ~1267-1268)
+### Changes
 
-Instead of filtering `mockFolderCards`, derive the folder cards dynamically from the current `folderTree` state. Specifically, use the direct children of the active folder (or top-level season folders when viewing "All Media") and build card objects from them. This ensures newly created folders and their archived state are always reflected.
+**`src/components/LibraryScreen.tsx`**
+- In the sidebar tree rendering (the recursive folder/gallery tree), filter out items where `archived === true`
+- In the main content Folders tab: already fixed to filter by archive state — verify galleries tab does the same
+- In the main content Galleries tab: filter out archived galleries from the grid/table unless `archivedGalleriesOnly` is true
 
-The change replaces:
-```ts
-const filteredFolderCards = mockFolderCards.filter(fc => {
-  const treeItem = findFolderById(folderTree, fc.id);
-  ...
-});
-```
+**`src/components/FolderDetailsView.tsx`**
+- When rendering child folders and galleries in the content area, filter out archived items unless the respective "Archived Only" toggle is on
+- When rendering the sidebar sub-tree for the current folder, exclude archived children
 
-With logic that derives cards from `folderTree` children directly:
-```ts
-const topLevelFolders = folderTree.filter(f => f.id !== "all");
-const filteredFolderCards = topLevelFolders
-  .filter(f => archivedFoldersOnly ? f.archived === true : f.archived !== true)
-  .map(f => ({ id: f.id, name: f.name, galleryCount: f.count || 0, timeAgo: "—" }));
-```
-
-This single change fixes both:
-1. Archived folders not appearing in "Archived Only" view
-2. Newly created folders not appearing in the grid at all (if they weren't in the static mock data)
+The sidebar tree is rendered in `LibraryScreen.tsx` via a recursive function. I'll add an `archived !== true` filter to that recursion so archived folders and galleries are hidden from navigation entirely.
 
