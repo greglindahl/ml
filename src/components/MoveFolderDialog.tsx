@@ -25,6 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { AlertTriangle, Info, Folder } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { FolderItem, FlattenedFolder } from "@/lib/mockFolderData";
 import { getMaxDepth, getAllDescendantIds } from "@/lib/mockFolderData";
 
@@ -116,29 +117,34 @@ export function MoveFolderDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          {/* Nested folders table */}
+          {/* Nested folders summary + scrollable table */}
+          <p className="text-sm text-muted-foreground">{nestedRows.length} {nestedRows.length === 1 ? "folder" : "folders"} will be moved</p>
           <div className="border rounded-lg overflow-hidden">
             <Table>
-              <TableHeader>
+              <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
                   <TableHead className="text-xs font-medium">Folder</TableHead>
                   <TableHead className="text-xs font-medium">Current Location</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
-                {nestedRows.map((row, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="py-2">
-                      <div className="flex items-center gap-2">
-                        <Folder className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        <span className="text-sm font-medium">{row.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-2 text-sm text-muted-foreground">{row.path}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
             </Table>
+            <ScrollArea className="max-h-[200px]">
+              <Table>
+                <TableBody>
+                  {nestedRows.map((row, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="py-2">
+                        <div className="flex items-center gap-2">
+                          <Folder className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <span className="text-sm font-medium">{row.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-2 text-sm text-muted-foreground">{row.path}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollArea>
           </div>
 
           {/* Target location */}
