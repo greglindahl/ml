@@ -1,26 +1,25 @@
 
 
-## Diversify Folder/Gallery Names for Season 24-25 and Season 23-24
+## Update Move Galleries Dialog to Table Layout (Hybrid Mockup)
 
-**`src/lib/mockFolderData.ts`**
+### What changes
 
-Keep Season 25-26 structure unchanged. Update the children of Season 24-25 and Season 23-24 with unique, varied names:
+**`src/components/MoveGalleriesDialog.tsx`**
 
-**Season 24-25 children:**
-- "In-Game" → "Game Day"
-- "Scoring Highlights" → "Clutch Plays"
-- "Rebounds Reels" → "Defensive Stops"
-- "Training" → "Pre-Season Camp"
-- "Fan Engagement" → "Meet & Greets"
-- "Big Moments" → "Playoff Run"
+Replace the current row-based layout (thumbnail + stacked name/path + dropdown) with a three-column table layout matching the uploaded mockup:
 
-**Season 23-24 children:**
-- "In-Game" → "Match Coverage"
-- "Scoring Highlights" → "Top 10 Dunks"
-- "Rebounds Reels" → "Block Party"
-- "Training" → "Summer Workouts"
-- "Fan Engagement" → "Community Outreach"
-- "Big Moments" → "Championship Parade"
+| Gallery | Current Location | Location |
+|---------|-----------------|----------|
+| Gallery Name | Folder > Folder | Select Location dropdown |
 
-Also update the corresponding entries in `mockGalleries` array to match the new names.
+Key changes:
+- Remove the gallery thumbnail icon
+- Use a `Table` with three columns: **Gallery**, **Current Location**, **Location**
+- Each row shows gallery name, its current breadcrumb path, and a `Select` dropdown for the target location
+- Remove the "+ Apply to All" button (not in the mockup)
+- Update description text to match mockup: split into two lines — "You're about to move [X] galleries to a new location." then "This changes where they appear in the folder hierarchy." then "Sharing, assets, and access are not affected"
+- Update info banner text to match mockup: "This move will affect 10,000 media items and may take some time to complete. The move will continue in the background. **Content will not be searchable until the move is finished.**"
+- Update select placeholder from "Select folder" to "Select Location"
+
+### No other files change
 
