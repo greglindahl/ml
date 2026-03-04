@@ -709,6 +709,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                           2 days ago
                         </span>
                       </div>
+                      <div className="text-xs text-muted-foreground truncate mt-1">
+                        {getGalleryLocationDisplay(gallery.id, folderTree)}
+                      </div>
                     </div>
                   </div>
                 );
