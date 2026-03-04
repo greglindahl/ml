@@ -1,27 +1,30 @@
 
 
+## Populate All Folders with Mock Gallery and Sub-folder Data
 
-## Remove Controls from Folders Tab (Keep Only Archived Toggle)
-
-On the All Media level Folders tab, remove the search bar, Creator filter, Date Range filter, Sort dropdown, and grid/list toggle. Replace them with just an "Archived Only" toggle.
+Currently, several folders across all three seasons (Training, Fan Engagement, Pre-Season Camp, Meet & Greets, Summer Workouts, Community Outreach) claim to have galleries in their `count` but have no actual `children` defined. This means navigating into them shows empty content.
 
 ### Changes
 
-**`src/components/LibraryScreen.tsx`**
+**`src/lib/mockFolderData.ts`**
 
-In the `<TabsContent value="folders">` section (lines 1160-1226):
+Add children (galleries and sub-folders where appropriate) to every folder that currently has none:
 
-1. **Remove** the `FacetedSearchWithTypeahead` search bar (lines 1161-1164)
-2. **Remove** the entire filters/controls row: Creator dropdown, Date Range dropdown, Sort dropdown, and grid/list toggle (lines 1166-1226)
-3. **Replace** with a single row containing an "Archived Only" toggle using a `Switch` component + label, right-aligned:
+**Season 25-26:**
+- **Training** (id: `training`): Add 3 galleries — "Shooting Drills", "Scrimmage Footage", "Film Sessions" — and 1 sub-folder "Conditioning" with 2 galleries inside
+- **Fan Engagement** (id: `fan-engagement`): Add 3 galleries — "Halftime Shows", "Autograph Signings", "Kids Day"
 
-```tsx
-<div className="flex items-center justify-end gap-2 mb-6">
-  <Label htmlFor="archived-folders" className="text-sm text-muted-foreground">
-    Archived Only
-  </Label>
-  <Switch id="archived-folders" />
-</div>
-```
+**Season 24-25:**
+- **Pre-Season Camp** (id: `training-2024`): Add 3 galleries — "Tryout Highlights", "Rookie Introductions", "Team Bonding" — and 1 sub-folder "Fitness Testing" with 2 galleries
+- **Meet & Greets** (id: `fan-engagement-2024`): Add 3 galleries — "VIP Courtside", "School Visits", "Charity Gala"
 
-This keeps the Folders grid unchanged — only the toolbar above it is simplified.
+**Season 23-24:**
+- **Summer Workouts** (id: `training-2023`): Add 3 galleries — "Open Gym Sessions", "Skills Camp", "Recovery & Rehab" — and 1 sub-folder "Weight Room" with 2 galleries
+- **Community Outreach** (id: `fan-engagement-2023`): Add 3 galleries — "Hospital Visits", "Food Drive", "Youth Basketball Clinic"
+
+Also add all these new galleries to the `mockGalleries` array so they appear in gallery pickers and search results.
+
+Update the `count` values on each folder to accurately reflect its actual children count.
+
+This gives every navigable folder real content at multiple nesting levels, making the app feel realistic for testing folder navigation, gallery management, and bulk actions throughout the hierarchy.
+
