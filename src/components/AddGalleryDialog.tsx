@@ -19,10 +19,18 @@ export function AddGalleryDialog({ open, onOpenChange, galleries, onSelectGaller
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const filtered = useMemo(() => {
-    if (!searchQuery.trim()) return galleries;
-    const q = searchQuery.toLowerCase();
-    return galleries.filter(g => g.name.toLowerCase().includes(q));
-  }, [galleries, searchQuery]);
+    let list = galleries;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(g => g.name.toLowerCase().includes(q));
+    }
+    // Sort: available galleries first, disabled (already in folder) last
+    return [...list].sort((a, b) => {
+      const aDisabled = disabledGalleryIds.has(a.id) ? 1 : 0;
+      const bDisabled = disabledGalleryIds.has(b.id) ? 1 : 0;
+      return aDisabled - bDisabled;
+    });
+  }, [galleries, searchQuery, disabledGalleryIds]);
 
   const toggleSelect = (id: string) => {
     if (disabledGalleryIds.has(id)) return;
