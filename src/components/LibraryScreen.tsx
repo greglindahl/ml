@@ -1160,11 +1160,21 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           </TabsContent>
 
           <TabsContent value="folders" className="flex-1 py-6 mt-0">
-            <div className="flex items-center justify-end gap-2 mb-6">
-              <Label htmlFor="archived-folders" className="text-sm text-muted-foreground">
-                Archived Only
-              </Label>
-              <Switch id="archived-folders" />
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="archived-folders" className="text-sm text-muted-foreground">
+                  Archived Only
+                </Label>
+                <Switch id="archived-folders" />
+              </div>
+              <div className="flex items-center border rounded-md bg-card">
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-r-none bg-accent">
+                  <Grid3X3 className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-l-none border-l">
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
 
             {/* Folders Grid */}
