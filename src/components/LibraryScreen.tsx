@@ -12,6 +12,7 @@ import type { FilterBarHandle } from "@/components/FilterBar";
 import { GalleryDetailsView } from "@/components/GalleryDetailsView";
 import { FolderDetailsView } from "@/components/FolderDetailsView";
 import { AssetTableView } from "@/components/AssetTableView";
+import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { GalleryTableView } from "@/components/GalleryTableView";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
@@ -84,6 +85,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const { toast } = useToast();
   const [archivedFoldersOnly, setArchivedFoldersOnly] = useState(false);
   const [archivedGalleriesOnly, setArchivedGalleriesOnly] = useState(false);
+  const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
 
   const flatFolders = useMemo(() => flattenFolders(folderTree), [folderTree]);
 
@@ -345,6 +347,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   // Auto-expand/collapse sidebar based on active tab
   useEffect(() => {
     setIsFolderSidebarExpanded(activeTab === "folders");
+    setSelectedAssets(new Set());
   }, [activeTab]);
 
   // Filter state (driven by FilterBar)
@@ -985,17 +988,57 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   >
                     <List className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-l-none">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={`h-8 w-8 rounded-l-none ${selectedAssets.size > 0 ? "bg-accent" : ""}`}
+                    onClick={() => {
+                      if (selectedAssets.size > 0) {
+                        setSelectedAssets(new Set());
+                      } else {
+                        setSelectedAssets(new Set(sortedResults.map(a => a.id)));
+                      }
+                    }}
+                  >
                     <CheckSquare className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
             </div>
 
+            {/* Asset Bulk Action Bar */}
+            {selectedAssets.size > 0 && (
+              <AssetBulkActionBar
+                selectedCount={selectedAssets.size}
+                allSelected={sortedResults.length > 0 && selectedAssets.size === sortedResults.length}
+                someSelected={selectedAssets.size > 0 && selectedAssets.size < sortedResults.length}
+                onSelectAll={(checked) => {
+                  if (checked) {
+                    setSelectedAssets(new Set(sortedResults.map(a => a.id)));
+                  } else {
+                    setSelectedAssets(new Set());
+                  }
+                }}
+              />
+            )}
+
             {/* Assets Grid/Table with Loading State */}
             <div className="min-h-[400px]">
             {assetsViewMode === "list" ? (
-              <AssetTableView assets={sortedResults} isLoading={isLoading} />
+              <AssetTableView 
+                assets={sortedResults} 
+                isLoading={isLoading}
+                selectedAssets={selectedAssets}
+                onSelectAsset={(id, checked) => {
+                  const next = new Set(selectedAssets);
+                  if (checked) next.add(id); else next.delete(id);
+                  setSelectedAssets(next);
+                }}
+                onSelectAll={(checked) => {
+                  if (checked) setSelectedAssets(new Set(sortedResults.map(a => a.id)));
+                  else setSelectedAssets(new Set());
+                }}
+              />
             ) : isLoading ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {Array.from({ length: 10 }).map((_, i) => (
@@ -1015,9 +1058,44 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {sortedResults.map((asset) => (
-                  <div key={asset.id} className="group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                  <div 
+                    key={asset.id} 
+                    className={`group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow ${selectedAssets.has(asset.id) ? "ring-2 ring-primary" : ""}`}
+                    onClick={() => {
+                      if (selectedAssets.size > 0) {
+                        const next = new Set(selectedAssets);
+                        if (next.has(asset.id)) next.delete(asset.id); else next.add(asset.id);
+                        setSelectedAssets(next);
+                      }
+                    }}
+                  >
                     {/* Thumbnail area */}
                     <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center relative">
+                      {/* Checkbox overlay */}
+                      {selectedAssets.size > 0 && (
+                        <div className="absolute top-2 left-2 z-10">
+                          <Checkbox
+                            checked={selectedAssets.has(asset.id)}
+                            onCheckedChange={(checked) => {
+                              const next = new Set(selectedAssets);
+                              if (checked) next.add(asset.id); else next.delete(asset.id);
+                              setSelectedAssets(next);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      )}
+                      {selectedAssets.size === 0 && (
+                        <div className="absolute top-2 left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Checkbox
+                            checked={false}
+                            onCheckedChange={() => {
+                              setSelectedAssets(new Set([asset.id]));
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      )}
                       <AssetTypeIcon type={asset.type} className="w-10 h-10 text-muted-foreground/40" />
                       {/* Branded icon overlay */}
                       {isBrandedActive && asset.isBranded && (
