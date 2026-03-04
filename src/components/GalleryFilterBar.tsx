@@ -80,7 +80,11 @@ const galleryFilters: FilterConfig[] = [
 }];
 
 
-export function GalleryFilterBar() {
+interface GalleryFilterBarProps {
+  onArchivedChange?: (archived: boolean) => void;
+}
+
+export function GalleryFilterBar({ onArchivedChange }: GalleryFilterBarProps = {}) {
   const [activeFilters, setActiveFilters] = useState<
     Record<string, {value: string;label: string;}[]>>(
     {});
@@ -247,7 +251,7 @@ export function GalleryFilterBar() {
         <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
           Archived Only 
         </span>
-        <Switch checked={showArchived} onCheckedChange={setShowArchived} className="scale-75" />
+        <Switch checked={showArchived} onCheckedChange={(v) => { setShowArchived(v); onArchivedChange?.(v); }} className="scale-75" />
       </div>
     </div>);
 
