@@ -1,30 +1,26 @@
 
 
-## Fix: Move Folder Depth Validation Bug
+## Diversify Folder/Gallery Names for Season 24-25 and Season 23-24
 
-### Problem
+**`src/lib/mockFolderData.ts`**
 
-The depth validation in `MoveFolderDialog` uses the check `targetDepth + movingDepth - 1 > 4`, but the rule is **folders can only exist at levels 1-3** (level 4 is galleries-only). This means the correct limit for folder depth is 3, not 4.
+Keep Season 25-26 structure unchanged. Update the children of Season 24-25 and Season 23-24 with unique, varied names:
 
-Example: Moving "Season 23-24" (which has folder children like "In-Game") into "Season 24-25 > In-Game" produces:
-- All Media > Season 24-25 (L1) > In-Game (L2) > Season 23-24 (L3) > In-Game (L4) — folder at level 4, violates the rule.
+**Season 24-25 children:**
+- "In-Game" → "Game Day"
+- "Scoring Highlights" → "Clutch Plays"
+- "Rebounds Reels" → "Defensive Stops"
+- "Training" → "Pre-Season Camp"
+- "Fan Engagement" → "Meet & Greets"
+- "Big Moments" → "Playoff Run"
 
-The current math evaluates to `3 + 2 - 1 = 4`, and `4 > 4` is false, so the move is incorrectly allowed.
+**Season 23-24 children:**
+- "In-Game" → "Match Coverage"
+- "Scoring Highlights" → "Top 10 Dunks"
+- "Rebounds Reels" → "Block Party"
+- "Training" → "Summer Workouts"
+- "Fan Engagement" → "Community Outreach"
+- "Big Moments" → "Championship Parade"
 
-### Fix
-
-**`src/components/MoveFolderDialog.tsx`** — One-line change:
-
-Change line 102 from:
-```typescript
-const exceedsDepthLimit = targetDepth + movingDepth - 1 > 4;
-```
-to:
-```typescript
-const exceedsDepthLimit = targetDepth + movingDepth - 1 > 3;
-```
-
-This enforces that the deepest folder in the moved subtree cannot land deeper than level 3, reserving level 4 for galleries only.
-
-### No other files change
+Also update the corresponding entries in `mockGalleries` array to match the new names.
 
