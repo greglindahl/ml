@@ -641,7 +641,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   };
 
   const renderFolder = (folder: FolderItem, depth = 0) => {
-    const hasChildren = folder.children && folder.children.length > 0;
+    const visibleChildren = folder.children?.filter(child => child.archived !== true) || [];
+    const hasChildren = visibleChildren.length > 0;
     const isExpanded = expandedFolders.has(folder.id);
     const isActive = activeFolder === folder.id;
     const isGallery = folder.type === "gallery";
@@ -690,7 +691,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         {/* Children */}
         {hasChildren && isExpanded && (
           <div className="mt-1">
-            {folder.children!.map((child) => renderFolder(child, depth + 1))}
+            {folder.children!.filter(child => child.archived !== true).map((child) => renderFolder(child, depth + 1))}
           </div>
         )}
       </div>
