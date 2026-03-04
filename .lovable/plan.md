@@ -1,28 +1,18 @@
 
 
-## Bug: Asset Bulk Actions Not Working on Top-Level Library Page
+## Add Favorite and Archive Buttons to Gallery Bulk Action Bar
 
-### Root Cause
-
-The top-level Library page (`LibraryScreen.tsx`) has no `selectedAssets` state and the `CheckSquare` bulk-select button (line 988) has no `onClick` handler. Bulk asset selection is only implemented in `FolderDetailsView.tsx`. The asset grid cards on the Library page also lack checkbox overlays and selection click handlers.
+### Problem
+The gallery bulk action bar on the top-level Library Galleries tab only shows a checkbox, selection count, and a three-dot menu with Move and Delete. It's missing the dedicated **Favorite** (Heart) and **Archive** icon buttons that should appear between the count and the three-dot menu, matching the asset bulk action bar pattern shown in `AssetBulkActionBar`.
 
 ### Fix
 
-**`src/components/LibraryScreen.tsx`**
+**`src/components/LibraryScreen.tsx`** (lines ~1221-1223)
 
-1. **Add `selectedAssets` state** — `useState<Set<string>>(new Set())`
+After the `"{selectedGalleries.size} selected"` span and before the `<DropdownMenu>`, add two icon buttons:
 
-2. **Wire the CheckSquare button** — toggle all/none selection on click, highlight when active
+1. **Favorite** — `<Heart>` icon button with tooltip "Favorite"
+2. **Archive** — `<Archive>` icon button with tooltip "Archive", which sets `archived: true` on all selected galleries and clears the selection
 
-3. **Add `AssetBulkActionBar`** — render it above the asset grid when `selectedAssets.size > 0`, with select-all, favorite, archive, download, share, gallery, and delete actions
-
-4. **Add checkbox overlays to asset grid cards** — show on hover (when nothing selected) or always (when selection active), matching the pattern in `FolderDetailsView`
-
-5. **Add selection click handling to cards** — when in selection mode, clicking a card toggles its selection instead of navigating
-
-6. **Pass `selectedAssets` and handlers to `AssetTableView`** — so list view also supports selection (matching how `FolderDetailsView` does it)
-
-7. **Clear selection on tab change or filter change** — reset `selectedAssets` when switching away from Assets tab
-
-All patterns already exist in `FolderDetailsView.tsx` and will be replicated to `LibraryScreen.tsx`.
+The Archive handler will update each selected gallery in `galleryList` state to set `archived: true`, then clear the selection. This matches the existing archive pattern used for folders.
 
