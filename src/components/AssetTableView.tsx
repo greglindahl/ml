@@ -21,6 +21,10 @@ import {
 interface AssetTableViewProps {
   assets: LibraryAsset[];
   isLoading?: boolean;
+  /** When provided, use external selection state instead of internal */
+  selectedAssets?: Set<string>;
+  onSelectAsset?: (assetId: string, checked: boolean) => void;
+  onSelectAll?: (checked: boolean) => void;
 }
 
 type SortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "status" | "favorites" | "lastDownloadDate" | null;
@@ -57,27 +61,36 @@ function getOrientation(aspectRatio: LibraryAsset["aspectRatio"]): string {
 }
 
 
-export function AssetTableView({ assets, isLoading = false }: AssetTableViewProps) {
-  const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
+export function AssetTableView({ assets, isLoading = false, selectedAssets: externalSelected, onSelectAsset: externalSelectAsset, onSelectAll: externalSelectAll }: AssetTableViewProps) {
+  const [internalSelected, setInternalSelected] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>("dateCreated");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
+  // Use external selection state when provided, otherwise internal
+  const selectedAssets = externalSelected ?? internalSelected;
+
   const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedAssets(new Set(assets.map(a => a.id)));
+    if (externalSelectAll) {
+      externalSelectAll(checked);
+    } else if (checked) {
+      setInternalSelected(new Set(assets.map(a => a.id)));
     } else {
-      setSelectedAssets(new Set());
+      setInternalSelected(new Set());
     }
   };
 
   const handleSelectAsset = (assetId: string, checked: boolean) => {
-    const newSelected = new Set(selectedAssets);
-    if (checked) {
-      newSelected.add(assetId);
+    if (externalSelectAsset) {
+      externalSelectAsset(assetId, checked);
     } else {
-      newSelected.delete(assetId);
+      const newSelected = new Set(internalSelected);
+      if (checked) {
+        newSelected.add(assetId);
+      } else {
+        newSelected.delete(assetId);
+      }
+      setInternalSelected(newSelected);
     }
-    setSelectedAssets(newSelected);
   };
 
   const handleSort = (field: SortField) => {
