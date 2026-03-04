@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, Share, Upload, MoreVertical, Settings2, Move, Trash2 } from "lucide-react";
+import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { AssetTableView } from "@/components/AssetTableView";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
 import { FolderItem, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay } from "@/lib/mockFolderData";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -56,6 +58,9 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
   const [moveGalleriesOpen, setMoveGalleriesOpen] = useState(false);
   // View mode state (grid vs list)
   const [assetsViewMode, setAssetsViewMode] = useState<"grid" | "list">("grid");
+  
+  // Asset selection state for bulk actions
+  const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
   
   // Filter state (driven by FilterBar)
   const [contentTypeFilter, setContentTypeFilter] = useState<Array<LibraryAsset["type"]>>([]);
@@ -330,17 +335,58 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 >
                   <List className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-l-none">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`h-8 w-8 rounded-l-none ${selectedAssets.size > 0 ? "bg-muted" : ""}`}
+                  onClick={() => {
+                    if (selectedAssets.size > 0) {
+                      setSelectedAssets(new Set());
+                    } else {
+                      setSelectedAssets(new Set(filteredResults.map(a => a.id)));
+                    }
+                  }}
+                >
                   <CheckSquare className="w-4 h-4" />
                 </Button>
               </div>
             </div>
           </div>
 
+          {/* Asset Bulk Action Bar */}
+          {selectedAssets.size > 0 && (
+            <AssetBulkActionBar
+              selectedCount={selectedAssets.size}
+              allSelected={filteredResults.length > 0 && selectedAssets.size === filteredResults.length}
+              someSelected={selectedAssets.size > 0 && selectedAssets.size < filteredResults.length}
+              onSelectAll={(checked) => {
+                if (checked) {
+                  setSelectedAssets(new Set(filteredResults.map(a => a.id)));
+                } else {
+                  setSelectedAssets(new Set());
+                }
+              }}
+              galleryActionLabel="Remove from Gallery"
+            />
+          )}
+
           {/* Assets Grid/Table with Loading State */}
           <div className="min-h-[400px]">
             {assetsViewMode === "list" ? (
-              <AssetTableView assets={filteredResults} isLoading={isLoading} />
+              <AssetTableView 
+                assets={filteredResults} 
+                isLoading={isLoading}
+                selectedAssets={selectedAssets}
+                onSelectAsset={(id, checked) => {
+                  const next = new Set(selectedAssets);
+                  if (checked) next.add(id); else next.delete(id);
+                  setSelectedAssets(next);
+                }}
+                onSelectAll={(checked) => {
+                  if (checked) setSelectedAssets(new Set(filteredResults.map(a => a.id)));
+                  else setSelectedAssets(new Set());
+                }}
+              />
             ) : isLoading ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {Array.from({ length: 10 }).map((_, i) => (
@@ -360,9 +406,46 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {filteredResults.map((asset) => (
-                  <div key={asset.id} className="group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                  <div 
+                    key={asset.id} 
+                    className={`group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow ${selectedAssets.has(asset.id) ? "ring-2 ring-primary" : ""}`}
+                    onClick={() => {
+                      if (selectedAssets.size > 0) {
+                        const next = new Set(selectedAssets);
+                        if (next.has(asset.id)) next.delete(asset.id); else next.add(asset.id);
+                        setSelectedAssets(next);
+                      }
+                    }}
+                  >
                     {/* Thumbnail area */}
                     <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center relative">
+                      {/* Checkbox overlay */}
+                      {(selectedAssets.size > 0) && (
+                        <div className="absolute top-2 left-2 z-10">
+                          <Checkbox
+                            checked={selectedAssets.has(asset.id)}
+                            onCheckedChange={(checked) => {
+                              const next = new Set(selectedAssets);
+                              if (checked) next.add(asset.id); else next.delete(asset.id);
+                              setSelectedAssets(next);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label={`Select ${asset.name}`}
+                          />
+                        </div>
+                      )}
+                      {selectedAssets.size === 0 && (
+                        <div className="absolute top-2 left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Checkbox
+                            checked={false}
+                            onCheckedChange={() => {
+                              setSelectedAssets(new Set([asset.id]));
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label={`Select ${asset.name}`}
+                          />
+                        </div>
+                      )}
                       <AssetTypeIcon type={asset.type} className="w-10 h-10 text-muted-foreground/40" />
                       {/* Metadata badges */}
                       <div className="absolute bottom-2 right-2 flex items-center gap-1.5">
