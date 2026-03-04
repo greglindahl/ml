@@ -1049,18 +1049,6 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   </Button>
                 )}
 
-                {galleriesViewMode === "grid" && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-card"
-                    onClick={() => setSelectedGalleries(prev => (prev.size > 0 ? new Set() : new Set(galleryList.map(g => g.id))))}
-                  >
-                    <CheckSquare className="w-3.5 h-3.5" />
-                    {isAnyGallerySelected ? `Selected (${selectedGalleries.size})` : "Bulk Select"}
-                  </Button>
-                )}
-
                 <div className="flex items-center border rounded-md bg-card">
                   <Button 
                     variant="ghost" 
@@ -1073,10 +1061,18 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className={`h-8 w-8 rounded-l-none ${galleriesViewMode === "list" ? "bg-accent" : ""}`}
+                    className={`h-8 w-8 rounded-none border-l ${galleriesViewMode === "list" ? "bg-accent" : ""}`}
                     onClick={() => setGalleriesViewMode("list")}
                   >
                     <List className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={`h-8 w-8 rounded-l-none border-l ${isAnyGallerySelected ? "bg-accent" : ""}`}
+                    onClick={() => setSelectedGalleries(prev => (prev.size > 0 ? new Set() : new Set(galleryList.map(g => g.id))))}
+                  >
+                    <CheckSquare className="w-4 h-4" />
                   </Button>
                 </div>
               </div>

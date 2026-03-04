@@ -628,10 +628,18 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className={`h-8 w-8 rounded-l-none border-l ${galleriesViewMode === "list" ? "bg-muted" : ""}`}
+                  className={`h-8 w-8 rounded-none border-l ${galleriesViewMode === "list" ? "bg-muted" : ""}`}
                   onClick={() => setGalleriesViewMode("list")}
                 >
                   <List className="w-4 h-4" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`h-8 w-8 rounded-l-none border-l ${isAnyGallerySelected ? "bg-muted" : ""}`}
+                  onClick={() => toggleSelectAllGalleries()}
+                >
+                  <CheckSquare className="w-4 h-4" />
                 </Button>
               </div>
             </div>
