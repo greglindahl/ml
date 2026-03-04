@@ -1233,6 +1233,9 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     <TooltipTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
                         setGalleryList(prev => prev.map(g => selectedGalleries.has(g.id) ? { ...g, archived: true } : g));
+                        selectedGalleries.forEach(id => {
+                          setFolderTree(prev => updateFolderInTree(prev, id, { archived: true }));
+                        });
                         setSelectedGalleries(new Set());
                       }}>
                         <Archive className="w-4 h-4" />
@@ -1308,6 +1311,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                             onClick={(e) => {
                               e.stopPropagation();
                               handleUnarchiveFolder(gallery.id);
+                              setGalleryList(prev => prev.map(g => g.id === gallery.id ? { ...g, archived: false } : g));
                               toast({ title: "Gallery unarchived", description: `"${gallery.name}" has been unarchived.` });
                             }}
                           >
