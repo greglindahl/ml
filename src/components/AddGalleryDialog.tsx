@@ -11,9 +11,10 @@ interface AddGalleryDialogProps {
   galleries: Gallery[];
   onSelectGalleries: (galleryIds: string[]) => void;
   onCreateNew: () => void;
+  disabledGalleryIds?: Set<string>;
 }
 
-export function AddGalleryDialog({ open, onOpenChange, galleries, onSelectGalleries, onCreateNew }: AddGalleryDialogProps) {
+export function AddGalleryDialog({ open, onOpenChange, galleries, onSelectGalleries, onCreateNew, disabledGalleryIds = new Set() }: AddGalleryDialogProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -24,6 +25,7 @@ export function AddGalleryDialog({ open, onOpenChange, galleries, onSelectGaller
   }, [galleries, searchQuery]);
 
   const toggleSelect = (id: string) => {
+    if (disabledGalleryIds.has(id)) return;
     setSelectedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
@@ -84,10 +86,11 @@ export function AddGalleryDialog({ open, onOpenChange, galleries, onSelectGaller
           ) : (
             filtered.map(gallery => {
               const isSelected = selectedIds.has(gallery.id);
+              const isDisabled = disabledGalleryIds.has(gallery.id);
               return (
                 <div
                   key={gallery.id}
-                  className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-accent/50 transition-colors ${isSelected ? "bg-accent" : ""}`}
+                  className={`flex items-center gap-3 px-3 py-2.5 transition-colors ${isDisabled ? "opacity-50 cursor-not-allowed" : `cursor-pointer hover:bg-accent/50 ${isSelected ? "bg-accent" : ""}`}`}
                   onClick={() => toggleSelect(gallery.id)}
                 >
                   <div className="w-10 h-10 rounded bg-muted flex items-center justify-center flex-shrink-0">
@@ -95,15 +98,19 @@ export function AddGalleryDialog({ open, onOpenChange, galleries, onSelectGaller
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium truncate">{gallery.name}</div>
-                    <div className="text-xs text-muted-foreground">{gallery.assetCount} assets · {gallery.timeAgo}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {gallery.assetCount} assets · {gallery.timeAgo}
+                      {isDisabled && <span className="ml-1 text-muted-foreground/70">· Already in a folder</span>}
+                    </div>
                   </div>
                   <Button
                     variant={isSelected ? "default" : "outline"}
                     size="sm"
                     className="flex-shrink-0 text-xs"
+                    disabled={isDisabled}
                     onClick={(e) => { e.stopPropagation(); toggleSelect(gallery.id); }}
                   >
-                    {isSelected ? "Selected" : "Select"}
+                    {isDisabled ? "In Folder" : isSelected ? "Selected" : "Select"}
                   </Button>
                 </div>
               );

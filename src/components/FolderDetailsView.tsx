@@ -9,7 +9,7 @@ import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeah
 import { FilterBar } from "@/components/FilterBar";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
-import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries, Gallery, FlattenedFolder, getGalleryLocationDisplay } from "@/lib/mockFolderData";
+import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries, Gallery, FlattenedFolder, getGalleryLocationDisplay, collectAssignedGalleryIds } from "@/lib/mockFolderData";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
@@ -1050,6 +1050,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         open={addGalleryDialogOpen}
         onOpenChange={setAddGalleryDialogOpen}
         galleries={galleryList ?? mockGalleries}
+        disabledGalleryIds={collectAssignedGalleryIds(folderTree)}
         onSelectGalleries={(ids) => {
           onAddGalleriesToFolder?.(ids, folderId);
           setAddGalleryDialogOpen(false);
@@ -1077,6 +1078,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         }}
         flattenedFolders={flattenedFolders ?? flattenFolders(folderTree)}
         galleries={galleryList ?? mockGalleries}
+        folderTree={folderTree}
       />
       <MoveGalleriesDialog
         open={moveGalleriesOpen}
