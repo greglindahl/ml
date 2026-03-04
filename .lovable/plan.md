@@ -1,39 +1,23 @@
 
 
-## Add Asset Bulk Actions to Folder Details and Gallery Details Views
+## Update Archive Folder Dialog
 
-Replicate the gallery bulk selection pattern for assets. Three locations need changes: the Assets tab in `FolderDetailsView`, the Assets tab in `GalleryDetailsView`, and the `AssetTableView` (which already has per-row checkboxes but no bulk action bar).
+The current `ArchiveFolderDialog` is a simple confirmation with just the folder name. The screenshot shows a richer design matching the Move Folder pattern: a table of all nested sub-folders with their breadcrumb paths, plus an info banner.
 
-### Constants
-
-- `ASSET_BULK_LIMIT = 20` — cap for actions like "Add to Gallery" or "Share" (with tooltip pattern matching galleries)
+Regarding showing the nested folder path table: yes, I'd recommend it. Archiving is a significant action that affects the entire subtree. Showing users exactly which folders will be hidden — with their full breadcrumb paths — gives them confidence and reduces "undo" support requests. It's the same `collectNestedFolders` logic already used in `MoveFolderDialog`, so it's consistent and low-effort to add.
 
 ### Changes
 
+**`src/components/ArchiveFolderDialog.tsx`**
+- Accept `folder: FolderItem` and `breadcrumbPath: string` props (replacing the simple `folderName` string)
+- Reuse `collectNestedFolders` from `MoveFolderDialog` (extract it or duplicate it) to build the nested folder rows
+- Add the same scrollable table pattern (ScrollArea with max-h-[200px], sticky headers) showing Folder name + Current Location columns
+- Update description text to match the screenshot: "Archiving a folder hides it from users. If you decide later you want to make an archived folder available, you can unarchive it."
+- Add info banner at bottom: "Galleries and assets are not deleted."
+- Keep Cancel + Archive footer buttons
+
 **`src/components/FolderDetailsView.tsx`**
-- Add `selectedAssets` state (`Set<string>`) and helpers (`toggleSelectAllAssets`, `handleSelectAsset`, `isAnyAssetSelected`, `allAssetsSelected`)
-- Wire the existing CheckSquare button in the assets view toggle to activate bulk select mode (toggle all on/off, highlight when active)
-- In the asset grid cards (lines 473-516), add a checkbox overlay on the thumbnail (visible on hover or when any asset is selected), clicking the card in bulk mode toggles selection
-- Add a bulk action bar above the grid (matching the gallery pattern): checkbox + "N selected" on left; Heart, Archive icons + three-dot menu (Download, Share, Add to Gallery, Delete) on right
-- Apply `ASSET_BULK_LIMIT` with disabled state + tooltip on "Share" and "Add to Gallery" menu items
-- Pass `selectedAssets` and `onSelectAsset`/`onSelectAll` props to `AssetTableView` so list view shares the same selection state
+- Update the `ArchiveFolderDialog` usage to pass `folder` and `breadcrumbPath` instead of `folderName`
 
-**`src/components/GalleryDetailsView.tsx`**
-- Same pattern: add `selectedAssets` state, wire CheckSquare button, add checkbox overlays on grid cards, add bulk action bar
-- Bulk actions: Heart, Archive, three-dot menu with Download, Share, Remove from Gallery, Delete
-- Same `ASSET_BULK_LIMIT` tooltip pattern
-
-**`src/components/AssetTableView.tsx`**
-- Accept optional props: `selectedAssets`, `onSelectAsset`, `onSelectAll` — when provided, use external selection state instead of internal
-- This ensures switching between grid and list view preserves selection
-- The existing per-row checkbox and select-all logic already works; just lift state when props are provided
-
-### Bulk action bar layout (both views)
-```text
-┌─────────────────────────────────────────────────┐
-│ ☑ N selected                    ♡  📦  ⋯       │
-│                                 Fav Arc  Menu   │
-└─────────────────────────────────────────────────┘
-```
-Menu items: Download, Share (disabled > 20), Add to Gallery (disabled > 20), Delete
+**Shared utility**: Extract `collectNestedFolders` into `mockFolderData.ts` (or duplicate in ArchiveFolderDialog) so both Move and Archive dialogs can use it.
 
