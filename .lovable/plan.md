@@ -1,28 +1,30 @@
 
 
-## Update Move Folder Dialog — Add Nested Folders Table + Enhanced Warning
+## Fix: Move Folder Depth Validation Bug
 
-### What changes
+### Problem
 
-**`src/components/MoveFolderDialog.tsx`**
+The depth validation in `MoveFolderDialog` uses the check `targetDepth + movingDepth - 1 > 4`, but the rule is **folders can only exist at levels 1-3** (level 4 is galleries-only). This means the correct limit for folder depth is 3, not 4.
 
-Replace the single "folder being moved" card with a table listing:
-- The folder itself (row 1) with its current breadcrumb path
-- All nested sub-folders (recursively) with their full breadcrumb paths
+Example: Moving "Season 23-24" (which has folder children like "In-Game") into "Season 24-25 > In-Game" produces:
+- All Media > Season 24-25 (L1) > In-Game (L2) > Season 23-24 (L3) > In-Game (L4) — folder at level 4, violates the rule.
 
-Add a helper function `collectNestedFolders(folder, parentPath)` that recursively walks `folder.children`, collecting `{ name, path }` for each child folder. The parent folder's path comes from the existing `breadcrumbPath` prop.
+The current math evaluates to `3 + 2 - 1 = 4`, and `4 > 4` is false, so the move is incorrectly allowed.
 
-**Table structure** (matching mockup):
-| Folder | Current Location |
-|--------|-----------------|
-| Season 25-26 | All Media |
-| In-Game | All Media > Season 25-26 |
-| Training | All Media > Season 25-26 |
+### Fix
 
-**Other updates:**
-- Update `DialogDescription` text to match mockup: "Galleries, assets, and sharing are not affected."
-- Update the info banner to include affected item count: "This move will affect X media items and may take some time..."
-- Compute total asset count by summing `count` values from descendant galleries
+**`src/components/MoveFolderDialog.tsx`** — One-line change:
+
+Change line 102 from:
+```typescript
+const exceedsDepthLimit = targetDepth + movingDepth - 1 > 4;
+```
+to:
+```typescript
+const exceedsDepthLimit = targetDepth + movingDepth - 1 > 3;
+```
+
+This enforces that the deepest folder in the moved subtree cannot land deeper than level 3, reserving level 4 for galleries only.
 
 ### No other files change
 
