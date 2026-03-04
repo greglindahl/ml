@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, Folder, ChevronDown, Plus, Upload, Grid3X3, List, CheckSquare, Image, Images, FileText, Music, Video, Loader2, Settings2, Palette, X, User, Tag, Sparkles, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Folder, ChevronDown, Plus, Upload, Grid3X3, List, CheckSquare, Image, Images, FileText, Music, Video, Loader2, Settings2, Palette, X, User, Tag, Sparkles, Search, MoreHorizontal, FolderInput, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,11 +13,14 @@ import { AssetTableView } from "@/components/AssetTableView";
 import { GalleryTableView } from "@/components/GalleryTableView";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
-import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, getAllDescendantIds, flattenFolders } from "@/lib/mockFolderData";
+import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay } from "@/lib/mockFolderData";
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
 import { NewGalleryDialog, type NewGalleryData } from "@/components/NewGalleryDialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
+import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleriesDialog";
+import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,6 +73,9 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const [addGalleryDialogOpen, setAddGalleryDialogOpen] = useState(false);
   const [newGalleryDialogOpen, setNewGalleryDialogOpen] = useState(false);
   const [galleryList, setGalleryList] = useState(mockGalleries);
+  const [selectedGalleries, setSelectedGalleries] = useState<Set<string>>(new Set());
+  const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const flatFolders = useMemo(() => flattenFolders(folderTree), [folderTree]);
 
@@ -239,6 +245,51 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
     });
     setAddGalleryDialogOpen(false);
   }, [galleryList, insertFolderAt]);
+
+  const isAnyGallerySelected = selectedGalleries.size > 0;
+  const allGalleriesSelected = galleryList.length > 0 && selectedGalleries.size === galleryList.length;
+
+  const toggleGallerySelection = useCallback((galleryId: string) => {
+    setSelectedGalleries(prev => {
+      const next = new Set(prev);
+      if (next.has(galleryId)) next.delete(galleryId);
+      else next.add(galleryId);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAllGalleries = useCallback(() => {
+    if (allGalleriesSelected) {
+      setSelectedGalleries(new Set());
+    } else {
+      setSelectedGalleries(new Set(galleryList.map(g => g.id)));
+    }
+  }, [allGalleriesSelected, galleryList]);
+
+  const handleMoveGalleries = useCallback((galleryIds: string[]) => {
+    setSelectedGalleries(new Set(galleryIds));
+    setIsMoveDialogOpen(true);
+  }, []);
+
+  const selectedMoveItems: MoveGalleryItem[] = useMemo(() => {
+    return galleryList
+      .filter(gallery => selectedGalleries.has(gallery.id))
+      .map(gallery => ({
+        id: gallery.id,
+        name: gallery.name,
+        currentLocation: getGalleryLocationDisplay(gallery.id, folderTree),
+      }));
+  }, [galleryList, selectedGalleries, folderTree]);
+
+  const applyGalleryMoves = useCallback((moves: Record<string, string | null>) => {
+    const count = Object.keys(moves).length;
+    setIsMoveDialogOpen(false);
+    setSelectedGalleries(new Set());
+    toast({
+      title: "Galleries moved",
+      description: `${count} ${count === 1 ? "gallery" : "galleries"} moved successfully.`,
+    });
+  }, [toast]);
 
   // Auto-expand/collapse sidebar based on active tab
   useEffect(() => {
@@ -998,6 +1049,18 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   </Button>
                 )}
 
+                {galleriesViewMode === "grid" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-card"
+                    onClick={() => setSelectedGalleries(prev => (prev.size > 0 ? new Set() : new Set(galleryList.map(g => g.id))))}
+                  >
+                    <CheckSquare className="w-3.5 h-3.5" />
+                    {isAnyGallerySelected ? `Selected (${selectedGalleries.size})` : "Bulk Select"}
+                  </Button>
+                )}
+
                 <div className="flex items-center border rounded-md bg-card">
                   <Button 
                     variant="ghost" 
@@ -1019,31 +1082,77 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               </div>
             </div>
 
+            {/* Bulk Action Bar */}
+            {isAnyGallerySelected && galleriesViewMode === "grid" && (
+              <div className="flex items-center justify-between mb-4 px-3 py-2 bg-muted/50 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    checked={allGalleriesSelected}
+                    onCheckedChange={toggleSelectAllGalleries}
+                  />
+                  <span className="text-sm font-medium">{selectedGalleries.size} selected</span>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleMoveGalleries(Array.from(selectedGalleries))}>
+                      <FolderInput className="w-4 h-4 mr-2" /> Move
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="text-destructive focus:text-destructive">
+                      <Trash2 className="w-4 h-4 mr-2" /> Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+
             {/* Galleries Grid/Table */}
             <div className="min-h-[400px]">
               {galleriesViewMode === "list" ? (
-                <GalleryTableView galleries={galleryList} />
+                <GalleryTableView galleries={galleryList} onNavigate={handleNavigate} onMoveGalleries={handleMoveGalleries} />
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {galleryList.map((gallery) => (
-                    <div 
-                      key={gallery.id} 
-                      className="group cursor-pointer border rounded-lg p-4 hover:border-primary/50 transition-colors"
-                      onClick={() => setActiveFolder(gallery.id)}
-                    >
-                      <div className="aspect-[4/3] border border-dashed rounded-lg bg-muted/30 flex items-center justify-center mb-3">
-                        <div className="w-3/4 h-3/4 bg-muted/50 rounded" />
+                  {galleryList.map((gallery) => {
+                    const isSelected = selectedGalleries.has(gallery.id);
+                    return (
+                      <div
+                        key={gallery.id}
+                        className={`group cursor-pointer border rounded-lg p-4 hover:border-primary/50 transition-colors relative ${isSelected ? "ring-2 ring-primary" : ""}`}
+                        onClick={() => {
+                          if (isAnyGallerySelected) {
+                            toggleGallerySelection(gallery.id);
+                          } else {
+                            setActiveFolder(gallery.id);
+                          }
+                        }}
+                      >
+                        <div
+                          className={`absolute top-2 left-2 z-10 ${isAnyGallerySelected || isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleGallerySelection(gallery.id);
+                          }}
+                        >
+                          <Checkbox checked={isSelected} />
+                        </div>
+                        <div className="aspect-[4/3] border border-dashed rounded-lg bg-muted/30 flex items-center justify-center mb-3">
+                          <div className="w-3/4 h-3/4 bg-muted/50 rounded" />
+                        </div>
+                        <div className="flex items-center gap-1.5 text-sm font-medium mb-1">
+                          <Images className="w-4 h-4 text-muted-foreground" />
+                          <span className="truncate">{gallery.name}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>{gallery.assetCount} Assets</span>
+                          <span>{gallery.timeAgo}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5 text-sm font-medium mb-1">
-                        <Images className="w-4 h-4 text-muted-foreground" />
-                        <span className="truncate">{gallery.name}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{gallery.assetCount} Assets</span>
-                        <span>{gallery.timeAgo}</span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -1149,6 +1258,13 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         </Tabs>
       </div>
       )}
+      <MoveGalleriesDialog
+        open={isMoveDialogOpen}
+        onOpenChange={setIsMoveDialogOpen}
+        galleries={selectedMoveItems}
+        flattenedFolders={flatFolders}
+        onMove={applyGalleryMoves}
+      />
       <NewFolderDialog
         open={newFolderDialogOpen}
         onOpenChange={setNewFolderDialogOpen}
