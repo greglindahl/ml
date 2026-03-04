@@ -319,6 +319,25 @@ export function getFolderDepth(folderId: string, tree: FolderItem[], currentDept
   return 0;
 }
 
+// Shared utility for collecting nested folder rows (used in Move/Archive dialogs)
+export interface NestedFolderRow {
+  name: string;
+  path: string;
+}
+
+export function collectNestedFolders(folder: FolderItem, parentPath: string): NestedFolderRow[] {
+  const rows: NestedFolderRow[] = [{ name: folder.name, path: parentPath }];
+  if (folder.children) {
+    const childPath = parentPath ? `${parentPath} > ${folder.name}` : folder.name;
+    for (const child of folder.children) {
+      if (child.type === "folder") {
+        rows.push(...collectNestedFolders(child, childPath));
+      }
+    }
+  }
+  return rows;
+}
+
 // Count sub-folders (direct children only that are folders)
 export function countSubFolders(folder: FolderItem): number {
   if (!folder.children) return 0;
