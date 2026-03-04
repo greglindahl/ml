@@ -1,25 +1,28 @@
 
 
-## Hide Archived Items from Nav and Content
+## Bug: Asset Bulk Actions Not Working on Top-Level Library Page
 
-Understood. When a folder or gallery is archived (`archived: true`), it should be hidden from:
+### Root Cause
 
-1. **Sidebar folder tree** — archived folders/galleries should not render in the left nav tree
-2. **Main content area** — archived folders/galleries should not appear in the grid/table unless "Archived Only" is toggled on
-3. **Only visible** when the "Archived Only" toggle is active on the respective tab
+The top-level Library page (`LibraryScreen.tsx`) has no `selectedAssets` state and the `CheckSquare` bulk-select button (line 988) has no `onClick` handler. Bulk asset selection is only implemented in `FolderDetailsView.tsx`. The asset grid cards on the Library page also lack checkbox overlays and selection click handlers.
 
-Currently, archived items still show in the sidebar tree and may still appear in content areas. The fix involves filtering out archived items in both rendering paths.
-
-### Changes
+### Fix
 
 **`src/components/LibraryScreen.tsx`**
-- In the sidebar tree rendering (the recursive folder/gallery tree), filter out items where `archived === true`
-- In the main content Folders tab: already fixed to filter by archive state — verify galleries tab does the same
-- In the main content Galleries tab: filter out archived galleries from the grid/table unless `archivedGalleriesOnly` is true
 
-**`src/components/FolderDetailsView.tsx`**
-- When rendering child folders and galleries in the content area, filter out archived items unless the respective "Archived Only" toggle is on
-- When rendering the sidebar sub-tree for the current folder, exclude archived children
+1. **Add `selectedAssets` state** — `useState<Set<string>>(new Set())`
 
-The sidebar tree is rendered in `LibraryScreen.tsx` via a recursive function. I'll add an `archived !== true` filter to that recursion so archived folders and galleries are hidden from navigation entirely.
+2. **Wire the CheckSquare button** — toggle all/none selection on click, highlight when active
+
+3. **Add `AssetBulkActionBar`** — render it above the asset grid when `selectedAssets.size > 0`, with select-all, favorite, archive, download, share, gallery, and delete actions
+
+4. **Add checkbox overlays to asset grid cards** — show on hover (when nothing selected) or always (when selection active), matching the pattern in `FolderDetailsView`
+
+5. **Add selection click handling to cards** — when in selection mode, clicking a card toggles its selection instead of navigating
+
+6. **Pass `selectedAssets` and handlers to `AssetTableView`** — so list view also supports selection (matching how `FolderDetailsView` does it)
+
+7. **Clear selection on tab change or filter change** — reset `selectedAssets` when switching away from Assets tab
+
+All patterns already exist in `FolderDetailsView.tsx` and will be replicated to `LibraryScreen.tsx`.
 
