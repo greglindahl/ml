@@ -1,30 +1,20 @@
 
 
-## Populate All Folders with Mock Gallery and Sub-folder Data
+## Ensure All Galleries Have Mock Assets
 
-Currently, several folders across all three seasons (Training, Fan Engagement, Pre-Season Camp, Meet & Greets, Summer Workouts, Community Outreach) claim to have galleries in their `count` but have no actual `children` defined. This means navigating into them shows empty content.
+The `folderIds` array in `src/lib/mockLibraryData.ts` controls which galleries/folders get assets assigned. Currently it only includes 18 IDs (mostly folder-level), missing all the individual gallery IDs added in the recent data population. This means galleries like "Combine Results", "Shooting Drills", "Halftime Shows", etc. show zero assets.
 
 ### Changes
 
-**`src/lib/mockFolderData.ts`**
+**`src/lib/mockLibraryData.ts`**
 
-Add children (galleries and sub-folders where appropriate) to every folder that currently has none:
+1. **Expand the `folderIds` array** (lines 614-618) to include every gallery ID from the folder tree. Add all missing IDs:
 
-**Season 25-26:**
-- **Training** (id: `training`): Add 3 galleries — "Shooting Drills", "Scrimmage Footage", "Film Sessions" — and 1 sub-folder "Conditioning" with 2 galleries inside
-- **Fan Engagement** (id: `fan-engagement`): Add 3 galleries — "Halftime Shows", "Autograph Signings", "Kids Day"
+   - Season 25-26: `shooting-drills`, `scrimmage-footage`, `film-sessions`, `cardio-sets`, `agility-drills`, `halftime-shows`, `autograph-signings`, `kids-day`
+   - Season 24-25: `tryout-highlights`, `rookie-introductions`, `team-bonding`, `combine-results`, `endurance-tests`, `vip-courtside`, `school-visits`, `charity-gala`
+   - Season 23-24: `open-gym-sessions`, `skills-camp`, `recovery-rehab`, `strength-training`, `mobility-work`, `hospital-visits`, `food-drive`, `youth-basketball-clinic`
 
-**Season 24-25:**
-- **Pre-Season Camp** (id: `training-2024`): Add 3 galleries — "Tryout Highlights", "Rookie Introductions", "Team Bonding" — and 1 sub-folder "Fitness Testing" with 2 galleries
-- **Meet & Greets** (id: `fan-engagement-2024`): Add 3 galleries — "VIP Courtside", "School Visits", "Charity Gala"
+2. **Increase the generated asset count** from 80 to ~160 so assets spread across all galleries still yield a reasonable number per gallery (with ~42 gallery IDs, 160 assets averages ~4 per gallery).
 
-**Season 23-24:**
-- **Summer Workouts** (id: `training-2023`): Add 3 galleries — "Open Gym Sessions", "Skills Camp", "Recovery & Rehab" — and 1 sub-folder "Weight Room" with 2 galleries
-- **Community Outreach** (id: `fan-engagement-2023`): Add 3 galleries — "Hospital Visits", "Food Drive", "Youth Basketball Clinic"
-
-Also add all these new galleries to the `mockGalleries` array so they appear in gallery pickers and search results.
-
-Update the `count` values on each folder to accurately reflect its actual children count.
-
-This gives every navigable folder real content at multiple nesting levels, making the app feel realistic for testing folder navigation, gallery management, and bulk actions throughout the hierarchy.
+This ensures every gallery in the tree has assets when navigated into, making all views look populated and realistic.
 
