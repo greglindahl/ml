@@ -1,29 +1,41 @@
 
 
-## Show All Descendant Galleries in Folder Views
+## Add Bulk Select to Gallery Controls (Toggle Group Style)
 
-Currently `getChildGalleries` only returns direct gallery children of a folder. The user wants to see **all galleries contained within a folder and its sub-folders** — so viewing "Season 25-26" shows galleries from "In-Game", "Training", etc.
+Integrate a "Bulk Select" toggle button into the existing grid/list toggle group in `FolderDetailsView.tsx`, matching the treatment shown in the screenshot — three icons (grid, list, checkbox) grouped together in a single bordered container.
 
 ### Changes
 
 **`src/components/FolderDetailsView.tsx`**
 
-Update `getChildGalleries` to recursively collect all descendant galleries instead of just direct children:
+Update the toggle group (lines 619-636) to add a third button for bulk select:
 
-```typescript
-function getChildGalleries(folder: FolderItem): FolderItem[] {
-  if (!folder.children) return [];
-  const galleries: FolderItem[] = [];
-  for (const child of folder.children) {
-    if (child.type === "gallery") {
-      galleries.push(child);
-    } else if (child.type === "folder" && child.children) {
-      galleries.push(...getChildGalleries(child));
-    }
-  }
-  return galleries;
-}
+```tsx
+<div className="flex items-center border rounded-md bg-background">
+  <Button variant="ghost" size="icon" 
+    className={`h-8 w-8 rounded-r-none ${galleriesViewMode === "grid" ? "bg-muted" : ""}`}
+    onClick={() => setGalleriesViewMode("grid")}>
+    <Grid3X3 className="w-4 h-4" />
+  </Button>
+  <Button variant="ghost" size="icon" 
+    className={`h-8 w-8 rounded-none border-l ${galleriesViewMode === "list" ? "bg-muted" : ""}`}
+    onClick={() => setGalleriesViewMode("list")}>
+    <List className="w-4 h-4" />
+  </Button>
+  <Button variant="ghost" size="icon" 
+    className={`h-8 w-8 rounded-l-none border-l ${isAnyGallerySelected ? "bg-muted" : ""}`}
+    onClick={() => toggleSelectAllGalleries()}>
+    <CheckSquare className="w-4 h-4" />
+  </Button>
+</div>
 ```
 
-This is the only change needed — `childGalleries` is already used everywhere (cards, selection, bulk actions, move dialog) so all downstream logic will automatically work with the full set.
+- Add `CheckSquare` to the imports (already used in LibraryScreen)
+- The button toggles selection: if any selected, clear all; if none, select all
+- Active state (`bg-muted`) shown when galleries are selected
+- No separate standalone "Bulk Select" button needed — it's integrated into the toggle group
+
+**`src/components/LibraryScreen.tsx`**
+
+Apply the same treatment: move the existing standalone "Bulk Select" button into the grid/list toggle group as a third icon button, replacing the current separate `Button` (lines 1052-1062). This keeps the UI consistent across both views.
 
