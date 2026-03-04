@@ -49,12 +49,20 @@ export function MoveGalleriesDialog({
   onMove,
 }: MoveGalleriesDialogProps) {
   const [targets, setTargets] = useState<Record<string, string | null>>({});
+  const [lastChanged, setLastChanged] = useState<string | null>(null);
 
   const handleTargetChange = (galleryId: string, value: string) => {
     setTargets((prev) => ({
       ...prev,
       [galleryId]: value === "all" ? null : value,
     }));
+    setLastChanged(galleryId);
+  };
+
+  const handleApplyToAll = (value: string | null) => {
+    const updated: Record<string, string | null> = {};
+    galleries.forEach((g) => { updated[g.id] = value; });
+    setTargets(updated);
   };
 
   const handleMove = () => {
@@ -63,7 +71,7 @@ export function MoveGalleriesDialog({
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen) setTargets({});
+    if (!nextOpen) { setTargets({}); setLastChanged(null); }
     onOpenChange(nextOpen);
   };
 
@@ -98,22 +106,33 @@ export function MoveGalleriesDialog({
                   <TableCell className="font-medium">{gallery.name}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">{gallery.currentLocation}</TableCell>
                   <TableCell>
-                    <Select
-                      value={targets[gallery.id] === null ? "all" : (targets[gallery.id] ?? "")}
-                      onValueChange={(val) => handleTargetChange(gallery.id, val)}
-                    >
-                      <SelectTrigger className="w-[180px] h-8 text-sm">
-                        <SelectValue placeholder="Select Location" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Media</SelectItem>
-                        {flattenedFolders.map((f) => (
-                          <SelectItem key={f.id} value={f.id}>
-                            {f.displayName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="flex flex-col gap-1">
+                      <Select
+                        value={targets[gallery.id] === null ? "all" : (targets[gallery.id] ?? "")}
+                        onValueChange={(val) => handleTargetChange(gallery.id, val)}
+                      >
+                        <SelectTrigger className="w-[180px] h-8 text-sm">
+                          <SelectValue placeholder="Select Location" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Media</SelectItem>
+                          {flattenedFolders.map((f) => (
+                            <SelectItem key={f.id} value={f.id}>
+                              {f.displayName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {lastChanged === gallery.id && targets[gallery.id] !== undefined && galleries.length > 1 && (
+                        <button
+                          type="button"
+                          className="text-xs text-pink-600 hover:text-pink-700 text-left w-fit"
+                          onClick={() => handleApplyToAll(targets[gallery.id])}
+                        >
+                          + Apply to all
+                        </button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
