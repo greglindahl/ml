@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, MoreVertical, MoreHorizontal, Upload, Settings2, FolderOpen, Pencil, Move, Archive, Trash2, Folder, Plus } from "lucide-react";
+import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, MoreVertical, MoreHorizontal, Upload, Settings2, FolderOpen, Pencil, Move, Archive, Trash2, Folder, Plus, Heart } from "lucide-react";
 import { AssetTableView } from "@/components/AssetTableView";
 import { GalleryTableView, GalleryTableItem } from "@/components/GalleryTableView";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -78,11 +78,12 @@ interface FolderDetailsViewProps {
   onCreateGallery?: (data: NewGalleryData) => void;
   onAddGalleriesToFolder?: (galleryIds: string[], targetFolderId: string | null) => void;
   onCreateFolder?: (data: NewFolderData) => void;
+  onMoveGalleries?: (moves: Record<string, string | null>) => void;
   galleryList?: Gallery[];
   flattenedFolders?: FlattenedFolder[];
 }
 
-export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = false, folderTree, onEditFolder, onMoveFolder, onArchiveFolder, onDeleteFolder, onCreateGallery, onAddGalleriesToFolder, onCreateFolder, galleryList, flattenedFolders }: FolderDetailsViewProps) {
+export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = false, folderTree, onEditFolder, onMoveFolder, onArchiveFolder, onDeleteFolder, onCreateGallery, onAddGalleriesToFolder, onCreateFolder, onMoveGalleries, galleryList, flattenedFolders }: FolderDetailsViewProps) {
   const [activeTab, setActiveTab] = useState("assets");
   
   // Dialog states
@@ -655,21 +656,29 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 />
                 <span className="text-sm font-medium">{selectedGalleries.size} selected</span>
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleBulkMoveGalleries}>
-                    <Move className="w-4 h-4 mr-2" /> Move
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="text-destructive focus:text-destructive">
-                    <Trash2 className="w-4 h-4 mr-2" /> Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({ title: "Favorited", description: `${selectedGalleries.size} ${selectedGalleries.size === 1 ? "gallery" : "galleries"} favorited.` })}>
+                  <Heart className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({ title: "Archived", description: `${selectedGalleries.size} ${selectedGalleries.size === 1 ? "gallery" : "galleries"} archived.` })}>
+                  <Archive className="w-4 h-4" />
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleBulkMoveGalleries}>
+                      <Move className="w-4 h-4 mr-2" /> Move
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="text-destructive focus:text-destructive">
+                      <Trash2 className="w-4 h-4 mr-2" /> Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           )}
 
@@ -899,6 +908,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         flattenedFolders={flattenedFolders ?? flattenFolders(folderTree)}
         onMove={(moves) => {
           setMoveGalleriesOpen(false);
+          setSelectedGalleries(new Set());
+          onMoveGalleries?.(moves);
           const count = Object.keys(moves).length;
           toast({ title: "Galleries moved", description: `${count} ${count === 1 ? "gallery" : "galleries"} moved successfully.` });
         }}

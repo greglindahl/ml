@@ -287,11 +287,50 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
     const count = Object.keys(moves).length;
     setIsMoveDialogOpen(false);
     setSelectedGalleries(new Set());
+
+    // Actually mutate the folder tree
+    setFolderTree(prevTree => {
+      const cloneTree = (items: FolderItem[]): FolderItem[] =>
+        items.map(item => ({ ...item, children: item.children ? cloneTree(item.children) : undefined }));
+      let tree = cloneTree(prevTree);
+      const galleryIds = Object.keys(moves);
+
+      // Remove galleries from their current locations
+      const removeFromTree = (items: FolderItem[]): FolderItem[] =>
+        items.map(item => ({
+          ...item,
+          children: item.children
+            ? removeFromTree(item.children.filter(c => !(c.type === "gallery" && galleryIds.includes(c.id))))
+            : undefined,
+        }));
+      tree = removeFromTree(tree);
+
+      // Insert galleries into target folders
+      for (const [galleryId, targetFolderId] of Object.entries(moves)) {
+        const galleryNode: FolderItem = { id: galleryId, name: galleryList.find(g => g.id === galleryId)?.name || galleryId, type: "gallery" };
+        if (targetFolderId) {
+          const insertInto = (items: FolderItem[]): boolean => {
+            for (const item of items) {
+              if (item.id === targetFolderId) {
+                item.children = [...(item.children || []), galleryNode];
+                return true;
+              }
+              if (item.children && insertInto(item.children)) return true;
+            }
+            return false;
+          };
+          insertInto(tree);
+        }
+        // null target = "All Media" root, no folder parent needed
+      }
+      return tree;
+    });
+
     toast({
       title: "Galleries moved",
       description: `${count} ${count === 1 ? "gallery" : "galleries"} moved successfully.`,
     });
-  }, [toast]);
+  }, [toast, galleryList]);
 
   // Auto-expand/collapse sidebar based on active tab
   useEffect(() => {
@@ -740,6 +779,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           onCreateGallery={handleCreateGallery}
           onAddGalleriesToFolder={handleAddGalleriesToFolder}
           onCreateFolder={handleCreateFolder}
+          onMoveGalleries={applyGalleryMoves}
           galleryList={galleryList}
           flattenedFolders={flatFolders}
         />
