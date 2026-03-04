@@ -880,6 +880,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
       <NewFolderDialog
         open={newFolderDialogOpen}
         onOpenChange={setNewFolderDialogOpen}
+        defaultLocationId={folderId}
         onCreateFolder={(data) => {
           const folderData = { ...data, locationId: data.locationId ?? folderId };
           onCreateFolder?.(folderData);

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +38,7 @@ interface NewFolderDialogProps {
   onCreateFolder: (data: NewFolderData) => void;
   flattenedFolders: FlattenedFolder[];
   galleries: Gallery[];
+  defaultLocationId?: string | null;
 }
 
 export function NewFolderDialog({
@@ -46,20 +47,25 @@ export function NewFolderDialog({
   onCreateFolder,
   flattenedFolders,
   galleries,
+  defaultLocationId = null,
 }: NewFolderDialogProps) {
   const [name, setName] = useState("");
-  const [locationId, setLocationId] = useState<string | null>(null);
+  const [locationId, setLocationId] = useState<string | null>(defaultLocationId);
   const [selectedGalleryIds, setSelectedGalleryIds] = useState<string[]>([]);
   const [nameError, setNameError] = useState(false);
   const [gallerySearch, setGallerySearch] = useState("");
 
+  useEffect(() => {
+    if (open) setLocationId(defaultLocationId);
+  }, [open, defaultLocationId]);
+
   const resetForm = useCallback(() => {
     setName("");
-    setLocationId(null);
+    setLocationId(defaultLocationId);
     setSelectedGalleryIds([]);
     setNameError(false);
     setGallerySearch("");
-  }, []);
+  }, [defaultLocationId]);
 
   const handleOpenChange = useCallback(
     (open: boolean) => {
