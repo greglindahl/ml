@@ -26,6 +26,10 @@ import { DeleteFolderDialog } from "@/components/DeleteFolderDialog";
 import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleriesDialog";
 import { toast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
+
+const GALLERY_MOVE_LIMIT = 5;
+const MOVE_LIMIT_MESSAGE = "Too many galleries selected. You may only move up to 5 at a time.";
 
 // Icon component for asset types
 function AssetTypeIcon({ type, className }: { type: LibraryAsset["type"]; className?: string }) {
@@ -670,9 +674,25 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={handleBulkMoveGalleries}>
-                      <Move className="w-4 h-4 mr-2" /> Move
-                    </DropdownMenuItem>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div>
+                            <DropdownMenuItem
+                              disabled={selectedGalleries.size > GALLERY_MOVE_LIMIT}
+                              onClick={handleBulkMoveGalleries}
+                            >
+                              <Move className="w-4 h-4 mr-2" /> Move
+                            </DropdownMenuItem>
+                          </div>
+                        </TooltipTrigger>
+                        {selectedGalleries.size > GALLERY_MOVE_LIMIT && (
+                          <TooltipContent side="left">
+                            {MOVE_LIMIT_MESSAGE}
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    </TooltipProvider>
                     <DropdownMenuItem className="text-destructive focus:text-destructive">
                       <Trash2 className="w-4 h-4 mr-2" /> Delete
                     </DropdownMenuItem>

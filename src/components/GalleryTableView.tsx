@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MoreHorizontal, Images, Video, ArrowUpDown, ArrowUp, ArrowDown, Move } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { Gallery } from "@/lib/mockFolderData";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,9 @@ export interface GalleryTableItem extends Gallery {
   hasVideo?: boolean;
   isNew?: boolean;
 }
+
+const GALLERY_MOVE_LIMIT = 5;
+const MOVE_LIMIT_MESSAGE = "Too many galleries selected. You may only move up to 5 at a time.";
 
 interface GalleryTableViewProps {
   galleries: GalleryTableItem[];
@@ -227,15 +231,29 @@ export function GalleryTableView({ galleries, isLoading = false, onNavigate, onM
           <span className="text-sm text-muted-foreground">
             {selectedGalleries.size} selected
           </span>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 gap-1.5 text-xs"
-            onClick={() => onMoveGalleries(Array.from(selectedGalleries))}
-          >
-            <Move className="w-3 h-3" />
-            Move
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 gap-1.5 text-xs"
+                    disabled={selectedGalleries.size > GALLERY_MOVE_LIMIT}
+                    onClick={() => onMoveGalleries(Array.from(selectedGalleries))}
+                  >
+                    <Move className="w-3 h-3" />
+                    Move
+                  </Button>
+                </div>
+              </TooltipTrigger>
+              {selectedGalleries.size > GALLERY_MOVE_LIMIT && (
+                <TooltipContent>
+                  {MOVE_LIMIT_MESSAGE}
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
       )}
       <Table>
