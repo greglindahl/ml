@@ -1150,6 +1150,9 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                           <span>{gallery.assetCount} Assets</span>
                           <span>{gallery.timeAgo}</span>
                         </div>
+                        <div className="text-xs text-muted-foreground truncate mt-1">
+                          {getGalleryLocationDisplay(gallery.id, folderTree)}
+                        </div>
                       </div>
                     );
                   })}
