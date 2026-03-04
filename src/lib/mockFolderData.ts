@@ -7,6 +7,7 @@ export interface FolderItem {
   count?: number;
   countType?: "folders" | "galleries" | "assets";
   children?: FolderItem[];
+  archived?: boolean;
 }
 
 // Helper to get all descendant folder/gallery IDs (including self)

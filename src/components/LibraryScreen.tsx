@@ -82,6 +82,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const [selectedGalleries, setSelectedGalleries] = useState<Set<string>>(new Set());
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
   const { toast } = useToast();
+  const [archivedFoldersOnly, setArchivedFoldersOnly] = useState(false);
+  const [archivedGalleriesOnly, setArchivedGalleriesOnly] = useState(false);
 
   const flatFolders = useMemo(() => flattenFolders(folderTree), [folderTree]);
 
@@ -197,9 +199,13 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   }, [removeFolderById, insertFolderAt]);
 
   const handleArchiveFolder = useCallback((folderId: string) => {
-    setFolderTree(prev => removeFolderById(prev, folderId));
+    setFolderTree(prev => updateFolderInTree(prev, folderId, { archived: true }));
     setActiveFolder("all");
-  }, [removeFolderById]);
+  }, [updateFolderInTree]);
+
+  const handleUnarchiveFolder = useCallback((folderId: string) => {
+    setFolderTree(prev => updateFolderInTree(prev, folderId, { archived: false }));
+  }, [updateFolderInTree]);
 
   const handleDeleteFolder = useCallback((folderId: string) => {
     setFolderTree(prev => removeFolderById(prev, folderId));
@@ -779,6 +785,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           onEditFolder={handleEditFolder}
           onMoveFolder={handleMoveFolder}
           onArchiveFolder={handleArchiveFolder}
+          onUnarchiveFolder={handleUnarchiveFolder}
           onDeleteFolder={handleDeleteFolder}
           onCreateGallery={handleCreateGallery}
           onAddGalleriesToFolder={handleAddGalleriesToFolder}
@@ -1068,7 +1075,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
 
             {/* Filters and Controls */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-              <GalleryFilterBar />
+              <GalleryFilterBar onArchivedChange={setArchivedGalleriesOnly} />
 
               <div className="flex items-center gap-2">
                 <DropdownMenu>
@@ -1174,13 +1181,18 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 <GalleryTableView galleries={galleryList} onNavigate={handleNavigate} onMoveGalleries={handleMoveGalleries} />
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {galleryList.map((gallery) => {
+                  {galleryList.filter(g => {
+                    const treeItem = findFolderById(folderTree, g.id);
+                    const isArchived = treeItem?.archived === true;
+                    return archivedGalleriesOnly ? isArchived : !isArchived;
+                  }).map((gallery) => {
                     const isSelected = selectedGalleries.has(gallery.id);
                     return (
                       <div
                         key={gallery.id}
                         className={`group cursor-pointer border rounded-lg p-4 hover:border-primary/50 transition-colors relative ${isSelected ? "ring-2 ring-primary" : ""}`}
                         onClick={() => {
+                          if (archivedGalleriesOnly) return;
                           if (isAnyGallerySelected) {
                             toggleGallerySelection(gallery.id);
                           } else {
@@ -1188,6 +1200,20 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                           }
                         }}
                       >
+                        {archivedGalleriesOnly && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="absolute top-2 right-2 z-10 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleUnarchiveFolder(gallery.id);
+                              toast({ title: "Gallery unarchived", description: `"${gallery.name}" has been unarchived.` });
+                            }}
+                          >
+                            Unarchive
+                          </Button>
+                        )}
                         <div
                           className={`absolute top-2 left-2 z-10 ${isAnyGallerySelected || isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
                           onClick={(e) => {
@@ -1225,7 +1251,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 <Label htmlFor="archived-folders" className="text-sm text-muted-foreground">
                   Archived Only
                 </Label>
-                <Switch id="archived-folders" />
+                <Switch id="archived-folders" checked={archivedFoldersOnly} onCheckedChange={setArchivedFoldersOnly} />
               </div>
               <div className="flex items-center border rounded-md bg-card">
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-r-none bg-accent">
@@ -1238,27 +1264,59 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             </div>
 
             {/* Folders Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {mockFolderCards.map((folder) => (
-                <div 
-                  key={folder.id} 
-                  className="group cursor-pointer border rounded-lg p-4 hover:border-primary/50 transition-colors"
-                  onClick={() => setActiveFolder(folder.id)}
-                >
-                  <div className="aspect-[4/3] border rounded-lg bg-muted/30 flex items-center justify-center mb-3">
-                    <Folder className="w-12 h-12 text-muted-foreground/70" />
-                  </div>
-                  <div className="flex items-center gap-1.5 text-sm font-medium mb-1">
-                    <Folder className="w-4 h-4 text-muted-foreground" />
-                    <span className="truncate">{folder.name}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{folder.galleryCount} Galleries</span>
-                    <span>{folder.timeAgo}</span>
-                  </div>
+            {(() => {
+              const filteredFolderCards = mockFolderCards.filter(fc => {
+                const treeItem = findFolderById(folderTree, fc.id);
+                const isArchived = treeItem?.archived === true;
+                return archivedFoldersOnly ? isArchived : !isArchived;
+              });
+              return filteredFolderCards.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <Folder className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                  <h3 className="text-lg font-medium mb-1">{archivedFoldersOnly ? "No archived folders" : "No folders"}</h3>
+                  <p className="text-sm text-muted-foreground">{archivedFoldersOnly ? "Archive a folder to see it here." : "Create a folder to get started."}</p>
                 </div>
-              ))}
-            </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {filteredFolderCards.map((folder) => (
+                    <div 
+                      key={folder.id} 
+                      className="group cursor-pointer border rounded-lg p-4 hover:border-primary/50 transition-colors relative"
+                      onClick={() => {
+                        if (archivedFoldersOnly) return;
+                        setActiveFolder(folder.id);
+                      }}
+                    >
+                      {archivedFoldersOnly && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="absolute top-2 right-2 z-10 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUnarchiveFolder(folder.id);
+                            toast({ title: "Folder unarchived", description: `"${folder.name}" has been unarchived.` });
+                          }}
+                        >
+                          Unarchive
+                        </Button>
+                      )}
+                      <div className="aspect-[4/3] border rounded-lg bg-muted/30 flex items-center justify-center mb-3">
+                        <Folder className="w-12 h-12 text-muted-foreground/70" />
+                      </div>
+                      <div className="flex items-center gap-1.5 text-sm font-medium mb-1">
+                        <Folder className="w-4 h-4 text-muted-foreground" />
+                        <span className="truncate">{folder.name}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{folder.galleryCount} Galleries</span>
+                        <span>{folder.timeAgo}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </TabsContent>
 
           <TabsContent value="saved" className="flex-1 py-6 mt-0">

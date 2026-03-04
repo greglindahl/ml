@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, MoreVertical, MoreHorizontal, Upload, Settings2, FolderOpen, Pencil, Move, Archive, Trash2, Folder, Plus, Heart } from "lucide-react";
+import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, MoreVertical, MoreHorizontal, Upload, Settings2, FolderOpen, Pencil, Move, Archive, Trash2, Folder, Plus, Heart, ArchiveRestore } from "lucide-react";
 import { AssetTableView } from "@/components/AssetTableView";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { GalleryTableView, GalleryTableItem } from "@/components/GalleryTableView";
@@ -10,6 +10,8 @@ import { FilterBar } from "@/components/FilterBar";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
 import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries, Gallery, FlattenedFolder, getGalleryLocationDisplay } from "@/lib/mockFolderData";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
 import { NewGalleryDialog, type NewGalleryData } from "@/components/NewGalleryDialog";
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
@@ -80,6 +82,7 @@ interface FolderDetailsViewProps {
   onEditFolder?: (folderId: string, data: { name: string; locationId: string | null; galleryIds: string[] }) => void;
   onMoveFolder?: (folderId: string, targetLocationId: string | null) => void;
   onArchiveFolder?: (folderId: string) => void;
+  onUnarchiveFolder?: (folderId: string) => void;
   onDeleteFolder?: (folderId: string) => void;
   onCreateGallery?: (data: NewGalleryData) => void;
   onAddGalleriesToFolder?: (galleryIds: string[], targetFolderId: string | null) => void;
@@ -89,7 +92,7 @@ interface FolderDetailsViewProps {
   flattenedFolders?: FlattenedFolder[];
 }
 
-export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = false, folderTree, onEditFolder, onMoveFolder, onArchiveFolder, onDeleteFolder, onCreateGallery, onAddGalleriesToFolder, onCreateFolder, onMoveGalleries, galleryList, flattenedFolders }: FolderDetailsViewProps) {
+export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = false, folderTree, onEditFolder, onMoveFolder, onArchiveFolder, onUnarchiveFolder, onDeleteFolder, onCreateGallery, onAddGalleriesToFolder, onCreateFolder, onMoveGalleries, galleryList, flattenedFolders }: FolderDetailsViewProps) {
   const [activeTab, setActiveTab] = useState("assets");
   
   // Dialog states
@@ -112,6 +115,10 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   // View mode state (grid vs list) - independent for assets and galleries
   const [assetsViewMode, setAssetsViewMode] = useState<"grid" | "list">("grid");
   const [galleriesViewMode, setGalleriesViewMode] = useState<"grid" | "list">("grid");
+  
+  // Archive toggle states
+  const [archivedFoldersOnly, setArchivedFoldersOnly] = useState(false);
+  const [archivedGalleriesOnly, setArchivedGalleriesOnly] = useState(false);
   
   // Filter state (driven by FilterBar)
   const [contentTypeFilter, setContentTypeFilter] = useState<Array<LibraryAsset["type"]>>([]);
@@ -665,6 +672,12 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   <DropdownMenuItem>This Week</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              {/* Archived toggle */}
+              <div className="inline-flex items-center gap-2 h-8 px-2">
+                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Archived Only</span>
+                <Switch checked={archivedGalleriesOnly} onCheckedChange={setArchivedGalleriesOnly} className="scale-75" />
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -785,70 +798,97 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             </div>
           )}
 
-          {/* Gallery Cards Grid or Table */}
-          {galleriesViewMode === "list" ? (
-            <GalleryTableView 
-              galleries={childGalleries.map(g => ({ 
-                id: g.id, 
-                name: g.name, 
-                assetCount: g.count || 0, 
-                timeAgo: "2 days ago" 
-              }))} 
-              onNavigate={onNavigate}
-              onMoveGalleries={handleMoveGalleries}
-            />
-          ) : childGalleries.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <Images className="w-12 h-12 text-muted-foreground/30 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No galleries yet</h3>
-              <p className="text-sm text-muted-foreground max-w-sm mb-8">
-                Add existing galleries to this folder or create a new one.
-              </p>
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setAddGalleryDialogOpen(true)}>Add Galleries</Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {childGalleries.map((gallery) => {
-                const isSelected = selectedGalleries.has(gallery.id);
-                return (
-                  <div
-                    key={gallery.id}
-                    className={`group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow text-left relative ${isSelected ? "ring-2 ring-primary" : ""}`}
-                  >
-                    {/* Checkbox overlay */}
+          {(() => {
+            const filteredGalleries = childGalleries.filter(g => archivedGalleriesOnly ? g.archived === true : g.archived !== true);
+            
+            if (galleriesViewMode === "list") {
+              return (
+                <GalleryTableView 
+                  galleries={filteredGalleries.map(g => ({ 
+                    id: g.id, 
+                    name: g.name, 
+                    assetCount: g.count || 0, 
+                    timeAgo: "2 days ago" 
+                  }))} 
+                  onNavigate={onNavigate}
+                  onMoveGalleries={handleMoveGalleries}
+                />
+              );
+            }
+            
+            if (filteredGalleries.length === 0) {
+              return (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <Images className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">{archivedGalleriesOnly ? "No archived galleries" : "No galleries yet"}</h3>
+                  <p className="text-sm text-muted-foreground max-w-sm mb-8">
+                    {archivedGalleriesOnly ? "Archive a gallery to see it here." : "Add existing galleries to this folder or create a new one."}
+                  </p>
+                  {!archivedGalleriesOnly && (
+                    <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setAddGalleryDialogOpen(true)}>Add Galleries</Button>
+                  )}
+                </div>
+              );
+            }
+            
+            return (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {filteredGalleries.map((gallery) => {
+                  const isSelected = selectedGalleries.has(gallery.id);
+                  return (
                     <div
-                      className={`absolute top-2 left-2 z-10 ${isAnyGallerySelected || isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
-                      onClick={(e) => { e.stopPropagation(); toggleGallerySelection(gallery.id); }}
+                      key={gallery.id}
+                      className={`group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow text-left relative ${isSelected ? "ring-2 ring-primary" : ""}`}
                     >
-                      <Checkbox checked={isSelected} />
-                    </div>
-                    {/* Thumbnail area */}
-                    <div
-                      className="aspect-[4/3] bg-muted/50 flex items-center justify-center"
-                      onClick={() => onNavigate(gallery.id)}
-                    >
-                      <Images className="w-10 h-10 text-muted-foreground/40" />
-                    </div>
-                    {/* Card info */}
-                    <div className="p-3" onClick={() => onNavigate(gallery.id)}>
-                      <div className="font-medium text-sm truncate mb-1">{gallery.name}</div>
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs text-muted-foreground">
-                          {gallery.count || 0} Assets
-                        </span>
-                        <span className="text-xs text-primary flex-shrink-0">
-                          2 days ago
-                        </span>
+                      {archivedGalleriesOnly && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="absolute top-2 right-2 z-10 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onUnarchiveFolder?.(gallery.id);
+                            toast({ title: "Gallery unarchived", description: `"${gallery.name}" has been unarchived.` });
+                          }}
+                        >
+                          Unarchive
+                        </Button>
+                      )}
+                      {/* Checkbox overlay */}
+                      <div
+                        className={`absolute top-2 left-2 z-10 ${isAnyGallerySelected || isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
+                        onClick={(e) => { e.stopPropagation(); toggleGallerySelection(gallery.id); }}
+                      >
+                        <Checkbox checked={isSelected} />
                       </div>
-                      <div className="text-xs text-muted-foreground truncate mt-1">
-                        {getGalleryLocationDisplay(gallery.id, folderTree)}
+                      {/* Thumbnail area */}
+                      <div
+                        className="aspect-[4/3] bg-muted/50 flex items-center justify-center"
+                        onClick={() => { if (!archivedGalleriesOnly) onNavigate(gallery.id); }}
+                      >
+                        <Images className="w-10 h-10 text-muted-foreground/40" />
+                      </div>
+                      {/* Card info */}
+                      <div className="p-3" onClick={() => { if (!archivedGalleriesOnly) onNavigate(gallery.id); }}>
+                        <div className="font-medium text-sm truncate mb-1">{gallery.name}</div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs text-muted-foreground">
+                            {gallery.count || 0} Assets
+                          </span>
+                          <span className="text-xs text-primary flex-shrink-0">
+                            2 days ago
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate mt-1">
+                          {getGalleryLocationDisplay(gallery.id, folderTree)}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            );
+          })()}
         </TabsContent>
 
         {/* Folders Tab */}
@@ -856,10 +896,10 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           {/* Controls row */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                <input type="checkbox" className="rounded border-input" />
-                Archived Only
-              </label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="archived-folders-detail" className="text-sm text-muted-foreground">Archived Only</Label>
+                <Switch id="archived-folders-detail" checked={archivedFoldersOnly} onCheckedChange={setArchivedFoldersOnly} />
+              </div>
             </div>
             <div className="flex items-center border rounded-md bg-background">
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-r-none bg-muted">
@@ -872,55 +912,88 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           </div>
 
           {/* Empty state or folder children */}
-          {(!folder.children || folder.children.filter(c => c.type === "folder").length === 0) ? (
-            <div className="flex-1 flex flex-col items-center justify-center py-16 text-center">
-              <div className="relative mb-6">
-                <FolderOpen className="h-16 w-16 text-muted-foreground/30" />
-                <Images className="h-6 w-6 text-muted-foreground/40 absolute -bottom-1 -right-2" />
-              </div>
-              {canCreateSubfolder ? (
-                <>
-                  <h3 className="text-xl font-semibold mb-2">This folder is empty</h3>
-                  <p className="text-sm text-muted-foreground max-w-sm mb-1">
-                    Folders help you group galleries and other folders by season, event, campaign, or purpose.
-                  </p>
-                  <p className="text-sm text-muted-foreground max-w-sm mb-8">
-                    You can add existing content or create something new. Nothing outside this folder is affected.
-                  </p>
-                  <Button className="mb-3 bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setAddGalleryDialogOpen(true)}>Add Galleries</Button>
-                  <button className="text-sm font-medium text-foreground hover:underline" onClick={() => setNewFolderDialogOpen(true)}>New Folder</button>
-                </>
-              ) : (
-                <>
-                  <h3 className="text-xl font-semibold mb-2">Folder limit reached</h3>
-                  <p className="text-sm text-muted-foreground max-w-sm mb-8">
-                    Folders can only be nested three levels deep. You can still add galleries to organize content in this folder.
-                  </p>
-                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setAddGalleryDialogOpen(true)}>Add Galleries</Button>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {folder.children.filter(c => c.type === "folder").map((child) => (
-                <button
-                  key={child.id}
-                  onClick={() => onNavigate(child.id)}
-                  className="group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow text-left"
-                >
-                  <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center">
-                    <FolderOpen className="w-10 h-10 text-muted-foreground/40" />
+          {(() => {
+            const childFolders = (folder.children || []).filter(c => c.type === "folder");
+            const filteredChildFolders = childFolders.filter(c => archivedFoldersOnly ? c.archived === true : c.archived !== true);
+            
+            if (childFolders.length === 0 && !archivedFoldersOnly) {
+              return (
+                <div className="flex-1 flex flex-col items-center justify-center py-16 text-center">
+                  <div className="relative mb-6">
+                    <FolderOpen className="h-16 w-16 text-muted-foreground/30" />
+                    <Images className="h-6 w-6 text-muted-foreground/40 absolute -bottom-1 -right-2" />
                   </div>
-                  <div className="p-3">
-                    <div className="font-medium text-sm truncate mb-1">{child.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {child.children?.length || 0} items
+                  {canCreateSubfolder ? (
+                    <>
+                      <h3 className="text-xl font-semibold mb-2">This folder is empty</h3>
+                      <p className="text-sm text-muted-foreground max-w-sm mb-1">
+                        Folders help you group galleries and other folders by season, event, campaign, or purpose.
+                      </p>
+                      <p className="text-sm text-muted-foreground max-w-sm mb-8">
+                        You can add existing content or create something new. Nothing outside this folder is affected.
+                      </p>
+                      <Button className="mb-3 bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setAddGalleryDialogOpen(true)}>Add Galleries</Button>
+                      <button className="text-sm font-medium text-foreground hover:underline" onClick={() => setNewFolderDialogOpen(true)}>New Folder</button>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="text-xl font-semibold mb-2">Folder limit reached</h3>
+                      <p className="text-sm text-muted-foreground max-w-sm mb-8">
+                        Folders can only be nested three levels deep. You can still add galleries to organize content in this folder.
+                      </p>
+                      <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setAddGalleryDialogOpen(true)}>Add Galleries</Button>
+                    </>
+                  )}
+                </div>
+              );
+            }
+            
+            if (filteredChildFolders.length === 0) {
+              return (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <Folder className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                  <h3 className="text-lg font-medium mb-1">{archivedFoldersOnly ? "No archived folders" : "No folders"}</h3>
+                  <p className="text-sm text-muted-foreground">{archivedFoldersOnly ? "Archive a folder to see it here." : "No sub-folders in this folder."}</p>
+                </div>
+              );
+            }
+            
+            return (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {filteredChildFolders.map((child) => (
+                  <div
+                    key={child.id}
+                    onClick={() => { if (!archivedFoldersOnly) onNavigate(child.id); }}
+                    className="group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow text-left relative"
+                  >
+                    {archivedFoldersOnly && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="absolute top-2 right-2 z-10 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onUnarchiveFolder?.(child.id);
+                          toast({ title: "Folder unarchived", description: `"${child.name}" has been unarchived.` });
+                        }}
+                      >
+                        Unarchive
+                      </Button>
+                    )}
+                    <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center">
+                      <FolderOpen className="w-10 h-10 text-muted-foreground/40" />
+                    </div>
+                    <div className="p-3">
+                      <div className="font-medium text-sm truncate mb-1">{child.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {child.children?.length || 0} items
+                      </div>
                     </div>
                   </div>
-                </button>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            );
+          })()}
         </TabsContent>
       </Tabs>
 
