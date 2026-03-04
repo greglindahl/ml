@@ -28,6 +28,7 @@ import { ArchiveFolderDialog } from "@/components/ArchiveFolderDialog";
 import { DeleteFolderDialog } from "@/components/DeleteFolderDialog";
 import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleriesDialog";
 import { toast } from "@/hooks/use-toast";
+import { toast as sonnerToast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 
@@ -1063,6 +1064,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         onCreateGallery={(data) => {
           onCreateGallery?.({ ...data, folderId: data.folderId ?? folderId });
           setNewGalleryDialogOpen(false);
+          sonnerToast.success("Gallery created successfully");
         }}
         flattenedFolders={flattenedFolders ?? flattenFolders(folderTree)}
         defaultFolderId={folderId}
@@ -1075,6 +1077,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           const folderData = { ...data, locationId: data.locationId ?? folderId };
           onCreateFolder?.(folderData);
           setNewFolderDialogOpen(false);
+          sonnerToast.success("Folder created successfully");
         }}
         flattenedFolders={flattenedFolders ?? flattenFolders(folderTree)}
         galleries={galleryList ?? mockGalleries}

@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleriesDialog";
 import { useToast } from "@/hooks/use-toast";
+import { toast as sonnerToast } from "sonner";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
@@ -144,6 +145,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
       setFolderTree(prev => insertFolderAt(prev, data.locationId, newFolder));
     }
     setNewFolderDialogOpen(false);
+    sonnerToast.success("Folder created successfully");
   }, [insertFolderAt]);
 
   const handleEditFolder = useCallback((folderId: string, data: { name: string; locationId: string | null; galleryIds: string[] }) => {
@@ -237,6 +239,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
       setFolderTree(prev => insertFolderAt(prev, data.folderId, galleryNode));
     }
     setNewGalleryDialogOpen(false);
+    sonnerToast.success("Gallery created successfully");
   }, [insertFolderAt]);
 
   const handleAddGalleriesToFolder = useCallback((galleryIds: string[], targetFolderId: string | null) => {
