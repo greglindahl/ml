@@ -54,7 +54,15 @@ function buildBreadcrumbPath(targetId: string, items: FolderItem[], path: Folder
 // Get child galleries from a folder
 function getChildGalleries(folder: FolderItem): FolderItem[] {
   if (!folder.children) return [];
-  return folder.children.filter(child => child.type === "gallery");
+  const galleries: FolderItem[] = [];
+  for (const child of folder.children) {
+    if (child.type === "gallery") {
+      galleries.push(child);
+    } else if (child.type === "folder" && child.children) {
+      galleries.push(...getChildGalleries(child));
+    }
+  }
+  return galleries;
 }
 
 interface FolderDetailsViewProps {
