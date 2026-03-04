@@ -1,40 +1,28 @@
 
 
-## Debug: Missing Bulk Actions + Gallery Details Move
+## Update Move Folder Dialog — Add Nested Folders Table + Enhanced Warning
 
-### Issues Found
+### What changes
 
-1. **FolderDetailsView galleries grid (non-list mode)** — The grid view (lines 622-648) has no selection checkboxes or bulk action bar. Only the list view (`GalleryTableView`) has move support via `onMoveGalleries`. The grid cards are plain buttons with no selection state.
+**`src/components/MoveFolderDialog.tsx`**
 
-2. **GalleryDetailsView three-dot menu** — The `MoreVertical` button (line 224-226) is just a plain button with no dropdown menu. It needs a `DropdownMenu` with Move (and other actions like Delete).
+Replace the single "folder being moved" card with a table listing:
+- The folder itself (row 1) with its current breadcrumb path
+- All nested sub-folders (recursively) with their full breadcrumb paths
 
-3. **LibraryScreenV4 galleries tab** — This one actually works (lines 528-602) with bulk action bar and checkboxes. However, it only shows when `isAnyGallerySelected` is true, so the user needs to click a gallery card to select it first (checkbox appears on hover).
+Add a helper function `collectNestedFolders(folder, parentPath)` that recursively walks `folder.children`, collecting `{ name, path }` for each child folder. The parent folder's path comes from the existing `breadcrumbPath` prop.
 
-### Plan
+**Table structure** (matching mockup):
+| Folder | Current Location |
+|--------|-----------------|
+| Season 25-26 | All Media |
+| In-Game | All Media > Season 25-26 |
+| Training | All Media > Season 25-26 |
 
-#### 1. FolderDetailsView — Add gallery selection + bulk actions to grid view
+**Other updates:**
+- Update `DialogDescription` text to match mockup: "Galleries, assets, and sharing are not affected."
+- Update the info banner to include affected item count: "This move will affect X media items and may take some time..."
+- Compute total asset count by summing `count` values from descendant galleries
 
-Add the same selection pattern used in `LibraryScreenV4`:
-- Add `selectedGalleries` state (Set), toggle functions, select-all
-- Add checkbox overlays on gallery grid cards (visible on hover or when any selected)
-- Add bulk action bar above gallery grid with three-dot menu containing Move and Delete
-- Wire Move to existing `handleMoveGalleries` / `MoveGalleriesDialog`
-
-#### 2. GalleryDetailsView — Add Move to three-dot menu
-
-Replace the plain `MoreVertical` button with a `DropdownMenu` containing:
-- Move — opens `MoveGalleriesDialog` for the single gallery
-- Delete (placeholder)
-
-This requires:
-- Import `DropdownMenu` components, `MoveGalleriesDialog`, `FolderInput`, `Trash2`
-- Add state for move dialog open + gallery item data
-- Add `flattenedFolders` prop or compute from `folderTree`
-- Render `MoveGalleriesDialog` in the component
-
-### Files to modify
-| File | Change |
-|------|--------|
-| `src/components/FolderDetailsView.tsx` | Add selection state, checkbox overlays, bulk action bar to galleries grid view |
-| `src/components/GalleryDetailsView.tsx` | Replace plain MoreVertical with DropdownMenu containing Move + Delete, wire up MoveGalleriesDialog |
+### No other files change
 
