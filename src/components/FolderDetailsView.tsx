@@ -688,8 +688,11 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           ) : childGalleries.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Images className="w-12 h-12 text-muted-foreground/30 mb-4" />
-              <h3 className="text-lg font-medium mb-1">No galleries found</h3>
-              <p className="text-sm text-muted-foreground">This folder doesn't contain any galleries</p>
+              <h3 className="text-xl font-semibold mb-2">No galleries yet</h3>
+              <p className="text-sm text-muted-foreground max-w-sm mb-8">
+                Add existing galleries to this folder or create a new one.
+              </p>
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setAddGalleryDialogOpen(true)}>Add Galleries</Button>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -772,7 +775,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   <p className="text-sm text-muted-foreground max-w-sm mb-8">
                     You can add existing content or create something new. Nothing outside this folder is affected.
                   </p>
-                  <Button className="mb-3 bg-foreground text-background hover:bg-foreground/90" onClick={() => setAddGalleryDialogOpen(true)}>Add Galleries</Button>
+                  <Button className="mb-3 bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setAddGalleryDialogOpen(true)}>Add Galleries</Button>
                   <button className="text-sm font-medium text-foreground hover:underline" onClick={() => setNewFolderDialogOpen(true)}>New Folder</button>
                 </>
               ) : (
@@ -781,7 +784,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   <p className="text-sm text-muted-foreground max-w-sm mb-8">
                     Folders can only be nested three levels deep. You can still add galleries to organize content in this folder.
                   </p>
-                  <Button className="bg-foreground text-background hover:bg-foreground/90" onClick={() => setAddGalleryDialogOpen(true)}>Add Galleries</Button>
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setAddGalleryDialogOpen(true)}>Add Galleries</Button>
                 </>
               )}
             </div>
