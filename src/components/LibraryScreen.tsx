@@ -1265,11 +1265,10 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
 
             {/* Folders Grid */}
             {(() => {
-              const filteredFolderCards = mockFolderCards.filter(fc => {
-                const treeItem = findFolderById(folderTree, fc.id);
-                const isArchived = treeItem?.archived === true;
-                return archivedFoldersOnly ? isArchived : !isArchived;
-              });
+              const topLevelFolders = folderTree.filter(f => f.id !== "all" && f.type === "folder");
+              const filteredFolderCards = topLevelFolders
+                .filter(f => archivedFoldersOnly ? f.archived === true : f.archived !== true)
+                .map(f => ({ id: f.id, name: f.name, galleryCount: f.count || 0, timeAgo: "—" }));
               return filteredFolderCards.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <Folder className="w-12 h-12 text-muted-foreground/30 mb-4" />
