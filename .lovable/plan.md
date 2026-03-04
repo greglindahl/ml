@@ -1,26 +1,20 @@
 
 
-## Fix: Archived Items Still Appearing in Sidebar Folder Tree
+## Replace Add Galleries Dropdown with AddGalleryDialog in New Folder Modal
 
-### Problem
-When galleries are archived (via bulk action or individual action), only the `galleryList` state is updated with `archived: true`. The `folderTree` state — which drives the sidebar navigation — is **not** updated. Since the sidebar filters on `child.archived !== true` from the `folderTree` data, archived galleries continue to appear in the nav.
+### Change
 
-The same issue applies to newly created folders that get archived — if the archive action only updates one state but not the other.
+**`src/components/NewFolderDialog.tsx`**
 
-### Fix
+1. **Remove** the Popover-based gallery multi-select dropdown (the `gallerySearch`, `Popover`, `PopoverTrigger`, `PopoverContent`, `Checkbox` list block)
 
-**`src/components/LibraryScreen.tsx`**
+2. **Add** a "Select Gallery" row styled as a bordered container with a gallery icon, "Select Gallery" text, and a "+" button on the right (matching the GIF pattern)
 
-1. **Gallery bulk archive** (line ~1235): After setting `archived: true` in `galleryList`, also update the `folderTree` using `updateFolderInTree` for each selected gallery ID:
-   ```
-   selectedGalleries.forEach(id => {
-     setFolderTree(prev => updateFolderInTree(prev, id, { archived: true }));
-   });
-   ```
+3. **On "+" click**, open the existing `AddGalleryDialog` component. When galleries are selected via `onSelectGalleries`, merge them into `selectedGalleryIds` state.
 
-2. **Any other gallery archive action** (individual gallery archive, gallery details archive): Search for all places where `setGalleryList` sets `archived: true` and add a corresponding `setFolderTree(prev => updateFolderInTree(prev, galleryId, { archived: true }))` call.
+4. **Show selected galleries** as a list below the selector row (gallery name with an X to remove), so the user can see what they've picked.
 
-3. **Gallery unarchive**: Similarly, when galleries are unarchived via `setGalleryList`, also update `folderTree` to set `archived: false`.
+5. **Remove** unused imports (`Popover`, `PopoverContent`, `PopoverTrigger`, `ChevronDown`, `Checkbox`, `gallerySearch` state).
 
-This ensures both data stores stay in sync — the sidebar tree will correctly hide archived galleries and folders.
+6. **Add** import for `AddGalleryDialog` and `Images`/`Plus` icons from lucide-react.
 
