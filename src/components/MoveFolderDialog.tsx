@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,9 +16,46 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FolderOpen, AlertTriangle, Info } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { AlertTriangle, Info, Folder } from "lucide-react";
 import type { FolderItem, FlattenedFolder } from "@/lib/mockFolderData";
 import { getMaxDepth, getAllDescendantIds } from "@/lib/mockFolderData";
+
+interface NestedFolderRow {
+  name: string;
+  path: string;
+}
+
+function collectNestedFolders(folder: FolderItem, parentPath: string): NestedFolderRow[] {
+  const rows: NestedFolderRow[] = [{ name: folder.name, path: parentPath }];
+  if (folder.children) {
+    const childPath = parentPath ? `${parentPath} > ${folder.name}` : folder.name;
+    for (const child of folder.children) {
+      if (child.type === "folder") {
+        rows.push(...collectNestedFolders(child, childPath));
+      }
+    }
+  }
+  return rows;
+}
+
+function countTotalAssets(folder: FolderItem): number {
+  let total = 0;
+  if (folder.type === "gallery" && folder.count) total += folder.count;
+  if (folder.children) {
+    for (const child of folder.children) {
+      total += countTotalAssets(child);
+    }
+  }
+  return total;
+}
 
 interface MoveFolderDialogProps {
   open: boolean;
@@ -65,24 +102,43 @@ export function MoveFolderDialog({
   const exceedsDepthLimit = targetDepth + movingDepth - 1 > 4;
   const hasSelected = targetLocationId !== undefined;
 
+  const nestedRows = useMemo(() => collectNestedFolders(folder, breadcrumbPath), [folder, breadcrumbPath]);
+  const totalAssets = useMemo(() => countTotalAssets(folder), [folder]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Move Folder</DialogTitle>
           <DialogDescription>
-            Choose a new location for this folder. Moving a folder changes its location in the hierarchy. Nested folders and galleries move with it.
+            Galleries, assets, and sharing are not affected.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          {/* Folder being moved */}
-          <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/50">
-            <FolderOpen className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-            <div className="min-w-0">
-              <p className="font-medium text-sm truncate">{folder.name}</p>
-              <p className="text-xs text-muted-foreground truncate">{breadcrumbPath}</p>
-            </div>
+          {/* Nested folders table */}
+          <div className="border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs font-medium">Folder</TableHead>
+                  <TableHead className="text-xs font-medium">Current Location</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {nestedRows.map((row, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="py-2">
+                      <div className="flex items-center gap-2">
+                        <Folder className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm font-medium">{row.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-2 text-sm text-muted-foreground">{row.path}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
 
           {/* Target location */}
@@ -118,7 +174,7 @@ export function MoveFolderDialog({
           <div className="flex items-start gap-2 p-3 rounded-lg border bg-muted/50 text-sm text-muted-foreground">
             <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <p>
-              This move may take some time to complete. The move will continue in the background.{" "}
+              This move will affect <strong className="text-foreground">{totalAssets} media items</strong> and may take some time to complete. The move will continue in the background.{" "}
               <strong className="text-foreground">Content will not be searchable until the move is finished.</strong>
             </p>
           </div>
