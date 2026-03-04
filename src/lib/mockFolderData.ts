@@ -271,7 +271,25 @@ export const mockGalleries: Gallery[] = [
   { id: "hospital-visits", name: "Hospital Visits", assetCount: 20, timeAgo: "2 months ago" },
   { id: "food-drive", name: "Food Drive", assetCount: 15, timeAgo: "3 months ago" },
   { id: "youth-basketball-clinic", name: "Youth Basketball Clinic", assetCount: 38, timeAgo: "2 months ago" },
+  { id: "player-portraits", name: "Player Portraits", assetCount: 42, timeAgo: "1 week ago" },
+  { id: "media-day-2025", name: "Media Day 2025", assetCount: 56, timeAgo: "3 days ago" },
+  { id: "social-media-clips", name: "Social Media Clips", assetCount: 34, timeAgo: "2 days ago" },
+  { id: "behind-the-scenes", name: "Behind the Scenes", assetCount: 28, timeAgo: "5 days ago" },
 ];
+
+// Collect all gallery IDs that are assigned to any folder in the tree
+export function collectAssignedGalleryIds(items: FolderItem[]): Set<string> {
+  const ids = new Set<string>();
+  for (const item of items) {
+    if (item.type === "gallery") ids.add(item.id);
+    if (item.children) {
+      for (const id of collectAssignedGalleryIds(item.children)) {
+        ids.add(id);
+      }
+    }
+  }
+  return ids;
+}
 
 // Flatten folder tree for dropdown display (only folders, not galleries)
 export interface FlattenedFolder {

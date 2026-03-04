@@ -16,7 +16,7 @@ import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { GalleryTableView } from "@/components/GalleryTableView";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
-import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay } from "@/lib/mockFolderData";
+import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds } from "@/lib/mockFolderData";
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
 import { NewGalleryDialog, type NewGalleryData } from "@/components/NewGalleryDialog";
@@ -1445,11 +1445,13 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         onCreateFolder={handleCreateFolder}
         flattenedFolders={flatFolders}
         galleries={galleryList}
+        folderTree={folderTree}
       />
       <AddGalleryDialog
         open={addGalleryDialogOpen}
         onOpenChange={setAddGalleryDialogOpen}
         galleries={galleryList}
+        disabledGalleryIds={collectAssignedGalleryIds(folderTree)}
         onSelectGalleries={(ids) => handleAddGalleriesToFolder(ids, activeFolder !== "all" ? activeFolder : null)}
         onCreateNew={() => setNewGalleryDialogOpen(true)}
       />

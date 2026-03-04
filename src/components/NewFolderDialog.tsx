@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Images, Plus, X } from "lucide-react";
-import type { FlattenedFolder, Gallery } from "@/lib/mockFolderData";
+import type { FlattenedFolder, Gallery, FolderItem } from "@/lib/mockFolderData";
+import { collectAssignedGalleryIds } from "@/lib/mockFolderData";
 import { AddGalleryDialog } from "./AddGalleryDialog";
 
 export interface NewFolderData {
@@ -34,6 +35,7 @@ interface NewFolderDialogProps {
   flattenedFolders: FlattenedFolder[];
   galleries: Gallery[];
   defaultLocationId?: string | null;
+  folderTree?: FolderItem[];
 }
 
 export function NewFolderDialog({
@@ -43,12 +45,15 @@ export function NewFolderDialog({
   flattenedFolders,
   galleries,
   defaultLocationId = null,
+  folderTree = [],
 }: NewFolderDialogProps) {
   const [name, setName] = useState("");
   const [locationId, setLocationId] = useState<string | null>(defaultLocationId);
   const [selectedGalleryIds, setSelectedGalleryIds] = useState<string[]>([]);
   const [nameError, setNameError] = useState(false);
   const [addGalleryOpen, setAddGalleryOpen] = useState(false);
+
+  const assignedGalleryIds = useMemo(() => collectAssignedGalleryIds(folderTree), [folderTree]);
 
   useEffect(() => {
     if (open) setLocationId(defaultLocationId);
@@ -210,6 +215,7 @@ export function NewFolderDialog({
         open={addGalleryOpen}
         onOpenChange={setAddGalleryOpen}
         galleries={galleries.filter((g) => !selectedGalleryIds.includes(g.id))}
+        disabledGalleryIds={assignedGalleryIds}
         onSelectGalleries={(ids) => {
           setSelectedGalleryIds((prev) => [...new Set([...prev, ...ids])]);
           setAddGalleryOpen(false);
