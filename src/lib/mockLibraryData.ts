@@ -612,9 +612,18 @@ const fixedAssets: Omit<LibraryAsset, 'downloads' | 'shares' | 'galleries' | 'vi
 
 // Available folder IDs for asset assignment
 const folderIds = [
+  // Season 25-26
   "in-game", "training", "fan-engagement", "big-moments", "scoring-highlights", "rebounds-reels",
+  "shooting-drills", "scrimmage-footage", "film-sessions", "cardio-sets", "agility-drills",
+  "halftime-shows", "autograph-signings", "kids-day",
+  // Season 24-25
   "in-game-2024", "training-2024", "fan-engagement-2024", "big-moments-2024", "scoring-highlights-2024", "rebounds-reels-2024",
+  "tryout-highlights", "rookie-introductions", "team-bonding", "combine-results", "endurance-tests",
+  "vip-courtside", "school-visits", "charity-gala",
+  // Season 23-24
   "in-game-2023", "training-2023", "fan-engagement-2023", "big-moments-2023", "scoring-highlights-2023", "rebounds-reels-2023",
+  "open-gym-sessions", "skills-camp", "recovery-rehab", "strength-training", "mobility-work",
+  "hospital-visits", "food-drive", "youth-basketball-clinic",
 ];
 
 // Generate 80 mock assets with good distribution of tags
@@ -694,7 +703,7 @@ export const mockLibraryAssets: LibraryAsset[] = (() => {
   }));
   
   // Combine fixed assets with generated ones
-  const allAssets = [...fixedAssetsWithFolders, ...Array.from({ length: 80 }, (_, i) => generateSeededAsset(i + 1))];
+  const allAssets = [...fixedAssetsWithFolders, ...Array.from({ length: 160 }, (_, i) => generateSeededAsset(i + 1))];
   
   // Assign extra fields deterministically
   let favSeed = 54321;
