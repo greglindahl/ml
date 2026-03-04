@@ -98,32 +98,32 @@ export const folders: FolderItem[] = [
     children: [
       { 
         id: "in-game-2024", 
-        name: "In-Game", 
+        name: "Game Day", 
         type: "folder",
         count: 2,
         countType: "galleries",
         children: [
-          { id: "scoring-highlights-2024", name: "Scoring Highlights", type: "gallery", count: 48, countType: "assets" },
-          { id: "rebounds-reels-2024", name: "Rebounds Reels", type: "gallery", count: 48, countType: "assets" },
+          { id: "scoring-highlights-2024", name: "Clutch Plays", type: "gallery", count: 48, countType: "assets" },
+          { id: "rebounds-reels-2024", name: "Defensive Stops", type: "gallery", count: 48, countType: "assets" },
         ],
       },
       { 
         id: "training-2024", 
-        name: "Training", 
+        name: "Pre-Season Camp", 
         type: "folder",
         count: 8,
         countType: "galleries",
       },
       { 
         id: "fan-engagement-2024", 
-        name: "Fan Engagement", 
+        name: "Meet & Greets", 
         type: "folder",
         count: 5,
         countType: "galleries",
       },
       { 
         id: "big-moments-2024", 
-        name: "Big Moments", 
+        name: "Playoff Run", 
         type: "gallery",
         count: 48,
         countType: "assets",
@@ -139,32 +139,32 @@ export const folders: FolderItem[] = [
     children: [
       { 
         id: "in-game-2023", 
-        name: "In-Game", 
+        name: "Match Coverage", 
         type: "folder",
         count: 2,
         countType: "galleries",
         children: [
-          { id: "scoring-highlights-2023", name: "Scoring Highlights", type: "gallery", count: 48, countType: "assets" },
-          { id: "rebounds-reels-2023", name: "Rebounds Reels", type: "gallery", count: 48, countType: "assets" },
+          { id: "scoring-highlights-2023", name: "Top 10 Dunks", type: "gallery", count: 48, countType: "assets" },
+          { id: "rebounds-reels-2023", name: "Block Party", type: "gallery", count: 48, countType: "assets" },
         ],
       },
       { 
         id: "training-2023", 
-        name: "Training", 
+        name: "Summer Workouts", 
         type: "folder",
         count: 8,
         countType: "galleries",
       },
       { 
         id: "fan-engagement-2023", 
-        name: "Fan Engagement", 
+        name: "Community Outreach", 
         type: "folder",
         count: 5,
         countType: "galleries",
       },
       { 
         id: "big-moments-2023", 
-        name: "Big Moments", 
+        name: "Championship Parade", 
         type: "gallery",
         count: 48,
         countType: "assets",
@@ -177,9 +177,12 @@ export const mockGalleries: Gallery[] = [
   { id: "scoring-highlights", name: "Scoring Highlights", assetCount: 48, timeAgo: "2 days ago" },
   { id: "rebounds-reels", name: "Rebounds Reels", assetCount: 48, timeAgo: "5 days ago" },
   { id: "big-moments", name: "Big Moments", assetCount: 48, timeAgo: "1 week ago" },
-  { id: "scoring-highlights-2024", name: "Scoring Highlights 24-25", assetCount: 48, timeAgo: "2 weeks ago" },
-  { id: "rebounds-reels-2024", name: "Rebounds Reels 24-25", assetCount: 48, timeAgo: "3 weeks ago" },
-  { id: "big-moments-2024", name: "Big Moments 24-25", assetCount: 48, timeAgo: "1 month ago" },
+  { id: "scoring-highlights-2024", name: "Clutch Plays", assetCount: 48, timeAgo: "2 weeks ago" },
+  { id: "rebounds-reels-2024", name: "Defensive Stops", assetCount: 48, timeAgo: "3 weeks ago" },
+  { id: "big-moments-2024", name: "Playoff Run", assetCount: 48, timeAgo: "1 month ago" },
+  { id: "scoring-highlights-2023", name: "Top 10 Dunks", assetCount: 48, timeAgo: "2 months ago" },
+  { id: "rebounds-reels-2023", name: "Block Party", assetCount: 48, timeAgo: "2 months ago" },
+  { id: "big-moments-2023", name: "Championship Parade", assetCount: 48, timeAgo: "3 months ago" },
 ];
 
 // Flatten folder tree for dropdown display (only folders, not galleries)
