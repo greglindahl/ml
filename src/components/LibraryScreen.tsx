@@ -129,7 +129,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
       countType: data.galleryIds.length > 0 ? "galleries" : undefined,
       children: data.galleryIds.length > 0
         ? data.galleryIds.map(gId => {
-            const gallery = mockGalleries.find(g => g.id === gId);
+            const gallery = galleryList.find(g => g.id === gId);
             return {
               id: gId,
               name: gallery?.name ?? gId,
@@ -148,7 +148,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
     }
     setNewFolderDialogOpen(false);
     sonnerToast.success("Folder created successfully");
-  }, [insertFolderAt]);
+  }, [insertFolderAt, galleryList]);
 
   const handleEditFolder = useCallback((folderId: string, data: { name: string; locationId: string | null; galleryIds: string[] }) => {
     setFolderTree(prev => {
@@ -164,7 +164,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         const galleryChildren: FolderItem[] = data.galleryIds.map(gId => {
           const existing = folder.children?.find(c => c.id === gId);
           if (existing) return existing;
-          const gallery = mockGalleries.find(g => g.id === gId);
+          const gallery = galleryList.find(g => g.id === gId);
           return {
             id: gId,
             name: gallery?.name ?? gId,
@@ -192,7 +192,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
 
       return tree;
     });
-  }, [updateFolderInTree, removeFolderById, insertFolderAt]);
+  }, [updateFolderInTree, removeFolderById, insertFolderAt, galleryList]);
 
   const handleMoveFolder = useCallback((folderId: string, targetLocationId: string | null) => {
     setFolderTree(prev => {
