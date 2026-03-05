@@ -896,32 +896,33 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
 
         {/* Folders Tab */}
         <TabsContent value="folders" className="flex-1 py-6 mt-0">
+          {/* Search row */}
+          <div className="relative w-full mb-4">
+            <input
+              ref={folderSearchInputRef}
+              type="text"
+              placeholder="Search folders…"
+              value={folderSearchQuery}
+              onChange={(e) => setFolderSearchQuery(e.target.value)}
+              className="h-10 w-full rounded-md border border-input bg-background px-3 pr-10 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            />
+            {folderSearchQuery ? (
+              <button
+                onClick={() => { setFolderSearchQuery(""); folderSearchInputRef.current?.focus(); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            ) : (
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            )}
+          </div>
+
           {/* Controls row */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                <input
-                  ref={folderSearchInputRef}
-                  type="text"
-                  placeholder="Search folders…"
-                  value={folderSearchQuery}
-                  onChange={(e) => setFolderSearchQuery(e.target.value)}
-                  className="h-8 w-48 rounded-md border border-input bg-background pl-8 pr-8 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                />
-                {folderSearchQuery && (
-                  <button
-                    onClick={() => { setFolderSearchQuery(""); folderSearchInputRef.current?.focus(); }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Label htmlFor="archived-folders-detail" className="text-sm text-muted-foreground">Archived Only</Label>
-                <Switch id="archived-folders-detail" checked={archivedFoldersOnly} onCheckedChange={setArchivedFoldersOnly} />
-              </div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="archived-folders-detail" className="text-sm text-muted-foreground">Archived Only</Label>
+              <Switch id="archived-folders-detail" checked={archivedFoldersOnly} onCheckedChange={setArchivedFoldersOnly} />
             </div>
             <div className="flex items-center border rounded-md bg-background">
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-r-none bg-muted">
