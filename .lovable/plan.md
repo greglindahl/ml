@@ -1,19 +1,10 @@
 
 
-## Update Assets tab search placeholder text
+## Fix: Folder > Galleries tab search placeholder
 
-Pass `placeholder="Search by people, tags, filenames…"` to the `FacetedSearchWithTypeahead` component on every Assets tab. Leave Galleries and Folders tab searches unchanged.
+The last edit incorrectly changed the Galleries tab search inside `FolderDetailsView.tsx` to use "Search by people, tags, filenames…". It should remain "Search" — only the Assets tab gets the longer placeholder.
 
-### Changes
+### Change: `src/components/FolderDetailsView.tsx` (line 619)
 
-**`src/components/LibraryScreen.tsx`** (line 871)
-- Add `placeholder="Search by people, tags, filenames…"` to the Assets tab search instance
-
-**`src/components/FolderDetailsView.tsx`** (lines 399 and 619)
-- Add `placeholder="Search by people, tags, filenames…"` to both Assets tab search instances inside folder details
-
-**`src/components/GalleryDetailsView.tsx`** (line 277)
-- Add `placeholder="Search by people, tags, filenames…"` to the gallery details assets search
-
-No changes to the Galleries tab search (LibraryScreen line 1157) or the Folders tab search input.
+Revert the Galleries tab `FacetedSearchWithTypeahead` placeholder back to `"Search"` (remove the `placeholder` prop so it uses the default).
 
