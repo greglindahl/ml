@@ -18,6 +18,7 @@ import { FolderTableView } from "@/components/FolderTableView";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
 import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds } from "@/lib/mockFolderData";
+import { FolderSidebar } from "@/components/FolderSidebar";
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
 import { NewGalleryDialog, type NewGalleryData } from "@/components/NewGalleryDialog";
@@ -208,6 +209,53 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
       return tree;
     });
   }, [removeFolderById, insertFolderAt]);
+
+  // DnD: move an item (folder or gallery) into a target folder
+  const handleDndMoveItem = useCallback((itemId: string, targetFolderId: string | null) => {
+    setFolderTree(prev => {
+      const item = findFolderById(prev, itemId);
+      if (!item) return prev;
+      let tree = removeFolderById(prev, itemId);
+      tree = insertFolderAt(tree, targetFolderId, item);
+      return tree;
+    });
+    // Auto-expand target so user sees the moved item
+    if (targetFolderId) {
+      setExpandedFolders(prev => new Set([...prev, targetFolderId]));
+    }
+  }, [removeFolderById, insertFolderAt]);
+
+  // DnD: reorder siblings within the same parent
+  const handleDndReorder = useCallback((parentId: string | null, itemId: string, overItemId: string) => {
+    setFolderTree(prev => {
+      const reorderInList = (items: FolderItem[]): FolderItem[] => {
+        const oldIndex = items.findIndex(i => i.id === itemId);
+        const newIndex = items.findIndex(i => i.id === overItemId);
+        if (oldIndex === -1 || newIndex === -1) return items;
+        const updated = [...items];
+        const [moved] = updated.splice(oldIndex, 1);
+        updated.splice(newIndex, 0, moved);
+        return updated;
+      };
+
+      if (parentId === null) {
+        return reorderInList(prev);
+      }
+
+      const reorderInTree = (items: FolderItem[]): FolderItem[] => {
+        return items.map(item => {
+          if (item.id === parentId && item.children) {
+            return { ...item, children: reorderInList(item.children) };
+          }
+          if (item.children) {
+            return { ...item, children: reorderInTree(item.children) };
+          }
+          return item;
+        });
+      };
+      return reorderInTree(prev);
+    });
+  }, []);
 
   const handleArchiveFolder = useCallback((folderId: string) => {
     setFolderTree(prev => updateFolderInTree(prev, folderId, { archived: true }));
@@ -654,66 +702,6 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
     });
   };
 
-  const renderFolder = (folder: FolderItem, depth = 0) => {
-    if (folder.archived === true && folder.id !== "all") return null;
-
-    const visibleChildren = folder.children?.filter(child => child.archived !== true) || [];
-    const hasChildren = visibleChildren.length > 0;
-    const isExpanded = expandedFolders.has(folder.id);
-    const isActive = activeFolder === folder.id;
-    const isGallery = folder.type === "gallery";
-    const isAllFiles = folder.id === "all";
-    const hasExpandableContent = hasChildren || (folder.count && folder.count > 0 && !isGallery);
-
-    return (
-      <div key={folder.id}>
-        <button
-          onClick={() => {
-            setActiveFolder(folder.id);
-            if (hasChildren) toggleFolderExpand(folder.id);
-          }}
-          className={`w-full flex items-center gap-2 py-1.5 text-sm rounded-md transition-colors ${
-            isActive
-              ? "bg-accent text-foreground"
-              : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-          }`}
-          style={{ paddingLeft: `${12 + depth * 16}px`, paddingRight: 12 }}
-        >
-          {/* Chevron for expandable items */}
-          {hasExpandableContent && !isAllFiles ? (
-            <ChevronDown
-              className={`w-4 h-4 flex-shrink-0 transition-transform text-muted-foreground ${
-                isExpanded ? "" : "-rotate-90"
-              }`}
-            />
-          ) : !isAllFiles ? (
-            <span className="w-4 flex-shrink-0" />
-          ) : null}
-          
-          {/* Icon - Gallery or Folder */}
-          {!isAllFiles && (
-            isGallery ? (
-              <Images className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
-            ) : (
-              <Folder className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
-            )
-          )}
-          
-          {/* Name */}
-          <span className={`truncate ${isActive ? "font-medium" : ""}`}>{folder.name}</span>
-        </button>
-        
-        
-        {/* Children */}
-        {hasChildren && isExpanded && (
-          <div className="mt-1">
-            {visibleChildren.map((child) => renderFolder(child, depth + 1))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
   // Determine if we should show expanded sidebar (user can toggle on any tab)
   const isFoldersTab = activeTab === "folders";
 
@@ -737,51 +725,18 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
 
   return (
     <div className="flex-1 flex">
-      {/* Folders Sidebar - Always visible, toggleable on all tabs */}
-      <div
-        className={`border-r bg-card flex flex-col transition-all duration-300 ease-in-out overflow-hidden ${
-          isFolderSidebarExpanded ? "w-64 opacity-100" : "w-12 opacity-100"
-        }`}
-      >
-        {isFolderSidebarExpanded ? (
-          <>
-            {/* Sidebar Header - Expanded */}
-            <div className="p-4 border-b flex items-center justify-between min-w-64">
-              <span className="font-medium text-sm">Library</span>
-              <button
-                onClick={() => setIsFolderSidebarExpanded(false)}
-                className="p-1 hover:bg-accent rounded transition-colors"
-                aria-label="Collapse folders"
-              >
-                <ChevronLeft className="w-4 h-4 text-muted-foreground" />
-              </button>
-            </div>
-
-            {/* Folder List */}
-            <div className="flex-1 p-2 overflow-y-auto min-w-64">
-              {folderTree.filter(folder => folder.id === "all" || folder.archived !== true).map((folder) => renderFolder(folder))}
-            </div>
-          </>
-        ) : (
-          /* Collapsed State - Icon with expand button */
-          <div className="p-2 flex flex-col items-center gap-1 min-w-12">
-            <button
-              onClick={() => setIsFolderSidebarExpanded(true)}
-              className="p-2 hover:bg-accent rounded transition-colors"
-              aria-label="Expand folders"
-            >
-              <Folder className="w-4 h-4 text-muted-foreground" />
-            </button>
-            <button
-              onClick={() => setIsFolderSidebarExpanded(true)}
-              className="p-2 hover:bg-accent rounded transition-colors"
-              aria-label="Expand folders"
-            >
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            </button>
-          </div>
-        )}
-      </div>
+      {/* Folders Sidebar with DnD */}
+      <FolderSidebar
+        folderTree={folderTree}
+        activeFolder={activeFolder}
+        expandedFolders={expandedFolders}
+        isFolderSidebarExpanded={isFolderSidebarExpanded}
+        onSetActiveFolder={setActiveFolder}
+        onToggleFolderExpand={toggleFolderExpand}
+        onSetSidebarExpanded={setIsFolderSidebarExpanded}
+        onMoveItem={handleDndMoveItem}
+        onReorder={handleDndReorder}
+      />
 
       {/* Main Content Area - Show GalleryDetailsView, FolderDetailsView, or Library content */}
       {activeGallery ? (
