@@ -868,7 +868,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           <TabsContent value="assets" className="flex-1 py-6 mt-0">
             {/* Faceted Search */}
             <div className="mb-2">
-              <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} onSelectedFacetsChange={setSearchSelectedFacets} handleRef={searchHandleRef} />
+              <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} onSelectedFacetsChange={setSearchSelectedFacets} handleRef={searchHandleRef} placeholder="Search by people, tags, filenames…" />
             </div>
 
             {/* Unified Applied Filter Chips */}
