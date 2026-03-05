@@ -250,7 +250,7 @@ export function FolderSidebar({
 
   if (!isFolderSidebarExpanded) {
     return (
-      <div className="border-r bg-card flex flex-col w-12 transition-all duration-300 ease-in-out overflow-hidden">
+      <div className="border-r bg-card flex flex-col w-12 h-full transition-all duration-300 ease-in-out overflow-hidden">
         <div className="p-2 flex flex-col items-center gap-1 min-w-12">
           <button
             onClick={() => onSetSidebarExpanded(true)}
@@ -272,7 +272,7 @@ export function FolderSidebar({
   }
 
   return (
-    <div className="border-r bg-card flex flex-col w-64 transition-all duration-300 ease-in-out overflow-hidden">
+    <div className="border-r bg-card flex flex-col w-64 h-full transition-all duration-300 ease-in-out overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b flex items-center justify-between min-w-64">
         <span className="font-medium text-sm">Library</span>
