@@ -1,12 +1,15 @@
-import { X } from "lucide-react";
+import { X, User } from "lucide-react";
 import { NavItem } from "./NavItem";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useState } from "react";
 import { OrgSwitcher, MobileOrgSwitcher } from "./OrgSwitcher";
+import gfLogoHorizontal from "@/assets/gf-logo-white-horizontal.svg";
+import gfLogoMark from "@/assets/gf-logo-white-mark.svg";
 
 export type Screen =
   | "home"
@@ -101,23 +104,49 @@ export function LeftNav({
           ))}
         </div>
 
-        {/* Divider */}
-        <div className="mx-4 border-t border-nav-border" />
+      {/* Divider */}
+      <div className="mx-4 border-t border-nav-border" />
 
-        {/* Bottom navigation */}
-        <div className="py-2">
-          {bottomNavItems.map((item) => (
-            <NavItem
-              key={item.id}
-              icon={item.icon}
-              label={item.label}
-              isExpanded={true}
-              isActive={activeScreen === item.id}
-              onClick={() => onNavigate(item.id)}
-            />
-          ))}
-        </div>
-      </nav>
+      {/* Utility icons */}
+      <div className="py-2 flex items-center justify-center gap-3 px-4">
+        <Avatar className="h-8 w-8 cursor-pointer">
+          <AvatarFallback className="bg-sidebar-accent text-nav-text">
+            <User className="h-4 w-4" />
+          </AvatarFallback>
+        </Avatar>
+        <button className="relative p-2 hover:bg-sidebar-accent rounded-md transition-colors">
+          <i className="bi bi-envelope text-nav-text text-lg" />
+          <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-medium px-1 py-0.5 rounded-full min-w-[18px] text-center leading-none">
+            99+
+          </span>
+        </button>
+        <button className="p-2 hover:bg-sidebar-accent rounded-md transition-colors">
+          <i className="bi bi-megaphone text-nav-text text-lg" />
+        </button>
+      </div>
+
+      {/* Divider */}
+      <div className="mx-4 border-t border-nav-border" />
+
+      {/* Bottom navigation */}
+      <div className="py-2">
+        {bottomNavItems.map((item) => (
+          <NavItem
+            key={item.id}
+            icon={item.icon}
+            label={item.label}
+            isExpanded={true}
+            isActive={activeScreen === item.id}
+            onClick={() => onNavigate(item.id)}
+          />
+        ))}
+      </div>
+
+      {/* Greenfly logo */}
+      <div className="px-4 pb-4 flex justify-center">
+        <img src={gfLogoHorizontal} alt="Greenfly" className="h-5 opacity-60" />
+      </div>
+    </nav>
     );
   }
 
@@ -170,6 +199,27 @@ export function LeftNav({
       {/* Divider */}
       <div className="mx-4 border-t border-nav-border" />
 
+      {/* Utility icons */}
+      <div className={`py-3 ${isExpanded ? "flex items-center justify-center gap-3 px-4" : "flex flex-col items-center gap-2"}`}>
+        <Avatar className="h-8 w-8 cursor-pointer">
+          <AvatarFallback className="bg-sidebar-accent text-nav-text">
+            <User className="h-4 w-4" />
+          </AvatarFallback>
+        </Avatar>
+        <button className="relative p-2 hover:bg-sidebar-accent rounded-md transition-colors">
+          <i className="bi bi-envelope text-nav-text text-lg" />
+          <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-medium px-1 py-0.5 rounded-full min-w-[18px] text-center leading-none">
+            99+
+          </span>
+        </button>
+        <button className="p-2 hover:bg-sidebar-accent rounded-md transition-colors">
+          <i className="bi bi-megaphone text-nav-text text-lg" />
+        </button>
+      </div>
+
+      {/* Divider */}
+      <div className="mx-4 border-t border-nav-border" />
+
       {/* Bottom navigation */}
       <div className="py-2">
         {bottomNavItems.map((item) => (
@@ -182,6 +232,15 @@ export function LeftNav({
             onClick={() => onNavigate(item.id)}
           />
         ))}
+      </div>
+
+      {/* Greenfly logo */}
+      <div className={`px-4 pb-4 flex justify-center`}>
+        <img
+          src={isExpanded ? gfLogoHorizontal : gfLogoMark}
+          alt="Greenfly"
+          className={isExpanded ? "h-5 opacity-60" : "h-6 opacity-60"}
+        />
       </div>
     </nav>
   );

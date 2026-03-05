@@ -314,7 +314,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
       </nav>
 
       {/* Folder Header */}
-      <div className="flex items-start justify-between mb-6 flex-shrink-0 pr-40">
+      <div className="flex items-start justify-between mb-6 flex-shrink-0">
         <h1 className="text-2xl font-semibold">{folder.name}</h1>
         <div className="flex items-center gap-2">
           <DropdownMenu>
