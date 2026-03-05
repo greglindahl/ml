@@ -21,6 +21,7 @@ import { Images, Plus, X } from "lucide-react";
 import type { FlattenedFolder, Gallery, FolderItem } from "@/lib/mockFolderData";
 import { collectAssignedGalleryIds } from "@/lib/mockFolderData";
 import { AddGalleryDialog } from "./AddGalleryDialog";
+import { NewGalleryDialog, type NewGalleryData } from "./NewGalleryDialog";
 
 export interface NewFolderData {
   name: string;
@@ -36,6 +37,7 @@ interface NewFolderDialogProps {
   galleries: Gallery[];
   defaultLocationId?: string | null;
   folderTree?: FolderItem[];
+  onCreateGallery?: (data: NewGalleryData) => Gallery | void;
 }
 
 export function NewFolderDialog({
@@ -46,12 +48,14 @@ export function NewFolderDialog({
   galleries,
   defaultLocationId = null,
   folderTree = [],
+  onCreateGallery,
 }: NewFolderDialogProps) {
   const [name, setName] = useState("");
   const [locationId, setLocationId] = useState<string | null>(defaultLocationId);
   const [selectedGalleryIds, setSelectedGalleryIds] = useState<string[]>([]);
   const [nameError, setNameError] = useState(false);
   const [addGalleryOpen, setAddGalleryOpen] = useState(false);
+  const [newGalleryDialogOpen, setNewGalleryDialogOpen] = useState(false);
 
   const assignedGalleryIds = useMemo(() => collectAssignedGalleryIds(folderTree), [folderTree]);
 
@@ -220,7 +224,22 @@ export function NewFolderDialog({
           setSelectedGalleryIds((prev) => [...new Set([...prev, ...ids])]);
           setAddGalleryOpen(false);
         }}
-        onCreateNew={() => {}}
+        onCreateNew={() => setNewGalleryDialogOpen(true)}
+      />
+
+      <NewGalleryDialog
+        open={newGalleryDialogOpen}
+        onOpenChange={setNewGalleryDialogOpen}
+        flattenedFolders={flattenedFolders}
+        onCreateGallery={(data) => {
+          if (onCreateGallery) {
+            const result = onCreateGallery(data);
+            if (result && result.id) {
+              setSelectedGalleryIds((prev) => [...new Set([...prev, result.id])]);
+            }
+          }
+          setNewGalleryDialogOpen(false);
+        }}
       />
     </>
   );
