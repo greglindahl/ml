@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MoreHorizontal, ArrowUpDown, ArrowUp, ArrowDown, FolderOpen, Eye, Pencil, Move, Archive, Trash2, ArchiveRestore, ChevronRight } from "lucide-react";
+import { MoreHorizontal, ArrowUpDown, ArrowUp, ArrowDown, FolderOpen, Eye, Pencil, Move, Archive, Trash2, ArchiveRestore } from "lucide-react";
 import { FolderItem } from "@/lib/mockFolderData";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -49,8 +49,6 @@ export function FolderTableView({ folders, onNavigate, isLoading = false, archiv
   const [selectedFolders, setSelectedFolders] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
-
   const enrichedFolders = folders.map((f, i) => enrichFolder(f, i));
 
   const handleSelectAll = (checked: boolean) => {
@@ -79,14 +77,8 @@ export function FolderTableView({ folders, onNavigate, isLoading = false, archiv
       : <ArrowDown className="w-3 h-3 ml-1" />;
   };
 
-  const toggleExpand = (folderId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setExpandedFolders(prev => {
-      const next = new Set(prev);
-      next.has(folderId) ? next.delete(folderId) : next.add(folderId);
-      return next;
-    });
-  };
+
+
 
   const sorted = [...enrichedFolders].sort((a, b) => {
     if (!sortField) return 0;
@@ -107,93 +99,64 @@ export function FolderTableView({ folders, onNavigate, isLoading = false, archiv
     return date.toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "2-digit" });
   };
 
-  const renderRow = (folder: EnrichedFolder, depth: number = 0) => {
-    const childFolders = folder.children?.filter(c => c.type === "folder") || [];
-    const hasChildren = childFolders.length > 0;
-    const isExpanded = expandedFolders.has(folder.id);
-
-    const rows = [
-      <TableRow key={folder.id} data-state={selectedFolders.has(folder.id) ? "selected" : undefined}>
-        <TableCell>
-          <Checkbox
-            checked={selectedFolders.has(folder.id)}
-            onCheckedChange={(checked) => handleSelectFolder(folder.id, !!checked)}
-            aria-label={`Select ${folder.name}`}
-          />
-        </TableCell>
-        <TableCell>
-          <div className="flex items-center" style={{ paddingLeft: `${depth * 24}px` }}>
-            {hasChildren ? (
-              <button
-                onClick={(e) => toggleExpand(folder.id, e)}
-                className="p-0.5 mr-1 rounded hover:bg-muted transition-colors"
-                aria-label={isExpanded ? "Collapse" : "Expand"}
-              >
-                <ChevronRight
-                  className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
-                />
-              </button>
+  const renderRow = (folder: EnrichedFolder) => (
+    <TableRow key={folder.id} data-state={selectedFolders.has(folder.id) ? "selected" : undefined}>
+      <TableCell>
+        <Checkbox
+          checked={selectedFolders.has(folder.id)}
+          onCheckedChange={(checked) => handleSelectFolder(folder.id, !!checked)}
+          aria-label={`Select ${folder.name}`}
+        />
+      </TableCell>
+      <TableCell>
+        <FolderOpen className="w-5 h-5 text-muted-foreground" />
+      </TableCell>
+      <TableCell>
+        <button
+          onClick={() => !archivedFoldersOnly && onNavigate(folder.id)}
+          className="font-medium text-sm text-primary hover:underline text-left truncate max-w-[200px]"
+        >
+          {folder.name}
+        </button>
+      </TableCell>
+      <TableCell>
+        <span className="text-sm">{folder.subfolderCount}</span>
+      </TableCell>
+      <TableCell>
+        <span className="text-sm">{formatDate(folder.createdDate)}</span>
+      </TableCell>
+      <TableCell>
+        <span className="text-sm">{folder.creator}</span>
+      </TableCell>
+      <TableCell>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreHorizontal className="w-4 h-4" />
+              <span className="sr-only">Open menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="bg-popover">
+            {archivedFoldersOnly ? (
+              <DropdownMenuItem onClick={() => onUnarchiveFolder?.(folder.id)}>
+                <ArchiveRestore className="w-4 h-4 mr-2" />Unarchive
+              </DropdownMenuItem>
             ) : (
-              <span className="w-5 mr-1 inline-block" />
-            )}
-            <FolderOpen className="w-5 h-5 text-muted-foreground" />
-          </div>
-        </TableCell>
-        <TableCell>
-          <button
-            onClick={() => !archivedFoldersOnly && onNavigate(folder.id)}
-            className="font-medium text-sm text-primary hover:underline text-left truncate max-w-[200px]"
-          >
-            {folder.name}
-          </button>
-        </TableCell>
-        <TableCell>
-          <span className="text-sm">{folder.subfolderCount}</span>
-        </TableCell>
-        <TableCell>
-          <span className="text-sm">{formatDate(folder.createdDate)}</span>
-        </TableCell>
-        <TableCell>
-          <span className="text-sm">{folder.creator}</span>
-        </TableCell>
-        <TableCell>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-popover">
-              {archivedFoldersOnly ? (
-                <DropdownMenuItem onClick={() => onUnarchiveFolder?.(folder.id)}>
-                  <ArchiveRestore className="w-4 h-4 mr-2" />Unarchive
+              <>
+                <DropdownMenuItem onClick={() => onNavigate(folder.id)}>
+                  <Eye className="w-4 h-4 mr-2" />View
                 </DropdownMenuItem>
-              ) : (
-                <>
-                  <DropdownMenuItem onClick={() => onNavigate(folder.id)}>
-                    <Eye className="w-4 h-4 mr-2" />View
-                  </DropdownMenuItem>
-                  <DropdownMenuItem><Pencil className="w-4 h-4 mr-2" />Edit</DropdownMenuItem>
-                  <DropdownMenuItem><Move className="w-4 h-4 mr-2" />Move</DropdownMenuItem>
-                  <DropdownMenuItem><Archive className="w-4 h-4 mr-2" />Archive</DropdownMenuItem>
-                  <DropdownMenuItem className="text-destructive"><Trash2 className="w-4 h-4 mr-2" />Delete</DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </TableCell>
-      </TableRow>
-    ];
-
-    if (isExpanded && hasChildren) {
-      childFolders.forEach((child, i) => {
-        rows.push(...renderRow(enrichFolder(child, i + depth * 10), depth + 1));
-      });
-    }
-
-    return rows;
-  };
+                <DropdownMenuItem><Pencil className="w-4 h-4 mr-2" />Edit</DropdownMenuItem>
+                <DropdownMenuItem><Move className="w-4 h-4 mr-2" />Move</DropdownMenuItem>
+                <DropdownMenuItem><Archive className="w-4 h-4 mr-2" />Archive</DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive"><Trash2 className="w-4 h-4 mr-2" />Delete</DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TableCell>
+    </TableRow>
+  );
 
   if (isLoading) {
     return (
@@ -264,7 +227,7 @@ export function FolderTableView({ folders, onNavigate, isLoading = false, archiv
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sorted.flatMap(folder => renderRow(folder))}
+          {sorted.map(folder => renderRow(folder))}
         </TableBody>
       </Table>
     </div>
