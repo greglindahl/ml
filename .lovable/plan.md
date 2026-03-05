@@ -1,18 +1,23 @@
 
 
-## Add Tooltip to Disabled Galleries in Add Gallery Dialog
+## Add Inline Tooltip Note to Add Gallery Dialog
 
 ### Change
 
-In `src/components/AddGalleryDialog.tsx`, wrap the "In Folder" button for disabled galleries with a `Tooltip` component that explains why the gallery cannot be selected.
-
-**Tooltip text**: "Galleries can only belong to one folder. To move this gallery, remove it from its current folder first."
+Add a persistent inline hint between the gallery list and the footer, using an `Info` (or `Eye`) icon plus muted text styled like a tooltip callout. This is always visible — not a hover tooltip.
 
 ### Implementation
 
-- Import `Tooltip`, `TooltipTrigger`, `TooltipContent`, `TooltipProvider` from `@/components/ui/tooltip`
-- When `isDisabled` is true, wrap the "In Folder" button in a `Tooltip` so hovering shows the explanatory message
-- Keep the existing "Already in a folder" inline text as secondary context
+**`src/components/AddGalleryDialog.tsx`** — Insert a new inline note between the scrollable list (line 143) and `DialogFooter` (line 145):
+
+```tsx
+<div className="flex items-center gap-1.5 pt-2">
+  <Info className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+  <span className="text-xs text-muted-foreground">Galleries can only belong to one folder.</span>
+</div>
+```
+
+This mirrors the tooltip text treatment (small, muted) but is always shown inline at the bottom of the dialog, matching the screenshot reference.
 
 ### File Modified
 - `src/components/AddGalleryDialog.tsx`
