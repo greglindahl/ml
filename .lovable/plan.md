@@ -1,12 +1,19 @@
 
 
-## Match folder search styling to the app-wide search treatment
+## Update Assets tab search placeholder text
 
-The screenshot shows the search icon on the **left** side of the input, matching the `FacetedSearchWithTypeahead` component. The current folder search has the icon on the **right**.
+Pass `placeholder="Search by people, tags, filenames…"` to the `FacetedSearchWithTypeahead` component on every Assets tab. Leave Galleries and Folders tab searches unchanged.
 
-### Change: `src/components/FolderDetailsView.tsx` (lines 900-918)
+### Changes
 
-- Move the `Search` icon to the **left** side (`left-3` instead of `right-3`)
-- Update input padding to `pl-10 pr-10` (left padding for icon, right padding for clear button)
-- Keep the clear (X) button on the right when text is entered
+**`src/components/LibraryScreen.tsx`** (line 871)
+- Add `placeholder="Search by people, tags, filenames…"` to the Assets tab search instance
+
+**`src/components/FolderDetailsView.tsx`** (lines 399 and 619)
+- Add `placeholder="Search by people, tags, filenames…"` to both Assets tab search instances inside folder details
+
+**`src/components/GalleryDetailsView.tsx`** (line 277)
+- Add `placeholder="Search by people, tags, filenames…"` to the gallery details assets search
+
+No changes to the Galleries tab search (LibraryScreen line 1157) or the Folders tab search input.
 
