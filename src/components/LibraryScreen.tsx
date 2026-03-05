@@ -14,6 +14,7 @@ import { FolderDetailsView } from "@/components/FolderDetailsView";
 import { AssetTableView } from "@/components/AssetTableView";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { GalleryTableView } from "@/components/GalleryTableView";
+import { FolderTableView } from "@/components/FolderTableView";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
 import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds } from "@/lib/mockFolderData";
@@ -85,6 +86,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
   const { toast } = useToast();
   const [archivedFoldersOnly, setArchivedFoldersOnly] = useState(false);
+  const [folderViewMode, setFolderViewMode] = useState<"grid" | "table">("grid");
   const [archivedGalleriesOnly, setArchivedGalleriesOnly] = useState(false);
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
 
@@ -1363,10 +1365,10 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 <Switch id="archived-folders" checked={archivedFoldersOnly} onCheckedChange={setArchivedFoldersOnly} />
               </div>
               <div className="flex items-center border rounded-md bg-card">
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-r-none bg-accent">
+                <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-r-none ${folderViewMode === "grid" ? "bg-accent" : ""}`} onClick={() => setFolderViewMode("grid")}>
                   <Grid3X3 className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-l-none border-l">
+                <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-l-none border-l ${folderViewMode === "table" ? "bg-accent" : ""}`} onClick={() => setFolderViewMode("table")}>
                   <List className="w-4 h-4" />
                 </Button>
               </div>
@@ -1384,6 +1386,17 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <h3 className="text-lg font-medium mb-1">{archivedFoldersOnly ? "No archived folders" : "No folders"}</h3>
                   <p className="text-sm text-muted-foreground">{archivedFoldersOnly ? "Archive a folder to see it here." : "Create a folder to get started."}</p>
                 </div>
+              ) : folderViewMode === "table" ? (
+                <FolderTableView
+                  folders={topLevelFolders.filter(f => archivedFoldersOnly ? f.archived === true : f.archived !== true)}
+                  onNavigate={(folderId) => setActiveFolder(folderId)}
+                  archivedFoldersOnly={archivedFoldersOnly}
+                  onUnarchiveFolder={(folderId) => {
+                    handleUnarchiveFolder(folderId);
+                    const name = topLevelFolders.find(f => f.id === folderId)?.name || "Folder";
+                    toast({ title: "Folder unarchived", description: `"${name}" has been unarchived.` });
+                  }}
+                />
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {filteredFolderCards.map((folder) => (
