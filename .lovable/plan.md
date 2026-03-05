@@ -1,28 +1,21 @@
 
 
-## Fix "New Gallery" Button in New Folder Dialog
+## Fix: New Gallery Not Appearing in New Folder Dialog
 
-### Problem
-In `NewFolderDialog.tsx`, the `AddGalleryDialog` is rendered with `onCreateNew={() => {}}` — a no-op. Clicking "New Gallery" closes the Add Gallery dialog but nothing else happens. In contrast, both `LibraryScreen.tsx` and `FolderDetailsView.tsx` wire `onCreateNew` to `() => setNewGalleryDialogOpen(true)`, which correctly opens the New Gallery modal.
+### Root Cause
 
-### Fix: `src/components/NewFolderDialog.tsx`
+Two issues:
 
-1. **Add state** for `newGalleryDialogOpen`
-2. **Import and render** `NewGalleryDialog` alongside the existing `AddGalleryDialog`
-3. **Wire** `onCreateNew={() => setNewGalleryDialogOpen(true)}` on the `AddGalleryDialog`
-4. **Handle gallery creation** inside the `NewGalleryDialog` callback: add the newly created gallery to `selectedGalleryIds` so it appears in the folder being created
-5. **Accept new props**: `flattenedFolders` (already available) and optionally `onGalleryCreated` callback so the parent can update its gallery list with the new gallery
+1. **`onCreateGallery` prop is never passed** to `<NewFolderDialog>` in either `LibraryScreen.tsx` (line 1458) or `FolderDetailsView.tsx` (line 1089). The prop was added to the interface but never wired by the parents.
 
-Since `NewFolderDialog` doesn't own the gallery list, the simplest approach is to add an optional `onCreateGallery` prop that bubbles the new gallery data up to the parent (`LibraryScreen` / `FolderDetailsView`), which already has the `handleCreateGallery` logic. The parent returns the new gallery ID, which `NewFolderDialog` then adds to `selectedGalleryIds`.
-
-Alternatively, render the `NewGalleryDialog` inside `NewFolderDialog` and pass an `onCreateGallery` prop from the parent that handles persisting the gallery and returns the created gallery object, so the dialog can immediately add it to the selected list.
+2. **`handleCreateGallery` returns `void`** (`LibraryScreen.tsx` line 222). The `NewFolderDialog` expects `onCreateGallery` to return the new `Gallery` object so it can add its ID to `selectedGalleryIds`. Since nothing is returned, even after wiring, the auto-select won't work.
 
 ### Changes
 
-- **`src/components/NewFolderDialog.tsx`**:
-  - Add `newGalleryDialogOpen` state
-  - Import `NewGalleryDialog` and `NewGalleryData`
-  - Add optional prop `onCreateGallery?: (data: NewGalleryData) => Gallery | void` to the interface
-  - Render `<NewGalleryDialog>` after `<AddGalleryDialog>`, wired to the new state
-  - Replace `onCreateNew={() => {}}` with `onCreateNew={() => setNewGalleryDialogOpen(true)}`
+**`src/components/LibraryScreen.tsx`**:
+- Make `handleCreateGallery` return the new `Gallery` object (add `return newGallery;` after line 244)
+- Pass `onCreateGallery={handleCreateGallery}` to `<NewFolderDialog>` (line 1458)
+
+**`src/components/FolderDetailsView.tsx`**:
+- Pass `onCreateGallery` prop through to `<NewFolderDialog>` (line 1089) — this component receives `onCreateGallery` from its parent (`LibraryScreen`), so it just needs to forward it
 
