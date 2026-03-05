@@ -1,21 +1,16 @@
 
 
-## Fix: New Gallery Not Appearing in New Folder Dialog
+## Fix: Newly Created Gallery Shows ID Instead of Name
 
 ### Root Cause
 
-Two issues:
+In `handleCreateFolder` (line 132), gallery name lookup uses `mockGalleries.find(g => g.id === gId)` — the **static imported array**. Newly created galleries are added to `galleryList` state, not `mockGalleries`. So the lookup fails and falls back to `gId` (the raw ID like `gallery-17727325332...`).
 
-1. **`onCreateGallery` prop is never passed** to `<NewFolderDialog>` in either `LibraryScreen.tsx` (line 1458) or `FolderDetailsView.tsx` (line 1089). The prop was added to the interface but never wired by the parents.
+The same issue exists in `handleEditFolder` (line 167).
 
-2. **`handleCreateGallery` returns `void`** (`LibraryScreen.tsx` line 222). The `NewFolderDialog` expects `onCreateGallery` to return the new `Gallery` object so it can add its ID to `selectedGalleryIds`. Since nothing is returned, even after wiring, the auto-select won't work.
+### Fix: `src/components/LibraryScreen.tsx`
 
-### Changes
-
-**`src/components/LibraryScreen.tsx`**:
-- Make `handleCreateGallery` return the new `Gallery` object (add `return newGallery;` after line 244)
-- Pass `onCreateGallery={handleCreateGallery}` to `<NewFolderDialog>` (line 1458)
-
-**`src/components/FolderDetailsView.tsx`**:
-- Pass `onCreateGallery` prop through to `<NewFolderDialog>` (line 1089) — this component receives `onCreateGallery` from its parent (`LibraryScreen`), so it just needs to forward it
+1. **Line 132**: Change `mockGalleries.find(g => g.id === gId)` to `galleryList.find(g => g.id === gId)` — use the live state array that includes newly created galleries
+2. **Line 167**: Same fix for `handleEditFolder` — change `mockGalleries.find(...)` to `galleryList.find(...)`
+3. **Update `useCallback` dependencies**: Add `galleryList` to the dependency arrays of both `handleCreateFolder` and `handleEditFolder`
 
