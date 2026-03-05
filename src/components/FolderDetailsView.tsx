@@ -396,7 +396,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         <TabsContent value="assets" className="flex-1 py-6 mt-0">
           {/* Faceted Search */}
           <div className="mb-4">
-            <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} />
+            <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
           </div>
 
           {/* Filters and Controls - Single Row */}
@@ -616,7 +616,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         <TabsContent value="galleries" className="flex-1 py-6 mt-0">
           {/* Faceted Search */}
           <div className="mb-4">
-            <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} />
+            <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
           </div>
 
           {/* Filters and Controls */}
