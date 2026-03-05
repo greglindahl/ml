@@ -14,6 +14,8 @@ interface SortableFolderItemProps {
   children?: React.ReactNode;
   isOverValid?: boolean;
   isOverInvalid?: boolean;
+  isArchived?: boolean;
+  disableDrag?: boolean;
 }
 
 export function SortableFolderItem({
@@ -27,6 +29,8 @@ export function SortableFolderItem({
   children,
   isOverValid,
   isOverInvalid,
+  isArchived,
+  disableDrag,
 }: SortableFolderItemProps) {
   const {
     attributes,
@@ -38,6 +42,7 @@ export function SortableFolderItem({
   } = useSortable({
     id: folder.id,
     data: { type: folder.type, folder },
+    disabled: disableDrag,
   });
 
   const style = {
@@ -58,11 +63,11 @@ export function SortableFolderItem({
             : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
         } ${isOverValid ? "ring-2 ring-primary bg-primary/10" : ""} ${
           isOverInvalid ? "ring-2 ring-destructive bg-destructive/10" : ""
-        }`}
+        } ${isArchived ? "opacity-50" : ""}`}
         style={{ paddingLeft: `${4 + depth * 16}px`, paddingRight: 12 }}
       >
         {/* Drag handle */}
-        {!isAllFiles && (
+        {!isAllFiles && !disableDrag && (
           <button
             className="p-0.5 cursor-grab opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity flex-shrink-0 touch-none"
             {...attributes}

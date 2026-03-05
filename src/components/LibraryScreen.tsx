@@ -736,6 +736,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         onSetSidebarExpanded={setIsFolderSidebarExpanded}
         onMoveItem={handleDndMoveItem}
         onReorder={handleDndReorder}
+        showArchived={archivedFoldersOnly}
+        onToggleArchived={setArchivedFoldersOnly}
       />
 
       {/* Main Content Area - Show GalleryDetailsView, FolderDetailsView, or Library content */}
@@ -1318,13 +1320,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           </TabsContent>
 
           <TabsContent value="folders" className="flex-1 py-6 mt-0">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="archived-folders" className="text-sm text-muted-foreground">
-                  Archived Only
-                </Label>
-                <Switch id="archived-folders" checked={archivedFoldersOnly} onCheckedChange={setArchivedFoldersOnly} />
-              </div>
+            <div className="flex items-center justify-end mb-6">
               <div className="flex items-center border rounded-md bg-card">
                 <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-r-none ${folderViewMode === "grid" ? "bg-accent" : ""}`} onClick={() => setFolderViewMode("grid")}>
                   <Grid3X3 className="w-4 h-4" />

@@ -16,6 +16,8 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { ChevronLeft, ChevronRight, Folder, Images, Info } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { SortableFolderItem } from "@/components/SortableFolderItem";
 import {
   AlertDialog,
@@ -39,22 +41,26 @@ interface FolderSidebarProps {
   onSetSidebarExpanded: (v: boolean) => void;
   onMoveItem: (itemId: string, targetFolderId: string | null) => void;
   onReorder: (parentId: string | null, itemId: string, overItemId: string) => void;
+  showArchived: boolean;
+  onToggleArchived: (v: boolean) => void;
 }
 
 // Collect all node IDs in the visible tree for SortableContext
 function collectVisibleIds(
   items: FolderItem[],
-  expandedFolders: Set<string>
+  expandedFolders: Set<string>,
+  showArchived: boolean
 ): string[] {
   const ids: string[] = [];
   for (const item of items) {
-    if (item.archived) continue;
+    if (!showArchived && item.archived) continue;
     ids.push(item.id);
     if (item.children && expandedFolders.has(item.id)) {
       ids.push(
         ...collectVisibleIds(
-          item.children.filter((c) => !c.archived),
-          expandedFolders
+          item.children.filter((c) => showArchived || !c.archived),
+          expandedFolders,
+          showArchived
         )
       );
     }
@@ -88,6 +94,8 @@ export function FolderSidebar({
   onSetSidebarExpanded,
   onMoveItem,
   onReorder,
+  showArchived,
+  onToggleArchived,
 }: FolderSidebarProps) {
   const [activeItem, setActiveItem] = useState<FolderItem | null>(null);
   const [overTargetId, setOverTargetId] = useState<string | null>(null);
@@ -100,8 +108,8 @@ export function FolderSidebar({
   );
 
   const visibleIds = useMemo(
-    () => collectVisibleIds(folderTree, expandedFolders),
-    [folderTree, expandedFolders]
+    () => collectVisibleIds(folderTree, expandedFolders, showArchived),
+    [folderTree, expandedFolders, showArchived]
   );
 
   const validateDrop = useCallback(
@@ -199,10 +207,10 @@ export function FolderSidebar({
 
   const renderTree = (items: FolderItem[], depth = 0) => {
     return items
-      .filter((f) => f.archived !== true)
+      .filter((f) => showArchived || f.archived !== true)
       .map((folder) => {
         const visibleChildren =
-          folder.children?.filter((c) => c.archived !== true) || [];
+          folder.children?.filter((c) => showArchived || c.archived !== true) || [];
         const hasChildren = visibleChildren.length > 0;
         const isExpanded = expandedFolders.has(folder.id);
         const isGallery = folder.type === "gallery";
@@ -227,6 +235,8 @@ export function FolderSidebar({
             onToggleExpand={onToggleFolderExpand}
             isOverValid={isThisOverValid}
             isOverInvalid={isThisOverInvalid}
+            isArchived={folder.archived === true}
+            disableDrag={folder.archived === true}
           >
             {hasChildren && isExpanded && (
               <div className="mt-1">
@@ -302,6 +312,14 @@ export function FolderSidebar({
             ) : null}
           </DragOverlay>
         </DndContext>
+      </div>
+
+      {/* Pinned footer: View Archived toggle */}
+      <div className="p-3 border-t flex items-center justify-between min-w-64">
+        <Label htmlFor="view-archived" className="text-sm text-muted-foreground cursor-pointer">
+          View Archived
+        </Label>
+        <Switch id="view-archived" checked={showArchived} onCheckedChange={onToggleArchived} />
       </div>
 
       <AlertDialog open={showDepthAlert} onOpenChange={setShowDepthAlert}>
