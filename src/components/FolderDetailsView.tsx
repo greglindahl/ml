@@ -1,5 +1,5 @@
-import { useState, useCallback, useMemo } from "react";
-import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, MoreVertical, MoreHorizontal, Upload, Settings2, FolderOpen, Pencil, Move, Archive, Trash2, Folder, Plus, Heart, ArchiveRestore } from "lucide-react";
+import { useState, useCallback, useMemo, useRef } from "react";
+import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, MoreVertical, MoreHorizontal, Upload, Settings2, FolderOpen, Pencil, Move, Archive, Trash2, Folder, Plus, Heart, ArchiveRestore, Search, X } from "lucide-react";
 import { AssetTableView } from "@/components/AssetTableView";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { GalleryTableView, GalleryTableItem } from "@/components/GalleryTableView";
@@ -120,6 +120,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   // Archive toggle states
   const [archivedFoldersOnly, setArchivedFoldersOnly] = useState(false);
   const [archivedGalleriesOnly, setArchivedGalleriesOnly] = useState(false);
+  const [folderSearchQuery, setFolderSearchQuery] = useState("");
+  const folderSearchInputRef = useRef<HTMLInputElement>(null);
   
   // Filter state (driven by FilterBar)
   const [contentTypeFilter, setContentTypeFilter] = useState<Array<LibraryAsset["type"]>>([]);
@@ -897,6 +899,25 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           {/* Controls row */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <input
+                  ref={folderSearchInputRef}
+                  type="text"
+                  placeholder="Search folders…"
+                  value={folderSearchQuery}
+                  onChange={(e) => setFolderSearchQuery(e.target.value)}
+                  className="h-8 w-48 rounded-md border border-input bg-background pl-8 pr-8 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                />
+                {folderSearchQuery && (
+                  <button
+                    onClick={() => { setFolderSearchQuery(""); folderSearchInputRef.current?.focus(); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 <Label htmlFor="archived-folders-detail" className="text-sm text-muted-foreground">Archived Only</Label>
                 <Switch id="archived-folders-detail" checked={archivedFoldersOnly} onCheckedChange={setArchivedFoldersOnly} />
@@ -915,7 +936,10 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           {/* Empty state or folder children */}
           {(() => {
             const childFolders = (folder.children || []).filter(c => c.type === "folder");
-            const filteredChildFolders = childFolders.filter(c => archivedFoldersOnly ? c.archived === true : c.archived !== true);
+            const searchFiltered = folderSearchQuery
+              ? childFolders.filter(c => c.name.toLowerCase().includes(folderSearchQuery.toLowerCase()))
+              : childFolders;
+            const filteredChildFolders = searchFiltered.filter(c => archivedFoldersOnly ? c.archived === true : c.archived !== true);
             
             if (childFolders.length === 0 && !archivedFoldersOnly) {
               return (
