@@ -1,44 +1,52 @@
 
 
-## Add "View Archived" Toggle to Folder Sidebar
+## Fix Scrolling & Sticky Behavior
 
-### What Changes
+### Problem
+The entire page scrolls as one unit — the left nav, folder sidebar, search/tabs/filters, and asset grid all scroll together. The GIF shows the folder sidebar and primary nav scrolling away.
 
-Move the "Archived Only" toggle from the main content Folders tab toolbar down to the **bottom of the folder sidebar**, pinned as a footer — matching the uploaded reference screenshot showing "View Archived" with a switch at the bottom of the nav.
-
-When toggled **on**, the sidebar tree shows archived folders/galleries (currently filtered out by `f.archived !== true`). The user can then right-click or use the existing overflow menu to unarchive items. When toggled **off** (default), archived items are hidden as they are today.
+### Goal
+- **Primary nav (LeftNav)**: Already `h-screen` and sticky — no change needed.
+- **Folder sidebar**: Should be viewport-height and scroll independently (its own overflow). Currently it's `flex flex-col` with `overflow-y-auto` on the tree area, but the parent container scrolls.
+- **Search + tabs + filters**: Should stick to the top when the user scrolls, so only the asset grid scrolls beneath them.
+- **Asset content area**: Only the asset cards/table should scroll.
 
 ### Changes
 
-**1. `src/components/FolderSidebar.tsx`**
-- Add a new prop `showArchived` (boolean) and `onToggleArchived` (callback) from the parent
-- Add a pinned footer section below the scrollable tree area with a `Switch` + "View Archived" label, matching the screenshot layout
-- Update `renderTree` to respect `showArchived`: when true, stop filtering out `archived` items (or show only archived items, depending on preference — likely show ALL items including archived, with archived items visually distinguished)
-- Update `collectVisibleIds` similarly so DnD context includes archived items when the toggle is on
-- Disable drag-and-drop on archived items (they shouldn't be reorderable while in archived view)
+**1. `src/components/LibraryScreen.tsx`**
 
-**2. `src/components/LibraryScreen.tsx`**
-- Pass `archivedFoldersOnly` state and `setArchivedFoldersOnly` to `FolderSidebar` as props
-- Remove the "Archived Only" toggle from the Folders tab toolbar (the `<Switch>` + label currently in the folders tab filter bar area around line 1321-1340)
-- Keep unarchive logic as-is since it's triggered from context menus / overflow menus on individual items
+The outermost wrapper (line 727) is `flex-1 flex`. The main content area (line 772) uses `flex-1 flex flex-col` and allows the whole thing to grow and scroll with the page.
 
-**3. `src/components/SortableFolderItem.tsx`**
-- When an item is archived and `showArchived` is true, add a subtle visual distinction (e.g., reduced opacity or an archive icon badge) so the user can tell which items are archived vs active
+Fix: Make the outer `flex-1 flex` container take full viewport height (`h-screen overflow-hidden`) so the sidebar and content area each manage their own scrolling. Then inside the main content area:
+- The header, tabs row, search, and filter bar become a sticky/fixed top section
+- Only the asset grid area below gets `overflow-y-auto flex-1`
 
-### Layout (matching screenshot)
+Specifically:
+- Line 727: Add `h-screen overflow-hidden` to the outer flex container
+- Line 772: Change the main content div to `flex-1 flex flex-col min-w-0 h-full overflow-hidden` (remove padding-top, keep horizontal padding)
+- Wrap the header + tabs + search + filters in a `flex-shrink-0` div so they don't scroll
+- Wrap each `TabsContent` body in a scrollable container (`overflow-y-auto flex-1`)
+
+**2. `src/components/FolderSidebar.tsx`**
+- The expanded sidebar (line ~226) already has `flex flex-col w-64` and the tree area has `overflow-y-auto`. Just need to ensure the parent constrains height. Adding `h-full` to the sidebar root divs will make them fill the viewport-height container.
+
+### Layout Structure After Fix
+
 ```text
-┌─────────────────────┐
-│ Library          «   │
-├─────────────────────┤
-│ All Media            │
-│  > New Folder Name   │
-│  > Old Folder Name   │
-│                      │
-│                      │
-│                      │
-│                      │
-├─────────────────────┤
-│ View Archived  (o)   │  ← pinned footer with Switch
-└─────────────────────┘
+┌──────────────────────────────────────────────────┐
+│ LeftNav (h-screen, sticky)                       │
+│  ┌─────────────┬────────────────────────────────┐│
+│  │ FolderSidebar│  Header + New/Upload buttons  ││
+│  │ (h-full,    │  Tabs bar                      ││
+│  │  own scroll)│  Search + Filters              ││ ← all sticky (flex-shrink-0)
+│  │             │────────────────────────────────││
+│  │             │  Asset grid (overflow-y-auto)  ││ ← only this scrolls
+│  │             │                                ││
+│  └─────────────┴────────────────────────────────┘│
+└──────────────────────────────────────────────────┘
 ```
+
+### Files Modified
+- `src/components/LibraryScreen.tsx` — restructure the main content area layout
+- `src/components/FolderSidebar.tsx` — minor: ensure `h-full` on root containers
 
