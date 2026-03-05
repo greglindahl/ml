@@ -242,6 +242,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
     }
     setNewGalleryDialogOpen(false);
     sonnerToast.success("Gallery created successfully");
+    return newGallery;
   }, [insertFolderAt]);
 
   const handleAddGalleriesToFolder = useCallback((galleryIds: string[], targetFolderId: string | null) => {
@@ -1462,6 +1463,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         flattenedFolders={flatFolders}
         galleries={galleryList}
         folderTree={folderTree}
+        onCreateGallery={handleCreateGallery}
       />
       <AddGalleryDialog
         open={addGalleryDialogOpen}

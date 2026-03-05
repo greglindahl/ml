@@ -1099,6 +1099,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         flattenedFolders={flattenedFolders ?? flattenFolders(folderTree)}
         galleries={galleryList ?? mockGalleries}
         folderTree={folderTree}
+        onCreateGallery={onCreateGallery}
       />
       <MoveGalleriesDialog
         open={moveGalleriesOpen}
