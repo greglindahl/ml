@@ -1,16 +1,28 @@
 
 
-## Fix: Newly Created Gallery Shows ID Instead of Name
+## Auto-Expand Sidebar to Show Newly Created Folders
 
-### Root Cause
+### Problem
+When creating a new folder (especially nested ones), the parent folder in the sidebar navigation may not be expanded, so the newly created folder is not visible. Dropbox automatically reveals newly created items in the folder tree by expanding their parent.
 
-In `handleCreateFolder` (line 132), gallery name lookup uses `mockGalleries.find(g => g.id === gId)` — the **static imported array**. Newly created galleries are added to `galleryList` state, not `mockGalleries`. So the lookup fails and falls back to `gId` (the raw ID like `gallery-17727325332...`).
+### Changes: `src/components/LibraryScreen.tsx`
 
-The same issue exists in `handleEditFolder` (line 167).
+1. **In `handleCreateFolder`**: After inserting the new folder, auto-expand its parent in the sidebar by adding the parent's ID (i.e., `data.locationId`) to `expandedFolders`. If the folder is created at root level, no expansion needed since root items are always visible.
 
-### Fix: `src/components/LibraryScreen.tsx`
+2. **In `FolderDetailsView`'s folder creation** (if it creates folders independently): Same logic — ensure the parent folder ID is added to `expandedFolders`.
 
-1. **Line 132**: Change `mockGalleries.find(g => g.id === gId)` to `galleryList.find(g => g.id === gId)` — use the live state array that includes newly created galleries
-2. **Line 167**: Same fix for `handleEditFolder` — change `mockGalleries.find(...)` to `galleryList.find(...)`
-3. **Update `useCallback` dependencies**: Add `galleryList` to the dependency arrays of both `handleCreateFolder` and `handleEditFolder`
+Concretely, after the `setFolderTree(...)` call in `handleCreateFolder`, add:
+
+```tsx
+// Auto-expand parent so new folder is visible in sidebar nav
+if (data.locationId) {
+  setExpandedFolders(prev => new Set([...prev, data.locationId]));
+}
+```
+
+3. **Also expand the sidebar itself** if it's collapsed: set `isFolderSidebarExpanded(true)` after folder creation so the user can see the tree.
+
+### Scope
+- Only `src/components/LibraryScreen.tsx` needs changes
+- Two lines added after folder creation in `handleCreateFolder` (~line 148)
 
