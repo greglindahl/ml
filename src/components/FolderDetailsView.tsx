@@ -293,9 +293,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   }, [selectedGalleries, handleMoveGalleries]);
 
   return (
-    <div className={`flex-1 flex flex-col min-w-0 px-4 md:px-8 xl:px-16 pb-12 ${isMobile ? "pt-[58px]" : "pt-8"}`}>
+    <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-4 md:px-8 xl:px-16">
       {/* Breadcrumb Navigation */}
-      <nav className="flex items-center gap-1 text-sm mb-6">
+      <nav className="flex items-center gap-1 text-sm mb-6 flex-shrink-0 pt-4">
         {breadcrumbPath.map((item, index) => (
           <div key={item.id} className="flex items-center gap-1">
             {index > 0 && <ChevronRight className="w-4 h-4 text-muted-foreground" />}
@@ -314,7 +314,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
       </nav>
 
       {/* Folder Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-start justify-between mb-6 flex-shrink-0 pr-40">
         <h1 className="text-2xl font-semibold">{folder.name}</h1>
         <div className="flex items-center gap-2">
           <DropdownMenu>
@@ -370,8 +370,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <div className="border-b">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+        <div className="border-b flex-shrink-0">
           <TabsList className="bg-transparent h-auto p-0 gap-6">
             <TabsTrigger
               value="assets"
@@ -395,7 +395,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         </div>
 
         {/* Assets Tab */}
-        <TabsContent value="assets" className="flex-1 py-6 mt-0">
+        <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">
           {/* Faceted Search */}
           <div className="mb-4">
             <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
@@ -615,7 +615,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         </TabsContent>
 
         {/* Galleries Tab */}
-        <TabsContent value="galleries" className="flex-1 py-6 mt-0">
+        <TabsContent value="galleries" className="flex-1 overflow-y-auto py-6 mt-0">
           {/* Faceted Search */}
           <div className="mb-4">
             <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} />
@@ -897,7 +897,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         </TabsContent>
 
         {/* Folders Tab */}
-        <TabsContent value="folders" className="flex-1 py-6 mt-0">
+        <TabsContent value="folders" className="flex-1 overflow-y-auto py-6 mt-0">
           {/* Search row */}
           <div className="mb-4">
             <FacetedSearchWithTypeahead onSearch={(query) => setFolderSearchQuery(query)} placeholder="Search" />
