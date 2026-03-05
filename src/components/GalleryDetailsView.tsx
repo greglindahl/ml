@@ -184,9 +184,9 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
   }, []);
 
   return (
-    <div className={`flex-1 flex flex-col min-w-0 px-4 md:px-8 xl:px-16 pb-12 ${isMobile ? "pt-[58px]" : "pt-8"}`}>
+    <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-4 md:px-8 xl:px-16">
       {/* Breadcrumb Navigation */}
-      <nav className="flex items-center gap-1 text-sm mb-6">
+      <nav className="flex items-center gap-1 text-sm mb-6 flex-shrink-0 pt-4">
         {breadcrumbPath.map((item, index) => (
           <div key={item.id} className="flex items-center gap-1">
             {index > 0 && <ChevronRight className="w-4 h-4 text-muted-foreground" />}
@@ -205,7 +205,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
       </nav>
 
       {/* Gallery Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-start justify-between mb-6 flex-shrink-0 pr-40">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
             <Images className="w-6 h-6 text-muted-foreground" />
@@ -247,8 +247,8 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <div className="border-b">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+        <div className="border-b flex-shrink-0">
           <TabsList className="bg-transparent h-auto p-0 gap-6">
             <TabsTrigger
               value="assets"
@@ -271,7 +271,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           </TabsList>
         </div>
 
-        <TabsContent value="assets" className="flex-1 py-6 mt-0">
+        <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">
           {/* Faceted Search */}
           <div className="mb-4">
             <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
@@ -490,7 +490,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           </div>
         </TabsContent>
 
-        <TabsContent value="overview" className="flex-1 py-6 mt-0">
+        <TabsContent value="overview" className="flex-1 overflow-y-auto py-6 mt-0">
           <div className="max-w-2xl">
             <h2 className="text-lg font-semibold mb-4">Gallery Overview</h2>
             <div className="space-y-4">
@@ -512,7 +512,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           </div>
         </TabsContent>
 
-        <TabsContent value="public-settings" className="flex-1 py-6 mt-0">
+        <TabsContent value="public-settings" className="flex-1 overflow-y-auto py-6 mt-0">
           <div className="max-w-2xl">
             <h2 className="text-lg font-semibold mb-4">Public Settings</h2>
             <div className="space-y-6">

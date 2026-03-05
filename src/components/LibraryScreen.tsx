@@ -771,7 +771,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
       ) : (
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-4 md:px-8 xl:px-16">
         {/* Header with title and actions */}
-        <div className="py-4 flex items-center justify-between flex-shrink-0">
+        <div className="py-4 flex items-center justify-between flex-shrink-0 pr-40">
           <h1 className="text-2xl font-semibold">Library</h1>
           <div className="flex items-center gap-2">
             <DropdownMenu>
