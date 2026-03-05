@@ -1,20 +1,44 @@
 
 
-## Fix: Depth Validation Bug + Alert Modal for Invalid Moves
+## Add "View Archived" Toggle to Folder Sidebar
 
-### Root Cause
+### What Changes
 
-The depth check on line 113 of `FolderSidebar.tsx` uses `> 4`, but since level 4 is reserved exclusively for galleries, folders can only occupy levels 1-3. A folder with 3 levels of nesting (New L1 > New L2 > New L3) dragged into a level-1 folder (Season 23-24) produces `1 + 3 = 4`, which passes the `> 4` check incorrectly. It should be `> 3`.
+Move the "Archived Only" toggle from the main content Folders tab toolbar down to the **bottom of the folder sidebar**, pinned as a footer — matching the uploaded reference screenshot showing "View Archived" with a switch at the bottom of the nav.
+
+When toggled **on**, the sidebar tree shows archived folders/galleries (currently filtered out by `f.archived !== true`). The user can then right-click or use the existing overflow menu to unarchive items. When toggled **off** (default), archived items are hidden as they are today.
 
 ### Changes
 
 **1. `src/components/FolderSidebar.tsx`**
-- Line 113: Change `targetDepth + draggedSubtreeDepth > 4` to `> 3` — enforces that folders cannot land at level 4 (reserved for galleries)
-- Line 168: Replace `sonnerToast.error(...)` with a call to set state that opens an alert dialog
-- Add state `showDepthAlert` and render an `AlertDialog` with the message from the reference image: *"This move would exceed the 4-level folder limit. Choose a different location."* with an info icon and OK button
+- Add a new prop `showArchived` (boolean) and `onToggleArchived` (callback) from the parent
+- Add a pinned footer section below the scrollable tree area with a `Switch` + "View Archived" label, matching the screenshot layout
+- Update `renderTree` to respect `showArchived`: when true, stop filtering out `archived` items (or show only archived items, depending on preference — likely show ALL items including archived, with archived items visually distinguished)
+- Update `collectVisibleIds` similarly so DnD context includes archived items when the toggle is on
+- Disable drag-and-drop on archived items (they shouldn't be reorderable while in archived view)
 
-**2. `src/components/FolderSidebar.tsx` — Alert Dialog UI**
-- Use the existing `@radix-ui/react-alert-dialog` (already installed) to show a modal alert
-- Style the message with a red/destructive info icon matching the reference screenshot
-- Single "OK" button dismisses the dialog; item has already snapped back automatically
+**2. `src/components/LibraryScreen.tsx`**
+- Pass `archivedFoldersOnly` state and `setArchivedFoldersOnly` to `FolderSidebar` as props
+- Remove the "Archived Only" toggle from the Folders tab toolbar (the `<Switch>` + label currently in the folders tab filter bar area around line 1321-1340)
+- Keep unarchive logic as-is since it's triggered from context menus / overflow menus on individual items
+
+**3. `src/components/SortableFolderItem.tsx`**
+- When an item is archived and `showArchived` is true, add a subtle visual distinction (e.g., reduced opacity or an archive icon badge) so the user can tell which items are archived vs active
+
+### Layout (matching screenshot)
+```text
+┌─────────────────────┐
+│ Library          «   │
+├─────────────────────┤
+│ All Media            │
+│  > New Folder Name   │
+│  > Old Folder Name   │
+│                      │
+│                      │
+│                      │
+│                      │
+├─────────────────────┤
+│ View Archived  (o)   │  ← pinned footer with Switch
+└─────────────────────┘
+```
 
