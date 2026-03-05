@@ -1,22 +1,15 @@
 
 
-## Add Table View for Folders
+## Wire Folder Table View Toggle at All Media Level
 
-Currently the Folders tab only renders a grid of folder cards. The grid/list toggle buttons exist but the list button does nothing. This plan adds a `FolderTableView` component and wires the toggle to switch between grid and table views.
+The grid/list toggle buttons in `LibraryScreen.tsx` (Folders tab, lines 1365-1372) are static — no state, no click handlers, no `FolderTableView` usage. The table view only works inside `FolderDetailsView.tsx`.
 
-### New file: `src/components/FolderTableView.tsx`
+### Changes: `src/components/LibraryScreen.tsx`
 
-Create a table component following the same patterns as `GalleryTableView.tsx`:
+1. **Import** `FolderTableView` from `@/components/FolderTableView`
+2. **Add state**: `const [folderViewMode, setFolderViewMode] = useState<"grid" | "table">("grid")`
+3. **Wire toggle buttons** (lines 1365-1372): add `onClick` handlers and active styling (`bg-muted` when selected), matching the pattern in `FolderDetailsView.tsx`
+4. **Conditional render** (lines 1375-1427): when `folderViewMode === "table"`, render `<FolderTableView>` with the filtered top-level folders converted to `FolderItem[]` format; when `"grid"`, keep existing grid
 
-- **Columns**: Checkbox, Icon (folder icon), Name (clickable, navigates into folder), Subfolders count, Created date (mock), Created by (mock), Actions menu (three-dot)
-- **Features**: Select all / individual checkboxes, sortable columns (name, subfolders, created), action menu with View, Edit, Move, Archive, Delete options
-- **Props**: `folders: FolderItem[]`, `onNavigate: (folderId: string) => void`, `isLoading?: boolean`, `archivedFoldersOnly?: boolean`, `onUnarchiveFolder?: (folderId: string) => void`
-- **Styling**: Matches `GalleryTableView` — uppercase tracking-wider column headers, `border rounded-lg bg-card` wrapper, same sort icon pattern
-
-### Change: `src/components/FolderDetailsView.tsx`
-
-1. Add `folderViewMode` state (`"grid" | "table"`, default `"grid"`)
-2. Wire the existing grid/list toggle buttons (lines 910-917) to set this state, with active highlighting
-3. Conditionally render the existing grid (lines 970-1003) or the new `<FolderTableView>` based on `folderViewMode`
-4. Import and use the new `FolderTableView` component
+The `FolderTableView` expects `FolderItem[]` from `mockFolderData`. The top-level folders from `folderTree` should map cleanly since they share the same shape. The `onNavigate` callback will call `setActiveFolder(folderId)`.
 
