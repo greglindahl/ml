@@ -724,7 +724,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   }, []);
 
   return (
-    <div className="flex-1 flex">
+    <div className="flex-1 flex h-screen overflow-hidden">
       {/* Folders Sidebar with DnD */}
       <FolderSidebar
         folderTree={folderTree}
@@ -769,9 +769,9 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           flattenedFolders={flatFolders}
         />
       ) : (
-      <div className={`flex-1 flex flex-col min-w-0 px-4 md:px-8 xl:px-16 pb-12 ${isMobile ? "pt-[58px]" : "pt-20"}`}>
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-4 md:px-8 xl:px-16">
         {/* Header with title and actions */}
-        <div className="py-4 flex items-center justify-between">
+        <div className="py-4 flex items-center justify-between flex-shrink-0">
           <h1 className="text-2xl font-semibold">Library</h1>
           <div className="flex items-center gap-2">
             <DropdownMenu>
@@ -800,8 +800,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-          <div className="border-b">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+          <div className="border-b flex-shrink-0">
             <TabsList className="bg-transparent h-auto p-0 gap-6">
               <TabsTrigger
                 value="assets"
@@ -830,7 +830,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             </TabsList>
           </div>
 
-          <TabsContent value="assets" className="flex-1 py-6 mt-0">
+          <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">
             {/* Faceted Search */}
             <div className="mb-2">
               <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} onSelectedFacetsChange={setSearchSelectedFacets} handleRef={searchHandleRef} placeholder="Search by people, tags, filenames…" />
@@ -1116,7 +1116,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             </div>
           </TabsContent>
 
-          <TabsContent value="galleries" className="flex-1 py-6 mt-0">
+          <TabsContent value="galleries" className="flex-1 overflow-y-auto py-6 mt-0">
             {/* Faceted Search */}
             <div className="mb-4">
               <FacetedSearchWithTypeahead placeholder="Search" />
@@ -1319,7 +1319,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             </div>
           </TabsContent>
 
-          <TabsContent value="folders" className="flex-1 py-6 mt-0">
+          <TabsContent value="folders" className="flex-1 overflow-y-auto py-6 mt-0">
             <div className="flex items-center justify-end mb-6">
               <div className="flex items-center border rounded-md bg-card">
                 <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-r-none ${folderViewMode === "grid" ? "bg-accent" : ""}`} onClick={() => setFolderViewMode("grid")}>
@@ -1397,7 +1397,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             })()}
           </TabsContent>
 
-          <TabsContent value="saved" className="flex-1 py-6 mt-0">
+          <TabsContent value="saved" className="flex-1 overflow-y-auto py-6 mt-0">
             <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
               <p>Saved content placeholder</p>
             </div>
