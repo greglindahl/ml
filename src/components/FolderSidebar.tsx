@@ -15,9 +15,17 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { ChevronLeft, ChevronRight, Folder, Images } from "lucide-react";
-import { toast as sonnerToast } from "sonner";
+import { ChevronLeft, ChevronRight, Folder, Images, Info } from "lucide-react";
 import { SortableFolderItem } from "@/components/SortableFolderItem";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import type { FolderItem } from "@/lib/mockFolderData";
 import { findFolderById, getMaxDepth, getFolderDepth } from "@/lib/mockFolderData";
 
@@ -84,6 +92,7 @@ export function FolderSidebar({
   const [activeItem, setActiveItem] = useState<FolderItem | null>(null);
   const [overTargetId, setOverTargetId] = useState<string | null>(null);
   const [isOverValid, setIsOverValid] = useState(false);
+  const [showDepthAlert, setShowDepthAlert] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -110,7 +119,7 @@ export function FolderSidebar({
       // Check depth: target's depth + dragged subtree depth must be <= 4
       const targetDepth = getFolderDepth(overId, folderTree);
       const draggedSubtreeDepth = getMaxDepth(draggedItem);
-      if (targetDepth + draggedSubtreeDepth > 4) return false;
+      if (targetDepth + draggedSubtreeDepth > 3) return false;
 
       // Can't drop into own descendant
       const checkDescendant = (item: FolderItem): boolean => {
@@ -165,7 +174,7 @@ export function FolderSidebar({
         if (validateDrop(draggedId, overId)) {
           onMoveItem(draggedId, overId);
         } else {
-          sonnerToast.error("This move would exceed the 4-level folder limit.");
+          setShowDepthAlert(true);
         }
         return;
       }
@@ -294,6 +303,25 @@ export function FolderSidebar({
           </DragOverlay>
         </DndContext>
       </div>
+
+      <AlertDialog open={showDepthAlert} onOpenChange={setShowDepthAlert}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Info className="w-5 h-5 text-destructive" />
+              Move not allowed
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This move would exceed the 4-level folder limit. Choose a different location.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowDepthAlert(false)}>
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
