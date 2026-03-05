@@ -905,7 +905,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               placeholder="Search"
               value={folderSearchQuery}
               onChange={(e) => setFolderSearchQuery(e.target.value)}
-              className="h-10 w-full rounded-md border border-input bg-background pl-10 pr-10 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="h-10 w-full rounded-md border border-input bg-white pl-10 pr-10 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             />
             {folderSearchQuery && (
               <button
