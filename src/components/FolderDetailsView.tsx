@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, V
 import { AssetTableView } from "@/components/AssetTableView";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { GalleryTableView, GalleryTableItem } from "@/components/GalleryTableView";
+import { FolderTableView } from "@/components/FolderTableView";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
@@ -121,6 +122,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   const [archivedFoldersOnly, setArchivedFoldersOnly] = useState(false);
   const [archivedGalleriesOnly, setArchivedGalleriesOnly] = useState(false);
   const [folderSearchQuery, setFolderSearchQuery] = useState("");
+  const [folderViewMode, setFolderViewMode] = useState<"grid" | "table">("grid");
   // folderSearchInputRef removed — now using FacetedSearchWithTypeahead
   
   // Filter state (driven by FilterBar)
@@ -908,10 +910,10 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               <Switch id="archived-folders-detail" checked={archivedFoldersOnly} onCheckedChange={setArchivedFoldersOnly} />
             </div>
             <div className="flex items-center border rounded-md bg-background">
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-r-none bg-muted">
+              <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-r-none ${folderViewMode === "grid" ? "bg-muted" : ""}`} onClick={() => setFolderViewMode("grid")}>
                 <Grid3X3 className="w-4 h-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-l-none border-l">
+              <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-l-none border-l ${folderViewMode === "table" ? "bg-muted" : ""}`} onClick={() => setFolderViewMode("table")}>
                 <List className="w-4 h-4" />
               </Button>
             </div>
@@ -967,7 +969,14 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               );
             }
             
-            return (
+            return folderViewMode === "table" ? (
+              <FolderTableView
+                folders={filteredChildFolders}
+                onNavigate={onNavigate}
+                archivedFoldersOnly={archivedFoldersOnly}
+                onUnarchiveFolder={onUnarchiveFolder}
+              />
+            ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {filteredChildFolders.map((child) => (
                   <div
