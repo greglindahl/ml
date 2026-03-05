@@ -205,7 +205,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
       </nav>
 
       {/* Gallery Header */}
-      <div className="flex items-start justify-between mb-6 flex-shrink-0 pr-40">
+      <div className="flex items-start justify-between mb-6 flex-shrink-0">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
             <Images className="w-6 h-6 text-muted-foreground" />

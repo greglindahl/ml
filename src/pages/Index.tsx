@@ -50,29 +50,6 @@ const Index = () => {
 
   return (
     <div className="flex min-h-screen w-full">
-      {/* Top right icons - fixed */}
-      <div className="fixed top-4 right-4 z-50 flex items-center gap-4">
-        {/* Announcements */}
-        <button className="p-2 hover:bg-accent rounded-md transition-colors">
-          <i className="bi bi-megaphone text-topnav-icon hover:text-topnav-icon-hover text-lg" />
-        </button>
-
-        {/* Messages with badge */}
-        <button className="relative p-2 hover:bg-accent rounded-md transition-colors">
-          <i className="bi bi-envelope text-topnav-icon hover:text-topnav-icon-hover text-lg" />
-          <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-medium px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
-            99+
-          </span>
-        </button>
-
-        {/* Profile avatar */}
-        <Avatar className="h-9 w-9 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all">
-          <AvatarFallback className="bg-muted">
-            <User className="h-4 w-4 text-muted-foreground" />
-          </AvatarFallback>
-        </Avatar>
-      </div>
-
       {/* Mobile header */}
       {isMobile && (
         <header className="fixed top-0 left-0 right-0 h-14 bg-card border-b flex items-center px-4 z-40">
