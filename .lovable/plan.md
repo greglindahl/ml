@@ -1,82 +1,20 @@
 
 
-## Drag-and-Drop for Folder Navigation
+## Fix: Depth Validation Bug + Alert Modal for Invalid Moves
 
-### Overview
+### Root Cause
 
-Add drag-and-drop to the sidebar folder tree using `@dnd-kit/core` + `@dnd-kit/sortable`. Three interactions:
-
-1. **Move folder (with nested items) to another folder** — drag a folder onto another folder to nest it inside
-2. **Reorder folders** at the same level — drag to reorder siblings
-3. **Move a gallery to another folder** — drag a gallery item onto a folder
-
-All moves enforce the 4-level depth limit. Invalid drops snap back with a toast alert.
-
-### Technical Approach
-
-**New dependency**: `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`
-
-**Architecture**:
-
-```text
-LibraryScreen
-└── FolderSidebar (new component, extracted from renderFolder)
-    └── DndContext + SortableContext
-        └── SortableFolderItem (recursive, one per tree node)
-            ├── useSortable() hook
-            ├── drag handle + overlay
-            └── drop target highlighting
-```
+The depth check on line 113 of `FolderSidebar.tsx` uses `> 4`, but since level 4 is reserved exclusively for galleries, folders can only occupy levels 1-3. A folder with 3 levels of nesting (New L1 > New L2 > New L3) dragged into a level-1 folder (Season 23-24) produces `1 + 3 = 4`, which passes the `> 4` check incorrectly. It should be `> 3`.
 
 ### Changes
 
-**1. New file: `src/components/FolderSidebar.tsx`**
-- Extract the sidebar folder tree rendering from `LibraryScreen.tsx` (lines 657-714, 746-783) into a dedicated component
-- Wrap tree in `DndContext` with `PointerSensor` and `KeyboardSensor`
-- Each folder/gallery node is a `SortableFolderItem` using `useSortable()`
-- `onDragEnd` handler:
-  - Calculate dragged item's subtree depth (`getMaxDepth`)
-  - Calculate target's depth in tree
-  - If combined depth > 4: snap back, show `sonnerToast.error("This move would exceed the 4-level folder limit.")`
-  - Otherwise: call parent's `onMoveFolder` / reorder callback to update `folderTree` state
+**1. `src/components/FolderSidebar.tsx`**
+- Line 113: Change `targetDepth + draggedSubtreeDepth > 4` to `> 3` — enforces that folders cannot land at level 4 (reserved for galleries)
+- Line 168: Replace `sonnerToast.error(...)` with a call to set state that opens an alert dialog
+- Add state `showDepthAlert` and render an `AlertDialog` with the message from the reference image: *"This move would exceed the 4-level folder limit. Choose a different location."* with an info icon and OK button
 
-**2. `src/components/SortableFolderItem.tsx`** (new file)
-- Renders a single folder/gallery row with drag handle
-- Uses `useSortable` for drag state
-- Shows visual indicators: blue border on valid drop targets, red border on invalid (depth exceeded)
-- Supports nested rendering (recursive children)
-
-**3. `src/components/LibraryScreen.tsx`**
-- Replace inline `renderFolder` + sidebar JSX with `<FolderSidebar>` component
-- Add `handleReorderFolders(itemId, targetParentId, newIndex)` callback to update `folderTree` state
-- Pass existing `handleMoveFolder`, `expandedFolders`, `toggleFolderExpand`, `activeFolder`, `setActiveFolder` as props
-
-**4. `src/lib/mockFolderData.ts`**
-- Add `getDepthOf(tree, folderId)` helper — returns the depth of a folder in the tree (needed for real-time validation during drag)
-- Add `removeFolderById` and `insertFolderAt` tree mutation helpers if not already present
-
-### Depth Validation Logic
-
-```text
-onDragOver:
-  draggedDepth = getMaxDepth(draggedItem)    // subtree depth
-  targetDepth  = getDepthOf(tree, targetId)  // target's current depth
-  wouldExceed  = targetDepth + draggedDepth > 3  // 4-level limit (0-indexed)
-  → show red/green indicator on drop target
-
-onDragEnd:
-  if wouldExceed → snap back + toast error
-  else → mutate folderTree state
-```
-
-### Visual Feedback
-- **Drag overlay**: Semi-transparent clone of the dragged item with folder icon + name
-- **Valid drop target**: Light blue background highlight on the target folder row
-- **Invalid drop target**: Light red background, cursor changes to "not-allowed"
-- **Snap-back**: Default `@dnd-kit` animation returns item to original position
-
-### Scope
-- ~3 new/modified files
-- 1 new npm package (`@dnd-kit` family)
-- No backend changes
+**2. `src/components/FolderSidebar.tsx` — Alert Dialog UI**
+- Use the existing `@radix-ui/react-alert-dialog` (already installed) to show a modal alert
+- Style the message with a red/destructive info icon matching the reference screenshot
+- Single "OK" button dismisses the dialog; item has already snapped back automatically
 
