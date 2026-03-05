@@ -121,7 +121,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   const [archivedFoldersOnly, setArchivedFoldersOnly] = useState(false);
   const [archivedGalleriesOnly, setArchivedGalleriesOnly] = useState(false);
   const [folderSearchQuery, setFolderSearchQuery] = useState("");
-  const folderSearchInputRef = useRef<HTMLInputElement>(null);
+  // folderSearchInputRef removed — now using FacetedSearchWithTypeahead
   
   // Filter state (driven by FilterBar)
   const [contentTypeFilter, setContentTypeFilter] = useState<Array<LibraryAsset["type"]>>([]);
@@ -897,24 +897,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         {/* Folders Tab */}
         <TabsContent value="folders" className="flex-1 py-6 mt-0">
           {/* Search row */}
-          <div className="relative w-full mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              ref={folderSearchInputRef}
-              type="text"
-              placeholder="Search"
-              value={folderSearchQuery}
-              onChange={(e) => setFolderSearchQuery(e.target.value)}
-              className="h-10 w-full rounded-md border border-input bg-white pl-10 pr-10 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            />
-            {folderSearchQuery && (
-              <button
-                onClick={() => { setFolderSearchQuery(""); folderSearchInputRef.current?.focus(); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
+          <div className="mb-4">
+            <FacetedSearchWithTypeahead onSearch={(query) => setFolderSearchQuery(query)} placeholder="Search" />
           </div>
 
           {/* Controls row */}
