@@ -142,6 +142,11 @@ export function AddGalleryDialog({ open, onOpenChange, galleries, onSelectGaller
           )}
         </div>
 
+        <div className="flex items-center gap-1.5 pt-2">
+          <Info className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+          <span className="text-xs text-muted-foreground">Galleries can only belong to one folder.</span>
+        </div>
+
         <DialogFooter>
           <Button variant="outline" onClick={handleCancel}>Cancel</Button>
           <Button onClick={handleSave} disabled={selectedIds.size === 0}>
