@@ -1,52 +1,35 @@
 
 
-## Fix Scrolling & Sticky Behavior
+## Fix Remaining Scroll & Layout Issues
 
-### Problem
-The entire page scrolls as one unit — the left nav, folder sidebar, search/tabs/filters, and asset grid all scroll together. The GIF shows the folder sidebar and primary nav scrolling away.
+### Issues Identified
 
-### Goal
-- **Primary nav (LeftNav)**: Already `h-screen` and sticky — no change needed.
-- **Folder sidebar**: Should be viewport-height and scroll independently (its own overflow). Currently it's `flex flex-col` with `overflow-y-auto` on the tree area, but the parent container scrolls.
-- **Search + tabs + filters**: Should stick to the top when the user scrolls, so only the asset grid scrolls beneath them.
-- **Asset content area**: Only the asset cards/table should scroll.
+1. **GalleryDetailsView and FolderDetailsView not scroll-constrained**: These detail views (lines 187, 296) still use the old pattern (`flex-1 flex flex-col min-w-0 px-4 ... pb-12 pt-8`) without `h-full overflow-hidden`. Their `TabsContent` elements also lack `overflow-y-auto`, so content overflows and gets cut off instead of scrolling independently.
+
+2. **Top-right icons overlapping Upload button**: The fixed icons (announcements, messages, avatar) in `LibraryV1.tsx` line 46 are `fixed top-4 right-4 z-50`. The Library header's action buttons (New, Upload) at line 774 sit in a `justify-between` row with no right padding to account for these fixed icons. They overlap.
 
 ### Changes
 
-**1. `src/components/LibraryScreen.tsx`**
+**1. `src/components/GalleryDetailsView.tsx`**
+- Line 187: Change outer div to `flex-1 flex flex-col min-w-0 h-full overflow-hidden px-4 md:px-8 xl:px-16` (add `h-full overflow-hidden`, remove `pb-12`, adjust padding-top)
+- Make breadcrumb + header + tabs bar `flex-shrink-0`
+- Line 250: Add `min-h-0` to Tabs container, `flex-shrink-0` to tab list border div
+- Lines 274, 493, 515: Add `overflow-y-auto` to all `TabsContent`
 
-The outermost wrapper (line 727) is `flex-1 flex`. The main content area (line 772) uses `flex-1 flex flex-col` and allows the whole thing to grow and scroll with the page.
+**2. `src/components/FolderDetailsView.tsx`**
+- Line 296: Same outer div fix — `h-full overflow-hidden`, remove `pb-12`
+- Make breadcrumb + header + tabs bar `flex-shrink-0`
+- Line 373: Add `min-h-0` to Tabs, `flex-shrink-0` to tab list border div
+- Lines 398, 618, 900: Add `overflow-y-auto` to all `TabsContent`
 
-Fix: Make the outer `flex-1 flex` container take full viewport height (`h-screen overflow-hidden`) so the sidebar and content area each manage their own scrolling. Then inside the main content area:
-- The header, tabs row, search, and filter bar become a sticky/fixed top section
-- Only the asset grid area below gets `overflow-y-auto flex-1`
+**3. `src/components/LibraryScreen.tsx`** — Fix top-right icon overlap
+- Line 774: Add right padding (`pr-40` or similar) to the header row so the New/Upload buttons don't sit under the fixed top-right icons
 
-Specifically:
-- Line 727: Add `h-screen overflow-hidden` to the outer flex container
-- Line 772: Change the main content div to `flex-1 flex flex-col min-w-0 h-full overflow-hidden` (remove padding-top, keep horizontal padding)
-- Wrap the header + tabs + search + filters in a `flex-shrink-0` div so they don't scroll
-- Wrap each `TabsContent` body in a scrollable container (`overflow-y-auto flex-1`)
-
-**2. `src/components/FolderSidebar.tsx`**
-- The expanded sidebar (line ~226) already has `flex flex-col w-64` and the tree area has `overflow-y-auto`. Just need to ensure the parent constrains height. Adding `h-full` to the sidebar root divs will make them fill the viewport-height container.
-
-### Layout Structure After Fix
-
-```text
-┌──────────────────────────────────────────────────┐
-│ LeftNav (h-screen, sticky)                       │
-│  ┌─────────────┬────────────────────────────────┐│
-│  │ FolderSidebar│  Header + New/Upload buttons  ││
-│  │ (h-full,    │  Tabs bar                      ││
-│  │  own scroll)│  Search + Filters              ││ ← all sticky (flex-shrink-0)
-│  │             │────────────────────────────────││
-│  │             │  Asset grid (overflow-y-auto)  ││ ← only this scrolls
-│  │             │                                ││
-│  └─────────────┴────────────────────────────────┘│
-└──────────────────────────────────────────────────┘
-```
+**4. `src/components/FolderDetailsView.tsx` and `src/components/GalleryDetailsView.tsx`** — Same overlap fix
+- Their header rows also need right padding to avoid the fixed icons
 
 ### Files Modified
-- `src/components/LibraryScreen.tsx` — restructure the main content area layout
-- `src/components/FolderSidebar.tsx` — minor: ensure `h-full` on root containers
+- `src/components/LibraryScreen.tsx` — add right padding to header
+- `src/components/GalleryDetailsView.tsx` — scroll containment + right padding
+- `src/components/FolderDetailsView.tsx` — scroll containment + right padding
 
