@@ -129,7 +129,7 @@ export function FacetedSearchWithTypeahead({
   onFacetCountsChange,
   onSelectedFacetsChange,
   assets = [],
-  placeholder = "Search by people, tags, filenames…",
+  placeholder = "Search",
   handleRef,
 }: FacetedSearchWithTypeaheadProps) {
   const [isOpen, setIsOpen] = useState(false);
