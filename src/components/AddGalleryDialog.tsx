@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
-import { Search, Plus, Images } from "lucide-react";
+import { Search, Plus, Images, Info } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Gallery } from "@/lib/mockFolderData";
@@ -111,15 +112,30 @@ export function AddGalleryDialog({ open, onOpenChange, galleries, onSelectGaller
                       {isDisabled && <span className="ml-1 text-muted-foreground/70">· Already in a folder</span>}
                     </div>
                   </div>
-                  <Button
-                    variant={isSelected ? "default" : "outline"}
-                    size="sm"
-                    className="flex-shrink-0 text-xs"
-                    disabled={isDisabled}
-                    onClick={(e) => { e.stopPropagation(); toggleSelect(gallery.id); }}
-                  >
-                    {isDisabled ? "In Folder" : isSelected ? "Selected" : "Select"}
-                  </Button>
+                  {isDisabled ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1.5 cursor-help">
+                            <span className="text-xs text-muted-foreground">In Folder</span>
+                            <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="left" className="max-w-[220px]">
+                          <p>Galleries can only belong to one folder. To move this gallery, remove it from its current folder first.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <Button
+                      variant={isSelected ? "default" : "outline"}
+                      size="sm"
+                      className="flex-shrink-0 text-xs"
+                      onClick={(e) => { e.stopPropagation(); toggleSelect(gallery.id); }}
+                    >
+                      {isSelected ? "Selected" : "Select"}
+                    </Button>
+                  )}
                 </div>
               );
             })
