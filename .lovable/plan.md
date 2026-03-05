@@ -1,13 +1,18 @@
 
 
-## Understanding: Folder-level search for sub-folders
+## Update folder search to match app-wide search pattern
 
-**What you're saying:**
+### Change
 
-- **No search** at the top-level "Library > Folders" view (the root level where all top-level folders are listed).
-- **Add search** inside any folder detail view (when you've navigated into a folder at level 1, 2, or 3) so users can filter/search sub-folders by name when there are potentially hundreds of them.
+**`src/components/FolderDetailsView.tsx`**
 
-This search would be a simple text filter on folder names within the current folder's children, not the full faceted/typeahead search used for assets.
+Move the search input out of the inline controls row and place it as a **full-width row above** the Archived Only / view toggle controls row. Style it to match the screenshot:
 
-I understand. Ready to plan the implementation when you'd like to proceed.
+- Full-width input with rounded border
+- Search icon on the **right** side (not left)
+- Placeholder: "Search folders…"
+- Clear button (X) appears when text is entered, replacing the search icon position
+- Same height/styling as other search inputs in the app (`h-9` or `h-10`, `rounded-md`, `border border-input`)
+
+The controls row (Archived Only toggle + grid/list view) remains unchanged below the search bar.
 
