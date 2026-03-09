@@ -294,6 +294,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         countType: "assets",
       };
       setFolderTree(prev => insertFolderAt(prev, data.folderId, galleryNode));
+      setExpandedFolders(prev => new Set([...prev, data.folderId]));
     }
     setNewGalleryDialogOpen(false);
     sonnerToast.success("Gallery created successfully");
