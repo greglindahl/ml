@@ -26,6 +26,7 @@ import {
 import { EditFolderDialog } from "@/components/EditFolderDialog";
 import { MoveFolderDialog } from "@/components/MoveFolderDialog";
 import { ArchiveFolderDialog } from "@/components/ArchiveFolderDialog";
+import { UnarchiveFolderDialog } from "@/components/UnarchiveFolderDialog";
 import { DeleteFolderDialog } from "@/components/DeleteFolderDialog";
 import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleriesDialog";
 import { toast } from "@/hooks/use-toast";
