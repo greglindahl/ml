@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -18,13 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { ChevronDown } from "lucide-react";
+import { Images, Plus, X } from "lucide-react";
 import type { FlattenedFolder, Gallery, FolderItem } from "@/lib/mockFolderData";
+import { collectAssignedGalleryIds } from "@/lib/mockFolderData";
+import { AddGalleryDialog } from "./AddGalleryDialog";
+import { NewGalleryDialog, type NewGalleryData } from "./NewGalleryDialog";
 
 interface EditFolderDialogProps {
   open: boolean;
@@ -35,6 +32,8 @@ interface EditFolderDialogProps {
   currentGalleryIds: string[];
   flattenedFolders: FlattenedFolder[];
   galleries: Gallery[];
+  folderTree?: FolderItem[];
+  onCreateGallery?: (data: NewGalleryData) => Gallery | void;
 }
 
 export function EditFolderDialog({
@@ -46,12 +45,17 @@ export function EditFolderDialog({
   currentGalleryIds,
   flattenedFolders,
   galleries,
+  folderTree = [],
+  onCreateGallery,
 }: EditFolderDialogProps) {
   const [name, setName] = useState(folder.name);
   const [locationId, setLocationId] = useState<string | null>(currentLocationId);
   const [selectedGalleryIds, setSelectedGalleryIds] = useState<string[]>(currentGalleryIds);
   const [nameError, setNameError] = useState(false);
-  const [gallerySearch, setGallerySearch] = useState("");
+  const [addGalleryOpen, setAddGalleryOpen] = useState(false);
+  const [newGalleryDialogOpen, setNewGalleryDialogOpen] = useState(false);
+
+  const assignedGalleryIds = useMemo(() => collectAssignedGalleryIds(folderTree), [folderTree]);
 
   useEffect(() => {
     if (open) {
@@ -59,7 +63,6 @@ export function EditFolderDialog({
       setLocationId(currentLocationId);
       setSelectedGalleryIds(currentGalleryIds);
       setNameError(false);
-      setGallerySearch("");
     }
   }, [open, folder, currentLocationId, currentGalleryIds]);
 
@@ -72,105 +75,144 @@ export function EditFolderDialog({
     onSave({ name: trimmed, locationId, galleryIds: selectedGalleryIds });
   }, [name, locationId, selectedGalleryIds, onSave]);
 
-  const toggleGallery = useCallback((galleryId: string) => {
-    setSelectedGalleryIds((prev) =>
-      prev.includes(galleryId) ? prev.filter((id) => id !== galleryId) : [...prev, galleryId]
-    );
+  const removeGallery = useCallback((galleryId: string) => {
+    setSelectedGalleryIds((prev) => prev.filter((id) => id !== galleryId));
   }, []);
 
-  const selectedGalleryLabel =
-    selectedGalleryIds.length === 0 ? "Select galleries..." : `${selectedGalleryIds.length} selected`;
+  const selectedGalleries = galleries.filter((g) => selectedGalleryIds.includes(g.id));
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Edit Folder</DialogTitle>
-          <DialogDescription className="sr-only">Edit folder details</DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Folder</DialogTitle>
+            <DialogDescription className="sr-only">Edit folder details</DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-4 py-2">
-          <div className="space-y-2">
-            <Label htmlFor="edit-folder-name">
-              Name <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="edit-folder-name"
-              placeholder="Enter folder name"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                if (nameError) setNameError(false);
-              }}
-              className={nameError ? "border-destructive" : ""}
-              autoFocus
-            />
-            {nameError && <p className="text-xs text-destructive">Name is required</p>}
-          </div>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="edit-folder-name">
+                Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="edit-folder-name"
+                placeholder="Enter folder name"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (nameError) setNameError(false);
+                }}
+                className={nameError ? "border-destructive" : ""}
+                autoFocus
+              />
+              {nameError && <p className="text-xs text-destructive">Name is required</p>}
+            </div>
 
-          <div className="space-y-2">
-            <Label>Location</Label>
-            <Select value={locationId ?? ""} onValueChange={(v) => setLocationId(v === "root" ? null : v)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select location..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="root">All Media</SelectItem>
-                {flattenedFolders.map((f) => (
-                  <SelectItem key={f.id} value={f.id}>
-                    {f.displayName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="space-y-2">
+              <Label>Location</Label>
+              <Select value={locationId ?? ""} onValueChange={(v) => setLocationId(v === "root" ? null : v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select location..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="root">All Media</SelectItem>
+                  {flattenedFolders.map((f) => (
+                    <SelectItem key={f.id} value={f.id}>
+                      {f.displayName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-2">
-            <Label>Add Galleries</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-between font-normal">
-                  <span className="truncate text-muted-foreground">{selectedGalleryLabel}</span>
-                  <ChevronDown className="h-4 w-4 opacity-50" />
+            {/* Add Galleries */}
+            <div className="space-y-2">
+              <Label>Add Galleries</Label>
+              <div
+                className="flex items-center justify-between border rounded-md px-3 py-2.5 cursor-pointer hover:bg-accent/50 transition-colors"
+                onClick={() => setAddGalleryOpen(true)}
+              >
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Images className="w-4 h-4" />
+                  <span>Select Gallery</span>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAddGalleryOpen(true);
+                  }}
+                >
+                  <Plus className="w-4 h-4" />
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                <div className="p-2 border-b">
-                  <Input
-                    placeholder="Search galleries..."
-                    value={gallerySearch}
-                    onChange={(e) => setGallerySearch(e.target.value)}
-                    className="h-8 text-sm"
-                  />
-                </div>
-                <div className="max-h-48 overflow-y-auto p-2 space-y-1">
-                  {galleries
-                    .filter((g) => g.name.toLowerCase().includes(gallerySearch.toLowerCase()))
-                    .map((gallery) => (
-                      <label
-                        key={gallery.id}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-sm text-sm hover:bg-accent cursor-pointer"
-                      >
-                        <Checkbox
-                          checked={selectedGalleryIds.includes(gallery.id)}
-                          onCheckedChange={() => toggleGallery(gallery.id)}
-                        />
-                        <span className="truncate">{gallery.name}</span>
-                      </label>
-                    ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
+              </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave}>Save</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+              {selectedGalleries.length > 0 && (
+                <div className="space-y-1">
+                  {selectedGalleries.map((g) => (
+                    <div
+                      key={g.id}
+                      className="flex items-center justify-between rounded-md border px-3 py-1.5 text-sm"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Images className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <span className="truncate">{g.name}</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 flex-shrink-0"
+                        onClick={() => removeGallery(g.id)}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AddGalleryDialog
+        open={addGalleryOpen}
+        onOpenChange={setAddGalleryOpen}
+        galleries={galleries.filter((g) => !selectedGalleryIds.includes(g.id))}
+        disabledGalleryIds={assignedGalleryIds}
+        onSelectGalleries={(ids) => {
+          setSelectedGalleryIds((prev) => [...new Set([...prev, ...ids])]);
+          setAddGalleryOpen(false);
+        }}
+        onCreateNew={() => setNewGalleryDialogOpen(true)}
+      />
+
+      <NewGalleryDialog
+        open={newGalleryDialogOpen}
+        onOpenChange={setNewGalleryDialogOpen}
+        flattenedFolders={flattenedFolders}
+        onCreateGallery={(data) => {
+          if (onCreateGallery) {
+            const result = onCreateGallery(data);
+            if (result && result.id) {
+              setSelectedGalleryIds((prev) => [...new Set([...prev, result.id])]);
+            }
+          }
+          setNewGalleryDialogOpen(false);
+        }}
+      />
+    </>
   );
 }
