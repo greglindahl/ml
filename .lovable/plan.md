@@ -1,29 +1,22 @@
 
 
-## Bug Fix: "All Media" Radio Selection Ignored in New Folder Dialog
+## Revert Chevron Expansion, Keep Subfolder Column
 
-### Root Cause
+### What Changes
 
-In `src/components/FolderDetailsView.tsx` line 1086, the `onCreateFolder` callback overrides the user's selection:
+Remove the expandable tree row behavior (chevron toggle, `expandedFolders` state, recursive `renderRow`, indentation) from `FolderTableView`, reverting to a flat list of top-level folders. Keep the "Subfolders" column showing the count.
 
-```tsx
-const folderData = { ...data, locationId: data.locationId ?? folderId };
-```
+### Implementation
 
-The nullish coalescing operator (`??`) treats `null` as a fallback case — but `null` is the intentional value for "All Media" (root level). So when the user selects "All Media", `locationId` is `null`, and `?? folderId` replaces it with the current folder's ID.
+**`src/components/FolderTableView.tsx`**
 
-### Fix
+1. Remove `expandedFolders` state and `toggleExpand` function
+2. Remove the recursive `renderRow` function — go back to a flat `.map()` over `sorted`
+3. Remove the chevron button and depth-based indentation from each row
+4. Keep the folder icon column simple (just `FolderOpen` icon, no chevron)
+5. Keep the "Subfolders" column and `subfolderCount` in the enriched data
+6. Remove `ChevronRight` from imports if no longer used
 
-**`src/components/FolderDetailsView.tsx`** (~line 1086)
-
-Pass `data.locationId` through as-is without the fallback:
-
-```tsx
-onCreateFolder?.(data);
-```
-
-The dialog already defaults `locationId` to `folderId` (via the `defaultLocationId` prop on line 1084), so the fallback is unnecessary — the user's explicit radio selection should be respected.
-
-### Files Modified
-- `src/components/FolderDetailsView.tsx` (1 line change)
+### File Modified
+- `src/components/FolderTableView.tsx`
 
