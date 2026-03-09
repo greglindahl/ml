@@ -851,7 +851,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   return (
                     <div
                       key={gallery.id}
-                      className={`group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow text-left relative ${isSelected ? "ring-2 ring-primary" : ""}`}
+                      className={`group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow text-left relative ${isSelected ? "ring-2 ring-primary" : ""} ${gallery.archived ? "opacity-50" : ""}`}
                     >
                       {/* Checkbox overlay */}
                       <div
