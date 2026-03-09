@@ -978,20 +978,6 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                     onClick={() => onNavigate(child.id)}
                     className="group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow text-left relative"
                   >
-                    {archivedFoldersOnly && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="absolute top-2 right-2 z-10 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onUnarchiveFolder?.(child.id);
-                          toast({ title: "Folder unarchived", description: `"${child.name}" has been unarchived.` });
-                        }}
-                      >
-                        Unarchive
-                      </Button>
-                    )}
                     <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center">
                       <FolderOpen className="w-10 h-10 text-muted-foreground/40" />
                     </div>
