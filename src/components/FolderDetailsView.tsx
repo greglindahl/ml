@@ -360,9 +360,15 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               <DropdownMenuItem onClick={() => setMoveOpen(true)}>
                 <Move className="w-4 h-4 mr-2" /> Move
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setArchiveOpen(true)}>
-                <Archive className="w-4 h-4 mr-2" /> Archive
-              </DropdownMenuItem>
+              {folder.archived ? (
+                <DropdownMenuItem onClick={() => setUnarchiveOpen(true)}>
+                  <ArchiveRestore className="w-4 h-4 mr-2" /> Unarchive
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem onClick={() => setArchiveOpen(true)}>
+                  <Archive className="w-4 h-4 mr-2" /> Archive
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={() => setDeleteOpen(true)} className="text-destructive focus:text-destructive">
                 <Trash2 className="w-4 h-4 mr-2" /> Delete
               </DropdownMenuItem>
