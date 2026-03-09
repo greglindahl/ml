@@ -67,16 +67,20 @@ export function SortableFolderItem({
         style={{ paddingLeft: `${4 + depth * 16}px`, paddingRight: 12 }}
       >
         {/* Drag handle */}
-        {!isAllFiles && !disableDrag && (
-          <button
-            className="p-0.5 cursor-grab opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity flex-shrink-0 touch-none"
-            {...attributes}
-            {...listeners}
-            tabIndex={-1}
-            aria-label="Drag to reorder"
-          >
-            <GripVertical className="w-3.5 h-3.5 text-muted-foreground" />
-          </button>
+        {!isAllFiles && (
+          disableDrag ? (
+            <span className="p-0.5 flex-shrink-0 w-[18px]" aria-hidden="true" />
+          ) : (
+            <button
+              className="p-0.5 cursor-grab opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity flex-shrink-0 touch-none"
+              {...attributes}
+              {...listeners}
+              tabIndex={-1}
+              aria-label="Drag to reorder"
+            >
+              <GripVertical className="w-3.5 h-3.5 text-muted-foreground" />
+            </button>
+          )
         )}
 
         <button

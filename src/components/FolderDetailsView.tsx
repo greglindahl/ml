@@ -976,7 +976,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   <div
                     key={child.id}
                     onClick={() => onNavigate(child.id)}
-                    className="group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow text-left relative"
+                    className={`group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow text-left relative ${child.archived ? "opacity-50" : ""}`}
                   >
                     <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center">
                       <FolderOpen className="w-10 h-10 text-muted-foreground/40" />
