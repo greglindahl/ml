@@ -975,7 +975,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 {filteredChildFolders.map((child) => (
                   <div
                     key={child.id}
-                    onClick={() => { if (!archivedFoldersOnly) onNavigate(child.id); }}
+                    onClick={() => onNavigate(child.id)}
                     className="group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow text-left relative"
                   >
                     {archivedFoldersOnly && (
