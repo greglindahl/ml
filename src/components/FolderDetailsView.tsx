@@ -863,7 +863,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                       {/* Thumbnail area */}
                       <div
                         className="aspect-[4/3] bg-muted/50 flex items-center justify-center"
-                        onClick={() => { if (!archivedGalleriesOnly) onNavigate(gallery.id); }}
+                        onClick={() => onNavigate(gallery.id)}
                       >
                         <Images className="w-10 h-10 text-muted-foreground/40" />
                       </div>
