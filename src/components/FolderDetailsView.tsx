@@ -853,20 +853,6 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                       key={gallery.id}
                       className={`group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow text-left relative ${isSelected ? "ring-2 ring-primary" : ""}`}
                     >
-                      {archivedGalleriesOnly && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="absolute top-2 right-2 z-10 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onUnarchiveFolder?.(gallery.id);
-                            toast({ title: "Gallery unarchived", description: `"${gallery.name}" has been unarchived.` });
-                          }}
-                        >
-                          Unarchive
-                        </Button>
-                      )}
                       {/* Checkbox overlay */}
                       <div
                         className={`absolute top-2 left-2 z-10 ${isAnyGallerySelected || isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
