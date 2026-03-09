@@ -105,19 +105,25 @@ export function EditFolderDialog({
 
             <div className="space-y-2">
               <Label>Location</Label>
-              <Select value={locationId ?? ""} onValueChange={(v) => setLocationId(v === "root" ? null : v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select location..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="root">All Media</SelectItem>
-                  {flattenedFolders.map((f) => (
-                    <SelectItem key={f.id} value={f.id}>
-                      {f.displayName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <RadioGroup
+                value={locationId ?? "root"}
+                onValueChange={(v) => setLocationId(v === "root" ? null : v)}
+                className="gap-3"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="root" id="edit-loc-root" />
+                  <Label htmlFor="edit-loc-root" className="font-normal cursor-pointer">All Media</Label>
+                </div>
+                {currentLocationId && (() => {
+                  const folder = flattenedFolders.find((f) => f.id === currentLocationId);
+                  return folder ? (
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value={currentLocationId} id="edit-loc-current" />
+                      <Label htmlFor="edit-loc-current" className="font-normal cursor-pointer">{folder.displayName}</Label>
+                    </div>
+                  ) : null;
+                })()}
+              </RadioGroup>
             </div>
 
             {/* Add Galleries */}
