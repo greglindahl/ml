@@ -147,10 +147,12 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
     } else {
       setFolderTree(prev => insertFolderAt(prev, data.locationId, newFolder));
     }
-    // Auto-expand parent so new folder is visible in sidebar nav
-    if (data.locationId) {
-      setExpandedFolders(prev => new Set([...prev, data.locationId]));
-    }
+    // Auto-expand parent and new folder so galleries are visible
+    setExpandedFolders(prev => {
+      const next = new Set([...prev, newFolder.id]);
+      if (data.locationId) next.add(data.locationId);
+      return next;
+    });
     setIsFolderSidebarExpanded(true);
     setNewFolderDialogOpen(false);
     sonnerToast.success("Folder created successfully");
