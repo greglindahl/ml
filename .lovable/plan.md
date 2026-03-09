@@ -1,22 +1,36 @@
-
-
-## Revert Chevron Expansion, Keep Subfolder Column
+## Replace Location Dropdown with Radio Buttons
 
 ### What Changes
 
-Remove the expandable tree row behavior (chevron toggle, `expandedFolders` state, recursive `renderRow`, indentation) from `FolderTableView`, reverting to a flat list of top-level folders. Keep the "Subfolders" column showing the count.
+In both `NewFolderDialog` and `EditFolderDialog`, replace the `<Select>` dropdown for Location with a `<RadioGroup>` offering exactly two options:
 
-### Implementation
+1. **All Media** — sets `locationId` to `null` (root level)
+2. **[Current folder name/path]** — sets `locationId` to the `defaultLocationId` (the folder the user is currently in). Only shown when `defaultLocationId` is not null.
 
-**`src/components/FolderTableView.tsx`**
+Default selection logic:
 
-1. Remove `expandedFolders` state and `toggleExpand` function
-2. Remove the recursive `renderRow` function — go back to a flat `.map()` over `sorted`
-3. Remove the chevron button and depth-based indentation from each row
-4. Keep the folder icon column simple (just `FolderOpen` icon, no chevron)
-5. Keep the "Subfolders" column and `subfolderCount` in the enriched data
-6. Remove `ChevronRight` from imports if no longer used
+- If opened from root ("All Media"), only "All Media" is shown and selected
+- If opened from within a folder (e.g. "New L1"), that folder is pre-selected
 
-### File Modified
-- `src/components/FolderTableView.tsx`
+### Changes
 
+`**src/components/NewFolderDialog.tsx**`
+
+1. Replace `Select`/`SelectTrigger`/`SelectContent`/`SelectItem` imports with `RadioGroup`/`RadioGroupItem` from `@/components/ui/radio-group`
+2. Replace the Location `<Select>` block (lines 136–155) with a `<RadioGroup>` containing:
+  - Radio item `"root"` labeled "All Media"
+  - Conditional radio item for `defaultLocationId` labeled with the folder's display name (look up from `flattenedFolders` by ID, or accept a new `defaultLocationName` prop)
+3. Remove `Select`-related imports that are no longer used
+
+`**src/components/EditFolderDialog.tsx**`
+
+1. Same swap — replace `Select` with `RadioGroup` (lines 112–127)
+2. Two radio options: "All Media" and the current parent folder name (derived from `currentLocationId` + `flattenedFolders`)
+3. Remove unused `Select` imports
+
+`**src/components/NewFolderDialog.tsx` & `EditFolderDialog.tsx**` — both need a helper to resolve the folder display name from `flattenedFolders` using the location ID.
+
+### Files Modified
+
+- `src/components/NewFolderDialog.tsx`
+- `src/components/EditFolderDialog.tsx`
