@@ -106,6 +106,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   const [addGalleryDialogOpen, setAddGalleryDialogOpen] = useState(false);
   const [newGalleryDialogOpen, setNewGalleryDialogOpen] = useState(false);
   const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
+  const [unarchiveOpen, setUnarchiveOpen] = useState(false);
   const [moveGalleriesOpen, setMoveGalleriesOpen] = useState(false);
   const [moveGalleryItems, setMoveGalleryItems] = useState<MoveGalleryItem[]>([]);
   
