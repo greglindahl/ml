@@ -868,7 +868,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                         <Images className="w-10 h-10 text-muted-foreground/40" />
                       </div>
                       {/* Card info */}
-                      <div className="p-3" onClick={() => { if (!archivedGalleriesOnly) onNavigate(gallery.id); }}>
+                      <div className="p-3" onClick={() => onNavigate(gallery.id)}>
                         <div className="font-medium text-sm truncate mb-1">{gallery.name}</div>
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-xs text-muted-foreground">
