@@ -113,7 +113,7 @@ export function FolderTableView({ folders, onNavigate, isLoading = false, archiv
       </TableCell>
       <TableCell>
         <button
-          onClick={() => !archivedFoldersOnly && onNavigate(folder.id)}
+          onClick={() => onNavigate(folder.id)}
           className="font-medium text-sm text-primary hover:underline text-left truncate max-w-[200px]"
         >
           {folder.name}

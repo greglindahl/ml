@@ -26,6 +26,7 @@ import {
 import { EditFolderDialog } from "@/components/EditFolderDialog";
 import { MoveFolderDialog } from "@/components/MoveFolderDialog";
 import { ArchiveFolderDialog } from "@/components/ArchiveFolderDialog";
+import { UnarchiveFolderDialog } from "@/components/UnarchiveFolderDialog";
 import { DeleteFolderDialog } from "@/components/DeleteFolderDialog";
 import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleriesDialog";
 import { toast } from "@/hooks/use-toast";
@@ -105,6 +106,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   const [addGalleryDialogOpen, setAddGalleryDialogOpen] = useState(false);
   const [newGalleryDialogOpen, setNewGalleryDialogOpen] = useState(false);
   const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
+  const [unarchiveOpen, setUnarchiveOpen] = useState(false);
   const [moveGalleriesOpen, setMoveGalleriesOpen] = useState(false);
   const [moveGalleryItems, setMoveGalleryItems] = useState<MoveGalleryItem[]>([]);
   
@@ -358,9 +360,15 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               <DropdownMenuItem onClick={() => setMoveOpen(true)}>
                 <Move className="w-4 h-4 mr-2" /> Move
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setArchiveOpen(true)}>
-                <Archive className="w-4 h-4 mr-2" /> Archive
-              </DropdownMenuItem>
+              {folder.archived ? (
+                <DropdownMenuItem onClick={() => setUnarchiveOpen(true)}>
+                  <ArchiveRestore className="w-4 h-4 mr-2" /> Unarchive
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem onClick={() => setArchiveOpen(true)}>
+                  <Archive className="w-4 h-4 mr-2" /> Archive
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={() => setDeleteOpen(true)} className="text-destructive focus:text-destructive">
                 <Trash2 className="w-4 h-4 mr-2" /> Delete
               </DropdownMenuItem>
@@ -845,20 +853,6 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                       key={gallery.id}
                       className={`group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow text-left relative ${isSelected ? "ring-2 ring-primary" : ""}`}
                     >
-                      {archivedGalleriesOnly && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="absolute top-2 right-2 z-10 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onUnarchiveFolder?.(gallery.id);
-                            toast({ title: "Gallery unarchived", description: `"${gallery.name}" has been unarchived.` });
-                          }}
-                        >
-                          Unarchive
-                        </Button>
-                      )}
                       {/* Checkbox overlay */}
                       <div
                         className={`absolute top-2 left-2 z-10 ${isAnyGallerySelected || isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
@@ -869,12 +863,12 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                       {/* Thumbnail area */}
                       <div
                         className="aspect-[4/3] bg-muted/50 flex items-center justify-center"
-                        onClick={() => { if (!archivedGalleriesOnly) onNavigate(gallery.id); }}
+                        onClick={() => onNavigate(gallery.id)}
                       >
                         <Images className="w-10 h-10 text-muted-foreground/40" />
                       </div>
                       {/* Card info */}
-                      <div className="p-3" onClick={() => { if (!archivedGalleriesOnly) onNavigate(gallery.id); }}>
+                      <div className="p-3" onClick={() => onNavigate(gallery.id)}>
                         <div className="font-medium text-sm truncate mb-1">{gallery.name}</div>
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-xs text-muted-foreground">
@@ -981,23 +975,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 {filteredChildFolders.map((child) => (
                   <div
                     key={child.id}
-                    onClick={() => { if (!archivedFoldersOnly) onNavigate(child.id); }}
+                    onClick={() => onNavigate(child.id)}
                     className="group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow text-left relative"
                   >
-                    {archivedFoldersOnly && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="absolute top-2 right-2 z-10 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onUnarchiveFolder?.(child.id);
-                          toast({ title: "Folder unarchived", description: `"${child.name}" has been unarchived.` });
-                        }}
-                      >
-                        Unarchive
-                      </Button>
-                    )}
                     <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center">
                       <FolderOpen className="w-10 h-10 text-muted-foreground/40" />
                     </div>
@@ -1055,6 +1035,16 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         }}
         folder={folder}
         breadcrumbPath={breadcrumbPath.map(b => b.name).join(" > ")}
+      />
+      <UnarchiveFolderDialog
+        open={unarchiveOpen}
+        onOpenChange={setUnarchiveOpen}
+        onUnarchive={() => {
+          setUnarchiveOpen(false);
+          onUnarchiveFolder?.(folderId);
+          toast({ title: "Folder unarchived", description: `"${folder.name}" has been unarchived.` });
+        }}
+        folderName={folder.name}
       />
       <DeleteFolderDialog
         open={deleteOpen}
