@@ -1029,6 +1029,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         currentGalleryIds={folder.children?.filter(c => c.type === "gallery").map(c => c.id) ?? []}
         flattenedFolders={flattenFolders(folderTree)}
         galleries={mockGalleries}
+        folderTree={folderTree}
+        onCreateGallery={onCreateGallery}
       />
       <MoveFolderDialog
         open={moveOpen}
