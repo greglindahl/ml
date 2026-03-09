@@ -1,23 +1,22 @@
 
 
-## Show Current Location and Galleries in Edit Folder Dialog
+## Revert Chevron Expansion, Keep Subfolder Column
 
-### Two Changes
+### What Changes
 
-1. **Location dropdown shows current parent folder** — When editing a folder that is nested inside another folder, the Location select should default to that parent. Only folders at the root ("All Media") level should show "Select location..." as placeholder.
-
-2. **Gallery list pre-populated** — The edit dialog should show the galleries already assigned to the folder, so the user can see and manage them.
+Remove the expandable tree row behavior (chevron toggle, `expandedFolders` state, recursive `renderRow`, indentation) from `FolderTableView`, reverting to a flat list of top-level folders. Keep the "Subfolders" column showing the count.
 
 ### Implementation
 
-**`src/components/FolderDetailsView.tsx`** (where `EditFolderDialog` is rendered, ~line 1019):
-- Compute the folder's parent ID using the `buildBreadcrumbPath` helper (already in this file) or a `findParentId` utility (already exists in `FolderSidebar.tsx` — can be extracted or duplicated inline).
-- Compute the folder's gallery children IDs by filtering `folder.children` for items with `type === "gallery"`.
-- Pass these as `currentLocationId` and `currentGalleryIds` instead of the current hardcoded `null` and `[]`.
+**`src/components/FolderTableView.tsx`**
 
-**`src/components/EditFolderDialog.tsx`** — No structural changes needed. It already initializes state from `currentLocationId` and `currentGalleryIds` props via the `useEffect`. The location select already supports showing "All Media" vs a folder name. The gallery section already renders selected galleries. The only behavior fix: when `currentLocationId` is `null`, the select shows "Select location..." (which is correct for root-level folders). When it has a value, it shows the parent folder name.
+1. Remove `expandedFolders` state and `toggleExpand` function
+2. Remove the recursive `renderRow` function — go back to a flat `.map()` over `sorted`
+3. Remove the chevron button and depth-based indentation from each row
+4. Keep the folder icon column simple (just `FolderOpen` icon, no chevron)
+5. Keep the "Subfolders" column and `subfolderCount` in the enriched data
+6. Remove `ChevronRight` from imports if no longer used
 
-### Summary
-
-This is primarily a data-passing fix in `FolderDetailsView.tsx` — the dialog component already supports both behaviors, it's just not receiving the right data.
+### File Modified
+- `src/components/FolderTableView.tsx`
 

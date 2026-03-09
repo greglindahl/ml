@@ -1025,8 +1025,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           toast({ title: "Folder updated", description: `"${data.name}" has been saved.` });
         }}
         folder={folder}
-        currentLocationId={null}
-        currentGalleryIds={[]}
+        currentLocationId={breadcrumbPath.length > 2 ? breadcrumbPath[breadcrumbPath.length - 2].id : null}
+        currentGalleryIds={folder.children?.filter(c => c.type === "gallery").map(c => c.id) ?? []}
         flattenedFolders={flattenFolders(folderTree)}
         galleries={mockGalleries}
       />
