@@ -1036,6 +1036,16 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         folder={folder}
         breadcrumbPath={breadcrumbPath.map(b => b.name).join(" > ")}
       />
+      <UnarchiveFolderDialog
+        open={unarchiveOpen}
+        onOpenChange={setUnarchiveOpen}
+        onUnarchive={() => {
+          setUnarchiveOpen(false);
+          onUnarchiveFolder?.(folderId);
+          toast({ title: "Folder unarchived", description: `"${folder.name}" has been unarchived.` });
+        }}
+        folderName={folder.name}
+      />
       <DeleteFolderDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
