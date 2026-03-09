@@ -319,6 +319,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
       });
       return tree;
     });
+    setExpandedFolders(prev => new Set([...prev, targetFolderId]));
     setAddGalleryDialogOpen(false);
   }, [galleryList, insertFolderAt]);
 
