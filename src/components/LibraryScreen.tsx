@@ -358,8 +358,9 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
       }));
   }, [galleryList, selectedGalleries, folderTree]);
 
-  const applyGalleryMoves = useCallback((moves: Record<string, string | null>) => {
-    const count = Object.keys(moves).length;
+  const applyGalleryMoves = useCallback((targetLocationId: string | null) => {
+    const galleryIds = Array.from(selectedGalleries);
+    const count = galleryIds.length;
     setIsMoveDialogOpen(false);
     setSelectedGalleries(new Set());
 
@@ -368,7 +369,6 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
       const cloneTree = (items: FolderItem[]): FolderItem[] =>
         items.map(item => ({ ...item, children: item.children ? cloneTree(item.children) : undefined }));
       let tree = cloneTree(prevTree);
-      const galleryIds = Object.keys(moves);
 
       // Remove galleries from their current locations
       const removeFromTree = (items: FolderItem[]): FolderItem[] =>
@@ -380,13 +380,13 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         }));
       tree = removeFromTree(tree);
 
-      // Insert galleries into target folders
-      for (const [galleryId, targetFolderId] of Object.entries(moves)) {
+      // Insert galleries into target folder
+      for (const galleryId of galleryIds) {
         const galleryNode: FolderItem = { id: galleryId, name: galleryList.find(g => g.id === galleryId)?.name || galleryId, type: "gallery" };
-        if (targetFolderId) {
+        if (targetLocationId) {
           const insertInto = (items: FolderItem[]): boolean => {
             for (const item of items) {
-              if (item.id === targetFolderId) {
+              if (item.id === targetLocationId) {
                 item.children = [...(item.children || []), galleryNode];
                 return true;
               }
@@ -405,7 +405,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
       title: "Galleries moved",
       description: `${count} ${count === 1 ? "gallery" : "galleries"} moved successfully.`,
     });
-  }, [toast, galleryList]);
+  }, [toast, galleryList, selectedGalleries]);
 
   // Auto-expand/collapse sidebar based on active tab
   useEffect(() => {

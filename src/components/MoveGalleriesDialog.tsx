@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Info } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Info, ChevronsUpDown, Check } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,13 +9,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Table,
@@ -25,6 +18,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import { FlattenedFolder } from "@/lib/mockFolderData";
 
 export interface MoveGalleryItem {
@@ -38,7 +35,7 @@ interface MoveGalleriesDialogProps {
   onOpenChange: (open: boolean) => void;
   galleries: MoveGalleryItem[];
   flattenedFolders: FlattenedFolder[];
-  onMove: (moves: Record<string, string | null>) => void;
+  onMove: (locationId: string | null) => void;
 }
 
 export function MoveGalleriesDialog({
@@ -48,34 +45,30 @@ export function MoveGalleriesDialog({
   flattenedFolders,
   onMove,
 }: MoveGalleriesDialogProps) {
-  const [targets, setTargets] = useState<Record<string, string | null>>({});
-  const [lastChanged, setLastChanged] = useState<string | null>(null);
+  const [locationId, setLocationId] = useState<string | null>(null);
+  const [locationSelected, setLocationSelected] = useState(false);
+  const [locationPopoverOpen, setLocationPopoverOpen] = useState(false);
 
-  const handleTargetChange = (galleryId: string, value: string) => {
-    setTargets((prev) => ({
-      ...prev,
-      [galleryId]: value === "all" ? null : value,
-    }));
-    setLastChanged(galleryId);
-  };
-
-  const handleApplyToAll = (value: string | null) => {
-    const updated: Record<string, string | null> = {};
-    galleries.forEach((g) => { updated[g.id] = value; });
-    setTargets(updated);
-  };
+  const selectedLocationLabel = useMemo(() => {
+    if (!locationSelected) return "Select Location";
+    if (!locationId) return "All Media";
+    const found = flattenedFolders.find((f) => f.id === locationId);
+    return found ? found.displayName : "Select Location";
+  }, [locationId, locationSelected, flattenedFolders]);
 
   const handleMove = () => {
-    onMove(targets);
-    setTargets({});
+    onMove(locationId);
+    setLocationId(null);
+    setLocationSelected(false);
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen) { setTargets({}); setLastChanged(null); }
+    if (!nextOpen) {
+      setLocationId(null);
+      setLocationSelected(false);
+    }
     onOpenChange(nextOpen);
   };
-
-  const hasAnyTarget = Object.keys(targets).length > 0;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -91,13 +84,12 @@ export function MoveGalleriesDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[400px] overflow-auto border rounded-md">
+        <div className="max-h-[300px] overflow-auto border rounded-md">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Gallery</TableHead>
                 <TableHead>Current Location</TableHead>
-                <TableHead>Location</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -105,39 +97,63 @@ export function MoveGalleriesDialog({
                 <TableRow key={gallery.id}>
                   <TableCell className="font-medium">{gallery.name}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">{gallery.currentLocation}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <Select
-                        value={targets[gallery.id] === null ? "all" : (targets[gallery.id] ?? "")}
-                        onValueChange={(val) => handleTargetChange(gallery.id, val)}
-                      >
-                        <SelectTrigger className="w-[180px] h-8 text-sm">
-                          <SelectValue placeholder="Select Location" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Media</SelectItem>
-                          {flattenedFolders.map((f) => (
-                            <SelectItem key={f.id} value={f.id}>
-                              {f.displayName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {lastChanged === gallery.id && targets[gallery.id] !== undefined && galleries.length > 1 && (
-                        <button
-                          type="button"
-                          className="text-xs text-pink-600 hover:text-pink-700 text-left w-fit"
-                          onClick={() => handleApplyToAll(targets[gallery.id])}
-                        >
-                          + Apply to all
-                        </button>
-                      )}
-                    </div>
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+        </div>
+
+        {/* Single location picker */}
+        <div className="space-y-2">
+          <Label>New Location</Label>
+          <Popover open={locationPopoverOpen} onOpenChange={setLocationPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={locationPopoverOpen}
+                className="w-full justify-between font-normal"
+              >
+                {selectedLocationLabel}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Search locations..." />
+                <CommandList>
+                  <CommandEmpty>No location found.</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem
+                      value="All Media"
+                      onSelect={() => {
+                        setLocationId(null);
+                        setLocationSelected(true);
+                        setLocationPopoverOpen(false);
+                      }}
+                    >
+                      <Check className={cn("mr-2 h-4 w-4", locationSelected && !locationId ? "opacity-100" : "opacity-0")} />
+                      All Media
+                    </CommandItem>
+                    {flattenedFolders.map((f) => (
+                      <CommandItem
+                        key={f.id}
+                        value={f.displayName}
+                        onSelect={() => {
+                          setLocationId(f.id);
+                          setLocationSelected(true);
+                          setLocationPopoverOpen(false);
+                        }}
+                      >
+                        <Check className={cn("mr-2 h-4 w-4", locationId === f.id ? "opacity-100" : "opacity-0")} />
+                        {f.displayName}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
 
         <Alert className="bg-muted/50 border-muted">
@@ -153,7 +169,7 @@ export function MoveGalleriesDialog({
           </Button>
           <Button
             onClick={handleMove}
-            disabled={!hasAnyTarget}
+            disabled={!locationSelected}
             className="bg-foreground text-background hover:bg-foreground/90"
           >
             Move
