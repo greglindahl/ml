@@ -551,7 +551,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           currentLocation: getGalleryLocationDisplay(galleryId, folderTree),
         }]}
         flattenedFolders={flattenFolders(folderTree)}
-        onMove={(moves) => {
+        onMove={(locationId) => {
           setMoveGalleriesOpen(false);
           toast({ title: "Gallery moved", description: `"${gallery.name}" has been moved successfully.` });
         }}
