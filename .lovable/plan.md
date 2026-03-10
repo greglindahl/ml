@@ -1,36 +1,22 @@
 
 
-## Add Searchable Location Dropdown to Folder Dialogs
+## Revert Chevron Expansion, Keep Subfolder Column
 
-### Approach
-Replace the `Select` component for Location in both `NewFolderDialog` and `EditFolderDialog` with a `Popover` + `Command` (cmdk) combo. This gives a searchable combobox pattern: clicking the trigger opens a popover with a search input at top and a filtered list of folder locations below.
+### What Changes
 
-### Changes
+Remove the expandable tree row behavior (chevron toggle, `expandedFolders` state, recursive `renderRow`, indentation) from `FolderTableView`, reverting to a flat list of top-level folders. Keep the "Subfolders" column showing the count.
 
-**`src/components/NewFolderDialog.tsx`**
-- Replace the `Select`/`SelectTrigger`/`SelectContent`/`SelectItem` for Location with `Popover` + `Command` components
-- Add `locationSearch` state for the search input
-- Add `locationPopoverOpen` state
-- Filter `flattenedFolders` by search term (case-insensitive match on `displayName`)
-- Always show "All Media" as the first option (unless filtered out)
-- Display the selected location name in the trigger button, with a `ChevronsUpDown` icon
+### Implementation
 
-**`src/components/EditFolderDialog.tsx`**
-- Same changes as above
+**`src/components/FolderTableView.tsx`**
 
-### UI Pattern
-```
-┌─────────────────────────┐
-│ Search locations...     │  ← CommandInput
-├─────────────────────────┤
-│ ✓ All Media             │  ← CommandItem
-│   └ Folder A            │
-│   └ Folder B            │
-│   └── Sub-folder C      │
-└─────────────────────────┘
-```
+1. Remove `expandedFolders` state and `toggleExpand` function
+2. Remove the recursive `renderRow` function — go back to a flat `.map()` over `sorted`
+3. Remove the chevron button and depth-based indentation from each row
+4. Keep the folder icon column simple (just `FolderOpen` icon, no chevron)
+5. Keep the "Subfolders" column and `subfolderCount` in the enriched data
+6. Remove `ChevronRight` from imports if no longer used
 
-### Files Modified
-- `src/components/NewFolderDialog.tsx`
-- `src/components/EditFolderDialog.tsx`
+### File Modified
+- `src/components/FolderTableView.tsx`
 

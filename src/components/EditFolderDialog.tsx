@@ -10,14 +10,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Images, Plus, X } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
+import { Images, Plus, X, ChevronsUpDown, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { FlattenedFolder, Gallery, FolderItem } from "@/lib/mockFolderData";
 import { collectAssignedGalleryIds } from "@/lib/mockFolderData";
 import { AddGalleryDialog } from "./AddGalleryDialog";
@@ -54,6 +50,13 @@ export function EditFolderDialog({
   const [nameError, setNameError] = useState(false);
   const [addGalleryOpen, setAddGalleryOpen] = useState(false);
   const [newGalleryDialogOpen, setNewGalleryDialogOpen] = useState(false);
+  const [locationPopoverOpen, setLocationPopoverOpen] = useState(false);
+
+  const selectedLocationLabel = useMemo(() => {
+    if (!locationId) return "All Media";
+    const found = flattenedFolders.find((f) => f.id === locationId);
+    return found ? found.displayName : "All Media";
+  }, [locationId, flattenedFolders]);
 
   const assignedGalleryIds = useMemo(() => collectAssignedGalleryIds(folderTree), [folderTree]);
 
@@ -111,19 +114,52 @@ export function EditFolderDialog({
 
             <div className="space-y-2">
               <Label>Location</Label>
-              <Select value={locationId ?? ""} onValueChange={(v) => setLocationId(v === "root" ? null : v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select location..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="root">All Media</SelectItem>
-                  {flattenedFolders.map((f) => (
-                    <SelectItem key={f.id} value={f.id}>
-                      {f.displayName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={locationPopoverOpen} onOpenChange={setLocationPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={locationPopoverOpen}
+                    className="w-full justify-between font-normal"
+                  >
+                    {selectedLocationLabel}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search locations..." />
+                    <CommandList>
+                      <CommandEmpty>No location found.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem
+                          value="All Media"
+                          onSelect={() => {
+                            setLocationId(null);
+                            setLocationPopoverOpen(false);
+                          }}
+                        >
+                          <Check className={cn("mr-2 h-4 w-4", !locationId ? "opacity-100" : "opacity-0")} />
+                          All Media
+                        </CommandItem>
+                        {flattenedFolders.map((f) => (
+                          <CommandItem
+                            key={f.id}
+                            value={f.displayName}
+                            onSelect={() => {
+                              setLocationId(f.id);
+                              setLocationPopoverOpen(false);
+                            }}
+                          >
+                            <Check className={cn("mr-2 h-4 w-4", locationId === f.id ? "opacity-100" : "opacity-0")} />
+                            {f.displayName}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Add Galleries */}
