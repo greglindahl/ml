@@ -55,9 +55,9 @@ export function NewFolderDialog({
   const [locationPopoverOpen, setLocationPopoverOpen] = useState(false);
 
   const selectedLocationLabel = useMemo(() => {
-    if (!locationId) return "All Media";
+    if (!locationId) return "Select Location";
     const found = flattenedFolders.find((f) => f.id === locationId);
-    return found ? found.displayName : "All Media";
+    return found ? found.displayName : "Select Location";
   }, [locationId, flattenedFolders]);
 
   const assignedGalleryIds = useMemo(() => collectAssignedGalleryIds(folderTree), [folderTree]);
