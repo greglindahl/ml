@@ -90,7 +90,7 @@ interface FolderDetailsViewProps {
   onCreateGallery?: (data: NewGalleryData) => void;
   onAddGalleriesToFolder?: (galleryIds: string[], targetFolderId: string | null) => void;
   onCreateFolder?: (data: NewFolderData) => void;
-  onMoveGalleries?: (moves: Record<string, string | null>) => void;
+  onMoveGalleries?: (locationId: string | null) => void;
   galleryList?: Gallery[];
   flattenedFolders?: FlattenedFolder[];
 }
