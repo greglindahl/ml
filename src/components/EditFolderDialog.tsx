@@ -50,6 +50,13 @@ export function EditFolderDialog({
   const [nameError, setNameError] = useState(false);
   const [addGalleryOpen, setAddGalleryOpen] = useState(false);
   const [newGalleryDialogOpen, setNewGalleryDialogOpen] = useState(false);
+  const [locationPopoverOpen, setLocationPopoverOpen] = useState(false);
+
+  const selectedLocationLabel = useMemo(() => {
+    if (!locationId) return "All Media";
+    const found = flattenedFolders.find((f) => f.id === locationId);
+    return found ? found.displayName : "All Media";
+  }, [locationId, flattenedFolders]);
 
   const assignedGalleryIds = useMemo(() => collectAssignedGalleryIds(folderTree), [folderTree]);
 
