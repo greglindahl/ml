@@ -137,24 +137,54 @@ export function NewFolderDialog({
             {/* Location */}
             <div className="space-y-2">
               <Label>Location</Label>
-              <Select
-                value={locationId ?? ""}
-                onValueChange={(v) => setLocationId(v === "root" ? null : v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select location..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="root">All Media</SelectItem>
-                  {flattenedFolders
-                    .filter((f) => f.depth < 2)
-                    .map((f) => (
-                      <SelectItem key={f.id} value={f.id}>
-                        {f.displayName}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+              <Popover open={locationPopoverOpen} onOpenChange={setLocationPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={locationPopoverOpen}
+                    className="w-full justify-between font-normal"
+                  >
+                    {selectedLocationLabel}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search locations..." />
+                    <CommandList>
+                      <CommandEmpty>No location found.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem
+                          value="All Media"
+                          onSelect={() => {
+                            setLocationId(null);
+                            setLocationPopoverOpen(false);
+                          }}
+                        >
+                          <Check className={cn("mr-2 h-4 w-4", !locationId ? "opacity-100" : "opacity-0")} />
+                          All Media
+                        </CommandItem>
+                        {flattenedFolders
+                          .filter((f) => f.depth < 2)
+                          .map((f) => (
+                            <CommandItem
+                              key={f.id}
+                              value={f.displayName}
+                              onSelect={() => {
+                                setLocationId(f.id);
+                                setLocationPopoverOpen(false);
+                              }}
+                            >
+                              <Check className={cn("mr-2 h-4 w-4", locationId === f.id ? "opacity-100" : "opacity-0")} />
+                              {f.displayName}
+                            </CommandItem>
+                          ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Add Galleries */}
