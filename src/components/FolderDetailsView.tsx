@@ -1083,7 +1083,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         onOpenChange={setNewFolderDialogOpen}
         defaultLocationId={folderId}
         onCreateFolder={(data) => {
-          onCreateFolder?.(data);
+          const folderData = { ...data, locationId: data.locationId ?? folderId };
+          onCreateFolder?.(folderData);
           setNewFolderDialogOpen(false);
           sonnerToast.success("Folder created successfully");
         }}
