@@ -898,11 +898,14 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           </div>
 
           {/* Controls row */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div className="flex flex-wrap items-center justify-end gap-4 mb-6">
+            {/* Archived Only toggle hidden — functionality preserved, toggle lives in sidebar */}
+            {false && (
             <div className="flex items-center gap-2">
               <Label htmlFor="archived-folders-detail" className="text-sm text-muted-foreground">Archived Only</Label>
               <Switch id="archived-folders-detail" checked={archivedFoldersOnly} onCheckedChange={setArchivedFoldersOnly} />
             </div>
+            )}
             <div className="flex items-center border rounded-md bg-background">
               <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-r-none ${folderViewMode === "grid" ? "bg-muted" : ""}`} onClick={() => setFolderViewMode("grid")}>
                 <Grid3X3 className="w-4 h-4" />
