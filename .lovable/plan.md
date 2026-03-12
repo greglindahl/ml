@@ -1,22 +1,32 @@
 
 
-## Revert Chevron Expansion, Keep Subfolder Column
+## Bug: Galleries Not Moving When Initiated from Folder View
 
-### What Changes
+### Root Cause
 
-Remove the expandable tree row behavior (chevron toggle, `expandedFolders` state, recursive `renderRow`, indentation) from `FolderTableView`, reverting to a flat list of top-level folders. Keep the "Subfolders" column showing the count.
+There are two independent move flows, and the folder-level one is broken:
 
-### Implementation
+- **LibraryScreen (root level)**: Sets its own `selectedGalleries` state, opens its own `MoveGalleriesDialog`, then `applyGalleryMoves` reads those selected IDs. This works.
+- **FolderDetailsView (folder level)**: Manages its own `selectedGalleries` and `MoveGalleriesDialog` locally. On move completion, it calls `onMoveGalleries(locationId)` which maps to `applyGalleryMoves`. But `applyGalleryMoves` reads `selectedGalleries` from **LibraryScreen's** state — which is empty because the selection lives inside FolderDetailsView.
 
-**`src/components/FolderTableView.tsx`**
+Result: `applyGalleryMoves` moves zero galleries and the tree doesn't change.
 
-1. Remove `expandedFolders` state and `toggleExpand` function
-2. Remove the recursive `renderRow` function — go back to a flat `.map()` over `sorted`
-3. Remove the chevron button and depth-based indentation from each row
-4. Keep the folder icon column simple (just `FolderOpen` icon, no chevron)
-5. Keep the "Subfolders" column and `subfolderCount` in the enriched data
-6. Remove `ChevronRight` from imports if no longer used
+### Fix
 
-### File Modified
-- `src/components/FolderTableView.tsx`
+Change the `onMoveGalleries` prop to also pass the gallery IDs, so the parent knows which galleries to move.
+
+**`src/components/FolderDetailsView.tsx`**
+- Update `onMoveGalleries` prop type from `(locationId: string | null) => void` to `(galleryIds: string[], locationId: string | null) => void`
+- In the `onMove` callback of `MoveGalleriesDialog`, pass `moveGalleryItems.map(g => g.id)` along with `locationId`
+
+**`src/components/LibraryScreen.tsx`**
+- Update `applyGalleryMoves` to accept `(galleryIds: string[], targetLocationId: string | null)` instead of reading from `selectedGalleries` state
+- Use the passed `galleryIds` parameter for the tree mutation
+- Update all call sites:
+  - The root-level `MoveGalleriesDialog`'s `onMove` callback: pass `Array.from(selectedGalleries)` as the first argument
+  - The `onMoveGalleries` prop passed to `FolderDetailsView`: already maps through correctly with the new signature
+
+### Files Modified
+- `src/components/FolderDetailsView.tsx`
+- `src/components/LibraryScreen.tsx`
 
