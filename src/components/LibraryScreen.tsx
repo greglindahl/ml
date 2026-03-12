@@ -404,7 +404,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
       title: "Galleries moved",
       description: `${count} ${count === 1 ? "gallery" : "galleries"} moved successfully.`,
     });
-  }, [toast, galleryList, selectedGalleries]);
+  }, [toast, galleryList]);
 
   // Auto-expand/collapse sidebar based on active tab
   useEffect(() => {
