@@ -358,8 +358,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
       }));
   }, [galleryList, selectedGalleries, folderTree]);
 
-  const applyGalleryMoves = useCallback((targetLocationId: string | null) => {
-    const galleryIds = Array.from(selectedGalleries);
+  const applyGalleryMoves = useCallback((galleryIds: string[], targetLocationId: string | null) => {
+    const count = galleryIds.length;
     const count = galleryIds.length;
     setIsMoveDialogOpen(false);
     setSelectedGalleries(new Set());
