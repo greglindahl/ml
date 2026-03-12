@@ -90,7 +90,7 @@ interface FolderDetailsViewProps {
   onCreateGallery?: (data: NewGalleryData) => void;
   onAddGalleriesToFolder?: (galleryIds: string[], targetFolderId: string | null) => void;
   onCreateFolder?: (data: NewFolderData) => void;
-  onMoveGalleries?: (locationId: string | null) => void;
+  onMoveGalleries?: (galleryIds: string[], locationId: string | null) => void;
   galleryList?: Gallery[];
   flattenedFolders?: FlattenedFolder[];
 }
@@ -1104,7 +1104,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         onMove={(locationId) => {
           setMoveGalleriesOpen(false);
           setSelectedGalleries(new Set());
-          onMoveGalleries?.(locationId);
+          onMoveGalleries?.(moveGalleryItems.map(g => g.id), locationId);
           const count = moveGalleryItems.length;
           toast({ title: "Galleries moved", description: `${count} ${count === 1 ? "gallery" : "galleries"} moved successfully.` });
         }}

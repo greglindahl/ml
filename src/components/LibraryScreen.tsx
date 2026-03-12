@@ -358,8 +358,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
       }));
   }, [galleryList, selectedGalleries, folderTree]);
 
-  const applyGalleryMoves = useCallback((targetLocationId: string | null) => {
-    const galleryIds = Array.from(selectedGalleries);
+  const applyGalleryMoves = useCallback((galleryIds: string[], targetLocationId: string | null) => {
     const count = galleryIds.length;
     setIsMoveDialogOpen(false);
     setSelectedGalleries(new Set());
@@ -405,7 +404,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
       title: "Galleries moved",
       description: `${count} ${count === 1 ? "gallery" : "galleries"} moved successfully.`,
     });
-  }, [toast, galleryList, selectedGalleries]);
+  }, [toast, galleryList]);
 
   // Auto-expand/collapse sidebar based on active tab
   useEffect(() => {
@@ -1414,7 +1413,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         onOpenChange={setIsMoveDialogOpen}
         galleries={selectedMoveItems}
         flattenedFolders={flatFolders}
-        onMove={applyGalleryMoves}
+        onMove={(locationId) => applyGalleryMoves(Array.from(selectedGalleries), locationId)}
       />
       <NewFolderDialog
         open={newFolderDialogOpen}
