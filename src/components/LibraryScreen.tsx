@@ -1413,7 +1413,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         onOpenChange={setIsMoveDialogOpen}
         galleries={selectedMoveItems}
         flattenedFolders={flatFolders}
-        onMove={applyGalleryMoves}
+        onMove={(locationId) => applyGalleryMoves(Array.from(selectedGalleries), locationId)}
       />
       <NewFolderDialog
         open={newFolderDialogOpen}
