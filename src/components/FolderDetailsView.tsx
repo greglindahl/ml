@@ -1104,7 +1104,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         onMove={(locationId) => {
           setMoveGalleriesOpen(false);
           setSelectedGalleries(new Set());
-          onMoveGalleries?.(locationId);
+          onMoveGalleries?.(moveGalleryItems.map(g => g.id), locationId);
           const count = moveGalleryItems.length;
           toast({ title: "Galleries moved", description: `${count} ${count === 1 ? "gallery" : "galleries"} moved successfully.` });
         }}
