@@ -1103,12 +1103,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         flattenedFolders={flattenedFolders ?? flattenFolders(folderTree)}
         onMove={(locationId) => {
           const idsToMove = moveGalleryItems.map(g => g.id);
-          console.log('[MOVE-FDV] onMove called, ids:', idsToMove, 'locationId:', locationId);
           setMoveGalleriesOpen(false);
           setSelectedGalleries(new Set());
           onMoveGalleries?.(idsToMove, locationId);
-          const count = moveGalleryItems.length;
-          toast({ title: "Galleries moved", description: `${count} ${count === 1 ? "gallery" : "galleries"} moved successfully.` });
         }}
       />
     </div>

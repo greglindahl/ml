@@ -135,7 +135,7 @@ export function MoveFolderDialog({
           <div className="space-y-2">
             <Label>Location</Label>
             <Select
-              value={targetLocationId ?? ""}
+              value={targetLocationId === null ? "root" : (targetLocationId ?? "root")}
               onValueChange={(v) => setTargetLocationId(v === "root" ? null : v)}
             >
               <SelectTrigger>

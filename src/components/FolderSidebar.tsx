@@ -214,9 +214,7 @@ export function FolderSidebar({
         const hasChildren = visibleChildren.length > 0;
         const isExpanded = expandedFolders.has(folder.id);
         const isGallery = folder.type === "gallery";
-        const hasExpandableContent =
-          hasChildren ||
-          (folder.count != null && folder.count > 0 && !isGallery);
+        const hasExpandableContent = hasChildren;
 
         const isThisOverValid =
           overTargetId === folder.id && isOverValid;
