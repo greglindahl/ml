@@ -1,22 +1,22 @@
 
 
-## Revert Chevron Expansion, Keep Subfolder Column
+## Hide "Archived Only" Toggle in Folders Tab
 
-### What Changes
+### Problem
+The "Archived Only" toggle is visible in the Folders tab toolbar (at the folder level like "Season 25-26"), but the user wants it hidden since the sidebar already has a "View Archived" toggle for folder tree navigation.
 
-Remove the expandable tree row behavior (chevron toggle, `expandedFolders` state, recursive `renderRow`, indentation) from `FolderTableView`, reverting to a flat list of top-level folders. Keep the "Subfolders" column showing the count.
+### Approach
+Wrap the "Archived Only" toggle element in the Folders tab with a conditional that prevents it from rendering, while preserving the code and state functionality for future use.
 
-### Implementation
+### Changes
 
-**`src/components/FolderTableView.tsx`**
+**`src/components/FolderDetailsView.tsx`**
+- Wrap the "Archived Only" toggle div (lines 901-905) with `{false && (...)}` to hide it while keeping the code intact
+- The toggle uses `archivedFoldersOnly` state and `setArchivedFoldersOnly` — these remain functional but unused while hidden
 
-1. Remove `expandedFolders` state and `toggleExpand` function
-2. Remove the recursive `renderRow` function — go back to a flat `.map()` over `sorted`
-3. Remove the chevron button and depth-based indentation from each row
-4. Keep the folder icon column simple (just `FolderOpen` icon, no chevron)
-5. Keep the "Subfolders" column and `subfolderCount` in the enriched data
-6. Remove `ChevronRight` from imports if no longer used
+### UI Result
+The Folders tab will show only the grid/list view toggle buttons on the right side of the controls row, with the "Archived Only" switch no longer visible.
 
-### File Modified
-- `src/components/FolderTableView.tsx`
+### Files Modified
+- `src/components/FolderDetailsView.tsx`
 
