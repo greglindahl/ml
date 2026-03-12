@@ -359,72 +359,36 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   }, [galleryList, selectedGalleries, folderTree]);
 
   const applyGalleryMoves = useCallback((galleryIds: string[], targetLocationId: string | null) => {
-    console.log('[MOVE] applyGalleryMoves called with galleryIds:', galleryIds, 'targetLocationId:', targetLocationId);
     const count = galleryIds.length;
-    if (count === 0) {
-      console.warn('[MOVE] galleryIds is empty — aborting');
-      return;
-    }
+    if (count === 0) return;
     setIsMoveDialogOpen(false);
     setSelectedGalleries(new Set());
 
-    // Actually mutate the folder tree
-    setFolderTree(prevTree => {
-      console.log('[MOVE] prevTree top-level ids:', prevTree.map(i => i.id));
-      const cloneTree = (items: FolderItem[]): FolderItem[] =>
-        items.map(item => ({ ...item, children: item.children ? cloneTree(item.children) : undefined }));
-      let tree = cloneTree(prevTree);
-
-      // Count galleries before removal
-      const countGalleries = (items: FolderItem[]): number => {
-        let c = 0;
-        for (const item of items) {
-          if (item.type === 'gallery' && galleryIds.includes(item.id)) c++;
-          if (item.children) c += countGalleries(item.children);
-        }
-        return c;
-      };
-      console.log('[MOVE] galleries found in tree before removal:', countGalleries(tree));
-
-      // Remove galleries from their current locations
-      const removeFromTree = (items: FolderItem[]): FolderItem[] =>
-        items.map(item => ({
-          ...item,
-          children: item.children
-            ? removeFromTree(item.children.filter(c => !(c.type === "gallery" && galleryIds.includes(c.id))))
-            : undefined,
-        }));
-      tree = removeFromTree(tree);
-      console.log('[MOVE] galleries found in tree after removal:', countGalleries(tree));
-
-      // Insert galleries into target folder
+    setFolderTree(prev => {
+      let tree = prev;
       for (const galleryId of galleryIds) {
-        const galleryNode: FolderItem = { id: galleryId, name: galleryList.find(g => g.id === galleryId)?.name || galleryId, type: "gallery" };
+        const galleryNode = findFolderById(tree, galleryId);
+        if (!galleryNode) continue;
+        // Use the same proven helpers as folder move
+        tree = removeFolderById(tree, galleryId);
         if (targetLocationId) {
-          const insertInto = (items: FolderItem[]): boolean => {
-            for (const item of items) {
-              if (item.id === targetLocationId) {
-                item.children = [...(item.children || []), galleryNode];
-                return true;
-              }
-              if (item.children && insertInto(item.children)) return true;
-            }
-            return false;
-          };
-          const inserted = insertInto(tree);
-          console.log('[MOVE] insertInto result for', galleryId, ':', inserted);
-        } else {
-          console.log('[MOVE] target is All Media (null), gallery', galleryId, 'removed from tree only');
+          tree = insertFolderAt(tree, targetLocationId, galleryNode);
         }
+        // If targetLocationId is null ("All Media"), just remove from tree
       }
       return tree;
     });
+
+    // Auto-expand target so the move is visible in sidebar
+    if (targetLocationId) {
+      setExpandedFolders(prev => new Set([...prev, targetLocationId]));
+    }
 
     toast({
       title: "Galleries moved",
       description: `${count} ${count === 1 ? "gallery" : "galleries"} moved successfully.`,
     });
-  }, [toast, galleryList]);
+  }, [toast, removeFolderById, insertFolderAt]);
 
   // Auto-expand/collapse sidebar based on active tab
   useEffect(() => {
