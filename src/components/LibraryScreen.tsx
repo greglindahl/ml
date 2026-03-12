@@ -359,15 +359,32 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   }, [galleryList, selectedGalleries, folderTree]);
 
   const applyGalleryMoves = useCallback((galleryIds: string[], targetLocationId: string | null) => {
+    console.log('[MOVE] applyGalleryMoves called with galleryIds:', galleryIds, 'targetLocationId:', targetLocationId);
     const count = galleryIds.length;
+    if (count === 0) {
+      console.warn('[MOVE] galleryIds is empty — aborting');
+      return;
+    }
     setIsMoveDialogOpen(false);
     setSelectedGalleries(new Set());
 
     // Actually mutate the folder tree
     setFolderTree(prevTree => {
+      console.log('[MOVE] prevTree top-level ids:', prevTree.map(i => i.id));
       const cloneTree = (items: FolderItem[]): FolderItem[] =>
         items.map(item => ({ ...item, children: item.children ? cloneTree(item.children) : undefined }));
       let tree = cloneTree(prevTree);
+
+      // Count galleries before removal
+      const countGalleries = (items: FolderItem[]): number => {
+        let c = 0;
+        for (const item of items) {
+          if (item.type === 'gallery' && galleryIds.includes(item.id)) c++;
+          if (item.children) c += countGalleries(item.children);
+        }
+        return c;
+      };
+      console.log('[MOVE] galleries found in tree before removal:', countGalleries(tree));
 
       // Remove galleries from their current locations
       const removeFromTree = (items: FolderItem[]): FolderItem[] =>
@@ -378,6 +395,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             : undefined,
         }));
       tree = removeFromTree(tree);
+      console.log('[MOVE] galleries found in tree after removal:', countGalleries(tree));
 
       // Insert galleries into target folder
       for (const galleryId of galleryIds) {
@@ -393,9 +411,11 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             }
             return false;
           };
-          insertInto(tree);
+          const inserted = insertInto(tree);
+          console.log('[MOVE] insertInto result for', galleryId, ':', inserted);
+        } else {
+          console.log('[MOVE] target is All Media (null), gallery', galleryId, 'removed from tree only');
         }
-        // null target = "All Media" root, no folder parent needed
       }
       return tree;
     });
