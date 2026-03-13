@@ -73,7 +73,7 @@ export function MoveGalleriesDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl" ref={contentRef}>
         <DialogHeader>
           <DialogTitle>Move Galleries</DialogTitle>
           <DialogDescription className="space-y-1">
