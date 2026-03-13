@@ -45,6 +45,7 @@ export function MoveGalleriesDialog({
   flattenedFolders,
   onMove,
 }: MoveGalleriesDialogProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
   const [locationId, setLocationId] = useState<string | null>(null);
   const [locationSelected, setLocationSelected] = useState(false);
   const [locationPopoverOpen, setLocationPopoverOpen] = useState(false);
