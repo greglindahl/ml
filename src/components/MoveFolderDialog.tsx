@@ -61,6 +61,7 @@ export function MoveFolderDialog({
   flattenedFolders,
   folderTree,
 }: MoveFolderDialogProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
   const [targetLocationId, setTargetLocationId] = useState<string | null>(null);
 
   useEffect(() => {
