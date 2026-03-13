@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -61,6 +61,7 @@ export function MoveFolderDialog({
   flattenedFolders,
   folderTree,
 }: MoveFolderDialogProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
   const [targetLocationId, setTargetLocationId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -92,7 +93,7 @@ export function MoveFolderDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg" ref={contentRef}>
         <DialogHeader>
           <DialogTitle>Move Folder</DialogTitle>
           <DialogDescription>
@@ -141,7 +142,7 @@ export function MoveFolderDialog({
               <SelectTrigger>
                 <SelectValue placeholder="Select new location..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent container={contentRef.current}>
                 <SelectItem value="root">All Media</SelectItem>
                 {validLocations.map((f) => (
                   <SelectItem key={f.id} value={f.id}>

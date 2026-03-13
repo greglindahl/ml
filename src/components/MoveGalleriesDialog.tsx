@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Info, ChevronsUpDown, Check } from "lucide-react";
 import {
   Dialog,
@@ -45,6 +45,7 @@ export function MoveGalleriesDialog({
   flattenedFolders,
   onMove,
 }: MoveGalleriesDialogProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
   const [locationId, setLocationId] = useState<string | null>(null);
   const [locationSelected, setLocationSelected] = useState(false);
   const [locationPopoverOpen, setLocationPopoverOpen] = useState(false);
@@ -72,7 +73,7 @@ export function MoveGalleriesDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl" ref={contentRef}>
         <DialogHeader>
           <DialogTitle>Move Galleries</DialogTitle>
           <DialogDescription className="space-y-1">
@@ -118,7 +119,7 @@ export function MoveGalleriesDialog({
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start" container={contentRef.current}>
               <Command>
                 <CommandInput placeholder="Search locations..." />
                 <CommandList>

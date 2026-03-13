@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -46,6 +46,7 @@ export function NewFolderDialog({
   folderTree = [],
   onCreateGallery,
 }: NewFolderDialogProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
   const [name, setName] = useState("");
   const [locationId, setLocationId] = useState<string | null>(defaultLocationId);
   const [selectedGalleryIds, setSelectedGalleryIds] = useState<string[]>([]);
@@ -104,7 +105,7 @@ export function NewFolderDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md" ref={contentRef}>
           <DialogHeader>
             <DialogTitle>New Folder</DialogTitle>
             <DialogDescription className="sr-only">
@@ -149,7 +150,7 @@ export function NewFolderDialog({
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start" container={contentRef.current}>
                   <Command>
                     <CommandInput placeholder="Search locations..." />
                     <CommandList>
