@@ -88,7 +88,7 @@ export function EditFolderDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md" ref={contentRef}>
           <DialogHeader>
             <DialogTitle>Edit Folder</DialogTitle>
             <DialogDescription className="sr-only">Edit folder details</DialogDescription>
