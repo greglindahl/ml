@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Info, ChevronsUpDown, Check } from "lucide-react";
 import {
   Dialog,
