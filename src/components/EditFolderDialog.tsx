@@ -44,6 +44,7 @@ export function EditFolderDialog({
   folderTree = [],
   onCreateGallery,
 }: EditFolderDialogProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
   const [name, setName] = useState(folder.name);
   const [locationId, setLocationId] = useState<string | null>(currentLocationId);
   const [selectedGalleryIds, setSelectedGalleryIds] = useState<string[]>(currentGalleryIds);
