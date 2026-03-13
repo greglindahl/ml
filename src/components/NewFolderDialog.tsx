@@ -46,6 +46,7 @@ export function NewFolderDialog({
   folderTree = [],
   onCreateGallery,
 }: NewFolderDialogProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
   const [name, setName] = useState("");
   const [locationId, setLocationId] = useState<string | null>(defaultLocationId);
   const [selectedGalleryIds, setSelectedGalleryIds] = useState<string[]>([]);
