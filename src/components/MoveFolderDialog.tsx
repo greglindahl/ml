@@ -142,7 +142,7 @@ export function MoveFolderDialog({
               <SelectTrigger>
                 <SelectValue placeholder="Select new location..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent container={contentRef.current}>
                 <SelectItem value="root">All Media</SelectItem>
                 {validLocations.map((f) => (
                   <SelectItem key={f.id} value={f.id}>
