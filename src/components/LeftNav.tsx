@@ -126,23 +126,23 @@ export function LeftNav({
       {/* Divider */}
       <div className="mx-4 border-t border-nav-border" />
 
-      {/* Bottom navigation */}
-      <div className="py-2">
-        {bottomNavItems.map((item) => (
-          <NavItem
-            key={item.id}
-            icon={item.icon}
-            label={item.label}
-            isExpanded={true}
-            isActive={activeScreen === item.id}
-            onClick={() => onNavigate(item.id)}
-          />
-        ))}
-      </div>
-
-      {/* Greenfly logo */}
-      <div className="px-4 pb-4 flex justify-center">
-        <img src={gfLogoHorizontal} alt="Greenfly" className="h-5 opacity-60" />
+      {/* Bottom navigation + Greenfly logo */}
+      <div className="px-2 pb-4 flex items-center justify-between">
+        <div>
+          {bottomNavItems.map((item) => (
+            <NavItem
+              key={item.id}
+              icon={item.icon}
+              label={item.label}
+              isExpanded={true}
+              isActive={activeScreen === item.id}
+              onClick={() => onNavigate(item.id)}
+            />
+          ))}
+        </div>
+        <div className="px-2">
+          <img src={gfLogoHorizontal} alt="Greenfly" className="h-5 opacity-60" />
+        </div>
       </div>
     </nav>
     );
