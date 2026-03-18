@@ -1,18 +1,22 @@
 
 
-## Put Help and Greenfly Logo on the Same Row
+## Revert Chevron Expansion, Keep Subfolder Column
 
-Looking at the design reference, the Help nav item and the Greenfly logo should sit side-by-side on the same row at the bottom of the nav, rather than stacked vertically.
+### What Changes
 
-### Changes in `src/components/LeftNav.tsx`
+Remove the expandable tree row behavior (chevron toggle, `expandedFolders` state, recursive `renderRow`, indentation) from `FolderTableView`, reverting to a flat list of top-level folders. Keep the "Subfolders" column showing the count.
 
-**Desktop (expanded):** Replace the separate "Bottom navigation" div and "Greenfly logo" div with a single flex row containing Help on the left and the logo on the right.
+### Implementation
 
-**Desktop (collapsed):** Stack them vertically (icon above logo mark) as they won't fit side-by-side.
+**`src/components/FolderTableView.tsx`**
 
-**Mobile:** Same horizontal layout as expanded desktop.
+1. Remove `expandedFolders` state and `toggleExpand` function
+2. Remove the recursive `renderRow` function — go back to a flat `.map()` over `sorted`
+3. Remove the chevron button and depth-based indentation from each row
+4. Keep the folder icon column simple (just `FolderOpen` icon, no chevron)
+5. Keep the "Subfolders" column and `subfolderCount` in the enriched data
+6. Remove `ChevronRight` from imports if no longer used
 
-Specifically:
-- Merge the bottom nav section (lines 219-230) and the Greenfly logo section (lines 232-239) into one `flex items-center justify-between` container when expanded.
-- Same treatment for mobile (lines 129-145).
+### File Modified
+- `src/components/FolderTableView.tsx`
 
