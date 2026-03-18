@@ -104,8 +104,6 @@ export function LeftNav({
           ))}
         </div>
 
-      {/* Divider */}
-      <div className="mx-4 border-t border-nav-border" />
 
       {/* Utility icons */}
       <div className="py-2 flex items-center justify-center gap-3 px-4">
@@ -196,8 +194,6 @@ export function LeftNav({
         ))}
       </div>
 
-      {/* Divider */}
-      <div className="mx-4 border-t border-nav-border" />
 
       {/* Utility icons */}
       <div className={`py-3 ${isExpanded ? "flex items-center justify-center gap-3 px-4" : "flex flex-col items-center gap-2"}`}>
