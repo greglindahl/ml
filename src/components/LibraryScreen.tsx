@@ -35,6 +35,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { GalleryFilterBar } from "@/components/GalleryFilterBar";
+import { GalleryCard, GalleryCardState } from "@/components/GalleryCard";
+import { AssetCard, AssetCardState } from "@/components/AssetCard";
+import { FolderCard, FolderCardState } from "@/components/FolderCard";
 
 const GALLERY_MOVE_LIMIT = 5;
 const MOVE_LIMIT_MESSAGE = "Too many galleries selected. You may only move up to 5 at a time.";
@@ -759,11 +762,14 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-4 md:px-8 xl:px-16">
         {/* Header with title and actions */}
         <div className="py-4 flex items-center justify-between flex-shrink-0">
-          <h1 className="text-2xl font-semibold">Library</h1>
-          <div className="flex items-center gap-2">
+          <h1 className="text-[26px] font-semibold text-foreground">Library</h1>
+          <div className="flex items-center gap-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2">
+                <Button
+                  variant="outline"
+                  className="w-[95px] h-10 px-3 py-2 gap-2 text-primary border-primary hover:bg-primary/5"
+                >
                   New
                   <ChevronDown className="w-4 h-4" />
                 </Button>
@@ -779,8 +785,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button className="gap-2">
-              <Upload className="w-4 h-4" />
+            <Button className="h-10 px-3 py-2">
               Upload
             </Button>
           </div>
@@ -789,31 +794,11 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
           <div className="border-b flex-shrink-0">
-            <TabsList className="bg-transparent h-auto p-0 gap-6">
-              <TabsTrigger
-                value="assets"
-                className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-              >
-                Assets
-              </TabsTrigger>
-              <TabsTrigger
-                value="galleries"
-                className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-              >
-                Galleries
-              </TabsTrigger>
-              <TabsTrigger
-                value="folders"
-                className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-              >
-                Folders
-              </TabsTrigger>
-              <TabsTrigger
-                value="saved"
-                className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-              >
-                Saved
-              </TabsTrigger>
+            <TabsList>
+              <TabsTrigger value="assets">Assets</TabsTrigger>
+              <TabsTrigger value="galleries">Galleries</TabsTrigger>
+              <TabsTrigger value="folders">Folders</TabsTrigger>
+              <TabsTrigger value="saved">Saved</TabsTrigger>
             </TabsList>
           </div>
 
@@ -997,12 +982,10 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 }}
               />
             ) : isLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
                 {Array.from({ length: 10 }).map((_, i) => (
                   <div key={i} className="group">
-                    <Skeleton className="aspect-[4/3] rounded-lg mb-2" />
-                    <Skeleton className="h-4 w-3/4 mb-1" />
-                    <Skeleton className="h-3 w-1/2" />
+                    <Skeleton className="aspect-[5/6] rounded-[24px] mb-2" />
                   </div>
                 ))}
               </div>
@@ -1013,91 +996,41 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 <p className="text-sm text-muted-foreground">Try adjusting your filters or search terms</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {sortedResults.map((asset) => (
-                  <div 
-                    key={asset.id} 
-                    className={`group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow ${selectedAssets.has(asset.id) ? "ring-2 ring-primary" : ""}`}
-                    onClick={() => {
-                      if (selectedAssets.size > 0) {
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
+                {sortedResults.map((asset) => {
+                  const isSelected = selectedAssets.has(asset.id);
+                  // Determine card state based on selection mode and selection status
+                  let cardState: AssetCardState = "default";
+                  if (selectedAssets.size > 0 && !isSelected) {
+                    cardState = "bulk-select";
+                  } else if (isSelected) {
+                    cardState = "selected";
+                  }
+
+                  return (
+                    <AssetCard
+                      key={asset.id}
+                      creatorName={asset.creator}
+                      duration={asset.duration}
+                      timestamp={getRelativeTime(asset.dateCreated)}
+                      thumbnailUrl={asset.thumbnailUrl}
+                      isBranded={isBrandedActive && asset.isBranded}
+                      state={cardState}
+                      onSelect={() => {
                         const next = new Set(selectedAssets);
-                        if (next.has(asset.id)) next.delete(asset.id); else next.add(asset.id);
+                        if (next.has(asset.id)) {
+                          next.delete(asset.id);
+                        } else {
+                          next.add(asset.id);
+                        }
                         setSelectedAssets(next);
-                      }
-                    }}
-                  >
-                    {/* Thumbnail area */}
-                    <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center relative">
-                      {/* Checkbox overlay */}
-                      {selectedAssets.size > 0 && (
-                        <div className="absolute top-2 left-2 z-10">
-                          <Checkbox
-                            checked={selectedAssets.has(asset.id)}
-                            onCheckedChange={(checked) => {
-                              const next = new Set(selectedAssets);
-                              if (checked) next.add(asset.id); else next.delete(asset.id);
-                              setSelectedAssets(next);
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        </div>
-                      )}
-                      {selectedAssets.size === 0 && (
-                        <div className="absolute top-2 left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Checkbox
-                            checked={false}
-                            onCheckedChange={() => {
-                              setSelectedAssets(new Set([asset.id]));
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        </div>
-                      )}
-                      <AssetTypeIcon type={asset.type} className="w-10 h-10 text-muted-foreground/40" />
-                      {/* Branded icon overlay */}
-                      {isBrandedActive && asset.isBranded && (
-                        <div className="absolute top-2 right-2 flex flex-col gap-1">
-                          <Palette className="w-4 h-4 text-primary" />
-                        </div>
-                      )}
-                      {/* Metadata badges */}
-                      <div className="absolute bottom-2 right-2 flex items-center gap-1.5">
-                        {asset.aspectRatio && (
-                          <span className="text-[10px] font-medium text-muted-foreground bg-background/90 px-1.5 py-0.5 rounded">
-                            {asset.aspectRatio}
-                          </span>
-                        )}
-                        <span className="text-[10px] font-medium text-muted-foreground bg-background/90 px-1.5 py-0.5 rounded uppercase">
-                          {asset.type}
-                        </span>
-                      </div>
-                      {asset.duration && (
-                        <span className="absolute bottom-2 left-2 text-[10px] font-medium text-muted-foreground bg-background/90 px-1.5 py-0.5 rounded">
-                          {asset.duration}
-                        </span>
-                      )}
-                    </div>
-                    {/* Card info */}
-                    <div className="p-3">
-                      <div className="font-medium text-sm truncate mb-1">{asset.name}</div>
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className="text-[10px] uppercase tracking-wide text-muted-foreground truncate">
-                            {asset.creator}
-                          </div>
-                          {asset.tags.length > 0 && (
-                            <div className="text-xs text-primary truncate">
-                              {asset.tags[0]}
-                            </div>
-                          )}
-                        </div>
-                        <span className="text-xs text-primary flex-shrink-0">
-                          {getRelativeTime(asset.dateCreated)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                      }}
+                      onFavorite={() => {
+                        // TODO: Implement favorite functionality
+                      }}
+                    />
+                  );
+                })}
               </div>
             )}
             </div>
@@ -1240,18 +1173,30 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               {galleriesViewMode === "list" ? (
                 <GalleryTableView galleries={galleryList} onNavigate={handleNavigate} onMoveGalleries={handleMoveGalleries} />
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
                   {galleryList.filter(g => {
                     const treeItem = findFolderById(folderTree, g.id);
                     const isArchived = treeItem?.archived === true;
                     return archivedGalleriesOnly ? isArchived : !isArchived;
                   }).map((gallery) => {
                     const isSelected = selectedGalleries.has(gallery.id);
+                    // Determine card state based on selection mode and selection status
+                    let cardState: GalleryCardState = "default";
+                    if (isAnyGallerySelected && !isSelected) {
+                      cardState = "bulk-select";
+                    } else if (isSelected) {
+                      cardState = "selected";
+                    }
+
                     return (
-                      <div
+                      <GalleryCard
                         key={gallery.id}
-                        className={`group cursor-pointer border rounded-lg p-4 hover:border-primary/50 transition-colors relative ${isSelected ? "ring-2 ring-primary" : ""}`}
-                        onClick={() => {
+                        name={gallery.name}
+                        assetCount={gallery.assetCount}
+                        timeAgo={gallery.timeAgo}
+                        thumbnailUrl={gallery.thumbnailUrl}
+                        state={cardState}
+                        onSelect={() => {
                           if (archivedGalleriesOnly) return;
                           if (isAnyGallerySelected) {
                             toggleGallerySelection(gallery.id);
@@ -1259,46 +1204,16 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                             setActiveFolder(gallery.id);
                           }
                         }}
-                      >
-                        {archivedGalleriesOnly && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="absolute top-2 right-2 z-10 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleUnarchiveFolder(gallery.id);
-                              setGalleryList(prev => prev.map(g => g.id === gallery.id ? { ...g, archived: false } : g));
-                              toast({ title: "Gallery unarchived", description: `"${gallery.name}" has been unarchived.` });
-                            }}
-                          >
-                            Unarchive
-                          </Button>
-                        )}
-                        <div
-                          className={`absolute top-2 left-2 z-10 ${isAnyGallerySelected || isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleGallerySelection(gallery.id);
-                          }}
-                        >
-                          <Checkbox checked={isSelected} />
-                        </div>
-                        <div className="aspect-[4/3] border border-dashed rounded-lg bg-muted/30 flex items-center justify-center mb-3">
-                          <div className="w-3/4 h-3/4 bg-muted/50 rounded" />
-                        </div>
-                        <div className="flex items-center gap-1.5 text-sm font-medium mb-1">
-                          <Images className="w-4 h-4 text-muted-foreground" />
-                          <span className="truncate">{gallery.name}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>{gallery.assetCount} Assets</span>
-                          <span>{gallery.timeAgo}</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground truncate mt-1">
-                          {getGalleryLocationDisplay(gallery.id, folderTree)}
-                        </div>
-                      </div>
+                        onFavorite={() => {
+                          // TODO: Implement favorite functionality
+                        }}
+                        onShare={() => {
+                          // TODO: Implement share functionality
+                        }}
+                        onMoreOptions={() => {
+                          // TODO: Implement more options menu
+                        }}
+                      />
                     );
                   })}
                 </div>
@@ -1342,43 +1257,24 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   }}
                 />
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {filteredFolderCards.map((folder) => (
-                    <div 
-                      key={folder.id} 
-                      className="group cursor-pointer border rounded-lg p-4 hover:border-primary/50 transition-colors relative"
-                      onClick={() => {
-                        if (archivedFoldersOnly) return;
-                        setActiveFolder(folder.id);
-                      }}
-                    >
-                      {archivedFoldersOnly && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="absolute top-2 right-2 z-10 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleUnarchiveFolder(folder.id);
-                            toast({ title: "Folder unarchived", description: `"${folder.name}" has been unarchived.` });
-                          }}
-                        >
-                          Unarchive
-                        </Button>
-                      )}
-                      <div className="aspect-[4/3] border rounded-lg bg-muted/30 flex items-center justify-center mb-3">
-                        <Folder className="w-12 h-12 text-muted-foreground/70" />
-                      </div>
-                      <div className="flex items-center gap-1.5 text-sm font-medium mb-1">
-                        <Folder className="w-4 h-4 text-muted-foreground" />
-                        <span className="truncate">{folder.name}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{folder.galleryCount} Galleries</span>
-                        <span>{folder.timeAgo}</span>
-                      </div>
-                    </div>
-                  ))}
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+                  {filteredFolderCards.map((folder) => {
+                    return (
+                      <FolderCard
+                        key={folder.id}
+                        name={folder.name}
+                        galleryCount={folder.galleryCount}
+                        onSelect={() => {
+                          if (!archivedFoldersOnly) {
+                            setActiveFolder(folder.id);
+                          }
+                        }}
+                        onMoreOptions={() => {
+                          // TODO: Implement more options menu
+                        }}
+                      />
+                    );
+                  })}
                 </div>
               );
             })()}

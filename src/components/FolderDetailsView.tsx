@@ -32,6 +32,9 @@ import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleries
 import { toast } from "@/hooks/use-toast";
 import { toast as sonnerToast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AssetCard, AssetCardState } from "@/components/AssetCard";
+import { GalleryCard, GalleryCardState } from "@/components/GalleryCard";
+import { FolderCard, FolderCardState } from "@/components/FolderCard";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 
 const GALLERY_MOVE_LIMIT = 5;
@@ -317,7 +320,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
 
       {/* Folder Header */}
       <div className="flex items-start justify-between mb-6 flex-shrink-0">
-        <h1 className="text-2xl font-semibold">{folder.name}</h1>
+        <h1 className="text-[26px] font-semibold text-foreground">{folder.name}</h1>
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -380,25 +383,10 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
         <div className="border-b flex-shrink-0">
-          <TabsList className="bg-transparent h-auto p-0 gap-6">
-            <TabsTrigger
-              value="assets"
-              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              Assets
-            </TabsTrigger>
-            <TabsTrigger
-              value="galleries"
-              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              Galleries
-            </TabsTrigger>
-            <TabsTrigger
-              value="folders"
-              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              Folders
-            </TabsTrigger>
+          <TabsList>
+            <TabsTrigger value="assets">Assets</TabsTrigger>
+            <TabsTrigger value="galleries">Galleries</TabsTrigger>
+            <TabsTrigger value="folders">Folders</TabsTrigger>
           </TabsList>
         </div>
 
@@ -520,7 +508,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 }}
               />
             ) : isLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
                 {Array.from({ length: 10 }).map((_, i) => (
                   <div key={i} className="group">
                     <Skeleton className="aspect-[4/3] rounded-lg mb-2" />
@@ -536,87 +524,41 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <p className="text-sm text-muted-foreground">Try adjusting your filters or search terms</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {filteredResults.map((asset) => (
-                  <div 
-                    key={asset.id} 
-                    className={`group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow ${selectedAssets.has(asset.id) ? "ring-2 ring-primary" : ""}`}
-                    onClick={() => {
-                      if (selectedAssets.size > 0) {
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
+                {filteredResults.map((asset) => {
+                  const isSelected = selectedAssets.has(asset.id);
+                  const isAnySelected = selectedAssets.size > 0;
+
+                  let cardState: AssetCardState = "default";
+                  if (isAnySelected && !isSelected) {
+                    cardState = "bulk-select";
+                  } else if (isSelected) {
+                    cardState = "selected";
+                  }
+
+                  return (
+                    <AssetCard
+                      key={asset.id}
+                      creatorName={asset.creator}
+                      duration={asset.duration}
+                      timestamp={getRelativeTime(asset.dateCreated)}
+                      thumbnailUrl={asset.thumbnailUrl}
+                      state={cardState}
+                      onSelect={() => {
                         const next = new Set(selectedAssets);
-                        if (next.has(asset.id)) next.delete(asset.id); else next.add(asset.id);
+                        if (next.has(asset.id)) {
+                          next.delete(asset.id);
+                        } else {
+                          next.add(asset.id);
+                        }
                         setSelectedAssets(next);
-                      }
-                    }}
-                  >
-                    {/* Thumbnail area */}
-                    <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center relative">
-                      {/* Checkbox overlay */}
-                      {(selectedAssets.size > 0) && (
-                        <div className="absolute top-2 left-2 z-10">
-                          <Checkbox
-                            checked={selectedAssets.has(asset.id)}
-                            onCheckedChange={(checked) => {
-                              const next = new Set(selectedAssets);
-                              if (checked) next.add(asset.id); else next.delete(asset.id);
-                              setSelectedAssets(next);
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                            aria-label={`Select ${asset.name}`}
-                          />
-                        </div>
-                      )}
-                      {selectedAssets.size === 0 && (
-                        <div className="absolute top-2 left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Checkbox
-                            checked={false}
-                            onCheckedChange={() => {
-                              setSelectedAssets(new Set([asset.id]));
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                            aria-label={`Select ${asset.name}`}
-                          />
-                        </div>
-                      )}
-                      <AssetTypeIcon type={asset.type} className="w-10 h-10 text-muted-foreground/40" />
-                      {/* Metadata badges */}
-                      <div className="absolute bottom-2 right-2 flex items-center gap-1.5">
-                        {asset.aspectRatio && (
-                          <span className="text-[10px] font-medium text-muted-foreground bg-background/90 px-1.5 py-0.5 rounded">
-                            {asset.aspectRatio}
-                          </span>
-                        )}
-                        <span className="text-[10px] font-medium text-muted-foreground bg-background/90 px-1.5 py-0.5 rounded uppercase">
-                          {asset.type}
-                        </span>
-                      </div>
-                      {asset.duration && (
-                        <span className="absolute bottom-2 left-2 text-[10px] font-medium text-muted-foreground bg-background/90 px-1.5 py-0.5 rounded">
-                          {asset.duration}
-                        </span>
-                      )}
-                    </div>
-                    {/* Card info */}
-                    <div className="p-3">
-                      <div className="font-medium text-sm truncate mb-1">{asset.name}</div>
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className="text-[10px] uppercase tracking-wide text-muted-foreground truncate">
-                            {asset.creator}
-                          </div>
-                          {asset.tags.length > 0 && (
-                            <div className="text-xs text-primary truncate">
-                              {asset.tags[0]}
-                            </div>
-                          )}
-                        </div>
-                        <span className="text-xs text-primary flex-shrink-0">
-                          {getRelativeTime(asset.dateCreated)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                      }}
+                      onFavorite={() => {
+                        // TODO: Implement favorite functionality
+                      }}
+                    />
+                  );
+                })}
               </div>
             )}
           </div>
@@ -845,44 +787,45 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             }
             
             return (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
                 {filteredGalleries.map((gallery) => {
                   const isSelected = selectedGalleries.has(gallery.id);
+
+                  let cardState: GalleryCardState = "default";
+                  if (isAnyGallerySelected && !isSelected) {
+                    cardState = "bulk-select";
+                  } else if (isSelected) {
+                    cardState = "selected";
+                  }
+
+                  // Find matching gallery from mockGalleries for thumbnailUrl
+                  const galleryData = mockGalleries.find(g => g.id === gallery.id);
+
                   return (
-                    <div
+                    <GalleryCard
                       key={gallery.id}
-                      className={`group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow text-left relative ${isSelected ? "ring-2 ring-primary" : ""} ${gallery.archived ? "opacity-50" : ""}`}
-                    >
-                      {/* Checkbox overlay */}
-                      <div
-                        className={`absolute top-2 left-2 z-10 ${isAnyGallerySelected || isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
-                        onClick={(e) => { e.stopPropagation(); toggleGallerySelection(gallery.id); }}
-                      >
-                        <Checkbox checked={isSelected} />
-                      </div>
-                      {/* Thumbnail area */}
-                      <div
-                        className="aspect-[4/3] bg-muted/50 flex items-center justify-center"
-                        onClick={() => onNavigate(gallery.id)}
-                      >
-                        <Images className="w-10 h-10 text-muted-foreground/40" />
-                      </div>
-                      {/* Card info */}
-                      <div className="p-3" onClick={() => onNavigate(gallery.id)}>
-                        <div className="font-medium text-sm truncate mb-1">{gallery.name}</div>
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs text-muted-foreground">
-                            {gallery.count || 0} Assets
-                          </span>
-                          <span className="text-xs text-primary flex-shrink-0">
-                            2 days ago
-                          </span>
-                        </div>
-                        <div className="text-xs text-muted-foreground truncate mt-1">
-                          {getGalleryLocationDisplay(gallery.id, folderTree)}
-                        </div>
-                      </div>
-                    </div>
+                      name={gallery.name}
+                      assetCount={gallery.count || 0}
+                      timeAgo="2 days ago"
+                      thumbnailUrl={galleryData?.thumbnailUrl}
+                      state={cardState}
+                      onSelect={() => {
+                        if (isAnyGallerySelected) {
+                          toggleGallerySelection(gallery.id);
+                        } else {
+                          onNavigate(gallery.id);
+                        }
+                      }}
+                      onFavorite={() => {
+                        // TODO: Implement favorite functionality
+                      }}
+                      onShare={() => {
+                        // TODO: Implement share functionality
+                      }}
+                      onMoreOptions={() => {
+                        // TODO: Implement more options menu
+                      }}
+                    />
                   );
                 })}
               </div>
@@ -974,24 +917,24 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 onUnarchiveFolder={onUnarchiveFolder}
               />
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {filteredChildFolders.map((child) => (
-                  <div
-                    key={child.id}
-                    onClick={() => onNavigate(child.id)}
-                    className={`group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow text-left relative ${child.archived ? "opacity-50" : ""}`}
-                  >
-                    <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center">
-                      <FolderOpen className="w-10 h-10 text-muted-foreground/40" />
-                    </div>
-                    <div className="p-3">
-                      <div className="font-medium text-sm truncate mb-1">{child.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {child.children?.length || 0} items
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+                {filteredChildFolders.map((child) => {
+                  // Count galleries in this folder
+                  const galleryCount = child.children?.filter(c => c.type === "gallery").length || 0;
+
+                  return (
+                    <FolderCard
+                      key={child.id}
+                      name={child.name}
+                      galleryCount={galleryCount}
+                      state="default"
+                      onSelect={() => onNavigate(child.id)}
+                      onMoreOptions={() => {
+                        // TODO: Implement more options menu
+                      }}
+                    />
+                  );
+                })}
               </div>
             );
           })()}

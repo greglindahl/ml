@@ -9,25 +9,15 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
     <div className={`flex-1 flex flex-col pb-12 ${isMobile ? "pt-[58px]" : "pt-20"}`}>
       {/* Header */}
       <div className="px-4 md:px-8 xl:px-16 py-4">
-        <h1 className="text-2xl font-semibold">Requests</h1>
+        <h1 className="text-[26px] font-semibold text-foreground">Requests</h1>
       </div>
 
       {/* Tabs */}
       <Tabs defaultValue="campaigns" className="flex-1 flex flex-col px-4 md:px-8 xl:px-16">
         <div className="border-b">
-          <TabsList className="bg-transparent h-auto p-0 gap-6">
-            <TabsTrigger
-              value="campaigns"
-              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              Campaigns
-            </TabsTrigger>
-            <TabsTrigger
-              value="requests"
-              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              Requests
-            </TabsTrigger>
+          <TabsList>
+            <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
+            <TabsTrigger value="requests">Requests</TabsTrigger>
           </TabsList>
         </div>
 

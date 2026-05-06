@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleriesDialog";
 import { toast } from "@/hooks/use-toast";
+import { AssetCard, AssetCardState } from "@/components/AssetCard";
 
 // Icon component for asset types
 function AssetTypeIcon({ type, className }: { type: LibraryAsset["type"]; className?: string }) {
@@ -211,7 +212,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             <Images className="w-6 h-6 text-muted-foreground" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold mb-2">{gallery.name}</h1>
+            <h1 className="text-[26px] font-semibold text-foreground mb-2">{gallery.name}</h1>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-xs">View Only</Badge>
               <Badge variant="outline" className="text-xs">Allow Upload</Badge>
@@ -249,25 +250,10 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
         <div className="border-b flex-shrink-0">
-          <TabsList className="bg-transparent h-auto p-0 gap-6">
-            <TabsTrigger
-              value="assets"
-              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              Assets
-            </TabsTrigger>
-            <TabsTrigger
-              value="overview"
-              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              Overview
-            </TabsTrigger>
-            <TabsTrigger
-              value="public-settings"
-              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              Public Settings
-            </TabsTrigger>
+          <TabsList>
+            <TabsTrigger value="assets">Assets</TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="public-settings">Public Settings</TabsTrigger>
           </TabsList>
         </div>
 
@@ -388,10 +374,10 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 }}
               />
             ) : isLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
                 {Array.from({ length: 10 }).map((_, i) => (
                   <div key={i} className="group">
-                    <Skeleton className="aspect-[4/3] rounded-lg mb-2" />
+                    <Skeleton className="aspect-[5/6] rounded-[24px] mb-2" />
                     <Skeleton className="h-4 w-3/4 mb-1" />
                     <Skeleton className="h-3 w-1/2" />
                   </div>
@@ -404,87 +390,41 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 <p className="text-sm text-muted-foreground">Try adjusting your filters or search terms</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {filteredResults.map((asset) => (
-                  <div 
-                    key={asset.id} 
-                    className={`group cursor-pointer bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow ${selectedAssets.has(asset.id) ? "ring-2 ring-primary" : ""}`}
-                    onClick={() => {
-                      if (selectedAssets.size > 0) {
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
+                {filteredResults.map((asset) => {
+                  const isSelected = selectedAssets.has(asset.id);
+                  const isAnySelected = selectedAssets.size > 0;
+
+                  let cardState: AssetCardState = "default";
+                  if (isAnySelected && !isSelected) {
+                    cardState = "bulk-select";
+                  } else if (isSelected) {
+                    cardState = "selected";
+                  }
+
+                  return (
+                    <AssetCard
+                      key={asset.id}
+                      creatorName={asset.creator}
+                      duration={asset.duration}
+                      timestamp={getRelativeTime(asset.dateCreated)}
+                      thumbnailUrl={asset.thumbnailUrl}
+                      state={cardState}
+                      onSelect={() => {
                         const next = new Set(selectedAssets);
-                        if (next.has(asset.id)) next.delete(asset.id); else next.add(asset.id);
+                        if (next.has(asset.id)) {
+                          next.delete(asset.id);
+                        } else {
+                          next.add(asset.id);
+                        }
                         setSelectedAssets(next);
-                      }
-                    }}
-                  >
-                    {/* Thumbnail area */}
-                    <div className="aspect-[4/3] bg-muted/50 flex items-center justify-center relative">
-                      {/* Checkbox overlay */}
-                      {(selectedAssets.size > 0) && (
-                        <div className="absolute top-2 left-2 z-10">
-                          <Checkbox
-                            checked={selectedAssets.has(asset.id)}
-                            onCheckedChange={(checked) => {
-                              const next = new Set(selectedAssets);
-                              if (checked) next.add(asset.id); else next.delete(asset.id);
-                              setSelectedAssets(next);
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                            aria-label={`Select ${asset.name}`}
-                          />
-                        </div>
-                      )}
-                      {selectedAssets.size === 0 && (
-                        <div className="absolute top-2 left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Checkbox
-                            checked={false}
-                            onCheckedChange={() => {
-                              setSelectedAssets(new Set([asset.id]));
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                            aria-label={`Select ${asset.name}`}
-                          />
-                        </div>
-                      )}
-                      <AssetTypeIcon type={asset.type} className="w-10 h-10 text-muted-foreground/40" />
-                      {/* Metadata badges */}
-                      <div className="absolute bottom-2 right-2 flex items-center gap-1.5">
-                        {asset.aspectRatio && (
-                          <span className="text-[10px] font-medium text-muted-foreground bg-background/90 px-1.5 py-0.5 rounded">
-                            {asset.aspectRatio}
-                          </span>
-                        )}
-                        <span className="text-[10px] font-medium text-muted-foreground bg-background/90 px-1.5 py-0.5 rounded uppercase">
-                          {asset.type}
-                        </span>
-                      </div>
-                      {asset.duration && (
-                        <span className="absolute bottom-2 left-2 text-[10px] font-medium text-muted-foreground bg-background/90 px-1.5 py-0.5 rounded">
-                          {asset.duration}
-                        </span>
-                      )}
-                    </div>
-                    {/* Card info */}
-                    <div className="p-3">
-                      <div className="font-medium text-sm truncate mb-1">{asset.name}</div>
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className="text-[10px] uppercase tracking-wide text-muted-foreground truncate">
-                            {asset.creator}
-                          </div>
-                          {asset.tags.length > 0 && (
-                            <div className="text-xs text-primary truncate">
-                              {asset.tags[0]}
-                            </div>
-                          )}
-                        </div>
-                        <span className="text-xs text-primary flex-shrink-0">
-                          {getRelativeTime(asset.dateCreated)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                      }}
+                      onFavorite={() => {
+                        // TODO: Implement favorite functionality
+                      }}
+                    />
+                  );
+                })}
               </div>
             )}
           </div>

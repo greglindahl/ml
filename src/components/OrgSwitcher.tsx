@@ -107,12 +107,12 @@ export function OrgSwitcher({ orgs, activeOrg, onOrgChange, isExpanded }: OrgSwi
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-          <div className="w-10 h-10 bg-gray-600 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm">
-            <img src={orgLogoPlaceholder} alt={activeOrg.name} className="w-6 h-6 object-contain" />
+        <button className={`flex items-center hover:opacity-80 transition-opacity ${isExpanded ? "flex-col gap-2" : ""}`}>
+          <div className="w-14 h-14 bg-[#95aac9]/20 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+            <img src={orgLogoPlaceholder} alt={activeOrg.name} className="w-8 h-8 object-contain" />
           </div>
           {isExpanded && (
-            <span className="text-sm font-medium text-sidebar-accent-foreground truncate">{activeOrg.name}</span>
+            <span className="text-[17px] font-normal text-white tracking-tight">{activeOrg.name}</span>
           )}
         </button>
       </DropdownMenuTrigger>
