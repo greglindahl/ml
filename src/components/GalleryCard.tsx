@@ -41,7 +41,7 @@ export function GalleryCard({
   return (
     <div
       className={cn(
-        "relative flex flex-col items-center justify-center w-[258px] h-[160px] rounded-3xl overflow-hidden cursor-pointer group",
+        "relative flex flex-col items-center justify-center w-full aspect-[16/10] min-w-[200px] rounded-3xl overflow-hidden cursor-pointer group",
         isHover && "shadow-xl",
         className
       )}

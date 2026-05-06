@@ -1000,12 +1000,10 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 }}
               />
             ) : isLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
                 {Array.from({ length: 10 }).map((_, i) => (
                   <div key={i} className="group">
-                    <Skeleton className="aspect-[4/3] rounded-lg mb-2" />
-                    <Skeleton className="h-4 w-3/4 mb-1" />
-                    <Skeleton className="h-3 w-1/2" />
+                    <Skeleton className="aspect-[5/6] rounded-[24px] mb-2" />
                   </div>
                 ))}
               </div>
@@ -1016,7 +1014,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 <p className="text-sm text-muted-foreground">Try adjusting your filters or search terms</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
                 {sortedResults.map((asset) => {
                   const isSelected = selectedAssets.has(asset.id);
                   // Determine card state based on selection mode and selection status
@@ -1030,13 +1028,10 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   return (
                     <AssetCard
                       key={asset.id}
-                      name={asset.name}
-                      creator={asset.creator}
-                      type={asset.type}
-                      aspectRatio={asset.aspectRatio}
+                      creatorName={asset.creator}
                       duration={asset.duration}
-                      tag={asset.tags.length > 0 ? asset.tags[0] : undefined}
-                      timeAgo={getRelativeTime(asset.dateCreated)}
+                      timestamp={getRelativeTime(asset.dateCreated)}
+                      thumbnailUrl={asset.thumbnailUrl}
                       isBranded={isBrandedActive && asset.isBranded}
                       state={cardState}
                       onSelect={() => {
@@ -1050,12 +1045,6 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                       }}
                       onFavorite={() => {
                         // TODO: Implement favorite functionality
-                      }}
-                      onDownload={() => {
-                        // TODO: Implement download functionality
-                      }}
-                      onMoreOptions={() => {
-                        // TODO: Implement more options menu
                       }}
                     />
                   );
@@ -1202,7 +1191,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               {galleriesViewMode === "list" ? (
                 <GalleryTableView galleries={galleryList} onNavigate={handleNavigate} onMoveGalleries={handleMoveGalleries} />
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
                   {galleryList.filter(g => {
                     const treeItem = findFolderById(folderTree, g.id);
                     const isArchived = treeItem?.archived === true;
@@ -1223,6 +1212,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                         name={gallery.name}
                         assetCount={gallery.assetCount}
                         timeAgo={gallery.timeAgo}
+                        thumbnailUrl={gallery.thumbnailUrl}
                         state={cardState}
                         onSelect={() => {
                           if (archivedGalleriesOnly) return;
@@ -1285,33 +1275,17 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   }}
                 />
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
                   {filteredFolderCards.map((folder) => {
-                    const folderItem = topLevelFolders.find(f => f.id === folder.id);
-                    const isArchived = folderItem?.archived === true;
-
                     return (
                       <FolderCard
                         key={folder.id}
                         name={folder.name}
                         galleryCount={folder.galleryCount}
-                        timeAgo={folder.timeAgo}
-                        isArchived={isArchived}
                         onSelect={() => {
                           if (!archivedFoldersOnly) {
                             setActiveFolder(folder.id);
                           }
-                        }}
-                        onFavorite={() => {
-                          // TODO: Implement favorite functionality
-                        }}
-                        onArchive={() => {
-                          handleArchiveFolder(folder.id);
-                          toast({ title: "Folder archived", description: `"${folder.name}" has been archived.` });
-                        }}
-                        onUnarchive={() => {
-                          handleUnarchiveFolder(folder.id);
-                          toast({ title: "Folder unarchived", description: `"${folder.name}" has been unarchived.` });
                         }}
                         onMoreOptions={() => {
                           // TODO: Implement more options menu

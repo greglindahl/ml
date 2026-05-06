@@ -24,6 +24,7 @@ export interface LibraryAsset {
   folderId?: string; // Which folder/gallery this asset belongs to
   isFavorite?: boolean;
   isBranded?: boolean;
+  thumbnailUrl?: string;
   downloads: number;
   shares: number;
   galleries: number;
@@ -689,6 +690,7 @@ export const mockLibraryAssets: LibraryAsset[] = (() => {
       dimensions: type === "image" || type === "video" ? seededFromArray(dimensions[aspectRatio]) : undefined,
       duration: type === "video" ? seededFromArray(durations) : undefined,
       folderId,
+      thumbnailUrl: `https://picsum.photos/seed/asset${id}/400/300`,
       // Placeholder values — will be overwritten by the deterministic pass below
       downloads: 0, shares: 0, galleries: 0, viewers: 0, publicViews: 0,
       publicDownloads: 0, favorites: 0, lastDownloadDate: null,
@@ -700,6 +702,7 @@ export const mockLibraryAssets: LibraryAsset[] = (() => {
   const fixedAssetsWithFolders = fixedAssets.map((asset, index) => ({
     ...asset,
     folderId: folderIds[index % folderIds.length],
+    thumbnailUrl: `https://picsum.photos/seed/fixed${index}/400/300`,
   }));
   
   // Combine fixed assets with generated ones

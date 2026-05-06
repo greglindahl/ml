@@ -1,206 +1,317 @@
 import { cn } from "@/lib/utils";
 
-export type AssetCardState = "default" | "hover" | "bulk-select" | "selected";
+export type AssetCardState =
+  | "default"
+  | "hover"
+  | "bulk-select"
+  | "selected"
+  | "approved"
+  | "rejected"
+  | "commented";
 
 interface AssetCardProps {
-  name: string;
-  creator: string;
-  type: "image" | "video";
+  creatorName: string;
+  timestamp?: string;
   thumbnailUrl?: string;
-  aspectRatio?: "1:1" | "16:9" | "9:16" | "4:3";
   duration?: string;
-  tag?: string;
-  timeAgo?: string;
+  isNew?: boolean;
   isBranded?: boolean;
+  isRequested?: boolean;
+  hasComment?: boolean;
   state?: AssetCardState;
   onSelect?: () => void;
   onFavorite?: () => void;
-  onShare?: () => void;
-  onDownload?: () => void;
-  onMoreOptions?: () => void;
+  onComment?: () => void;
+  onApprove?: () => void;
+  onReject?: () => void;
   className?: string;
 }
 
 export function AssetCard({
-  name,
-  creator,
-  type,
+  creatorName,
+  timestamp = "1/14/26, 1:56 PM",
   thumbnailUrl,
-  aspectRatio,
   duration,
-  tag,
-  timeAgo,
+  isNew = false,
   isBranded = false,
+  isRequested = false,
+  hasComment = false,
   state = "default",
   onSelect,
   onFavorite,
-  onShare,
-  onDownload,
-  onMoreOptions,
+  onComment,
+  onApprove,
+  onReject,
   className,
 }: AssetCardProps) {
   const isDefault = state === "default";
   const isHover = state === "hover";
   const isBulkSelect = state === "bulk-select";
   const isSelected = state === "selected";
+  const isApproved = state === "approved";
+  const isRejected = state === "rejected";
+  const isCommented = state === "commented";
 
-  const showCheckbox = isHover || isBulkSelect || isSelected;
+  const isSelectionState = isHover || isBulkSelect || isSelected;
+  const isReviewState = isApproved || isRejected || isCommented;
+  const showCheckbox = isSelectionState || isSelected;
   const isChecked = isSelected;
 
   return (
     <div
       className={cn(
-        "relative flex flex-col w-[200px] rounded-xl overflow-hidden cursor-pointer group bg-card border shadow-sm hover:shadow-md transition-shadow",
-        isSelected && "ring-2 ring-primary",
+        "relative flex flex-col w-full aspect-[5/6] min-w-[160px] rounded-[24px] overflow-hidden cursor-pointer group",
+        isHover && "shadow-[0_32px_32px_rgba(18,38,63,0.12)]",
         className
       )}
     >
-      {/* Thumbnail Area */}
-      <div className="relative aspect-[4/3] bg-muted/50 flex items-center justify-center overflow-hidden">
+      {/* Full-bleed Image with Gradient Overlay */}
+      <div className="absolute inset-0">
         {thumbnailUrl ? (
           <img
             src={thumbnailUrl}
-            alt={name}
+            alt={creatorName}
             className="absolute inset-0 w-full h-full object-cover"
           />
         ) : (
-          <div className="flex items-center justify-center">
-            {type === "video" ? (
-              <i className="bi bi-play-circle text-4xl text-muted-foreground/40" />
-            ) : (
-              <i className="bi bi-image text-4xl text-muted-foreground/40" />
-            )}
+          <div className="absolute inset-0 bg-gray-700 flex items-center justify-center">
+            <i className="bi bi-image text-4xl text-gray-500" />
           </div>
         )}
+        {/* Gradient overlay - from black at bottom to transparent at top */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/36" />
+      </div>
 
-        {/* Top Row - Checkbox and Actions */}
-        <div className="absolute top-0 left-0 right-0 p-2 flex items-start justify-between">
-          {/* Left - Checkbox */}
-          <div className="flex items-center">
-            {showCheckbox && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelect?.();
-                }}
-                className="flex items-center justify-center"
-              >
-                {isChecked ? (
-                  <div className="relative w-5 h-5">
-                    <div className="absolute inset-[3px] w-[14px] h-[14px] bg-white rounded-full" />
-                    <i className="bi bi-check-circle-fill text-primary text-xl absolute inset-0" />
-                  </div>
-                ) : (
-                  <div className="w-5 h-5 rounded-full border-2 border-white/80 bg-black/20" />
-                )}
-              </button>
-            )}
-            {!showCheckbox && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelect?.();
-                }}
-                className="flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <div className="w-5 h-5 rounded-full border-2 border-white/80 bg-black/20" />
-              </button>
-            )}
-          </div>
+      {/* Content Layer */}
+      <div className="relative flex flex-col flex-1 p-4 justify-between">
+        {/* Top Row */}
+        <div className={cn(
+          "flex items-center",
+          isSelectionState ? "justify-between" : "justify-end gap-2"
+        )}>
+          {/* Left - Checkbox (selection states) or Selected indicator (review states with selected) */}
+          {isSelectionState && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect?.();
+              }}
+              className="flex items-center justify-center"
+            >
+              {isChecked ? (
+                <div className="relative w-6 h-6">
+                  <div className="absolute inset-[4.5px] w-[15px] h-[15px] bg-white rounded-full" />
+                  <i className="bi bi-check-circle-fill text-primary text-2xl absolute inset-0" />
+                </div>
+              ) : (
+                <div className="w-6 h-6 rounded-full border-2 border-white/60 bg-transparent" />
+              )}
+            </button>
+          )}
 
-          {/* Right - Action Buttons (visible on hover) */}
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            {/* Favorite Button */}
+          {/* Default state - just favorite button on right */}
+          {isDefault && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onFavorite?.();
               }}
-              className="w-6 h-6 flex items-center justify-center bg-black/30 backdrop-blur-sm rounded-full hover:bg-black/50 transition-colors"
+              className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full"
             >
-              <i className="bi bi-heart text-white text-xs" />
+              <i className="bi bi-heart-fill text-white text-[8px]" />
             </button>
+          )}
 
-            {/* Download Button */}
+          {/* Hover state - checkbox on left, favorite on right */}
+          {isHover && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onDownload?.();
+                onFavorite?.();
               }}
-              className="w-6 h-6 flex items-center justify-center bg-black/30 backdrop-blur-sm rounded-full hover:bg-black/50 transition-colors"
+              className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full"
             >
-              <i className="bi bi-download text-white text-xs" />
+              <i className="bi bi-heart-fill text-white text-[8px]" />
             </button>
+          )}
 
-            {/* More Options Button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onMoreOptions?.();
-              }}
-              className="w-6 h-6 flex items-center justify-center bg-black/30 backdrop-blur-sm rounded-full hover:bg-black/50 transition-colors"
-            >
-              <i className="bi bi-three-dots text-white text-xs" />
-            </button>
-          </div>
+          {/* Bulk Select / Selected - checkbox on left, favorite on right */}
+          {(isBulkSelect || isSelected) && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFavorite?.();
+                }}
+                className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full"
+              >
+                <i className="bi bi-heart-fill text-white text-[8px]" />
+              </button>
+            </div>
+          )}
+
+          {/* Review states - New badge + favorite if applicable */}
+          {isReviewState && (
+            <div className="flex items-center gap-2">
+              {isNew && (
+                <span className="text-[10px] font-medium text-[#0d7333] bg-[#d9f7e5] px-1.5 py-1 rounded-full tracking-tight">
+                  New
+                </span>
+              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFavorite?.();
+                }}
+                className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full"
+              >
+                <i className="bi bi-heart-fill text-white text-[8px]" />
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Branded Badge (top right, below action buttons when not hovering) */}
-        {isBranded && (
-          <div className="absolute top-2 right-2 group-hover:opacity-0 transition-opacity">
-            <div className="w-6 h-6 flex items-center justify-center bg-primary/90 rounded-full">
-              <i className="bi bi-palette text-white text-xs" />
-            </div>
+        {/* Video Duration Badge - Top Right Area */}
+        {duration && (
+          <div className="absolute top-4 right-12 flex items-center gap-1 text-white text-xs">
+            <i className="bi bi-play-fill text-[10px]" />
+            <span>{duration}</span>
           </div>
         )}
 
-        {/* Bottom Row - Metadata Badges */}
-        <div className="absolute bottom-0 left-0 right-0 p-2 flex items-end justify-between">
-          {/* Left - Duration (for videos) */}
-          <div>
-            {duration && (
-              <span className="text-[10px] font-medium text-white bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded">
-                {duration}
-              </span>
-            )}
-          </div>
-
-          {/* Right - Aspect Ratio and Type */}
-          <div className="flex items-center gap-1">
-            {aspectRatio && (
-              <span className="text-[10px] font-medium text-muted-foreground bg-background/90 backdrop-blur-sm px-1.5 py-0.5 rounded">
-                {aspectRatio}
-              </span>
-            )}
-            <span className="text-[10px] font-medium text-muted-foreground bg-background/90 backdrop-blur-sm px-1.5 py-0.5 rounded uppercase">
-              {type}
+        {/* New Badge - for non-review states */}
+        {isNew && !isReviewState && (
+          <div className="absolute top-4 left-4">
+            <span className="text-[10px] font-medium text-[#0d7333] bg-[#d9f7e5] px-1.5 py-1 rounded-full tracking-tight">
+              New
             </span>
           </div>
-        </div>
-      </div>
+        )}
 
-      {/* Card Info */}
-      <div className="p-3 flex-1 flex flex-col">
-        {/* Asset Name */}
-        <h3 className="font-medium text-sm truncate mb-1">{name}</h3>
-
-        {/* Creator and Meta */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground truncate">
-              {creator}
+        {/* Bottom Content */}
+        <div className="flex flex-col gap-1.5">
+          {/* Action buttons row for review states */}
+          {isApproved && (
+            <div className="flex items-center gap-1.5">
+              {hasComment && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onComment?.();
+                  }}
+                  className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full"
+                >
+                  <i className="bi bi-chat-fill text-white text-[10px]" />
+                </button>
+              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onApprove?.();
+                }}
+                className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full"
+              >
+                <i className="bi bi-check-lg text-[#00D97E] text-sm" />
+              </button>
+              {isBranded && (
+                <button className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full">
+                  <i className="bi bi-palette-fill text-white text-[10px]" />
+                </button>
+              )}
+              {isRequested && (
+                <span className="text-[10px] font-medium text-[#8c1a2b] bg-[#fae3e8] px-1.5 py-1 rounded-full tracking-tight flex items-center gap-1">
+                  <i className="bi bi-exclamation-circle-fill text-[8px]" />
+                  Requested
+                </span>
+              )}
             </div>
-            {tag && (
-              <div className="text-xs text-primary truncate">
-                {tag}
-              </div>
-            )}
-          </div>
-          {timeAgo && (
-            <span className="text-xs text-primary flex-shrink-0">
-              {timeAgo}
-            </span>
           )}
+
+          {isRejected && (
+            <div className="flex items-center gap-1.5">
+              {hasComment && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onComment?.();
+                  }}
+                  className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full"
+                >
+                  <i className="bi bi-chat-fill text-white text-[10px]" />
+                </button>
+              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReject?.();
+                }}
+                className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full"
+              >
+                <i className="bi bi-x-lg text-danger text-sm" />
+              </button>
+              {isBranded && (
+                <button className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full">
+                  <i className="bi bi-palette-fill text-white text-[10px]" />
+                </button>
+              )}
+              {isRequested && (
+                <span className="text-[10px] font-medium text-[#8c1a2b] bg-[#fae3e8] px-1.5 py-1 rounded-full tracking-tight flex items-center gap-1">
+                  <i className="bi bi-exclamation-circle-fill text-[8px]" />
+                  Requested
+                </span>
+              )}
+            </div>
+          )}
+
+          {isCommented && (
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onComment?.();
+                }}
+                className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full"
+              >
+                <i className="bi bi-chat-fill text-info text-[10px]" />
+              </button>
+              {isBranded && (
+                <button className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full">
+                  <i className="bi bi-palette-fill text-white text-[10px]" />
+                </button>
+              )}
+              {isRequested && (
+                <span className="text-[10px] font-medium text-[#8c1a2b] bg-[#fae3e8] px-1.5 py-1 rounded-full tracking-tight flex items-center gap-1">
+                  <i className="bi bi-exclamation-circle-fill text-[8px]" />
+                  Requested
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Branding indicator for non-review states */}
+          {!isReviewState && isBranded && (
+            <div className="flex items-center gap-1.5">
+              <button className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full">
+                <i className="bi bi-palette-fill text-white text-[10px]" />
+              </button>
+              {isRequested && (
+                <span className="text-[10px] font-medium text-[#8c1a2b] bg-[#fae3e8] px-1.5 py-1 rounded-full tracking-tight flex items-center gap-1">
+                  <i className="bi bi-exclamation-circle-fill text-[8px]" />
+                  Requested
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Creator Name */}
+          <p className="text-[15px] text-white font-normal leading-[1.2] tracking-tight">
+            {creatorName}
+          </p>
+
+          {/* Timestamp */}
+          <p className="text-[13px] text-white/80 font-normal leading-[1.25] tracking-tight">
+            {timestamp}
+          </p>
         </div>
       </div>
     </div>
