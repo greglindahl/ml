@@ -630,7 +630,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
 
               {/* Archived toggle */}
               <div className="inline-flex items-center gap-2 h-8 px-2">
-                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Archived Only</span>
+                <span className="text-[15px] font-normal text-muted-foreground whitespace-nowrap">Archived Only</span>
                 <Switch checked={archivedGalleriesOnly} onCheckedChange={setArchivedGalleriesOnly} className="scale-75" />
               </div>
             </div>
