@@ -15,9 +15,10 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { ChevronLeft, ChevronRight, Folder, Images, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import { SortableFolderItem } from "@/components/SortableFolderItem";
 import {
   AlertDialog,
@@ -248,21 +249,21 @@ export function FolderSidebar({
 
   if (!isFolderSidebarExpanded) {
     return (
-      <div className="border-r bg-card flex flex-col w-12 h-full transition-all duration-300 ease-in-out overflow-hidden">
-        <div className="p-2 flex flex-col items-center gap-1 min-w-12">
+      <div className="border-r border-[#e3ebf6] bg-white flex flex-col w-[50px] h-full transition-all duration-300 ease-in-out overflow-hidden pt-3 pb-6 px-1">
+        <div className="flex flex-col items-center gap-2">
           <button
             onClick={() => onSetSidebarExpanded(true)}
-            className="p-2 hover:bg-accent rounded transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
             aria-label="Expand folders"
           >
-            <Folder className="w-4 h-4 text-muted-foreground" />
+            <i className="bi bi-folder text-[15px] text-[#6e84a3]" />
           </button>
           <button
             onClick={() => onSetSidebarExpanded(true)}
-            className="p-2 hover:bg-accent rounded transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
             aria-label="Expand folders"
           >
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            <i className="bi bi-chevron-double-right text-[15px] text-[#6e84a3]" />
           </button>
         </div>
       </div>
@@ -270,21 +271,21 @@ export function FolderSidebar({
   }
 
   return (
-    <div className="border-r bg-card flex flex-col w-64 h-full transition-all duration-300 ease-in-out overflow-hidden">
+    <div className="border-r border-[#e3ebf6] bg-white flex flex-col w-[220px] h-full transition-all duration-300 ease-in-out overflow-hidden pt-3 pb-6 px-1">
       {/* Header */}
-      <div className="p-4 border-b flex items-center justify-between min-w-64">
-        <span className="font-medium text-sm">Library</span>
+      <div className="px-3 py-2 flex items-center justify-between">
+        <span className="font-medium text-[15px] text-[#12263f] tracking-[-0.3px]">Library</span>
         <button
           onClick={() => onSetSidebarExpanded(false)}
-          className="p-1 hover:bg-accent rounded transition-colors"
+          className="p-1 hover:bg-gray-100 rounded-md transition-colors"
           aria-label="Collapse folders"
         >
-          <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+          <i className="bi bi-chevron-double-left text-[15px] text-[#6e84a3]" />
         </button>
       </div>
 
       {/* DnD Tree */}
-      <div className="flex-1 p-2 overflow-y-auto min-w-64">
+      <div className="flex-1 overflow-y-auto mt-3">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -299,13 +300,13 @@ export function FolderSidebar({
 
           <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
             {activeItem ? (
-              <div className="flex items-center gap-2 px-3 py-1.5 text-sm bg-card border rounded-md shadow-lg opacity-90">
+              <div className="flex items-center gap-2 px-3 py-1.5 text-[13px] bg-white border border-[#e3ebf6] rounded-md shadow-lg opacity-90">
                 {activeItem.type === "gallery" ? (
-                  <Images className="w-4 h-4 text-muted-foreground" />
+                  <i className="bi bi-images text-[#6e84a3]" />
                 ) : (
-                  <Folder className="w-4 h-4 text-muted-foreground" />
+                  <i className="bi bi-folder text-[#6e84a3]" />
                 )}
-                <span className="truncate">{activeItem.name}</span>
+                <span className="truncate text-[#6e84a3]">{activeItem.name}</span>
               </div>
             ) : null}
           </DragOverlay>
@@ -313,8 +314,8 @@ export function FolderSidebar({
       </div>
 
       {/* Pinned footer: View Archived toggle */}
-      <div className="p-3 border-t flex items-center justify-between min-w-64">
-        <Label htmlFor="view-archived" className="text-sm text-muted-foreground cursor-pointer">
+      <div className="px-3 py-3 border-t border-[#e3ebf6] flex items-center justify-between">
+        <Label htmlFor="view-archived" className="text-[13px] text-[#6e84a3] cursor-pointer tracking-[-0.13px]">
           View Archived
         </Label>
         <Switch id="view-archived" checked={showArchived} onCheckedChange={onToggleArchived} />
