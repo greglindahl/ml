@@ -19,23 +19,21 @@ interface ContentScreenProps {
 const screenTitles: Record<Screen, string> = {
   home: "Home",
   library: "Library",
-  engage: "Engage",
-  requests: "Requests",
+  network: "Network",
   connect: "Connect",
-  stats: "Stats",
-  admin: "Admin",
-  help: "Help",
+  engage: "Engage",
+  requests: "Activations",
+  stats: "Insights",
 };
 
 const screenDescriptions: Record<Screen, string> = {
   home: "Dashboard overview and quick actions",
   library: "Your content library and media files",
-  engage: "Customer engagement and conversations",
-  requests: "Incoming requests and pending items",
+  network: "Manage your network and members",
   connect: "Integrations and connected services",
+  engage: "Customer engagement and conversations",
+  requests: "Activations and campaigns",
   stats: "Analytics and performance metrics",
-  admin: "System administration and settings",
-  help: "Help center and documentation",
 };
 
 export function ContentScreen({ screen, history, onBack, isMobile = false }: ContentScreenProps) {
@@ -66,8 +64,8 @@ export function ContentScreen({ screen, history, onBack, isMobile = false }: Con
     return <StatsScreen isMobile={isMobile} />;
   }
 
-  // Admin has its own dedicated screen with tabs
-  if (screen === "admin") {
+  // Network has its own dedicated screen with tabs
+  if (screen === "network") {
     return <AdminScreen isMobile={isMobile} />;
   }
 

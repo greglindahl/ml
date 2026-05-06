@@ -1,4 +1,46 @@
 @import "bootstrap-icons/font/bootstrap-icons.css";
+
+/* Cerebri Sans Font Family */
+@font-face {
+  font-family: 'Cerebri Sans';
+  src: url('/assets/fonts/cerebrisans-book.woff') format('woff'),
+       url('/assets/fonts/cerebrisans-book.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Cerebri Sans';
+  src: url('/assets/fonts/cerebrisans-regular.woff') format('woff'),
+       url('/assets/fonts/cerebrisans-regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Cerebri Sans';
+  src: url('/assets/fonts/cerebrisans-medium.woff') format('woff'),
+       url('/assets/fonts/cerebrisans-medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Cerebri Sans';
+  src: url('/assets/fonts/cerebrisans-semibold.woff') format('woff'),
+       url('/assets/fonts/cerebrisans-semibold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Cerebri Sans';
+  src: url('/assets/fonts/cerebrisans-bold.woff') format('woff'),
+       url('/assets/fonts/cerebrisans-bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -173,8 +215,7 @@
   }
 
   body {
-    @apply bg-background text-foreground;
-    font-family: system-ui, -apple-system, sans-serif;
+    @apply bg-background text-foreground font-sans;
     /* Keep a consistent vertical scrollbar to avoid horizontal “jumping” */
     overflow-y: scroll;
     /* Avoid scroll anchoring adjustments when swapping large DOM blocks */

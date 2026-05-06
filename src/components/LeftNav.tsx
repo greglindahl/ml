@@ -8,18 +8,15 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useState } from "react";
 import { OrgSwitcher, MobileOrgSwitcher } from "./OrgSwitcher";
-import gfLogoHorizontal from "@/assets/gf-logo-white-horizontal.svg";
-import gfLogoMark from "@/assets/gf-logo-white-mark.svg";
 
 export type Screen =
   | "home"
   | "library"
+  | "network"
+  | "connect"
   | "engage"
   | "requests"
-  | "connect"
-  | "stats"
-  | "admin"
-  | "help";
+  | "stats";
 
 interface LeftNavProps {
   isExpanded: boolean;
@@ -38,15 +35,11 @@ const mainNavItems: {
 }[] = [
   { id: "home", icon: "bi-house", label: "Home" },
   { id: "library", icon: "bi-image", label: "Library" },
+  { id: "network", icon: "bi-people", label: "Network" },
   { id: "connect", icon: "bi-plug", label: "Connect" },
   { id: "engage", icon: "bi-cloud-arrow-up", label: "Engage" },
-  { id: "requests", icon: "bi-camera", label: "Requests" },
+  { id: "requests", icon: "bi-lightning", label: "Activations" },
   { id: "stats", icon: "bi-bar-chart", label: "Insights" },
-  { id: "admin", icon: "bi-shield-lock", label: "Admin" },
-];
-
-const bottomNavItems: { id: Screen; icon: string; label: string }[] = [
-  { id: "help", icon: "bi-question-circle", label: "Help" },
 ];
 
 const orgs = [
@@ -105,43 +98,31 @@ export function LeftNav({
         </div>
 
 
-      {/* Utility icons */}
-      <div className="py-2 flex items-center justify-center gap-3 px-4">
-        <Avatar className="h-8 w-8 cursor-pointer">
-          <AvatarFallback className="bg-sidebar-accent text-nav-text">
-            <User className="h-4 w-4" />
-          </AvatarFallback>
-        </Avatar>
-        <button className="relative p-2 hover:bg-sidebar-accent rounded-md transition-colors">
-          <i className="bi bi-envelope text-nav-text text-lg" />
-          <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-medium px-1 py-0.5 rounded-full min-w-[18px] text-center leading-none">
-            99+
-          </span>
-        </button>
-        <button className="p-2 hover:bg-sidebar-accent rounded-md transition-colors">
-          <i className="bi bi-megaphone text-nav-text text-lg" />
-        </button>
+      {/* Greenfly logo */}
+      <div className="px-4 py-3 flex items-center justify-center">
+        <img src="/assets/gf-logo/gf-logo-white.svg" alt="Greenfly" className="h-6 opacity-70" />
       </div>
 
-      {/* Divider */}
-      <div className="mx-4 border-t border-nav-border" />
-
-      {/* Bottom navigation + Greenfly logo */}
-      <div className="px-2 pb-4 flex items-center justify-between">
-        <div>
-          {bottomNavItems.map((item) => (
-            <NavItem
-              key={item.id}
-              icon={item.icon}
-              label={item.label}
-              isExpanded={true}
-              isActive={activeScreen === item.id}
-              onClick={() => onNavigate(item.id)}
-            />
-          ))}
-        </div>
-        <div className="px-2">
-          <img src={gfLogoHorizontal} alt="Greenfly" className="h-5 opacity-60" />
+      {/* Utility icons row */}
+      <div className="py-3 pb-4 flex items-center justify-between px-4">
+        <Avatar className="h-10 w-10 cursor-pointer">
+          <AvatarFallback className="bg-sidebar-accent text-nav-text">
+            <User className="h-5 w-5" />
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex items-center gap-4">
+          <button className="p-2 hover:bg-sidebar-accent rounded-md transition-colors">
+            <i className="bi bi-question-circle text-nav-text text-xl" />
+          </button>
+          <button className="relative p-2 hover:bg-sidebar-accent rounded-md transition-colors">
+            <i className="bi bi-envelope text-nav-text text-xl" />
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full min-w-[20px] text-center leading-none">
+              99+
+            </span>
+          </button>
+          <button className="p-2 hover:bg-sidebar-accent rounded-md transition-colors">
+            <i className="bi bi-megaphone text-nav-text text-xl" />
+          </button>
         </div>
       </div>
     </nav>
@@ -152,7 +133,7 @@ export function LeftNav({
   return (
     <nav
       className="h-screen bg-nav-background border-r border-nav-border flex flex-col nav-transition flex-shrink-0 relative group"
-      style={{ width: isExpanded ? "256px" : "72px" }}
+      style={{ width: isExpanded ? "260px" : "72px" }}
     >
       {/* Floating toggle button - appears on right edge on hover */}
       <Tooltip delayDuration={0}>
@@ -171,7 +152,7 @@ export function LeftNav({
       </Tooltip>
 
       {/* Header with org logo dropdown */}
-      <div className={`border-b border-nav-border ${isExpanded ? "p-4" : "p-4 flex justify-center"}`}>
+      <div className={`${isExpanded ? "py-9 px-4 flex justify-center" : "py-9 px-4 flex justify-center"}`}>
         <OrgSwitcher
           orgs={orgs}
           activeOrg={activeOrg}
@@ -195,59 +176,60 @@ export function LeftNav({
       </div>
 
 
-      {/* Utility icons */}
-      <div className={`py-3 ${isExpanded ? "flex items-center justify-center gap-3 px-4" : "flex flex-col items-center gap-2"}`}>
-        <Avatar className="h-8 w-8 cursor-pointer">
-          <AvatarFallback className="bg-sidebar-accent text-nav-text">
-            <User className="h-4 w-4" />
-          </AvatarFallback>
-        </Avatar>
-        <button className="relative p-2 hover:bg-sidebar-accent rounded-md transition-colors">
-          <i className="bi bi-envelope text-nav-text text-lg" />
-          <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-medium px-1 py-0.5 rounded-full min-w-[18px] text-center leading-none">
-            99+
-          </span>
-        </button>
-        <button className="p-2 hover:bg-sidebar-accent rounded-md transition-colors">
-          <i className="bi bi-megaphone text-nav-text text-lg" />
-        </button>
+      {/* Greenfly logo */}
+      <div className={`py-3 flex items-center justify-center ${isExpanded ? "px-4" : ""}`}>
+        {isExpanded ? (
+          <img src="/assets/gf-logo/gf-logo-white.svg" alt="Greenfly" className="h-6 opacity-70" />
+        ) : (
+          <img src="/assets/gf-fly-icon/gf-fly-icon-white.svg" alt="Greenfly" className="h-6 opacity-70" />
+        )}
       </div>
 
       {/* Divider */}
-      <div className="mx-4 border-t border-nav-border" />
+      <div className="mx-4 my-6 border-t border-nav-border" />
 
-      {/* Bottom navigation + Greenfly logo */}
+      {/* Utility icons row */}
       {isExpanded ? (
-        <div className="px-2 pb-4 flex items-center justify-between">
-          <div>
-            {bottomNavItems.map((item) => (
-              <NavItem
-                key={item.id}
-                icon={item.icon}
-                label={item.label}
-                isExpanded={true}
-                isActive={activeScreen === item.id}
-                onClick={() => onNavigate(item.id)}
-              />
-            ))}
-          </div>
-          <div className="px-2">
-            <img src={gfLogoHorizontal} alt="Greenfly" className="h-5 opacity-60" />
+        <div className="py-3 pb-4 flex items-center justify-between px-4">
+          <Avatar className="h-10 w-10 cursor-pointer">
+            <AvatarFallback className="bg-sidebar-accent text-nav-text">
+              <User className="h-5 w-5" />
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex items-center gap-4">
+            <button className="p-2 hover:bg-sidebar-accent rounded-md transition-colors">
+              <i className="bi bi-question-circle text-nav-text text-xl" />
+            </button>
+            <button className="relative p-2 hover:bg-sidebar-accent rounded-md transition-colors">
+              <i className="bi bi-envelope text-nav-text text-xl" />
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full min-w-[20px] text-center leading-none">
+                99+
+              </span>
+            </button>
+            <button className="p-2 hover:bg-sidebar-accent rounded-md transition-colors">
+              <i className="bi bi-megaphone text-nav-text text-xl" />
+            </button>
           </div>
         </div>
       ) : (
-        <div className="py-2 flex flex-col items-center gap-2 pb-4">
-          {bottomNavItems.map((item) => (
-            <NavItem
-              key={item.id}
-              icon={item.icon}
-              label={item.label}
-              isExpanded={false}
-              isActive={activeScreen === item.id}
-              onClick={() => onNavigate(item.id)}
-            />
-          ))}
-          <img src={gfLogoMark} alt="Greenfly" className="h-6 opacity-60" />
+        <div className="py-3 pb-4 flex flex-col items-center gap-3">
+          <button className="p-2 hover:bg-sidebar-accent rounded-md transition-colors">
+            <i className="bi bi-megaphone text-nav-text text-xl" />
+          </button>
+          <button className="relative p-2 hover:bg-sidebar-accent rounded-md transition-colors">
+            <i className="bi bi-envelope text-nav-text text-xl" />
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full min-w-[20px] text-center leading-none">
+              99+
+            </span>
+          </button>
+          <button className="p-2 hover:bg-sidebar-accent rounded-md transition-colors">
+            <i className="bi bi-question-circle text-nav-text text-xl" />
+          </button>
+          <Avatar className="h-10 w-10 cursor-pointer">
+            <AvatarFallback className="bg-sidebar-accent text-nav-text">
+              <User className="h-5 w-5" />
+            </AvatarFallback>
+          </Avatar>
         </div>
       )}
     </nav>
