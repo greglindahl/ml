@@ -212,7 +212,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             <Images className="w-6 h-6 text-muted-foreground" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold mb-2">{gallery.name}</h1>
+            <h1 className="text-[26px] font-semibold text-foreground mb-2">{gallery.name}</h1>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-xs">View Only</Badge>
               <Badge variant="outline" className="text-xs">Allow Upload</Badge>

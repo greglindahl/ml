@@ -9,7 +9,7 @@ export function AdminScreen({ isMobile = false }: AdminScreenProps) {
     <div className={`flex-1 flex flex-col pb-12 ${isMobile ? "pt-[58px]" : "pt-20"}`}>
       {/* Header */}
       <div className="px-4 md:px-8 xl:px-16 py-4">
-        <h1 className="text-2xl font-semibold">Admin</h1>
+        <h1 className="text-[26px] font-semibold text-foreground">Admin</h1>
       </div>
 
       {/* Tabs */}
