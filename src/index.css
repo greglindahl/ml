@@ -3,42 +3,47 @@
 /* Cerebri Sans Font Family */
 @font-face {
   font-family: 'Cerebri Sans';
+  font-style: normal;
+  font-weight: 300;
   src: url('/assets/fonts/cerebrisans-book.woff') format('woff'),
        url('/assets/fonts/cerebrisans-book.ttf') format('truetype');
-  font-weight: 300;
-  font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'Cerebri Sans';
+  font-style: normal;
+  font-weight: 400;
   src: url('/assets/fonts/cerebrisans-regular.woff') format('woff'),
        url('/assets/fonts/cerebrisans-regular.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'Cerebri Sans';
+  font-style: normal;
+  font-weight: 500;
   src: url('/assets/fonts/cerebrisans-medium.woff') format('woff'),
        url('/assets/fonts/cerebrisans-medium.ttf') format('truetype');
-  font-weight: 500;
-  font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'Cerebri Sans';
+  font-style: normal;
+  font-weight: 600;
   src: url('/assets/fonts/cerebrisans-semibold.woff') format('woff'),
        url('/assets/fonts/cerebrisans-semibold.ttf') format('truetype');
-  font-weight: 600;
-  font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'Cerebri Sans';
+  font-style: normal;
+  font-weight: 700;
   src: url('/assets/fonts/cerebrisans-bold.woff') format('woff'),
        url('/assets/fonts/cerebrisans-bold.ttf') format('truetype');
-  font-weight: 700;
-  font-style: normal;
+  font-display: swap;
 }
 
 @tailwind base;
@@ -47,26 +52,132 @@
 
 @layer base {
   :root {
+    /* ===== Greenfly Design Tokens ===== */
+
+    /* Grays */
+    --gf-white: #FFFFFF;
+    --gf-gray-100: #F9FBFD;
+    --gf-gray-200: #EDF2F9;
+    --gf-gray-300: #E3EBF6;
+    --gf-gray-400: #D2DDEC;
+    --gf-gray-500: #B1C2D9;
+    --gf-gray-600: #95AAC9;
+    --gf-gray-700: #6E84A3;
+    --gf-gray-800: #3B506C;
+    --gf-gray-900: #283E59;
+    --gf-black: #12263F;
+
+    /* Brand & semantic */
+    --gf-primary: #2C7BE5;
+    --gf-secondary: #6E84A3;
+    --gf-success: #00D97E;
+    --gf-info: #39AFD1;
+    --gf-warning: #F6C343;
+    --gf-danger: #E63757;
+    --gf-light: #EDF2F9;
+    --gf-dark: #12263F;
+
+    /* Body */
+    --gf-body-bg: #F8FBFD;
+    --gf-body-color: #12263F;
+    --gf-body-secondary: #6E84A3;
+    --gf-border-color: #E3EBF6;
+
+    /* Greenfly contextual */
+    --gf-scheduled: #F3A536;
+    --gf-public-gallery: #9747FF;
+
+    /* Social */
+    --gf-instagram: #E63757;
+    --gf-twitter: #000000;
+    --gf-facebook: #1A41E1;
+    --gf-tiktok: #000000;
+
+    /* Typography */
+    --gf-font-sans: 'Cerebri Sans', Arial, sans-serif;
+    --gf-font-size-xs: 0.625rem;   /* 10px */
+    --gf-font-size-sm: 0.8125rem;  /* 13px */
+    --gf-font-size-base: 0.9375rem;  /* 15px */
+    --gf-font-size-lg: 1.0625rem;  /* 17px */
+    --gf-font-size-xl: 1.2890625rem; /* ~20.6px */
+    --gf-line-height-base: 1.5;
+    --gf-headings-letter-spacing: -0.02em;
+    --gf-font-weight-normal: 400;
+    --gf-font-weight-medium: 500;  /* headings use this */
+    --gf-font-weight-bold: 600;  /* "bold" is 600 */
+    --gf-font-weight-bolder: 700;
+
+    /* Headings */
+    --gf-h1-font-size: 1.625rem;   /* 26px */
+    --gf-h2-font-size: 1.25rem;    /* 20px */
+    --gf-h3-font-size: 1.0625rem;  /* 17px */
+    --gf-h4-font-size: 0.9375rem;  /* 15px */
+    --gf-h5-font-size: 0.8125rem;  /* 13px */
+    --gf-h6-font-size: 0.625rem;   /* 10px */
+
+    /* Spacing (Bootstrap spacer scale, base = 1.5rem) */
+    --gf-spacer: 1.5rem;     /* 24px */
+    --gf-spacer-1: 0.1875rem;  /* 3px  */
+    --gf-spacer-2: 0.375rem;   /* 6px  */
+    --gf-spacer-3: 0.75rem;    /* 12px */
+    --gf-spacer-4: 1.5rem;     /* 24px */
+    --gf-spacer-5: 2.25rem;    /* 36px */
+    --gf-spacer-6: 4.5rem;     /* 72px */
+
+    /* Radii */
+    --gf-radius-xs: 0.1875rem;  /* 3px */
+    --gf-radius-sm: 0.25rem;    /* 4px */
+    --gf-radius: 0.375rem;      /* 6px */
+    --gf-radius-lg: 0.5rem;     /* 8px */
+
+    /* Shadows */
+    --gf-shadow-card: 0 0.75rem 1.5rem rgba(18,38,63,0.03);
+    --gf-shadow-lift: 0 1rem 2.5rem rgba(18,38,63,0.1),
+                      0 0.5rem 1rem -0.75rem rgba(18,38,63,0.1);
+
+    /* Layout */
+    --gf-sidebar-width: 250px;
+    --gf-sidebar-width-collapsed: 25px;
+    --gf-sidebar-width-sm: 66px;
+    --gf-header-height: 80px;
+    --gf-header-height-mobile: 58px;
+
+    /* Avatars */
+    --gf-avatar-xs: 1.625rem;  /* 26px */
+    --gf-avatar-sm: 2.5rem;    /* 40px */
+    --gf-avatar: 3rem;      /* 48px */
+    --gf-avatar-lg: 4rem;      /* 64px */
+    --gf-avatar-xl: 5.125rem;  /* 82px */
+    --gf-avatar-xxl: 8rem;      /* 128px */
+
+    /* Container max-widths */
+    --gf-container-sm: 540px;
+    --gf-container-md: 720px;
+    --gf-container-lg: 960px;
+    --gf-container-xl: 1140px;
+
+    /* ===== Shadcn/Tailwind CSS Variables (HSL format) ===== */
+
     /* Greenfly Primary Colors */
     --primary: 210 72% 53%;           /* #2C7BE5 */
     --primary-foreground: 0 0% 100%;  /* white */
-    
+
     --secondary: 215 22% 54%;         /* #6E84A3 */
     --secondary-foreground: 0 0% 100%;
-    
+
     --success: 157 100% 42%;          /* #00D97E */
     --success-foreground: 0 0% 100%;
-    
+
     --info: 193 59% 52%;              /* #39AFD1 */
     --info-foreground: 0 0% 100%;
-    
+
     --warning: 42 91% 61%;            /* #F6C343 */
     --warning-foreground: 213 35% 16%;
-    
+
     --destructive: 351 78% 56%;       /* #E63757 */
     --destructive-foreground: 0 0% 100%;
 
-    /* Greenfly Grayscale */
+    /* Greenfly Grayscale (HSL) */
     --gray-100: 213 50% 98%;          /* #F9FBFD */
     --gray-200: 214 45% 95%;          /* #EDF2F9 */
     --gray-300: 214 42% 93%;          /* #E3EBF6 */
@@ -81,20 +192,20 @@
     /* Background & Surfaces */
     --background: 210 50% 98%;        /* #F8FBFD */
     --foreground: 213 53% 16%;        /* #12263F (black) */
-    
+
     --card: 0 0% 100%;                /* white */
     --card-foreground: 213 53% 16%;   /* black */
-    
+
     --popover: 0 0% 100%;
     --popover-foreground: 213 53% 16%;
-    
+
     /* Tooltip - Light Mode */
-    --tooltip: 216 40% 93%;             /* #E3EBF6 */
-    --tooltip-foreground: 213 56% 16%;  /* #12263F */
-    
+    --tooltip: 214 42% 93%;             /* #E3EBF6 (gray-300) */
+    --tooltip-foreground: 213 53% 16%;  /* #12263F */
+
     --muted: 213 50% 98%;             /* gray-100 */
-    --muted-foreground: 214 25% 69%; /* gray-600 */
-    
+    --muted-foreground: 215 22% 54%; /* gray-700 */
+
     --accent: 214 45% 95%;            /* gray-200 */
     --accent-foreground: 213 53% 16%;
 
@@ -103,13 +214,13 @@
     --input: 214 38% 87%;             /* gray-400 */
     --ring: 210 72% 53%;              /* primary */
 
-    --radius: 0.375rem;
+    --radius: 0.375rem;               /* 6px */
 
-    /* Contextual Colors */
+    /* Contextual Colors (HSL) */
     --scheduled: 33 89% 58%;          /* #F3A536 */
     --public-gallery: 264 100% 64%;   /* #9747FF */
 
-    /* Social Platform Colors */
+    /* Social Platform Colors (HSL) */
     --instagram: 351 78% 56%;         /* #E63757 */
     --twitter: 0 0% 0%;               /* #000000 */
     --facebook: 228 88% 49%;          /* #1A41E1 */
@@ -123,7 +234,7 @@
     --nav-text-active: 0 0% 100%;     /* white */
     --nav-active-border: 210 72% 53%; /* primary */
     --nav-heading: 214 25% 69%;       /* gray-600 */
-    
+
     /* Top Nav */
     --topnav-icon: 214 25% 69%;       /* gray-600 */
     --topnav-icon-hover: 215 22% 54%; /* gray-700 */
@@ -192,7 +303,7 @@
     --nav-text-hover: 213 50% 98%;
     --nav-text-active: 213 50% 98%;
     --nav-active-border: 210 72% 53%;
-    
+
     --sidebar-background: 213 53% 12%;
     --sidebar-foreground: 214 25% 69%;
     --sidebar-primary: 210 72% 53%;
@@ -210,17 +321,34 @@
   }
 
   html {
-    /* Prevent layout shift when content changes height (e.g., grid <-> table toggles) */
+    /* Portal uses 15px base font, not 16px. 93.75% of 16px = 15px */
+    font-size: 93.75%;
+    /* Prevent layout shift when content changes height */
     scrollbar-gutter: stable;
   }
 
   body {
     @apply bg-background text-foreground font-sans;
-    /* Keep a consistent vertical scrollbar to avoid horizontal “jumping” */
+    font-size: var(--gf-font-size-base);
+    line-height: var(--gf-line-height-base);
+    /* Keep a consistent vertical scrollbar to avoid horizontal "jumping" */
     overflow-y: scroll;
     /* Avoid scroll anchoring adjustments when swapping large DOM blocks */
     overflow-anchor: none;
   }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: var(--gf-font-weight-medium); /* 500 */
+    letter-spacing: var(--gf-headings-letter-spacing);
+    line-height: 1.1;
+  }
+
+  h1 { font-size: var(--gf-h1-font-size); }
+  h2 { font-size: var(--gf-h2-font-size); }
+  h3 { font-size: var(--gf-h3-font-size); }
+  h4 { font-size: var(--gf-h4-font-size); }
+  h5 { font-size: var(--gf-h5-font-size); }
+  h6 { font-size: var(--gf-h6-font-size); }
 }
 
 @layer utilities {

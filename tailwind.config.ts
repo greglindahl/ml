@@ -14,7 +14,34 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Cerebri Sans', 'system-ui', 'sans-serif'],
+        sans: ['"Cerebri Sans"', 'Arial', 'sans-serif'],
+      },
+      fontSize: {
+        // Portal uses 15px base, not 16px
+        xs:   ['0.625rem',  { lineHeight: '1.5' }],   // 10px
+        sm:   ['0.8125rem', { lineHeight: '1.5' }],   // 13px
+        base: ['0.9375rem', { lineHeight: '1.5' }],   // 15px
+        lg:   ['1.0625rem', { lineHeight: '1.5' }],   // 17px
+        xl:   ['1.2890625rem', { lineHeight: '1.25' }], // ~20.6px
+        // Headings
+        'h6': ['0.625rem',  { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '500' }],
+        'h5': ['0.8125rem', { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '500' }],
+        'h4': ['0.9375rem', { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '500' }],
+        'h3': ['1.0625rem', { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '500' }],
+        'h2': ['1.25rem',   { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '500' }],
+        'h1': ['1.625rem',  { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '500' }],
+        // Display sizes
+        'display-4': ['2rem',     { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '600' }],
+        'display-3': ['2.625rem', { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '600' }],
+        'display-2': ['3.25rem',  { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '600' }],
+        'display-1': ['4rem',     { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '600' }],
+      },
+      fontWeight: {
+        normal: '400',
+        medium: '500',  // headings
+        semibold: '600', // "bold" in this system is 600
+        bold: '600',    // bold in this system is 600, NOT 700
+        bolder: '700',
       },
       colors: {
         border: "hsl(var(--border))",
@@ -25,6 +52,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          hover: '#1862C2',
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -46,6 +74,15 @@ export default {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
+        danger: {
+          DEFAULT: '#E63757',
+        },
+        light: {
+          DEFAULT: '#EDF2F9',
+        },
+        dark: {
+          DEFAULT: '#12263F',
+        },
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
@@ -62,27 +99,34 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Greenfly Grayscale
+        // Greenfly Grayscale (direct hex for utility)
         gray: {
-          100: "hsl(var(--gray-100))",
-          200: "hsl(var(--gray-200))",
-          300: "hsl(var(--gray-300))",
-          400: "hsl(var(--gray-400))",
-          500: "hsl(var(--gray-500))",
-          600: "hsl(var(--gray-600))",
-          700: "hsl(var(--gray-700))",
-          800: "hsl(var(--gray-800))",
-          900: "hsl(var(--gray-900))",
+          100: '#F9FBFD',
+          200: '#EDF2F9',
+          300: '#E3EBF6',
+          400: '#D2DDEC',
+          500: '#B1C2D9',
+          600: '#95AAC9',
+          700: '#6E84A3',
+          800: '#3B506C',
+          900: '#283E59',
         },
-        black: "hsl(var(--black))",
+        black: '#12263F',
+        // Body colors
+        body: {
+          DEFAULT: '#12263F',
+          bg: '#F8FBFD',
+          secondary: '#6E84A3',
+        },
         // Contextual
-        scheduled: "hsl(var(--scheduled))",
-        "public-gallery": "hsl(var(--public-gallery))",
+        scheduled: '#F3A536',
+        "public-gallery": '#9747FF',
         // Social
-        instagram: "hsl(var(--instagram))",
-        twitter: "hsl(var(--twitter))",
-        facebook: "hsl(var(--facebook))",
-        tiktok: "hsl(var(--tiktok))",
+        instagram: { DEFAULT: '#E63757', light: '#FAD9E0' },
+        twitter: { DEFAULT: '#000000', light: '#E6E6E6' },
+        facebook: { DEFAULT: '#1A41E1', light: '#DBE2F9' },
+        tiktok: { DEFAULT: '#000000', light: '#E6E6E6' },
+        'additional-platforms': { DEFAULT: '#5C5C5C', light: '#828282' },
         // Navigation
         nav: {
           background: "hsl(var(--nav-background))",
@@ -125,13 +169,45 @@ export default {
           focus: "hsl(var(--channel-focus))",
         },
       },
-      boxShadow: {
-        channel: "0 0 7px 0 rgba(0, 0, 0, 0.19)",
+      spacing: {
+        // Bootstrap/Dashkit spacers (base $spacer = 1.5rem = 24px)
+        'gf-1': '0.1875rem',  // 3px  ($spacer * .125)
+        'gf-2': '0.375rem',   // 6px  ($spacer * .25)
+        'gf-3': '0.75rem',    // 12px ($spacer * .5)
+        'gf-4': '1.5rem',     // 24px ($spacer)
+        'gf-5': '2.25rem',    // 36px ($spacer * 1.5)
+        'gf-6': '4.5rem',     // 72px ($spacer * 3)
+        'gf-7': '6.75rem',    // 108px ($spacer * 4.5)
+        'gf-8': '13.5rem',    // 216px ($spacer * 9)
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        xs:   '0.1875rem', // 3px
+        sm:   '0.25rem',   // 4px
+        DEFAULT: '0.375rem', // 6px
+        md: '0.375rem',    // 6px (alias)
+        lg:   '0.5rem',    // 8px
+        pill: '200px',
+      },
+      boxShadow: {
+        card:    '0 0.75rem 1.5rem rgba(18,38,63,0.03)',
+        lift:    '0 1rem 2.5rem rgba(18,38,63,0.1), 0 0.5rem 1rem -0.75rem rgba(18,38,63,0.1)',
+        'lift-lg': '0 2rem 5rem rgba(18,38,63,0.1), 0 0.5rem 1rem -0.75rem rgba(18,38,63,0.05)',
+        channel: '0 0 7px 0 rgba(0, 0, 0, 0.19)',
+      },
+      screens: {
+        // Bootstrap 5.3 breakpoints
+        sm:  '576px',
+        md:  '768px',
+        lg:  '992px',
+        xl:  '1200px',
+        xxl: '1400px',
+      },
+      maxWidth: {
+        // Container max-widths
+        'container-sm': '540px',
+        'container-md': '720px',
+        'container-lg': '960px',
+        'container-xl': '1140px',
       },
       keyframes: {
         "accordion-down": {
