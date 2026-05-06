@@ -250,25 +250,10 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
         <div className="border-b flex-shrink-0">
-          <TabsList className="bg-transparent h-auto p-0 gap-6">
-            <TabsTrigger
-              value="assets"
-              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              Assets
-            </TabsTrigger>
-            <TabsTrigger
-              value="overview"
-              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              Overview
-            </TabsTrigger>
-            <TabsTrigger
-              value="public-settings"
-              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              Public Settings
-            </TabsTrigger>
+          <TabsList>
+            <TabsTrigger value="assets">Assets</TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="public-settings">Public Settings</TabsTrigger>
           </TabsList>
         </div>
 

@@ -15,43 +15,13 @@ export function StatsScreen({ isMobile = false }: StatsScreenProps) {
       {/* Tabs */}
       <Tabs defaultValue="overview" className="flex-1 flex flex-col px-4 md:px-8 xl:px-16">
         <div className="border-b">
-          <TabsList className="bg-transparent h-auto p-0 gap-6">
-            <TabsTrigger
-              value="overview"
-              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              Overview
-            </TabsTrigger>
-            <TabsTrigger
-              value="social-shares"
-              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              Social Shares
-            </TabsTrigger>
-            <TabsTrigger
-              value="activity"
-              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              Activity
-            </TabsTrigger>
-            <TabsTrigger
-              value="share-requests"
-              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              Share Requests
-            </TabsTrigger>
-            <TabsTrigger
-              value="gallery-downloads"
-              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              Gallery Downloads
-            </TabsTrigger>
-            <TabsTrigger
-              value="user-stats"
-              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              User Stats
-            </TabsTrigger>
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="social-shares">Social Shares</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="share-requests">Share Requests</TabsTrigger>
+            <TabsTrigger value="gallery-downloads">Gallery Downloads</TabsTrigger>
+            <TabsTrigger value="user-stats">User Stats</TabsTrigger>
           </TabsList>
         </div>
 

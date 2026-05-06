@@ -383,25 +383,10 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
         <div className="border-b flex-shrink-0">
-          <TabsList className="bg-transparent h-auto p-0 gap-6">
-            <TabsTrigger
-              value="assets"
-              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              Assets
-            </TabsTrigger>
-            <TabsTrigger
-              value="galleries"
-              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              Galleries
-            </TabsTrigger>
-            <TabsTrigger
-              value="folders"
-              className="bg-transparent px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              Folders
-            </TabsTrigger>
+          <TabsList>
+            <TabsTrigger value="assets">Assets</TabsTrigger>
+            <TabsTrigger value="galleries">Galleries</TabsTrigger>
+            <TabsTrigger value="folders">Folders</TabsTrigger>
           </TabsList>
         </div>
 
