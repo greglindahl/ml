@@ -396,10 +396,10 @@ export function FilterBar({
       const dropdownMenu = <DropdownMenu key={filter.id}>
             <DropdownMenuTrigger asChild>
               {isActive ? (compactMode ? (
-                <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-primary/10 border-primary text-primary">
+                <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-primary/10 border-primary text-primary">
                   <span>{filter.label}</span>
                   <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">{totalActiveCount}</span>
-                  <ChevronDown className="w-3 h-3 opacity-50" />
+                  <ChevronDown className="w-4 h-4 opacity-50" />
                 </Button>
               ) : <div className="inline-flex items-center gap-1 h-8 px-1.5 border border-input rounded-md bg-white min-w-[120px] max-w-[280px]">
                   <div className="flex flex-wrap gap-1 flex-1">
@@ -422,9 +422,9 @@ export function FilterBar({
                     </button>
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                   </div>
-                </div>) : <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-white" ref={isDateFilter ? dateFilterRef : undefined}>
+                </div>) : <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300" ref={isDateFilter ? dateFilterRef : undefined}>
                   <span>{filter.label}</span>
-                  <ChevronDown className="w-3 h-3 opacity-50" />
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
                 </Button>}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="bg-white z-50 min-w-[200px]" onCloseAutoFocus={e => e.preventDefault()}>
@@ -594,10 +594,10 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className={cn("h-8 gap-1.5 px-2.5 text-xs font-medium bg-white", moreCount > 0 && "bg-primary/10 border-primary text-primary")}>
+              <Button variant="outline" size="sm" className={cn("h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300", moreCount > 0 && "bg-primary/10 border-primary text-primary")}>
                 <span>More</span>
                 {moreCount > 0 && <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">{moreCount}</span>}
-                <ChevronDown className="w-3 h-3 opacity-50" />
+                <ChevronDown className="w-4 h-4 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="bg-white z-50 min-w-[180px]">
@@ -659,7 +659,7 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
         variant="outline"
         size="icon"
         className={cn(
-          "h-8 w-8 flex-shrink-0",
+          "h-10 w-10 flex-shrink-0 rounded-md border-gray-300",
           isBrandedActive && "bg-primary/10 border-primary text-primary"
         )}
         onClick={() => {

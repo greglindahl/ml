@@ -270,12 +270,12 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             <div className="flex items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-background">
+                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300">
                     120 per Page
-                    <ChevronDown className="w-3 h-3 opacity-50" />
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent className="bg-white">
                   <DropdownMenuItem>24 per Page</DropdownMenuItem>
                   <DropdownMenuItem>48 per Page</DropdownMenuItem>
                   <DropdownMenuItem>120 per Page</DropdownMenuItem>
@@ -283,20 +283,20 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
               </DropdownMenu>
 
               {assetsViewMode === "list" && (
-                <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-background">
-                  <Settings2 className="w-3.5 h-3.5" />
+                <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300">
+                  <Settings2 className="w-4 h-4" />
                   Manage Columns
                 </Button>
               )}
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-background">
+                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300">
                     Sort
-                    <ChevronDown className="w-3 h-3 opacity-50" />
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent className="bg-white">
                   <DropdownMenuItem>Date (Newest)</DropdownMenuItem>
                   <DropdownMenuItem>Date (Oldest)</DropdownMenuItem>
                   <DropdownMenuItem>Name (A-Z)</DropdownMenuItem>
@@ -304,27 +304,27 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <div className="flex items-center border rounded-md bg-background">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className={`h-8 w-8 rounded-r-none ${assetsViewMode === "grid" ? "bg-muted" : ""}`}
+              <div className="flex items-center border border-gray-300 rounded-md bg-white">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`h-10 w-10 rounded-r-none ${assetsViewMode === "grid" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("grid")}
                 >
                   <Grid3X3 className="w-4 h-4" />
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className={`h-8 w-8 rounded-none border-x ${assetsViewMode === "list" ? "bg-muted" : ""}`}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`h-10 w-10 rounded-none border-x border-gray-300 ${assetsViewMode === "list" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("list")}
                 >
                   <List className="w-4 h-4" />
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className={`h-8 w-8 rounded-l-none ${selectedAssets.size > 0 ? "bg-muted" : ""}`}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`h-10 w-10 rounded-l-none ${selectedAssets.size > 0 ? "bg-gray-100" : ""}`}
                   onClick={() => {
                     if (selectedAssets.size > 0) {
                       setSelectedAssets(new Set());

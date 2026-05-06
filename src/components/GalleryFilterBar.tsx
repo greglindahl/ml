@@ -199,10 +199,10 @@ export function GalleryFilterBar({ onArchivedChange }: GalleryFilterBarProps = {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-card">
-                
+                className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300">
+
                   <span>{filter.label}</span>
-                  <ChevronDown className="w-3 h-3 opacity-50" />
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
                 </Button>
               }
             </DropdownMenuTrigger>
