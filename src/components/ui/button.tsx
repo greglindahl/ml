@@ -5,22 +5,48 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-[15px] font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-[15px] font-medium tracking-tight ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        // Primary - solid blue background
+        default: "bg-primary text-white hover:bg-primary/90",
+        // Secondary - gray background
+        secondary: "bg-[#E3EBF6] text-foreground hover:bg-[#D2DCE9]",
+        // Primary Outline - blue border, transparent bg
+        "primary-outline": "border border-primary bg-transparent text-primary hover:bg-primary/5",
+        // Secondary Outline - gray border, transparent bg
+        outline: "border border-[#D2DDEC] bg-transparent text-foreground hover:bg-accent",
+        // Light - light gray background
+        light: "bg-[#EDF2F9] text-foreground hover:bg-[#E3EBF6]",
+        // Dark - dark navy background
+        dark: "bg-[#12263F] text-white hover:bg-[#1a3a5c]",
+        // Danger - red background
+        destructive: "bg-destructive text-white hover:bg-destructive/90",
+        // Warning - amber/yellow background
+        warning: "bg-[#F6C343] text-[#12263F] hover:bg-[#E5B43E]",
+        // Success - green background
+        success: "bg-[#00D97E] text-white hover:bg-[#00C471]",
+        // Info - cyan background
+        info: "bg-[#39AAF5] text-white hover:bg-[#2E9CE5]",
+        // White - white background with border
+        white: "bg-white text-foreground border border-[#D2DDEC] hover:bg-gray-50",
+        // Link - no background, just text
+        link: "text-primary underline-offset-4 hover:underline bg-transparent",
+        // Ghost - no background, hover shows bg
         ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+        // Small - 28px height
+        sm: "h-7 px-3 py-1 text-[13px]",
+        // Medium - 40px height (default)
+        default: "h-10 px-3 py-2",
+        // Large - 48px height
+        lg: "h-12 px-4 py-3",
+        // Icon sizes (square buttons)
+        icon: "h-10 w-10 p-0",
+        "icon-sm": "h-7 w-7 p-0 text-[13px]",
+        "icon-lg": "h-12 w-12 p-0",
       },
     },
     defaultVariants: {
