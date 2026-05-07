@@ -894,7 +894,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
 
             {/* Filters and Controls - Single Row */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-              <FilterBar onFilterChange={handleFilterChange} onCustomDateChange={handleCustomDateChange} onFavoritesToggle={setIsBrandedActive} compactMode={true} handleRef={filterBarHandleRef} />
+              <FilterBar onFilterChange={handleFilterChange} onCustomDateChange={handleCustomDateChange} onBrandedToggle={setIsBrandedActive} compactMode={true} handleRef={filterBarHandleRef} disabledValues={searchSelectedFacets.filter(f => f.type !== "search").map(f => ({ value: f.value, category: f.category }))} onRemoveDisabledValue={(value) => { searchHandleRef.current?.removeFacet(value); }} />
 
               <div className="flex items-center gap-2">
                 <DropdownMenu>
