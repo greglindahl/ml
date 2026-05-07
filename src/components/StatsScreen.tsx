@@ -17,11 +17,8 @@ export function StatsScreen({ isMobile = false }: StatsScreenProps) {
         <div className="border-b">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="social-shares">Social Shares</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
-            <TabsTrigger value="share-requests">Share Requests</TabsTrigger>
-            <TabsTrigger value="gallery-downloads">Gallery Downloads</TabsTrigger>
-            <TabsTrigger value="user-stats">User Stats</TabsTrigger>
+            <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="social-activity">Social Activity</TabsTrigger>
           </TabsList>
         </div>
 
@@ -31,7 +28,13 @@ export function StatsScreen({ isMobile = false }: StatsScreenProps) {
           </div>
         </TabsContent>
 
-        <TabsContent value="social-shares" className="flex-1 py-6 mt-0">
+        <TabsContent value="users" className="flex-1 py-6 mt-0">
+          <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
+            <p>Users content placeholder</p>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="social-activity" className="flex-1 py-6 mt-0">
           <Tabs defaultValue="verified-shares" className="flex-1 flex flex-col">
             <TabsList className="bg-muted/50 h-9 p-1 w-fit">
               <TabsTrigger
@@ -60,30 +63,6 @@ export function StatsScreen({ isMobile = false }: StatsScreenProps) {
               </div>
             </TabsContent>
           </Tabs>
-        </TabsContent>
-
-        <TabsContent value="activity" className="flex-1 py-6 mt-0">
-          <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
-            <p>Activity content placeholder</p>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="share-requests" className="flex-1 py-6 mt-0">
-          <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
-            <p>Share Requests content placeholder</p>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="gallery-downloads" className="flex-1 py-6 mt-0">
-          <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
-            <p>Gallery Downloads content placeholder</p>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="user-stats" className="flex-1 py-6 mt-0">
-          <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
-            <p>User Stats content placeholder</p>
-          </div>
         </TabsContent>
       </Tabs>
     </div>
