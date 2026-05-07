@@ -253,7 +253,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="outline" size="icon" className="border-primary text-primary hover:bg-primary/5">
                   <MoreVertical className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
