@@ -1,22 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronDown, Calendar as CalendarIcon, X, Search, ChevronRight, Folder, Images, Palette, Image as ImageIcon, Video, RectangleHorizontal, Square, RectangleVertical, Proportions, Info, type LucideIcon } from "lucide-react";
+import { ChevronDown, X, Heart, Settings, Image as ImageIcon, Video, Info, type LucideIcon } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 // Popover removed — custom date uses a plain positioned div
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-import { folders, FolderItem } from "@/lib/mockFolderData";
-import { AI_GENERATED_TAGS, mockLibraryAssets } from "@/lib/mockLibraryData";
+import { mockLibraryAssets } from "@/lib/mockLibraryData";
 interface FilterOption {
   label: string;
   value: string;
-  depth?: number;
-  type?: "folder" | "gallery";
-  group?: string;
   count?: number;
   icon?: LucideIcon;
 }
@@ -26,83 +21,43 @@ interface FilterConfig {
   icon: React.ReactNode;
   options: FilterOption[];
   multiSelect?: boolean;
-  isTreeStructure?: boolean;
-  hasGroups?: boolean; // Whether options are grouped
 }
 
-// Helper to flatten folder tree into options with depth (folders only, no galleries)
-function flattenFolderTree(items: FolderItem[], depth = 0): FilterOption[] {
-  const result: FilterOption[] = [];
-  items.forEach(item => {
-    if (item.id !== "all" && item.type === "folder") {
-      // Skip "All Files" and galleries
-      result.push({
-        label: item.name,
-        value: item.id,
-        depth,
-        type: item.type
-      });
-      if (item.children) {
-        result.push(...flattenFolderTree(item.children, depth + 1));
-      }
-    }
-  });
-  return result;
-}
-const folderOptions = flattenFolderTree(folders);
-// Known filter values to match against asset tags
-const PEOPLE_NAMES = ["Lebron James", "Steph Curry", "Kevin Durant", "Giannis Antetokounmpo", "Luka Doncic"];
-const SCENE_VALUES: Record<string, string> = {
-  "dunk": "Dunk", "celebration": "Celebration", "arrival": "Arrival",
-  "interview": "Interview", "warm-up": "Warm-up", "timeout": "Timeout",
-  "huddle": "Huddle", "victory": "Victory", "injury": "Injury",
-};
-const BRAND_VALUES: Record<string, string> = {
-  "nike": "Nike", "adidas": "Adidas", "under armour": "Under Armour", "puma": "Puma",
-};
 const CREATOR_MAP: Record<string, string> = { john: "John Smith", jane: "Jane Doe", alex: "Alex Johnson" };
 
-function computeTagMatchCounts(values: string[], labelMap?: Record<string, string>): FilterOption[] {
-  const counts: Record<string, number> = {};
-  values.forEach(v => { counts[v] = 0; });
-  mockLibraryAssets.forEach(asset => {
-    asset.tags.forEach(tag => {
-      const lower = tag.toLowerCase();
-      values.forEach(v => {
-        if (lower === v.toLowerCase()) counts[v] = (counts[v] || 0) + 1;
-      });
-    });
-  });
-  return Object.entries(counts)
-    .filter(([, c]) => c > 0)
-    .sort(([, a], [, b]) => b - a)
-    .map(([v, count]) => ({ label: labelMap ? labelMap[v] || v : v, value: v, count }));
-}
-
 const filters: FilterConfig[] = [{
-  id: "people",
-  label: "People",
+  id: "content-type",
+  label: "Type",
   icon: null,
   multiSelect: true,
-  options: computeTagMatchCounts(PEOPLE_NAMES),
+  options: (() => {
+    const counts: Record<string, number> = {};
+    mockLibraryAssets.forEach(asset => {
+      counts[asset.type] = (counts[asset.type] || 0) + 1;
+    });
+    const typeIcons: Record<string, LucideIcon> = { image: ImageIcon, video: Video };
+    return Object.entries(counts)
+      .sort(([, a], [, b]) => b - a)
+      .map(([type, count]) => ({ label: type.charAt(0).toUpperCase() + type.slice(1), value: type, count, icon: typeIcons[type] }));
+  })(),
 }, {
-  id: "scene",
-  label: "Scene",
+  id: "source",
+  label: "Source",
   icon: null,
   multiSelect: true,
-  options: computeTagMatchCounts(Object.keys(SCENE_VALUES), SCENE_VALUES),
-}, {
-  id: "brand",
-  label: "Brand",
-  icon: null,
-  multiSelect: true,
-  options: computeTagMatchCounts(Object.keys(BRAND_VALUES), BRAND_VALUES),
+  options: [
+    { label: "Posted Content", value: "posted-content", count: 12 },
+    { label: "Imported Content", value: "imported-content", count: 8 },
+    { label: "Published Content", value: "published-content", count: 15 },
+    { label: "Uploaded Content", value: "uploaded-content", count: 22 },
+    { label: "Engage Content", value: "engage-content", count: 5 },
+    { label: "Requested Content", value: "requested-content", count: 3 },
+  ],
 }, {
   id: "tags",
   label: "Tags",
   icon: null,
   multiSelect: true,
-  hasGroups: false,
   options: (() => {
     const tagCounts: Record<string, number> = {};
     mockLibraryAssets.forEach(asset => {
@@ -135,30 +90,8 @@ const filters: FilterConfig[] = [{
       .map(([id, count]) => ({ label: CREATOR_MAP[id] || id, value: id, count }));
   })(),
 }, {
-  id: "content-type",
-  label: "Type",
-  icon: null,
-  multiSelect: true,
-  options: (() => {
-    const counts: Record<string, number> = {};
-    mockLibraryAssets.forEach(asset => {
-      counts[asset.type] = (counts[asset.type] || 0) + 1;
-    });
-    const typeIcons: Record<string, LucideIcon> = { image: ImageIcon, video: Video };
-    return Object.entries(counts)
-      .sort(([, a], [, b]) => b - a)
-      .map(([type, count]) => ({ label: type.charAt(0).toUpperCase() + type.slice(1), value: type, count, icon: typeIcons[type] }));
-  })(),
-}, {
-  id: "folders",
-  label: "Folders",
-  icon: null,
-  multiSelect: true,
-  isTreeStructure: true,
-  options: folderOptions
-}, {
   id: "date-range",
-  label: "Date",
+  label: "Capture Date",
   icon: null,
   options: [{
     label: "Last 7 days",
@@ -183,20 +116,15 @@ const filters: FilterConfig[] = [{
     value: "custom"
   }]
 }, {
-  id: "aspect-ratio",
-  label: "Ratio",
+  id: "view",
+  label: "View",
   icon: null,
   multiSelect: true,
-  options: (() => {
-    const counts: Record<string, number> = {};
-    mockLibraryAssets.forEach(asset => {
-      counts[asset.aspectRatio] = (counts[asset.aspectRatio] || 0) + 1;
-    });
-    const ratioIcons: Record<string, LucideIcon> = { "16:9": RectangleHorizontal, "1:1": Square, "9:16": RectangleVertical, "4:3": Proportions };
-    return Object.entries(counts)
-      .sort(([, a], [, b]) => b - a)
-      .map(([ratio, count]) => ({ label: ratio, value: ratio, count, icon: ratioIcons[ratio] }));
-  })(),
+  options: [
+    { label: "All", value: "all", count: 65 },
+    { label: "Viewed", value: "viewed", count: 42 },
+    { label: "Not Viewed", value: "not-viewed", count: 23 },
+  ],
 }];
 
 export interface CustomDateRange {
@@ -212,9 +140,7 @@ interface FilterBarProps {
   onFilterChange?: (filterId: string, values: string[]) => void;
   onCustomDateChange?: (range: CustomDateRange) => void;
   hideFilters?: string[];
-  onBrandedToggle?: (active: boolean) => void;
-  disabledValues?: { value: string; category: string }[];
-  onRemoveDisabledValue?: (value: string, category: string) => void;
+  onFavoritesToggle?: (active: boolean) => void;
   compactMode?: boolean;
   handleRef?: React.MutableRefObject<FilterBarHandle | null>;
 }
@@ -222,9 +148,7 @@ export function FilterBar({
   onFilterChange,
   onCustomDateChange,
   hideFilters = [],
-  onBrandedToggle,
-  disabledValues = [],
-  onRemoveDisabledValue,
+  onFavoritesToggle,
   compactMode = false,
   handleRef,
 }: FilterBarProps) {
@@ -234,8 +158,7 @@ export function FilterBar({
     value: string;
     label: string;
   }[]>>({});
-  const [isBrandedActive, setIsBrandedActive] = useState(false);
-  const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
+  const [isFavoritesActive, setIsFavoritesActive] = useState(false);
   const [customDateRange, setCustomDateRange] = useState<CustomDateRange>({
     from: undefined,
     to: undefined
@@ -385,12 +308,7 @@ export function FilterBar({
   return <div className="flex flex-wrap items-center gap-1.5">
       {visibleFilters.map(filter => {
       const selected = activeFilters[filter.id] || [];
-      const categoryMap: Record<string, string> = { people: "People", scene: "Scene", brand: "Brand", tags: "Tag" };
-      const disabledForFilter = disabledValues.filter(
-        dv => dv.category.toLowerCase() === (categoryMap[filter.id] || "").toLowerCase()
-      );
-      const totalActiveCount = selected.length + disabledForFilter.length;
-      const isActive = totalActiveCount > 0;
+      const isActive = selected.length > 0;
       const isMulti = filter.multiSelect;
       const isDateFilter = filter.id === "date-range";
       const dropdownMenu = <DropdownMenu key={filter.id}>
@@ -398,7 +316,7 @@ export function FilterBar({
               {isActive ? (compactMode ? (
                 <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-primary/10 border-primary text-primary">
                   <span>{filter.label}</span>
-                  <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">{totalActiveCount}</span>
+                  <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">{selected.length}</span>
                   <ChevronDown className="w-4 h-4 opacity-50" />
                 </Button>
               ) : <div className="inline-flex items-center gap-1 h-8 px-1.5 border border-input rounded-md bg-white min-w-[120px] max-w-[280px]">
@@ -429,72 +347,29 @@ export function FilterBar({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="bg-white z-50 min-w-[200px]" onCloseAutoFocus={e => e.preventDefault()}>
               <div className="max-h-[280px] overflow-y-auto">
-                {/* Sub-header for People, Scene, Brand filters */}
-                {(filter.id === "people" || filter.id === "scene" || filter.id === "brand") && <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5 bg-muted/30">
-                    <i className="bi bi-stars text-primary/70" />
-                    AI-Identified
-                  </div>}
-                {/* Grouped options for filters with hasGroups */}
-                {filter.hasGroups ? (() => {
-              const filteredOptions = filter.options;
-
-              // Group options by their group property
-              const groups = filteredOptions.reduce((acc, option) => {
-                const group = option.group || "Other";
-                if (!acc[group]) acc[group] = [];
-                acc[group].push(option);
-                return acc;
-              }, {} as Record<string, FilterOption[]>);
-              const groupOrder = ["Sports", "Teams", "Categories", "Shot Types", "Other"];
-              const sortedGroups = Object.entries(groups).sort(([a], [b]) => groupOrder.indexOf(a) - groupOrder.indexOf(b));
-              if (filteredOptions.length === 0) {
-                return <div className="px-2 py-1.5 text-xs text-muted-foreground text-center">
-                          No results found
-                        </div>;
-              }
-              return sortedGroups.map(([groupName, options]) => <div key={groupName}>
-                        <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider mt-1 first:mt-0">
-                          {groupName}
-                        </div>
-                        {options.map(option => {
-                  const isAiGenerated = AI_GENERATED_TAGS.has(option.value) || AI_GENERATED_TAGS.has(option.label);
-                  const showSparkle = isAiGenerated && option.group !== "Sports";
-                  return <DropdownMenuCheckboxItem key={option.value} checked={selected.some(s => s.value === option.value)} onCheckedChange={checked => handleMultiSelect(filter.id, option.value, option.label, checked)} className="flex items-center justify-between gap-2">
-                              <span>{option.label}</span>
-                              {showSparkle && <i className="bi bi-stars text-primary/70 text-xs" />}
-                            </DropdownMenuCheckboxItem>;
+                {filter.options.map(option => {
+                  return isMulti ? (
+                    <DropdownMenuCheckboxItem
+                      key={option.value}
+                      checked={selected.some(s => s.value === option.value)}
+                      onCheckedChange={checked => handleMultiSelect(filter.id, option.value, option.label, checked)}
+                      className="flex items-center gap-2"
+                      onSelect={e => e.preventDefault()}
+                    >
+                      {option.icon && <option.icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
+                      <span className="flex-1">{option.label}</span>
+                      {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>}
+                    </DropdownMenuCheckboxItem>
+                  ) : (
+                    <DropdownMenuCheckboxItem
+                      key={option.value}
+                      checked={selected.some(s => s.value === option.value)}
+                      onCheckedChange={() => handleSingleSelect(filter.id, option.value, option.label)}
+                    >
+                      {option.label}
+                    </DropdownMenuCheckboxItem>
+                  );
                 })}
-                      </div>);
-            })() : <>
-                    {filter.options.map(option => {
-                const isTreeItem = filter.isTreeStructure && option.depth !== undefined;
-                const indent = isTreeItem ? option.depth! * 12 : 0;
-                const Icon = option.type === "gallery" ? Images : Folder;
-                const categoryMap: Record<string, string> = { people: "People", scene: "Scene", brand: "Brand", tags: "Tag" };
-                const isDisabledBySearch = disabledValues.some(
-                  dv => dv.value.toLowerCase() === option.value.toLowerCase() && dv.category.toLowerCase() === (categoryMap[filter.id] || "").toLowerCase()
-                );
-return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.some(s => s.value === option.value) || isDisabledBySearch} onCheckedChange={checked => {
-                  if (isDisabledBySearch) {
-                    onRemoveDisabledValue?.(option.value, categoryMap[filter.id] || "");
-                  } else {
-                    handleMultiSelect(filter.id, option.value, option.label, checked);
-                  }
-                }} style={{
-                  paddingLeft: isTreeItem ? `${8 + indent}px` : undefined
-                }} className="flex items-center gap-2" onSelect={e => e.preventDefault()}>
-                            {isTreeItem && <Icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
-                            {option.icon && !isTreeItem && <option.icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 group-data-[state=checked]:text-white" />}
-                            <span className={cn("flex-1", option.depth === 0 ? "font-medium" : "")}>{option.label}</span>
-                            {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto group-data-[state=checked]:text-white">{option.count}</span>}
-                          </DropdownMenuCheckboxItem> : <DropdownMenuCheckboxItem key={option.value} checked={selected.some(s => s.value === option.value)} onCheckedChange={() => handleSingleSelect(filter.id, option.value, option.label)}>
-                            {option.label}
-                          </DropdownMenuCheckboxItem>;
-              })}
-                    {filter.options.filter(option => option.label.toLowerCase().includes((searchQueries[filter.id] || "").toLowerCase())).length === 0 && <div className="px-2 py-1.5 text-xs text-muted-foreground text-center">
-                        No results found
-                      </div>}
-                  </>}
               </div>
             </DropdownMenuContent>
           </DropdownMenu>;
@@ -566,109 +441,30 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
       return dropdownMenu;
     })}
 
-
-      {/* More Dropdown with Source & Status flyouts */}
-      {(() => {
-        const sourceOptions = [
-          { label: "Posted Content", value: "posted-content", count: 12 },
-          { label: "Imported Content", value: "imported-content", count: 8 },
-          { label: "Published Content", value: "published-content", count: 15 },
-          { label: "Uploaded Content", value: "uploaded-content", count: 22 },
-          { label: "Engage Content", value: "engage-content", count: 5 },
-          { label: "Requested Content", value: "requested-content", count: 3 },
-        ];
-        const statusOptions = [
-          { label: "Pending", value: "pending", count: 14 },
-          { label: "Approved", value: "approved", count: 38 },
-          { label: "Rejected", value: "rejected", count: 7 },
-        ];
-        const orgStatusOptions = [
-          { label: "All", value: "all", count: 65 },
-          { label: "Sorted", value: "organized", count: 42 },
-          { label: "Unsorted", value: "unorganized", count: 23 },
-        ];
-        const sourceSelected = activeFilters["source"] || [];
-        const statusSelected = activeFilters["status"] || [];
-        const orgStatusSelected = activeFilters["organization-status"] || [];
-        const moreCount = sourceSelected.length + statusSelected.length + orgStatusSelected.length;
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className={cn("h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]", moreCount > 0 && "bg-primary/10 border-primary text-primary")}>
-                <span>More</span>
-                {moreCount > 0 && <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">{moreCount}</span>}
-                <ChevronDown className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="bg-white z-50 min-w-[180px]">
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="text-sm">Source</DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
-                  {sourceOptions.map(opt => (
-                    <DropdownMenuCheckboxItem
-                      key={opt.value}
-                      checked={sourceSelected.some(s => s.value === opt.value)}
-                      onCheckedChange={(checked) => handleMultiSelect("source", opt.value, opt.label, !!checked)}
-                      onSelect={e => e.preventDefault()}
-                    >
-                      <span className="flex-1">{opt.label}</span>
-                      <span className="text-xs text-muted-foreground ml-auto group-data-[state=checked]:text-white">{opt.count}</span>
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="text-sm">Approval Status</DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="bg-white z-50 min-w-[180px]">
-                  {statusOptions.map(opt => (
-                    <DropdownMenuCheckboxItem
-                      key={opt.value}
-                      checked={statusSelected.some(s => s.value === opt.value)}
-                      onCheckedChange={(checked) => handleMultiSelect("status", opt.value, opt.label, !!checked)}
-                      onSelect={e => e.preventDefault()}
-                    >
-                      <span className="flex-1">{opt.label}</span>
-                      <span className="text-xs text-muted-foreground ml-auto group-data-[state=checked]:text-white">{opt.count}</span>
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="text-sm">Sorted</DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="bg-white z-50 min-w-[180px]">
-                  {orgStatusOptions.map(opt => (
-                    <DropdownMenuCheckboxItem
-                      key={opt.value}
-                      checked={orgStatusSelected.some(s => s.value === opt.value)}
-                      onCheckedChange={(checked) => handleMultiSelect("organization-status", opt.value, opt.label, !!checked)}
-                      onSelect={e => e.preventDefault()}
-                    >
-                      <span className="flex-1">{opt.label}</span>
-                      <span className="text-xs text-muted-foreground ml-auto group-data-[state=checked]:text-white">{opt.count}</span>
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      })()}
-
-      {/* Branded Toggle */}
+      {/* Favorites Toggle */}
       <Button
         variant="outline"
         size="icon"
         className={cn(
           "h-10 w-10 flex-shrink-0 rounded-md border-gray-300 bg-white text-[#6e84a3]",
-          isBrandedActive && "bg-primary/10 border-primary text-primary"
+          isFavoritesActive && "bg-primary/10 border-primary text-primary"
         )}
         onClick={() => {
-          const next = !isBrandedActive;
-          setIsBrandedActive(next);
-          onBrandedToggle?.(next);
+          const next = !isFavoritesActive;
+          setIsFavoritesActive(next);
+          onFavoritesToggle?.(next);
         }}
       >
-        <Palette className={cn("h-4 w-4", isBrandedActive && "fill-current")} />
+        <Heart className={cn("h-4 w-4", isFavoritesActive && "fill-current")} />
+      </Button>
+
+      {/* Settings Button */}
+      <Button
+        variant="outline"
+        size="icon"
+        className="h-10 w-10 flex-shrink-0 rounded-md border-gray-300 bg-white text-[#6e84a3]"
+      >
+        <Settings className="h-4 w-4" />
       </Button>
     </div>;
 }
