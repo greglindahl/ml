@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, Folder, ChevronDown, Plus, Upload, Grid3X3, List, CheckSquare, Image, Images, FileText, Music, Video, Loader2, Settings2, Palette, X, User, Tag, Sparkles, Search, MoreHorizontal, FolderInput, Trash2, Heart, Archive } from "lucide-react";
+import { ChevronLeft, ChevronRight, Folder, ChevronDown, Plus, PlusCircle, Upload, Grid3X3, List, CheckSquare, Image, Images, FileText, Music, Video, Loader2, Settings2, Palette, X, User, Tag, Sparkles, Search, MoreHorizontal, FolderInput, Trash2, Heart, Archive } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -771,8 +771,9 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-[95px] h-10 px-3 py-2 gap-2 text-primary border-primary hover:bg-primary/5"
+                  className="h-10 px-3 py-2 gap-2 text-primary border-primary hover:bg-primary/5"
                 >
+                  <PlusCircle className="w-4 h-4" />
                   New
                   <ChevronDown className="w-4 h-4" />
                 </Button>
@@ -788,7 +789,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button className="h-10 px-3 py-2">
+            <Button className="h-10 px-3 py-2 gap-2">
+              <Upload className="w-4 h-4" />
               Upload
             </Button>
           </div>
