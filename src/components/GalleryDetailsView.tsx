@@ -208,7 +208,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
 
       {/* Gallery Header */}
       <div className="flex items-start justify-between mb-6 flex-shrink-0">
-        <div className="flex items-start gap-4">
+        <div className="flex items-center gap-4">
           {/* Gallery Thumbnail */}
           <div className="w-[82px] h-[82px] rounded-lg overflow-hidden flex-shrink-0">
             <img
@@ -218,7 +218,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             />
           </div>
           <div>
-            <h1 className="text-[26px] font-semibold text-foreground mb-2">{gallery.name}</h1>
+            <h1 className="text-[26px] font-semibold text-foreground mb-1">{gallery.name}</h1>
             {/* Feature Badges */}
             <div className="flex items-center gap-1.5">
               {/* Shared/External */}
