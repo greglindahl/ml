@@ -110,7 +110,7 @@ function Badge({
       {leadingIcon && (
         <span className="flex-shrink-0 -ml-0.5">{leadingIcon}</span>
       )}
-      <span>{children}</span>
+      <span className="inline-flex items-center gap-1">{children}</span>
       {onRemove && (
         <button
           type="button"
