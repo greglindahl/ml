@@ -422,9 +422,9 @@ export function FilterBar({
                     </button>
                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                   </div>
-                </div>) : <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300" ref={isDateFilter ? dateFilterRef : undefined}>
+                </div>) : <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]" ref={isDateFilter ? dateFilterRef : undefined}>
                   <span>{filter.label}</span>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  <ChevronDown className="w-4 h-4" />
                 </Button>}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="bg-white z-50 min-w-[200px]" onCloseAutoFocus={e => e.preventDefault()}>
@@ -594,10 +594,10 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className={cn("h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300", moreCount > 0 && "bg-primary/10 border-primary text-primary")}>
+              <Button variant="outline" size="sm" className={cn("h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]", moreCount > 0 && "bg-primary/10 border-primary text-primary")}>
                 <span>More</span>
                 {moreCount > 0 && <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">{moreCount}</span>}
-                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                <ChevronDown className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="bg-white z-50 min-w-[180px]">
