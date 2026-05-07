@@ -760,8 +760,11 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         />
       ) : (
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-4 md:px-8 xl:px-16">
+        {/* Breadcrumb spacer - matches FolderDetailsView/GalleryDetailsView for consistent header position */}
+        <div className="mb-2 h-[44px] flex-shrink-0" />
+
         {/* Header with title and actions */}
-        <div className="py-4 flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center justify-between flex-shrink-0 mb-6">
           <h1 className="text-[26px] font-semibold text-foreground">Library</h1>
           <div className="flex items-center gap-3">
             <DropdownMenu>

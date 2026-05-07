@@ -186,20 +186,20 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
 
   return (
     <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-4 md:px-8 xl:px-16">
-      {/* Breadcrumb Navigation */}
-      <nav className="flex items-center gap-1 text-sm mb-6 flex-shrink-0 pt-4">
+      {/* Breadcrumb Navigation - fixed height to prevent layout shift */}
+      <nav className="flex items-center gap-[6px] text-[13px] tracking-[-0.13px] mb-2 flex-shrink-0 h-[44px] items-end">
         {breadcrumbPath.map((item, index) => (
-          <div key={item.id} className="flex items-center gap-1">
-            {index > 0 && <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+          <div key={item.id} className="flex items-center gap-[6px]">
+            {index > 0 && <ChevronRight className="w-[11px] h-[11px] text-[#95aac9]" />}
             {index < breadcrumbPath.length - 1 ? (
               <button
                 onClick={() => onNavigate(item.id)}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-[#2c7be5] hover:text-[#2c7be5]/80 transition-colors"
               >
                 {item.name}
               </button>
             ) : (
-              <span className="text-foreground font-medium">{item.name}</span>
+              <span className="text-[#95aac9]">{item.name}</span>
             )}
           </div>
         ))}
