@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, Share, Upload, MoreVertical, Settings2, Move, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, Share2, Upload, MoreVertical, Settings2, Move, Trash2 } from "lucide-react";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { AssetTableView } from "@/components/AssetTableView";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -248,7 +248,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
               Upload
             </Button>
             <Button variant="outline" className="gap-2 border-primary text-primary hover:bg-primary/5">
-              <Share className="w-4 h-4" />
+              <Share2 className="w-4 h-4" />
               Share
             </Button>
             <DropdownMenu>
