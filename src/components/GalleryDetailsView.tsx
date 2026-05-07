@@ -226,11 +226,11 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 <i className="bi bi-folder-symlink-fill text-white text-sm" />
               </div>
               {/* View Only */}
-              <div className="w-7 h-7 rounded-md bg-[#6B7280] flex items-center justify-center">
+              <div className="w-7 h-7 rounded-md bg-[#6E84A3] flex items-center justify-center">
                 <i className="bi bi-eye text-white text-sm" />
               </div>
               {/* Allow Upload */}
-              <div className="w-7 h-7 rounded-md bg-[#6B7280] flex items-center justify-center">
+              <div className="w-7 h-7 rounded-md bg-[#6E84A3] flex items-center justify-center">
                 <i className="bi bi-upload text-white text-sm" />
               </div>
               {/* Expiration/Date */}
@@ -242,7 +242,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 <i className="bi bi-archive text-white text-sm" />
               </div>
               {/* Folder */}
-              <div className="w-7 h-7 rounded-md bg-[#6B7280] flex items-center justify-center">
+              <div className="w-7 h-7 rounded-md bg-[#6E84A3] flex items-center justify-center">
                 <i className="bi bi-folder text-white text-sm" />
               </div>
             </div>
