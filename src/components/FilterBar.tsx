@@ -670,11 +670,5 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
       >
         <Palette className={cn("h-4 w-4", isBrandedActive && "fill-current")} />
       </Button>
-
-
-      {/* Clear All */}
-      {activeFilterCount > 0 && <Button variant="ghost" size="sm" onClick={clearAllFilters} className="h-7 px-2 text-[13px] text-muted-foreground hover:text-foreground">
-          Clear all
-        </Button>}
     </div>;
 }
