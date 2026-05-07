@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
-import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, Share2, Upload, MoreVertical, Settings2, Move, Trash2, Eye, Calendar, Inbox, Folder, ExternalLink } from "lucide-react";
+import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, Share2, Upload, MoreVertical, Settings2, Move, Trash2 } from "lucide-react";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { AssetTableView } from "@/components/AssetTableView";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -222,27 +223,27 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             <div className="flex items-center gap-1.5">
               {/* Shared/External */}
               <div className="w-7 h-7 rounded-md bg-[#8B5CF6] flex items-center justify-center">
-                <ExternalLink className="w-4 h-4 text-white" />
+                <i className="bi bi-box-arrow-up-right text-white text-sm" />
               </div>
               {/* View Only */}
               <div className="w-7 h-7 rounded-md bg-[#6B7280] flex items-center justify-center">
-                <Eye className="w-4 h-4 text-white" />
+                <i className="bi bi-eye-fill text-white text-sm" />
               </div>
               {/* Allow Upload */}
               <div className="w-7 h-7 rounded-md bg-[#6B7280] flex items-center justify-center">
-                <Upload className="w-4 h-4 text-white" />
+                <i className="bi bi-cloud-arrow-up-fill text-white text-sm" />
               </div>
               {/* Expiration/Date */}
               <div className="w-7 h-7 rounded-md bg-[#F59E0B] flex items-center justify-center">
-                <Calendar className="w-4 h-4 text-white" />
+                <i className="bi bi-calendar-event-fill text-white text-sm" />
               </div>
               {/* Collection/Inbox */}
               <div className="w-7 h-7 rounded-md bg-[#06B6D4] flex items-center justify-center">
-                <Inbox className="w-4 h-4 text-white" />
+                <i className="bi bi-inbox-fill text-white text-sm" />
               </div>
               {/* Folder */}
               <div className="w-7 h-7 rounded-md bg-[#6B7280] flex items-center justify-center">
-                <Folder className="w-4 h-4 text-white" />
+                <i className="bi bi-folder-fill text-white text-sm" />
               </div>
             </div>
           </div>
