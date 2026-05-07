@@ -13,7 +13,7 @@ const SelectValue = SelectPrimitive.Value;
 
 const selectTriggerVariants = cva(
   // Base styles - matching input component
-  "flex h-10 w-full items-center justify-between rounded-lg border bg-white px-3 py-2 text-[15px] tracking-tight ring-offset-background transition-colors placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-muted-foreground disabled:border-gray-300 [&>span]:line-clamp-1",
+  "flex h-10 w-full items-center justify-between rounded-lg border bg-white px-3 py-2 text-[15px] tracking-tight ring-offset-background transition-colors placeholder:text-[#6e84a3] focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-muted-foreground disabled:border-gray-300 [&>span]:line-clamp-1",
   {
     variants: {
       variant: {

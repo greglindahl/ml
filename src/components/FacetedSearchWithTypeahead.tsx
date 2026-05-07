@@ -433,7 +433,7 @@ export function FacetedSearchWithTypeahead({
           onFocus={handleInputFocus}
           onKeyDown={handleKeyDown}
           placeholder={selectedFacets.length === 0 ? placeholder : ""}
-          className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-[15px] h-7"
+          className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-[15px] h-7 placeholder:text-[#6e84a3]"
         />
         {(searchQuery || selectedFacets.length > 0) && (
           <button onClick={handleClearAll} className="p-1 hover:bg-accent rounded transition-colors flex-shrink-0">
