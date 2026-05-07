@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, Heart, Settings, Image as ImageIcon, Video, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -103,17 +103,78 @@ const filters: FilterConfig[] = [{
   ],
 }];
 
+export interface GalleryDetailsFilterBarHandle {
+  removeValue: (filterId: string, value: string) => void;
+  clearAll: () => void;
+}
+
+export interface ActiveFilterChip {
+  filterId: string;
+  filterLabel: string;
+  value: string;
+  label: string;
+}
+
 interface GalleryDetailsFilterBarProps {
   onFilterChange?: (filterId: string, values: string[]) => void;
   onFavoritesToggle?: (active: boolean) => void;
+  onActiveFiltersChange?: (chips: ActiveFilterChip[]) => void;
+  handleRef?: React.MutableRefObject<GalleryDetailsFilterBarHandle | null>;
 }
 
 export function GalleryDetailsFilterBar({
   onFilterChange,
   onFavoritesToggle,
+  onActiveFiltersChange,
+  handleRef,
 }: GalleryDetailsFilterBarProps) {
   const [activeFilters, setActiveFilters] = useState<Record<string, { value: string; label: string }[]>>({});
   const [isFavoritesActive, setIsFavoritesActive] = useState(false);
+
+  // Build chips and notify parent when filters change
+  useEffect(() => {
+    const chips: ActiveFilterChip[] = [];
+    Object.entries(activeFilters).forEach(([filterId, items]) => {
+      const filterConfig = filters.find(f => f.id === filterId);
+      items.forEach(item => {
+        chips.push({
+          filterId,
+          filterLabel: filterConfig?.label || filterId,
+          value: item.value,
+          label: item.label,
+        });
+      });
+    });
+    onActiveFiltersChange?.(chips);
+  }, [activeFilters, onActiveFiltersChange]);
+
+  // Expose imperative handle
+  useEffect(() => {
+    if (handleRef) {
+      handleRef.current = {
+        removeValue: (filterId: string, value: string) => {
+          setActiveFilters(prev => {
+            const current = prev[filterId] || [];
+            const updated = current.filter(item => item.value !== value);
+            const newFilters = { ...prev };
+            if (updated.length === 0) {
+              delete newFilters[filterId];
+            } else {
+              newFilters[filterId] = updated;
+            }
+            onFilterChange?.(filterId, updated.map(i => i.value));
+            return newFilters;
+          });
+        },
+        clearAll: () => {
+          Object.keys(activeFilters).forEach(filterId => {
+            onFilterChange?.(filterId, []);
+          });
+          setActiveFilters({});
+        },
+      };
+    }
+  });
 
   const handleMultiSelect = (filterId: string, value: string, label: string, checked: boolean) => {
     setActiveFilters(prev => {

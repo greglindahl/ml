@@ -1,5 +1,5 @@
-import { useState, useCallback, useMemo } from "react";
-import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, Share2, Upload, MoreVertical, Settings2, Move, Trash2 } from "lucide-react";
+import { useState, useCallback, useMemo, useRef } from "react";
+import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, Share2, Upload, MoreVertical, Settings2, Move, Trash2, X } from "lucide-react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { AssetTableView } from "@/components/AssetTableView";
@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
-import { GalleryDetailsFilterBar } from "@/components/GalleryDetailsFilterBar";
+import { GalleryDetailsFilterBar, GalleryDetailsFilterBarHandle, ActiveFilterChip } from "@/components/GalleryDetailsFilterBar";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
 import { FolderItem, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay } from "@/lib/mockFolderData";
@@ -64,6 +64,10 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
   // Asset selection state for bulk actions
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
   
+  // Filter chips state and ref
+  const [filterChips, setFilterChips] = useState<ActiveFilterChip[]>([]);
+  const filterBarHandleRef = useRef<GalleryDetailsFilterBarHandle | null>(null);
+
   // Filter state (driven by FilterBar)
   const [contentTypeFilter, setContentTypeFilter] = useState<Array<LibraryAsset["type"]>>([]);
   const [creatorFilter, setCreatorFilter] = useState<string[]>([]);
@@ -294,9 +298,38 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
           </div>
 
+          {/* Active Filter Chips */}
+          {filterChips.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 mb-3">
+              {filterChips.map((chip, i) => (
+                <Badge
+                  key={`${chip.filterId}-${chip.value}-${i}`}
+                  colorStyle="primary"
+                  theme="soft"
+                  shape="rounded"
+                  className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-primary/30 text-[13px] normal-case tracking-normal font-normal"
+                  onClick={() => filterBarHandleRef.current?.removeValue(chip.filterId, chip.value)}
+                >
+                  {chip.label}
+                  <X className="w-3.5 h-3.5 ml-0.5" />
+                </Badge>
+              ))}
+              <button
+                onClick={() => filterBarHandleRef.current?.clearAll()}
+                className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+
           {/* Filters and Controls - Single Row */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-            <GalleryDetailsFilterBar onFilterChange={handleFilterChange} />
+            <GalleryDetailsFilterBar
+              onFilterChange={handleFilterChange}
+              onActiveFiltersChange={setFilterChips}
+              handleRef={filterBarHandleRef}
+            />
 
             <div className="flex items-center gap-2">
               <DropdownMenu>
