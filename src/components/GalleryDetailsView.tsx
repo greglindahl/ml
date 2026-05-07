@@ -217,7 +217,6 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             />
           </div>
           <div>
-            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Gallery</span>
             <h1 className="text-[26px] font-semibold text-foreground mb-2">{gallery.name}</h1>
             {/* Social Platform Icons */}
             <div className="flex items-center gap-1.5">
