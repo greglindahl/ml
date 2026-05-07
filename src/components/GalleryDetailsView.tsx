@@ -247,7 +247,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
               <Upload className="w-4 h-4" />
               Upload
             </Button>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2 border-primary text-primary hover:bg-primary/5">
               <Share className="w-4 h-4" />
               Share
             </Button>
