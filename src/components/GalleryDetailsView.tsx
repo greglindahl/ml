@@ -243,7 +243,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
         </div>
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-2">
-            <Button className="gap-2 bg-[#00D97E] hover:bg-[#00D97E]/90 text-white">
+            <Button className="gap-2">
               <Upload className="w-4 h-4" />
               Upload
             </Button>
