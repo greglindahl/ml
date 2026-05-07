@@ -803,7 +803,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               <TabsTrigger value="assets">Assets</TabsTrigger>
               <TabsTrigger value="galleries">Galleries</TabsTrigger>
               <TabsTrigger value="folders">Folders</TabsTrigger>
-              <TabsTrigger value="saved">Saved</TabsTrigger>
+              <TabsTrigger value="favorites">Favorites</TabsTrigger>
+              <TabsTrigger value="branding">Branding</TabsTrigger>
             </TabsList>
           </div>
 
@@ -1287,9 +1288,15 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             })()}
           </TabsContent>
 
-          <TabsContent value="saved" className="flex-1 overflow-y-auto py-6 mt-0">
+          <TabsContent value="favorites" className="flex-1 overflow-y-auto py-6 mt-0">
             <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
-              <p>Saved content placeholder</p>
+              <p>Favorites content placeholder</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="branding" className="flex-1 overflow-y-auto py-6 mt-0">
+            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
+              <p>Branding content placeholder</p>
             </div>
           </TabsContent>
         </Tabs>
