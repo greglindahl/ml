@@ -209,7 +209,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
       <div className="flex items-start justify-between mb-6 flex-shrink-0">
         <div className="flex items-start gap-4">
           {/* Gallery Thumbnail */}
-          <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+          <div className="w-[82px] h-[82px] rounded-lg overflow-hidden flex-shrink-0">
             <img
               src="https://images.unsplash.com/photo-1551958219-acbc608c6377?w=128&h=128&fit=crop"
               alt={gallery.name}
