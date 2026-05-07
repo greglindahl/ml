@@ -673,7 +673,7 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
 
 
       {/* Clear All */}
-      {activeFilterCount > 0 && <Button variant="ghost" size="sm" onClick={clearAllFilters} className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground">
+      {activeFilterCount > 0 && <Button variant="ghost" size="sm" onClick={clearAllFilters} className="h-7 px-2 text-[13px] text-muted-foreground hover:text-foreground">
           Clear all
         </Button>}
     </div>;
