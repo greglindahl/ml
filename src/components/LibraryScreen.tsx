@@ -814,11 +814,12 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} onSelectedFacetsChange={setSearchSelectedFacets} handleRef={searchHandleRef} placeholder="Search by people, tags, filenames…" />
             </div>
 
-            {/* Unified Applied Filter Chips */}
+            {/* Unified Applied Filter Chips - reserved height to prevent layout shift */}
+            <div className="min-h-[24px] mb-2">
             {(() => {
               // Build chip objects from all sources
               const chips: { label: string; value: string; sourceId: string; icon: React.ReactNode }[] = [];
-              
+
               // Search facets
               searchSelectedFacets.forEach(f => {
                 const isPeople = f.category === "People";
@@ -867,7 +868,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               };
 
               return (
-                <div className="flex flex-wrap items-center gap-1.5 mb-3">
+                <div className="flex flex-wrap items-center gap-1.5">
                   {chips.map((chip, i) => (
                     <Badge
                       key={`${chip.sourceId}-${chip.value}-${i}`}
@@ -891,6 +892,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 </div>
               );
             })()}
+            </div>
 
             {/* Filters and Controls - Single Row */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
@@ -1046,9 +1048,12 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
 
           <TabsContent value="galleries" className="flex-1 overflow-y-auto py-6 mt-0">
             {/* Faceted Search */}
-            <div className="mb-4">
+            <div className="mb-2">
               <FacetedSearchWithTypeahead placeholder="Search" />
             </div>
+
+            {/* Filter Chips - reserved height to prevent layout shift */}
+            <div className="min-h-[24px] mb-2" />
 
             {/* Filters and Controls */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
