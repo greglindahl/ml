@@ -1,12 +1,13 @@
-import { useState, useCallback, useMemo } from "react";
-import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, Share, Upload, MoreVertical, Settings2, Move, Trash2 } from "lucide-react";
+import { useState, useCallback, useMemo, useRef } from "react";
+import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, Share2, Upload, MoreVertical, Settings2, Move, Trash2, X } from "lucide-react";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { AssetTableView } from "@/components/AssetTableView";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
-import { FilterBar } from "@/components/FilterBar";
+import { GalleryDetailsFilterBar, GalleryDetailsFilterBarHandle, ActiveFilterChip } from "@/components/GalleryDetailsFilterBar";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
 import { FolderItem, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay } from "@/lib/mockFolderData";
@@ -63,6 +64,10 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
   // Asset selection state for bulk actions
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
   
+  // Filter chips state and ref
+  const [filterChips, setFilterChips] = useState<ActiveFilterChip[]>([]);
+  const filterBarHandleRef = useRef<GalleryDetailsFilterBarHandle | null>(null);
+
   // Filter state (driven by FilterBar)
   const [contentTypeFilter, setContentTypeFilter] = useState<Array<LibraryAsset["type"]>>([]);
   const [creatorFilter, setCreatorFilter] = useState<string[]>([]);
@@ -207,43 +212,73 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
 
       {/* Gallery Header */}
       <div className="flex items-start justify-between mb-6 flex-shrink-0">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
-            <Images className="w-6 h-6 text-muted-foreground" />
+        <div className="flex items-center gap-4">
+          {/* Gallery Thumbnail */}
+          <div className="w-[82px] h-[82px] rounded-lg overflow-hidden flex-shrink-0">
+            <img
+              src={`https://picsum.photos/seed/${galleryId}/200/200`}
+              alt={gallery.name}
+              className="w-full h-full object-cover"
+            />
           </div>
           <div>
-            <h1 className="text-[26px] font-semibold text-foreground mb-2">{gallery.name}</h1>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs">View Only</Badge>
-              <Badge variant="outline" className="text-xs">Allow Upload</Badge>
-              <span className="text-xs text-muted-foreground">6/26/24, 12:00 PM</span>
+            <h1 className="text-[26px] font-semibold text-foreground mb-1">{gallery.name}</h1>
+            {/* Feature Badges */}
+            <div className="flex items-center gap-1.5">
+              {/* Shared/External */}
+              <div className="w-7 h-7 rounded-md bg-[#8B5CF6] flex items-center justify-center">
+                <i className="bi bi-folder-symlink-fill text-white text-sm" />
+              </div>
+              {/* View Only */}
+              <div className="w-7 h-7 rounded-md bg-[#6E84A3] flex items-center justify-center">
+                <i className="bi bi-eye text-white text-sm" />
+              </div>
+              {/* Allow Upload */}
+              <div className="w-7 h-7 rounded-md bg-[#6E84A3] flex items-center justify-center">
+                <i className="bi bi-upload text-white text-sm" />
+              </div>
+              {/* Expiration/Date */}
+              <div className="w-7 h-7 rounded-md bg-[#F59E0B] flex items-center justify-center">
+                <i className="bi bi-calendar-date text-white text-sm" />
+              </div>
+              {/* Collection/Inbox */}
+              <div className="w-7 h-7 rounded-md bg-[#06B6D4] flex items-center justify-center">
+                <i className="bi bi-archive text-white text-sm" />
+              </div>
+              {/* Folder */}
+              <div className="w-7 h-7 rounded-md bg-[#6E84A3] flex items-center justify-center">
+                <i className="bi bi-folder text-white text-sm" />
+              </div>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" className="gap-2">
-            <Share className="w-4 h-4" />
-            Share
-          </Button>
-          <Button className="gap-2">
-            <Upload className="w-4 h-4" />
-            Upload
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setMoveGalleriesOpen(true)}>
-                <Move className="w-4 h-4 mr-2" /> Move
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive focus:text-destructive">
-                <Trash2 className="w-4 h-4 mr-2" /> Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-2">
+            <Button className="gap-2">
+              <Upload className="w-4 h-4" />
+              Upload
+            </Button>
+            <Button variant="outline" className="gap-2 border-primary text-primary hover:bg-primary/5">
+              <Share2 className="w-4 h-4" />
+              Share
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="border-primary text-primary hover:bg-primary/5">
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setMoveGalleriesOpen(true)}>
+                  <Move className="w-4 h-4 mr-2" /> Move
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive focus:text-destructive">
+                  <Trash2 className="w-4 h-4 mr-2" /> Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <span className="text-xs text-muted-foreground">Shared with 3 user(s)</span>
         </div>
       </div>
 
@@ -259,13 +294,44 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
 
         <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">
           {/* Faceted Search */}
-          <div className="mb-4">
+          <div className="mb-2">
             <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
+          </div>
+
+          {/* Active Filter Chips - reserved height to prevent layout shift */}
+          <div className="min-h-[24px] mb-2">
+            {filterChips.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {filterChips.map((chip, i) => (
+                  <Badge
+                    key={`${chip.filterId}-${chip.value}-${i}`}
+                    colorStyle="primary"
+                    theme="soft"
+                    shape="rounded"
+                    className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-primary/30 text-[13px] normal-case tracking-normal font-normal"
+                    onClick={() => filterBarHandleRef.current?.removeValue(chip.filterId, chip.value)}
+                  >
+                    {chip.label}
+                    <X className="w-3.5 h-3.5 ml-0.5" />
+                  </Badge>
+                ))}
+                <button
+                  onClick={() => filterBarHandleRef.current?.clearAll()}
+                  className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Filters and Controls - Single Row */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-            <FilterBar onFilterChange={handleFilterChange} onCustomDateChange={handleCustomDateChange} hideFilters={["folders"]} />
+            <GalleryDetailsFilterBar
+              onFilterChange={handleFilterChange}
+              onActiveFiltersChange={setFilterChips}
+              handleRef={filterBarHandleRef}
+            />
 
             <div className="flex items-center gap-2">
               <DropdownMenu>

@@ -7,7 +7,8 @@ import { FolderTableView } from "@/components/FolderTableView";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
-import { FilterBar } from "@/components/FilterBar";
+import { FilterBar, FilterBarHandle } from "@/components/FilterBar";
+import { Badge } from "@/components/ui/badge";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
 import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries, Gallery, FlattenedFolder, getGalleryLocationDisplay, collectAssignedGalleryIds } from "@/lib/mockFolderData";
@@ -137,6 +138,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   const [peopleFilter, setPeopleFilter] = useState<string[]>([]);
   const [dateRangeFilter, setDateRangeFilter] = useState<"today" | "week" | "month" | "quarter" | "year" | "custom" | null>(null);
   const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
+  const filterBarHandleRef = useRef<FilterBarHandle | null>(null);
 
   // Use the library search hook
   const { results, allAssets, isLoading, search } = useLibrarySearch();
@@ -393,13 +395,54 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         {/* Assets Tab */}
         <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">
           {/* Faceted Search */}
-          <div className="mb-4">
+          <div className="mb-2">
             <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
+          </div>
+
+          {/* Filter Chips - reserved height to prevent layout shift */}
+          <div className="min-h-[24px] mb-2">
+            {(() => {
+              const chips: { label: string; value: string; sourceId: string }[] = [];
+              peopleFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "people" }));
+              creatorFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "creator" }));
+              contentTypeFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "content-type" }));
+              aspectRatioFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "aspect-ratio" }));
+              if (dateRangeFilter) {
+                const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 Days", month: "Last 30 Days", quarter: "Last 90 Days", year: "Last Year", custom: "Custom Date" };
+                chips.push({ label: dateLabels[dateRangeFilter] || dateRangeFilter, value: dateRangeFilter, sourceId: "date-range" });
+              }
+
+              if (chips.length === 0) return null;
+
+              return (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {chips.map((chip, i) => (
+                    <Badge
+                      key={`${chip.sourceId}-${chip.value}-${i}`}
+                      colorStyle="primary"
+                      theme="soft"
+                      shape="rounded"
+                      className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-primary/30 text-[13px] normal-case tracking-normal font-normal"
+                      onClick={() => filterBarHandleRef.current?.removeValue(chip.sourceId, chip.value)}
+                    >
+                      {chip.label}
+                      <X className="w-3.5 h-3.5 ml-0.5" />
+                    </Badge>
+                  ))}
+                  <button
+                    onClick={() => filterBarHandleRef.current?.clearAll()}
+                    className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+                  >
+                    Clear all
+                  </button>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Filters and Controls - Single Row */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-            <FilterBar onFilterChange={handleFilterChange} onCustomDateChange={handleCustomDateChange} hideFilters={["folders"]} />
+            <FilterBar onFilterChange={handleFilterChange} onCustomDateChange={handleCustomDateChange} hideFilters={["folders"]} handleRef={filterBarHandleRef} />
 
             <div className="flex items-center gap-2">
               <DropdownMenu>
