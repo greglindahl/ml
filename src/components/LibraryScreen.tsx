@@ -868,8 +868,10 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   {chips.map((chip, i) => (
                     <Badge
                       key={`${chip.sourceId}-${chip.value}-${i}`}
-                      variant="secondary"
-                      className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-secondary/80"
+                      colorStyle="primary"
+                      theme="soft"
+                      shape="rounded"
+                      className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-primary/30 text-[13px] normal-case tracking-normal font-normal"
                       onClick={() => handleRemoveChip(chip)}
                     >
                       {chip.icon}
@@ -879,7 +881,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   ))}
                   <button
                     onClick={handleClearAllChips}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+                    className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                   >
                     Clear all
                   </button>
