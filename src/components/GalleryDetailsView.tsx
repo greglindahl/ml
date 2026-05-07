@@ -223,27 +223,27 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             <div className="flex items-center gap-1.5">
               {/* Shared/External */}
               <div className="w-7 h-7 rounded-md bg-[#8B5CF6] flex items-center justify-center">
-                <i className="bi bi-box-arrow-up-right text-white text-sm" />
+                <i className="bi bi-folder-symlink-fill text-white text-sm" />
               </div>
               {/* View Only */}
               <div className="w-7 h-7 rounded-md bg-[#6B7280] flex items-center justify-center">
-                <i className="bi bi-eye-fill text-white text-sm" />
+                <i className="bi bi-eye text-white text-sm" />
               </div>
               {/* Allow Upload */}
               <div className="w-7 h-7 rounded-md bg-[#6B7280] flex items-center justify-center">
-                <i className="bi bi-cloud-arrow-up-fill text-white text-sm" />
+                <i className="bi bi-upload text-white text-sm" />
               </div>
               {/* Expiration/Date */}
               <div className="w-7 h-7 rounded-md bg-[#F59E0B] flex items-center justify-center">
-                <i className="bi bi-calendar-event-fill text-white text-sm" />
+                <i className="bi bi-calendar-date text-white text-sm" />
               </div>
               {/* Collection/Inbox */}
               <div className="w-7 h-7 rounded-md bg-[#06B6D4] flex items-center justify-center">
-                <i className="bi bi-inbox-fill text-white text-sm" />
+                <i className="bi bi-archive text-white text-sm" />
               </div>
               {/* Folder */}
               <div className="w-7 h-7 rounded-md bg-[#6B7280] flex items-center justify-center">
-                <i className="bi bi-folder-fill text-white text-sm" />
+                <i className="bi bi-folder text-white text-sm" />
               </div>
             </div>
           </div>
