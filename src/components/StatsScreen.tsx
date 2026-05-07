@@ -36,16 +36,16 @@ export function StatsScreen({ isMobile = false }: StatsScreenProps) {
 
         <TabsContent value="social-activity" className="flex-1 py-6 mt-0">
           <Tabs defaultValue="verified-shares" className="flex-1 flex flex-col">
-            <TabsList className="flex h-8 items-center gap-3 bg-transparent p-0">
+            <TabsList className="flex items-center gap-3 bg-transparent p-0 h-auto">
               <TabsTrigger
                 value="verified-shares"
-                className="h-8 px-4 text-sm font-medium rounded-md border border-transparent text-[#6E84A3] data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent"
+                className="flex flex-col justify-center items-center py-2 px-3 text-sm font-medium rounded-md border border-transparent text-[#6E84A3] data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent"
               >
                 Verified Shares
               </TabsTrigger>
               <TabsTrigger
                 value="initiated-shares"
-                className="h-8 px-4 text-sm font-medium rounded-md border border-transparent text-[#6E84A3] data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent"
+                className="flex flex-col justify-center items-center py-2 px-3 text-sm font-medium rounded-md border border-transparent text-[#6E84A3] data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent"
               >
                 Initiated Shares
               </TabsTrigger>
