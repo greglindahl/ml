@@ -95,7 +95,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   <DropdownMenuPrimitive.CheckboxItem
     ref={ref}
     className={cn(
-      "relative flex cursor-pointer select-none items-center px-3 py-2.5 text-[15px] tracking-tight outline-none transition-colors",
+      "group relative flex cursor-pointer select-none items-center px-3 py-2.5 text-[15px] tracking-tight outline-none transition-colors",
       // Default state
       "text-foreground",
       // Hover state - light gray background

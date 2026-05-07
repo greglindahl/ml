@@ -484,9 +484,9 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
                   paddingLeft: isTreeItem ? `${8 + indent}px` : undefined
                 }} className="flex items-center gap-2" onSelect={e => e.preventDefault()}>
                             {isTreeItem && <Icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
-                            {option.icon && !isTreeItem && <option.icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
+                            {option.icon && !isTreeItem && <option.icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 group-data-[state=checked]:text-white" />}
                             <span className={cn("flex-1", option.depth === 0 ? "font-medium" : "")}>{option.label}</span>
-                            {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>}
+                            {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto group-data-[state=checked]:text-white">{option.count}</span>}
                           </DropdownMenuCheckboxItem> : <DropdownMenuCheckboxItem key={option.value} checked={selected.some(s => s.value === option.value)} onCheckedChange={() => handleSingleSelect(filter.id, option.value, option.label)}>
                             {option.label}
                           </DropdownMenuCheckboxItem>;
@@ -612,7 +612,7 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
                       onSelect={e => e.preventDefault()}
                     >
                       <span className="flex-1">{opt.label}</span>
-                      <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
+                      <span className="text-xs text-muted-foreground ml-auto group-data-[state=checked]:text-white">{opt.count}</span>
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuSubContent>
@@ -628,7 +628,7 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
                       onSelect={e => e.preventDefault()}
                     >
                       <span className="flex-1">{opt.label}</span>
-                      <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
+                      <span className="text-xs text-muted-foreground ml-auto group-data-[state=checked]:text-white">{opt.count}</span>
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuSubContent>
@@ -644,7 +644,7 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
                       onSelect={e => e.preventDefault()}
                     >
                       <span className="flex-1">{opt.label}</span>
-                      <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
+                      <span className="text-xs text-muted-foreground ml-auto group-data-[state=checked]:text-white">{opt.count}</span>
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuSubContent>
