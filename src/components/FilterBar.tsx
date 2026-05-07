@@ -659,7 +659,7 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
         variant="outline"
         size="icon"
         className={cn(
-          "h-10 w-10 flex-shrink-0 rounded-md border-gray-300",
+          "h-10 w-10 flex-shrink-0 rounded-md border-gray-300 bg-white text-[#6e84a3]",
           isBrandedActive && "bg-primary/10 border-primary text-primary"
         )}
         onClick={() => {

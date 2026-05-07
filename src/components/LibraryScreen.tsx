@@ -920,7 +920,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`h-10 w-10 rounded-r-none ${assetsViewMode === "grid" ? "bg-gray-100" : ""}`}
+                    className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${assetsViewMode === "grid" ? "bg-gray-100" : ""}`}
                     onClick={() => setAssetsViewMode("grid")}
                   >
                     <Grid3X3 className="w-4 h-4" />
@@ -928,7 +928,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`h-10 w-10 rounded-none border-x border-gray-300 ${assetsViewMode === "list" ? "bg-gray-100" : ""}`}
+                    className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${assetsViewMode === "list" ? "bg-gray-100" : ""}`}
                     onClick={() => setAssetsViewMode("list")}
                   >
                     <List className="w-4 h-4" />
@@ -936,7 +936,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`h-10 w-10 rounded-l-none ${selectedAssets.size > 0 ? "bg-gray-100" : ""}`}
+                    className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${selectedAssets.size > 0 ? "bg-gray-100" : ""}`}
                     onClick={() => {
                       if (selectedAssets.size > 0) {
                         setSelectedAssets(new Set());
@@ -1078,7 +1078,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`h-10 w-10 rounded-r-none ${galleriesViewMode === "grid" ? "bg-gray-100" : ""}`}
+                    className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${galleriesViewMode === "grid" ? "bg-gray-100" : ""}`}
                     onClick={() => setGalleriesViewMode("grid")}
                   >
                     <Grid3X3 className="w-4 h-4" />
@@ -1086,7 +1086,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`h-10 w-10 rounded-none border-x border-gray-300 ${galleriesViewMode === "list" ? "bg-gray-100" : ""}`}
+                    className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${galleriesViewMode === "list" ? "bg-gray-100" : ""}`}
                     onClick={() => setGalleriesViewMode("list")}
                   >
                     <List className="w-4 h-4" />
@@ -1094,7 +1094,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`h-10 w-10 rounded-l-none ${isAnyGallerySelected ? "bg-gray-100" : ""}`}
+                    className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${isAnyGallerySelected ? "bg-gray-100" : ""}`}
                     onClick={() => setSelectedGalleries(prev => (prev.size > 0 ? new Set() : new Set(galleryList.map(g => g.id))))}
                   >
                     <CheckSquare className="w-4 h-4" />
@@ -1227,10 +1227,10 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           <TabsContent value="folders" className="flex-1 overflow-y-auto py-6 mt-0">
             <div className="flex items-center justify-end mb-6">
               <div className="flex items-center border rounded-md bg-card">
-                <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-r-none ${folderViewMode === "grid" ? "bg-accent" : ""}`} onClick={() => setFolderViewMode("grid")}>
+                <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-r-none text-[#6e84a3] ${folderViewMode === "grid" ? "bg-accent" : ""}`} onClick={() => setFolderViewMode("grid")}>
                   <Grid3X3 className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-l-none border-l ${folderViewMode === "table" ? "bg-accent" : ""}`} onClick={() => setFolderViewMode("table")}>
+                <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-l-none border-l text-[#6e84a3] ${folderViewMode === "table" ? "bg-accent" : ""}`} onClick={() => setFolderViewMode("table")}>
                   <List className="w-4 h-4" />
                 </Button>
               </div>

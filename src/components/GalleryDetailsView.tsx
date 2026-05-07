@@ -308,7 +308,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`h-10 w-10 rounded-r-none ${assetsViewMode === "grid" ? "bg-gray-100" : ""}`}
+                  className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${assetsViewMode === "grid" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("grid")}
                 >
                   <Grid3X3 className="w-4 h-4" />
@@ -316,7 +316,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`h-10 w-10 rounded-none border-x border-gray-300 ${assetsViewMode === "list" ? "bg-gray-100" : ""}`}
+                  className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${assetsViewMode === "list" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("list")}
                 >
                   <List className="w-4 h-4" />
@@ -324,7 +324,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`h-10 w-10 rounded-l-none ${selectedAssets.size > 0 ? "bg-gray-100" : ""}`}
+                  className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${selectedAssets.size > 0 ? "bg-gray-100" : ""}`}
                   onClick={() => {
                     if (selectedAssets.size > 0) {
                       setSelectedAssets(new Set());
