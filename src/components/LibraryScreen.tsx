@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, Folder, ChevronDown, Plus, Upload, Grid3X3, List, CheckSquare, Image, Images, FileText, Music, Video, Loader2, Settings2, Palette, X, User, Tag, Sparkles, Search, MoreHorizontal, FolderInput, Trash2, Heart, Archive } from "lucide-react";
+import { ChevronLeft, ChevronRight, Folder, ChevronDown, Plus, PlusCircle, Upload, Grid3X3, List, CheckSquare, Image, Images, FileText, Music, Video, Loader2, Settings2, Palette, X, User, Tag, Sparkles, Search, MoreHorizontal, FolderInput, Trash2, Heart, Archive } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -760,16 +760,20 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         />
       ) : (
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-4 md:px-8 xl:px-16">
+        {/* Breadcrumb spacer - matches FolderDetailsView/GalleryDetailsView for consistent header position */}
+        <div className="mb-2 h-[44px] flex-shrink-0" />
+
         {/* Header with title and actions */}
-        <div className="py-4 flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center justify-between flex-shrink-0 mb-6">
           <h1 className="text-[26px] font-semibold text-foreground">Library</h1>
           <div className="flex items-center gap-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-[95px] h-10 px-3 py-2 gap-2 text-primary border-primary hover:bg-primary/5"
+                  className="h-10 px-3 py-2 gap-2 text-primary border-primary hover:bg-primary/5"
                 >
+                  <PlusCircle className="w-4 h-4" />
                   New
                   <ChevronDown className="w-4 h-4" />
                 </Button>
@@ -785,7 +789,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button className="h-10 px-3 py-2">
+            <Button className="h-10 px-3 py-2 gap-2">
+              <Upload className="w-4 h-4" />
               Upload
             </Button>
           </div>
@@ -798,7 +803,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               <TabsTrigger value="assets">Assets</TabsTrigger>
               <TabsTrigger value="galleries">Galleries</TabsTrigger>
               <TabsTrigger value="folders">Folders</TabsTrigger>
-              <TabsTrigger value="saved">Saved</TabsTrigger>
+              <TabsTrigger value="favorites">Favorites</TabsTrigger>
+              <TabsTrigger value="branding">Branding</TabsTrigger>
             </TabsList>
           </div>
 
@@ -865,8 +871,10 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   {chips.map((chip, i) => (
                     <Badge
                       key={`${chip.sourceId}-${chip.value}-${i}`}
-                      variant="secondary"
-                      className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-secondary/80"
+                      colorStyle="primary"
+                      theme="soft"
+                      shape="rounded"
+                      className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-primary/30 text-[13px] normal-case tracking-normal font-normal"
                       onClick={() => handleRemoveChip(chip)}
                     >
                       {chip.icon}
@@ -876,7 +884,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   ))}
                   <button
                     onClick={handleClearAllChips}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+                    className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                   >
                     Clear all
                   </button>
@@ -891,12 +899,12 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               <div className="flex items-center gap-2">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-card">
+                    <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                       Sort{sortField ? `: ${SORT_LABELS[sortField]}` : ""}
-                      <ChevronDown className="w-3 h-3 opacity-50" />
+                      <ChevronDown className="w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-popover w-48">
+                  <DropdownMenuContent className="bg-white w-48">
                     {SORT_OPTIONS.map(opt => (
                       <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
                         {opt.label}
@@ -907,33 +915,33 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 </DropdownMenu>
 
                 {assetsViewMode === "list" && (
-                  <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-card">
-                    <Settings2 className="w-3.5 h-3.5" />
+                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                    <Settings2 className="w-4 h-4" />
                     Manage Columns
                   </Button>
                 )}
 
-                <div className="flex items-center border rounded-md bg-card">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className={`h-8 w-8 rounded-r-none ${assetsViewMode === "grid" ? "bg-accent" : ""}`}
+                <div className="flex items-center border border-gray-300 rounded-md bg-white">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${assetsViewMode === "grid" ? "bg-gray-100" : ""}`}
                     onClick={() => setAssetsViewMode("grid")}
                   >
                     <Grid3X3 className="w-4 h-4" />
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className={`h-8 w-8 rounded-none border-x ${assetsViewMode === "list" ? "bg-accent" : ""}`}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${assetsViewMode === "list" ? "bg-gray-100" : ""}`}
                     onClick={() => setAssetsViewMode("list")}
                   >
                     <List className="w-4 h-4" />
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className={`h-8 w-8 rounded-l-none ${selectedAssets.size > 0 ? "bg-accent" : ""}`}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${selectedAssets.size > 0 ? "bg-gray-100" : ""}`}
                     onClick={() => {
                       if (selectedAssets.size > 0) {
                         setSelectedAssets(new Set());
@@ -1049,12 +1057,12 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               <div className="flex items-center gap-2">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-card">
+                    <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                       Sort{sortField ? `: ${SORT_LABELS[sortField]}` : ""}
-                      <ChevronDown className="w-3 h-3 opacity-50" />
+                      <ChevronDown className="w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-popover w-48">
+                  <DropdownMenuContent className="bg-white w-48">
                     {SORT_OPTIONS.map(opt => (
                       <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
                         {opt.label}
@@ -1065,33 +1073,33 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 </DropdownMenu>
 
                 {galleriesViewMode === "list" && (
-                  <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-card">
-                    <Settings2 className="w-3.5 h-3.5" />
+                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                    <Settings2 className="w-4 h-4" />
                     Manage Columns
                   </Button>
                 )}
 
-                <div className="flex items-center border rounded-md bg-card">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className={`h-8 w-8 rounded-r-none ${galleriesViewMode === "grid" ? "bg-accent" : ""}`}
+                <div className="flex items-center border border-gray-300 rounded-md bg-white">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${galleriesViewMode === "grid" ? "bg-gray-100" : ""}`}
                     onClick={() => setGalleriesViewMode("grid")}
                   >
                     <Grid3X3 className="w-4 h-4" />
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className={`h-8 w-8 rounded-none border-l ${galleriesViewMode === "list" ? "bg-accent" : ""}`}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${galleriesViewMode === "list" ? "bg-gray-100" : ""}`}
                     onClick={() => setGalleriesViewMode("list")}
                   >
                     <List className="w-4 h-4" />
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className={`h-8 w-8 rounded-l-none border-l ${isAnyGallerySelected ? "bg-accent" : ""}`}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${isAnyGallerySelected ? "bg-gray-100" : ""}`}
                     onClick={() => setSelectedGalleries(prev => (prev.size > 0 ? new Set() : new Set(galleryList.map(g => g.id))))}
                   >
                     <CheckSquare className="w-4 h-4" />
@@ -1224,10 +1232,10 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           <TabsContent value="folders" className="flex-1 overflow-y-auto py-6 mt-0">
             <div className="flex items-center justify-end mb-6">
               <div className="flex items-center border rounded-md bg-card">
-                <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-r-none ${folderViewMode === "grid" ? "bg-accent" : ""}`} onClick={() => setFolderViewMode("grid")}>
+                <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-r-none text-[#6e84a3] ${folderViewMode === "grid" ? "bg-accent" : ""}`} onClick={() => setFolderViewMode("grid")}>
                   <Grid3X3 className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-l-none border-l ${folderViewMode === "table" ? "bg-accent" : ""}`} onClick={() => setFolderViewMode("table")}>
+                <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-l-none border-l text-[#6e84a3] ${folderViewMode === "table" ? "bg-accent" : ""}`} onClick={() => setFolderViewMode("table")}>
                   <List className="w-4 h-4" />
                 </Button>
               </div>
@@ -1280,9 +1288,15 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             })()}
           </TabsContent>
 
-          <TabsContent value="saved" className="flex-1 overflow-y-auto py-6 mt-0">
+          <TabsContent value="favorites" className="flex-1 overflow-y-auto py-6 mt-0">
             <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
-              <p>Saved content placeholder</p>
+              <p>Favorites content placeholder</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="branding" className="flex-1 overflow-y-auto py-6 mt-0">
+            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
+              <p>Branding content placeholder</p>
             </div>
           </TabsContent>
         </Tabs>

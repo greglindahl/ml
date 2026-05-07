@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center border text-[10px] font-medium uppercase tracking-wide transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center flex-nowrap whitespace-nowrap border text-[10px] font-medium uppercase tracking-wide transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       // Color style
@@ -110,7 +110,7 @@ function Badge({
       {leadingIcon && (
         <span className="flex-shrink-0 -ml-0.5">{leadingIcon}</span>
       )}
-      <span>{children}</span>
+      <span className="inline-flex items-center gap-1">{children}</span>
       {onRemove && (
         <button
           type="button"

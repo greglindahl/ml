@@ -199,10 +199,10 @@ export function GalleryFilterBar({ onArchivedChange }: GalleryFilterBarProps = {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-card">
-                
+                className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+
                   <span>{filter.label}</span>
-                  <ChevronDown className="w-3 h-3 opacity-50" />
+                  <ChevronDown className="w-4 h-4" />
                 </Button>
               }
             </DropdownMenuTrigger>
@@ -248,8 +248,8 @@ export function GalleryFilterBar({ onArchivedChange }: GalleryFilterBarProps = {
 
       {/* Archived toggle */}
       <div className="inline-flex items-center gap-2 h-8 px-2">
-        <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
-          Archived Only 
+        <span className="text-[15px] font-normal text-muted-foreground whitespace-nowrap">
+          Archived Only
         </span>
         <Switch checked={showArchived} onCheckedChange={(v) => { setShowArchived(v); onArchivedChange?.(v); }} className="scale-75" />
       </div>

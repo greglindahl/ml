@@ -186,20 +186,20 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
 
   return (
     <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-4 md:px-8 xl:px-16">
-      {/* Breadcrumb Navigation */}
-      <nav className="flex items-center gap-1 text-sm mb-6 flex-shrink-0 pt-4">
+      {/* Breadcrumb Navigation - fixed height to prevent layout shift */}
+      <nav className="flex items-center gap-[6px] text-[13px] tracking-[-0.13px] mb-2 flex-shrink-0 h-[44px] items-end">
         {breadcrumbPath.map((item, index) => (
-          <div key={item.id} className="flex items-center gap-1">
-            {index > 0 && <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+          <div key={item.id} className="flex items-center gap-[6px]">
+            {index > 0 && <ChevronRight className="w-[11px] h-[11px] text-[#95aac9]" />}
             {index < breadcrumbPath.length - 1 ? (
               <button
                 onClick={() => onNavigate(item.id)}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-[#2c7be5] hover:text-[#2c7be5]/80 transition-colors"
               >
                 {item.name}
               </button>
             ) : (
-              <span className="text-foreground font-medium">{item.name}</span>
+              <span className="text-[#95aac9]">{item.name}</span>
             )}
           </div>
         ))}
@@ -270,12 +270,12 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             <div className="flex items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-background">
+                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                     120 per Page
-                    <ChevronDown className="w-3 h-3 opacity-50" />
+                    <ChevronDown className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent className="bg-white">
                   <DropdownMenuItem>24 per Page</DropdownMenuItem>
                   <DropdownMenuItem>48 per Page</DropdownMenuItem>
                   <DropdownMenuItem>120 per Page</DropdownMenuItem>
@@ -283,20 +283,20 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
               </DropdownMenu>
 
               {assetsViewMode === "list" && (
-                <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-background">
-                  <Settings2 className="w-3.5 h-3.5" />
+                <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                  <Settings2 className="w-4 h-4" />
                   Manage Columns
                 </Button>
               )}
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs font-medium bg-background">
+                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                     Sort
-                    <ChevronDown className="w-3 h-3 opacity-50" />
+                    <ChevronDown className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent className="bg-white">
                   <DropdownMenuItem>Date (Newest)</DropdownMenuItem>
                   <DropdownMenuItem>Date (Oldest)</DropdownMenuItem>
                   <DropdownMenuItem>Name (A-Z)</DropdownMenuItem>
@@ -304,27 +304,27 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <div className="flex items-center border rounded-md bg-background">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className={`h-8 w-8 rounded-r-none ${assetsViewMode === "grid" ? "bg-muted" : ""}`}
+              <div className="flex items-center border border-gray-300 rounded-md bg-white">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${assetsViewMode === "grid" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("grid")}
                 >
                   <Grid3X3 className="w-4 h-4" />
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className={`h-8 w-8 rounded-none border-x ${assetsViewMode === "list" ? "bg-muted" : ""}`}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${assetsViewMode === "list" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("list")}
                 >
                   <List className="w-4 h-4" />
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className={`h-8 w-8 rounded-l-none ${selectedAssets.size > 0 ? "bg-muted" : ""}`}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${selectedAssets.size > 0 ? "bg-gray-100" : ""}`}
                   onClick={() => {
                     if (selectedAssets.size > 0) {
                       setSelectedAssets(new Set());
