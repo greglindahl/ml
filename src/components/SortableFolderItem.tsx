@@ -99,18 +99,13 @@ export function SortableFolderItem({
           }}
           className="flex items-center gap-2 flex-1 min-w-0"
         >
-          {/* First slot: Chevron for folders, Blue dot for galleries */}
-          {isAllFiles ? null : isGallery ? (
-            /* Blue dot for galleries - in chevron position */
-            <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">
-              <span className="w-2 h-2 rounded-full bg-[#2c7be5]" />
-            </span>
-          ) : hasExpandableContent ? (
+          {/* First slot: Chevron for expandable folders, spacer for others */}
+          {isAllFiles ? null : hasExpandableContent ? (
             <i
               className={`bi ${isExpanded ? "bi-chevron-down" : "bi-chevron-right"} text-[16px] w-4 flex-shrink-0 transition-transform`}
             />
           ) : (
-            /* Spacer for folders without children */
+            /* Spacer for galleries and folders without children */
             <span className="w-4 flex-shrink-0" />
           )}
 
