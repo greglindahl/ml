@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
-import { FilterBar } from "@/components/FilterBar";
+import { GalleryDetailsFilterBar } from "@/components/GalleryDetailsFilterBar";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
 import { FolderItem, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay } from "@/lib/mockFolderData";
@@ -296,7 +296,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
 
           {/* Filters and Controls - Single Row */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-            <FilterBar onFilterChange={handleFilterChange} onCustomDateChange={handleCustomDateChange} hideFilters={["folders"]} />
+            <GalleryDetailsFilterBar onFilterChange={handleFilterChange} />
 
             <div className="flex items-center gap-2">
               <DropdownMenu>
