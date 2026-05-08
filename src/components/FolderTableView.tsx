@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MoreHorizontal, ArrowUpDown, ArrowUp, ArrowDown, FolderOpen, Eye, Pencil, Move, Archive, Trash2, ArchiveRestore } from "lucide-react";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import { FolderItem } from "@/lib/mockFolderData";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -71,10 +71,10 @@ export function FolderTableView({ folders, onNavigate, isLoading = false, archiv
   };
 
   const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return <ArrowUpDown className="w-3 h-3 ml-1 opacity-50" />;
+    if (sortField !== field) return <i className="bi bi-arrow-down-up w-3 h-3 ml-1 opacity-50" />;
     return sortDirection === "asc"
-      ? <ArrowUp className="w-3 h-3 ml-1" />
-      : <ArrowDown className="w-3 h-3 ml-1" />;
+      ? <i className="bi bi-arrow-up w-3 h-3 ml-1" />
+      : <i className="bi bi-arrow-down w-3 h-3 ml-1" />;
   };
 
 
@@ -109,7 +109,7 @@ export function FolderTableView({ folders, onNavigate, isLoading = false, archiv
         />
       </TableCell>
       <TableCell>
-        <FolderOpen className="w-5 h-5 text-muted-foreground" />
+        <i className="bi bi-folder2-open text-lg text-muted-foreground" />
       </TableCell>
       <TableCell>
         <button
@@ -132,24 +132,24 @@ export function FolderTableView({ folders, onNavigate, isLoading = false, archiv
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="w-4 h-4" />
+              <i className="bi bi-three-dots w-4 h-4" />
               <span className="sr-only">Open menu</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-popover">
             {archivedFoldersOnly ? (
               <DropdownMenuItem onClick={() => onUnarchiveFolder?.(folder.id)}>
-                <ArchiveRestore className="w-4 h-4 mr-2" />Unarchive
+                <i className="bi bi-arrow-counterclockwise w-4 h-4 mr-2" />Unarchive
               </DropdownMenuItem>
             ) : (
               <>
                 <DropdownMenuItem onClick={() => onNavigate(folder.id)}>
-                  <Eye className="w-4 h-4 mr-2" />View
+                  <i className="bi bi-eye w-4 h-4 mr-2" />View
                 </DropdownMenuItem>
-                <DropdownMenuItem><Pencil className="w-4 h-4 mr-2" />Edit</DropdownMenuItem>
-                <DropdownMenuItem><Move className="w-4 h-4 mr-2" />Move</DropdownMenuItem>
-                <DropdownMenuItem><Archive className="w-4 h-4 mr-2" />Archive</DropdownMenuItem>
-                <DropdownMenuItem className="text-destructive"><Trash2 className="w-4 h-4 mr-2" />Delete</DropdownMenuItem>
+                <DropdownMenuItem><i className="bi bi-pencil w-4 h-4 mr-2" />Edit</DropdownMenuItem>
+                <DropdownMenuItem><i className="bi bi-arrows-move w-4 h-4 mr-2" />Move</DropdownMenuItem>
+                <DropdownMenuItem><i className="bi bi-archive w-4 h-4 mr-2" />Archive</DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive"><i className="bi bi-trash w-4 h-4 mr-2" />Delete</DropdownMenuItem>
               </>
             )}
           </DropdownMenuContent>

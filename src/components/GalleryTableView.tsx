@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MoreHorizontal, Images, Video, ArrowUpDown, ArrowUp, ArrowDown, Move } from "lucide-react";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { Gallery } from "@/lib/mockFolderData";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -120,11 +120,11 @@ export function GalleryTableView({ galleries, isLoading = false, onNavigate, onM
 
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) {
-      return <ArrowUpDown className="w-3 h-3 ml-1 opacity-50" />;
+      return <i className="bi bi-arrow-down-up w-3 h-3 ml-1 opacity-50" />;
     }
-    return sortDirection === "asc" 
-      ? <ArrowUp className="w-3 h-3 ml-1" />
-      : <ArrowDown className="w-3 h-3 ml-1" />;
+    return sortDirection === "asc"
+      ? <i className="bi bi-arrow-up w-3 h-3 ml-1" />
+      : <i className="bi bi-arrow-down w-3 h-3 ml-1" />;
   };
 
   // Sort galleries
@@ -242,7 +242,7 @@ export function GalleryTableView({ galleries, isLoading = false, onNavigate, onM
                     disabled={selectedGalleries.size > GALLERY_MOVE_LIMIT}
                     onClick={() => onMoveGalleries(Array.from(selectedGalleries))}
                   >
-                    <Move className="w-3 h-3" />
+                    <i className="bi bi-arrows-move w-3 h-3" />
                     Move
                   </Button>
                 </div>
@@ -361,7 +361,7 @@ export function GalleryTableView({ galleries, isLoading = false, onNavigate, onM
               {/* Thumbnail */}
               <TableCell>
                 <div className="relative w-16 h-12 bg-muted rounded overflow-hidden flex items-center justify-center">
-                  <Images className="w-6 h-6 text-muted-foreground/40" />
+                  <i className="bi bi-images text-2xl text-muted-foreground/40" />
                   {/* Asset count badge */}
                   <span className="absolute top-0.5 left-0.5 text-[9px] font-bold text-white bg-primary px-1.5 py-0.5 rounded">
                     {gallery.assetCount}
@@ -369,7 +369,7 @@ export function GalleryTableView({ galleries, isLoading = false, onNavigate, onM
                   {/* Video indicator */}
                   {gallery.hasVideo && (
                     <span className="absolute bottom-0.5 left-0.5 p-0.5 bg-primary rounded">
-                      <Video className="w-2.5 h-2.5 text-primary-foreground" />
+                      <i className="bi bi-camera-video text-[10px] text-primary-foreground" />
                     </span>
                   )}
                 </div>
@@ -438,7 +438,7 @@ export function GalleryTableView({ galleries, isLoading = false, onNavigate, onM
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="w-4 h-4" />
+                      <i className="bi bi-three-dots w-4 h-4" />
                       <span className="sr-only">Open menu</span>
                     </Button>
                   </DropdownMenuTrigger>

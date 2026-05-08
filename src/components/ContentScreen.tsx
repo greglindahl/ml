@@ -1,4 +1,4 @@
-import { ArrowLeft, FileCode } from "lucide-react";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import { Link } from "react-router-dom";
 import { Screen } from "./LeftNav";
 import { LibraryScreen } from "./LibraryScreen";
@@ -77,7 +77,7 @@ export function ContentScreen({ screen, history, onBack, isMobile = false }: Con
           onClick={onBack}
           className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <i className="bi bi-arrow-left w-4 h-4" />
           <span className="text-sm">Back</span>
         </button>
       )}

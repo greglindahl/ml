@@ -15,7 +15,6 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Info } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import "bootstrap-icons/font/bootstrap-icons.css";
@@ -326,7 +325,7 @@ export function FolderSidebar({
         <AlertDialogContent className="max-w-sm">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <Info className="w-5 h-5 text-destructive" />
+              <i className="bi bi-info-circle w-5 h-5 text-destructive" />
               Move not allowed
             </AlertDialogTitle>
             <AlertDialogDescription>

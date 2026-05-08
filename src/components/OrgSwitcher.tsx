@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search } from "lucide-react";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,7 +47,7 @@ function ChannelSwitcherContent({
       {/* Search Input */}
       <div className="px-4 pb-3">
         <div className="relative">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-[15px] h-[15px] text-channel-placeholder" />
+          <i className="bi bi-search absolute left-2 top-1/2 -translate-y-1/2 w-[15px] h-[15px] text-channel-placeholder" />
           <input
             type="text"
             placeholder="Search for Channel"

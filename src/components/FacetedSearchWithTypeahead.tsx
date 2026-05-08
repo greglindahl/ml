@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { Search, X, User, Tag, Folder, Clock, Sparkles } from "lucide-react";
+import "bootstrap-icons/font/bootstrap-icons.css";
 
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -197,9 +197,9 @@ export function FacetedSearchWithTypeahead({
   // Helper to get icon for a facet group
   const getIconForGroup = (groupLabel: string): React.ReactNode => {
     if (groupLabel === "People") {
-      return <User className="w-4 h-4 text-muted-foreground" />;
+      return <i className="bi bi-person w-4 h-4 text-muted-foreground" />;
     }
-    return <Folder className="w-4 h-4 text-muted-foreground" />;
+    return <i className="bi bi-folder w-4 h-4 text-muted-foreground" />;
   };
 
   // Generate grouped typeahead suggestions based on query
@@ -222,7 +222,7 @@ export function FacetedSearchWithTypeahead({
             type: "facet",
             value: facet,
             label: `${facet} (recognized)`,
-            icon: <User className="w-4 h-4" />,
+            icon: <i className="bi bi-person w-4 h-4" />,
             count,
             category: "People",
             isAiGenerated: true
@@ -243,7 +243,7 @@ export function FacetedSearchWithTypeahead({
             type: "facet",
             value: facet,
             label: facet,
-            icon: <Tag className="w-4 h-4" />,
+            icon: <i className="bi bi-tag w-4 h-4" />,
             count,
             category: "Scene",
             isAiGenerated: true
@@ -268,7 +268,7 @@ export function FacetedSearchWithTypeahead({
             type: "facet",
             value: facet,
             label: facet,
-            icon: <Tag className="w-4 h-4" />,
+            icon: <i className="bi bi-tag w-4 h-4" />,
             count,
             category: "Brand",
             isAiGenerated: true
@@ -293,7 +293,7 @@ export function FacetedSearchWithTypeahead({
           type: "tag",
           value: tag,
           label: tag,
-          icon: <Tag className="w-4 h-4" />,
+          icon: <i className="bi bi-tag w-4 h-4" />,
           count,
           category: "Tag",
           isAiGenerated: false
@@ -309,7 +309,7 @@ export function FacetedSearchWithTypeahead({
           type: "tag",
           value: "Lebron James",
           label: "Lebron James",
-          icon: <Tag className="w-4 h-4" />,
+          icon: <i className="bi bi-tag w-4 h-4" />,
           count,
           category: "Tag",
           isAiGenerated: false
@@ -424,7 +424,7 @@ export function FacetedSearchWithTypeahead({
         className="flex items-center gap-1.5 min-h-[40px] px-3 py-1.5 border rounded-md bg-white focus-within:ring-2 focus-within:ring-ring cursor-text"
         onClick={() => inputRef.current?.focus()}
       >
-        <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+        <i className="bi bi-search w-4 h-4 text-muted-foreground flex-shrink-0" />
         <input
           ref={inputRef}
           type="text"
@@ -437,7 +437,7 @@ export function FacetedSearchWithTypeahead({
         />
         {(searchQuery || selectedFacets.length > 0) && (
           <button onClick={handleClearAll} className="p-1 hover:bg-accent rounded transition-colors flex-shrink-0">
-            <X className="w-4 h-4 text-muted-foreground" />
+            <i className="bi bi-x w-4 h-4 text-muted-foreground" />
           </button>
         )}
       </div>
@@ -450,7 +450,7 @@ export function FacetedSearchWithTypeahead({
               {/* Generic Search Option - shown when user is typing */}
               {searchQuery.trim() && <div className="mb-4">
                   <button onClick={() => handleAddSearchTerm(searchQuery.trim())} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left rounded-lg hover:bg-accent transition-colors">
-                    <Search className="w-4 h-4 text-muted-foreground" />
+                    <i className="bi bi-search w-4 h-4 text-muted-foreground" />
                     <span className="font-medium">{searchQuery}</span>
                   </button>
                 </div>}
@@ -471,14 +471,14 @@ export function FacetedSearchWithTypeahead({
                   <div className="flex flex-col gap-1">
                     {recentSearches.map((search, idx) => <div key={`recent-${idx}`} className="flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-accent transition-colors group">
                         <button onClick={() => handleAddSearchTerm(search)} className="flex items-center gap-2 flex-1 text-left">
-                          <Clock className="w-4 h-4 text-muted-foreground" />
+                          <i className="bi bi-clock w-4 h-4 text-muted-foreground" />
                           <span>{search}</span>
                         </button>
                         <button onClick={e => {
                   e.stopPropagation();
                   removeRecentSearch(search);
                 }} className="p-0.5 rounded hover:bg-secondary opacity-0 group-hover:opacity-100 transition-opacity" aria-label={`Remove ${search} from recent searches`}>
-                          <X className="w-3.5 h-3.5 text-muted-foreground" />
+                          <i className="bi bi-x text-muted-foreground" />
                         </button>
                       </div>)}
                   </div>
@@ -500,9 +500,9 @@ export function FacetedSearchWithTypeahead({
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit bg-gray-200 hover:bg-gray-100" 
                         style={{ backgroundColor: '#e0e0e0' }}
                       >
-                        {suggestion.category === "People" ? <User className="w-4 h-4" /> : suggestion.category === "Brand" ? <i className="bi bi-badge-tm" /> : <i className="bi bi-bounding-box-circles" />}
+                        {suggestion.category === "People" ? <i className="bi bi-person w-4 h-4" /> : suggestion.category === "Brand" ? <i className="bi bi-badge-tm" /> : <i className="bi bi-bounding-box-circles" />}
                         <span>{suggestion.value}</span>
-                        <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
+                        <i className="bi bi-stars text-muted-foreground" />
                       </button>
                     ))}
                   </div>
@@ -522,7 +522,7 @@ export function FacetedSearchWithTypeahead({
                           onClick={() => handleSuggestionClick(suggestion)} 
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit bg-gray-200 hover:bg-gray-300 text-gray-900"
                         >
-                          <Tag className="w-4 h-4" />
+                          <i className="bi bi-tag w-4 h-4" />
                           <span>{suggestion.value}</span>
                         </button>
                       );

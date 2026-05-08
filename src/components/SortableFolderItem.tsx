@@ -1,6 +1,5 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react";
 import type { FolderItem } from "@/lib/mockFolderData";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
@@ -87,7 +86,7 @@ export function SortableFolderItem({
               tabIndex={-1}
               aria-label="Drag to reorder"
             >
-              <GripVertical className="w-3.5 h-3.5 text-[#6e84a3]" />
+              <i className="bi bi-grip-vertical w-3.5 h-3.5 text-[#6e84a3]" />
             </button>
           )
         )}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronDown, Heart, Settings, Image as ImageIcon, Video, type LucideIcon } from "lucide-react";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -9,7 +9,7 @@ interface FilterOption {
   label: string;
   value: string;
   count?: number;
-  icon?: LucideIcon;
+  iconClass?: string;
 }
 
 interface FilterConfig {
@@ -30,10 +30,10 @@ const filters: FilterConfig[] = [{
     mockLibraryAssets.forEach(asset => {
       counts[asset.type] = (counts[asset.type] || 0) + 1;
     });
-    const typeIcons: Record<string, LucideIcon> = { image: ImageIcon, video: Video };
+    const typeIcons: Record<string, string> = { image: "bi-image", video: "bi-camera-video" };
     return Object.entries(counts)
       .sort(([, a], [, b]) => b - a)
-      .map(([type, count]) => ({ label: type.charAt(0).toUpperCase() + type.slice(1), value: type, count, icon: typeIcons[type] }));
+      .map(([type, count]) => ({ label: type.charAt(0).toUpperCase() + type.slice(1), value: type, count, iconClass: typeIcons[type] }));
   })(),
 }, {
   id: "source",
@@ -236,7 +236,7 @@ export function GalleryDetailsFilterBar({
                     {selected.length}
                   </span>
                 )}
-                <ChevronDown className="w-4 h-4" />
+                <i className="bi bi-chevron-down w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="bg-white z-50 min-w-[200px]">
@@ -250,7 +250,7 @@ export function GalleryDetailsFilterBar({
                       className="flex items-center gap-2"
                       onSelect={e => e.preventDefault()}
                     >
-                      {option.icon && <option.icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
+                      {option.iconClass && <i className={`bi ${option.iconClass} text-sm text-muted-foreground flex-shrink-0`} />}
                       <span className="flex-1">{option.label}</span>
                       {option.count !== undefined && (
                         <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>
@@ -286,7 +286,7 @@ export function GalleryDetailsFilterBar({
           onFavoritesToggle?.(next);
         }}
       >
-        <Heart className={cn("h-4 w-4", isFavoritesActive && "fill-current")} />
+        <i className={cn("bi h-4 w-4", isFavoritesActive ? "bi-heart-fill" : "bi-heart")} />
       </Button>
 
       {/* Settings Button */}
@@ -295,7 +295,7 @@ export function GalleryDetailsFilterBar({
         size="icon"
         className="h-10 w-10 flex-shrink-0 rounded-md border-gray-300 bg-white text-[#6e84a3]"
       >
-        <Settings className="h-4 w-4" />
+        <i className="bi bi-gear h-4 w-4" />
       </Button>
     </div>
   );

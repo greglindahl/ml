@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X } from "lucide-react";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -176,7 +176,7 @@ export function NewGalleryDialog({ open, onOpenChange, onCreateGallery, flattene
                 <span key={chip} className="inline-flex items-center gap-1 bg-muted text-sm px-2 py-0.5 rounded-full">
                   {chip}
                   <button type="button" onClick={() => removeSharingChip(chip)} className="hover:text-destructive">
-                    <X className="w-3 h-3" />
+                    <i className="bi bi-x text-xs" />
                   </button>
                 </span>
               ))}

@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { Info, ChevronsUpDown, Check } from "lucide-react";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import {
   Dialog,
   DialogContent,
@@ -116,7 +116,7 @@ export function MoveGalleriesDialog({
                 className="w-full justify-between font-normal"
               >
                 {selectedLocationLabel}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                <i className="bi bi-chevron-expand ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start" container={contentRef.current}>
@@ -133,7 +133,7 @@ export function MoveGalleriesDialog({
                         setLocationPopoverOpen(false);
                       }}
                     >
-                      <Check className={cn("mr-2 h-4 w-4", locationSelected && !locationId ? "opacity-100" : "opacity-0")} />
+                      <i className={cn("bi bi-check mr-2 h-4 w-4", locationSelected && !locationId ? "opacity-100" : "opacity-0")} />
                       All Media
                     </CommandItem>
                     {flattenedFolders.map((f) => (
@@ -146,7 +146,7 @@ export function MoveGalleriesDialog({
                           setLocationPopoverOpen(false);
                         }}
                       >
-                        <Check className={cn("mr-2 h-4 w-4", locationId === f.id ? "opacity-100" : "opacity-0")} />
+                        <i className={cn("bi bi-check mr-2 h-4 w-4", locationId === f.id ? "opacity-100" : "opacity-0")} />
                         {f.displayName}
                       </CommandItem>
                     ))}
@@ -158,7 +158,7 @@ export function MoveGalleriesDialog({
         </div>
 
         <Alert className="bg-muted/50 border-muted">
-          <Info className="h-4 w-4" />
+          <i className="bi bi-info-circle h-4 w-4" />
           <AlertDescription className="text-xs text-muted-foreground">
             This move will affect 10,000 media items and may take some time to complete. The move will continue in the background. <strong>Content will not be searchable until the move is finished.</strong>
           </AlertDescription>
