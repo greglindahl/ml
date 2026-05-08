@@ -38,6 +38,7 @@ import { GalleryFilterBar } from "@/components/GalleryFilterBar";
 import { GalleryCard, GalleryCardState } from "@/components/GalleryCard";
 import { AssetCard, AssetCardState } from "@/components/AssetCard";
 import { FolderCard, FolderCardState } from "@/components/FolderCard";
+import { SettingsDrawer, useDisplayLabel } from "@/components/SettingsDrawer";
 
 const GALLERY_MOVE_LIMIT = 5;
 const MOVE_LIMIT_MESSAGE = "Too many galleries selected. You may only move up to 5 at a time.";
@@ -93,6 +94,14 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const [folderViewMode, setFolderViewMode] = useState<"grid" | "table">("grid");
   const [archivedGalleriesOnly, setArchivedGalleriesOnly] = useState(false);
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
+
+  // Settings drawer state
+  const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
+  const [displayLabel, setDisplayLabel] = useDisplayLabel();
+
+  // Toggle pill states for FilterBar
+  const [isUnsortedActive, setIsUnsortedActive] = useState(false);
+  const [isUnviewedActive, setIsUnviewedActive] = useState(false);
 
   const flatFolders = useMemo(() => flattenFolders(folderTree), [folderTree]);
 
@@ -759,7 +768,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           flattenedFolders={flatFolders}
         />
       ) : (
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-4 md:px-8 xl:px-16">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-4 md:px-8 xl:px-16 content-container">
         {/* Breadcrumb spacer - matches FolderDetailsView/GalleryDetailsView for consistent header position */}
         <div className="mb-2 h-[44px] flex-shrink-0" />
 
@@ -816,10 +825,25 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             </div>
 
             {/* Filters and Controls - Single Row */}
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
-              <FilterBar onFilterChange={handleFilterChange} onCustomDateChange={handleCustomDateChange} onBrandedToggle={setIsBrandedActive} compactMode={true} handleRef={filterBarHandleRef} disabledValues={searchSelectedFacets.filter(f => f.type !== "search").map(f => ({ value: f.value, category: f.category }))} onRemoveDisabledValue={(value) => { searchHandleRef.current?.removeFacet(value); }} />
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-3 cq-stack-xs">
+              <div className="filter-bar-container flex-1 min-w-0">
+                <FilterBar
+                onFilterChange={handleFilterChange}
+                onCustomDateChange={handleCustomDateChange}
+                compactMode={true}
+                handleRef={filterBarHandleRef}
+                disabledValues={searchSelectedFacets.filter(f => f.type !== "search").map(f => ({ value: f.value, category: f.category }))}
+                onRemoveDisabledValue={(value) => { searchHandleRef.current?.removeFacet(value); }}
+                isUnsortedActive={isUnsortedActive}
+                onUnsortedToggle={setIsUnsortedActive}
+                isUnviewedActive={isUnviewedActive}
+                onUnviewedToggle={setIsUnviewedActive}
+                isBrandingActive={isBrandedActive}
+                onBrandingToggle={setIsBrandedActive}
+              />
+              </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
@@ -869,6 +893,16 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     <i className="bi bi-check-square w-4 h-4" />
                   </Button>
                 </div>
+
+                {/* Settings button */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
+                  onClick={() => setSettingsDrawerOpen(true)}
+                >
+                  <i className="bi bi-gear w-4 h-4" />
+                </Button>
               </div>
             </div>
 
@@ -1080,7 +1114,10 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
 
             {/* Filters and Controls */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-              <GalleryFilterBar onArchivedChange={setArchivedGalleriesOnly} />
+              <GalleryFilterBar
+                isArchivedActive={archivedGalleriesOnly}
+                onArchivedToggle={setArchivedGalleriesOnly}
+              />
 
               <div className="flex items-center gap-2">
                 <DropdownMenu>
@@ -1126,6 +1163,16 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     <i className="bi bi-check-square w-4 h-4" />
                   </Button>
                 </div>
+
+                {/* Settings button */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
+                  onClick={() => setSettingsDrawerOpen(true)}
+                >
+                  <i className="bi bi-gear w-4 h-4" />
+                </Button>
               </div>
             </div>
 
@@ -1429,6 +1476,12 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         onOpenChange={setNewGalleryDialogOpen}
         onCreateGallery={handleCreateGallery}
         flattenedFolders={flatFolders}
+      />
+      <SettingsDrawer
+        open={settingsDrawerOpen}
+        onOpenChange={setSettingsDrawerOpen}
+        displayLabel={displayLabel}
+        onDisplayLabelChange={setDisplayLabel}
       />
     </div>
   );

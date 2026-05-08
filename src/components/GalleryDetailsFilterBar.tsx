@@ -1,9 +1,19 @@
 import { useState, useEffect } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { mockLibraryAssets } from "@/lib/mockLibraryData";
+import { TogglePill } from "./TogglePill";
 
 interface FilterOption {
   label: string;
@@ -35,18 +45,6 @@ const filters: FilterConfig[] = [{
       .sort(([, a], [, b]) => b - a)
       .map(([type, count]) => ({ label: type.charAt(0).toUpperCase() + type.slice(1), value: type, count, iconClass: typeIcons[type] }));
   })(),
-}, {
-  id: "source",
-  label: "Source",
-  multiSelect: true,
-  options: [
-    { label: "Posted Content", value: "posted-content", count: 12 },
-    { label: "Imported Content", value: "imported-content", count: 8 },
-    { label: "Published Content", value: "published-content", count: 15 },
-    { label: "Uploaded Content", value: "uploaded-content", count: 22 },
-    { label: "Engage Content", value: "engage-content", count: 5 },
-    { label: "Requested Content", value: "requested-content", count: 3 },
-  ],
 }, {
   id: "tags",
   label: "Tags",
@@ -92,16 +90,23 @@ const filters: FilterConfig[] = [{
     { label: "Last 90 days", value: "quarter" },
     { label: "Last 12 months", value: "year" },
   ],
-}, {
-  id: "view",
-  label: "View",
-  multiSelect: true,
-  options: [
-    { label: "All", value: "all", count: 65 },
-    { label: "Viewed", value: "viewed", count: 42 },
-    { label: "Not Viewed", value: "not-viewed", count: 23 },
-  ],
 }];
+
+// Options for the More dropdown sub-flyouts
+const sourceOptions: FilterOption[] = [
+  { label: "Posted Content", value: "posted-content", count: 12 },
+  { label: "Imported Content", value: "imported-content", count: 8 },
+  { label: "Published Content", value: "published-content", count: 15 },
+  { label: "Uploaded Content", value: "uploaded-content", count: 22 },
+  { label: "Engage Content", value: "engage-content", count: 5 },
+  { label: "Requested Content", value: "requested-content", count: 3 },
+];
+
+const approvalStatusOptions: FilterOption[] = [
+  { label: "Pending", value: "pending" },
+  { label: "Approved", value: "approved" },
+  { label: "Rejected", value: "rejected" },
+];
 
 export interface GalleryDetailsFilterBarHandle {
   removeValue: (filterId: string, value: string) => void;
@@ -120,6 +125,9 @@ interface GalleryDetailsFilterBarProps {
   onFavoritesToggle?: (active: boolean) => void;
   onActiveFiltersChange?: (chips: ActiveFilterChip[]) => void;
   handleRef?: React.MutableRefObject<GalleryDetailsFilterBarHandle | null>;
+  // Toggle pill states
+  isUnviewedActive?: boolean;
+  onUnviewedToggle?: (active: boolean) => void;
 }
 
 export function GalleryDetailsFilterBar({
@@ -127,9 +135,14 @@ export function GalleryDetailsFilterBar({
   onFavoritesToggle,
   onActiveFiltersChange,
   handleRef,
+  isUnviewedActive = false,
+  onUnviewedToggle,
 }: GalleryDetailsFilterBarProps) {
   const [activeFilters, setActiveFilters] = useState<Record<string, { value: string; label: string }[]>>({});
   const [isFavoritesActive, setIsFavoritesActive] = useState(false);
+  // State for More dropdown sub-flyouts (source and approval-status)
+  const [sourceSelections, setSourceSelections] = useState<{ value: string; label: string }[]>([]);
+  const [approvalStatusSelections, setApprovalStatusSelections] = useState<{ value: string; label: string }[]>([]);
 
   // Build chips and notify parent when filters change
   useEffect(() => {
@@ -272,6 +285,118 @@ export function GalleryDetailsFilterBar({
         );
       })}
 
+      {/* More dropdown with sub-flyouts */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
+              (sourceSelections.length > 0 || approvalStatusSelections.length > 0) && "bg-primary/10 border-primary text-primary"
+            )}
+          >
+            <span>More</span>
+            {(sourceSelections.length > 0 || approvalStatusSelections.length > 0) && (
+              <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                {sourceSelections.length + approvalStatusSelections.length}
+              </span>
+            )}
+            <i className="bi bi-chevron-down w-4 h-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="bg-white z-50 min-w-[200px]">
+          {/* Source sub-flyout */}
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger className="flex items-center gap-2">
+              <i className="bi bi-box-arrow-in-right text-sm text-muted-foreground" />
+              <span>Source</span>
+              {sourceSelections.length > 0 && (
+                <span className="ml-auto inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                  {sourceSelections.length}
+                </span>
+              )}
+            </DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
+                <div className="max-h-[280px] overflow-y-auto">
+                  {sourceOptions.map(option => (
+                    <DropdownMenuCheckboxItem
+                      key={option.value}
+                      checked={sourceSelections.some(s => s.value === option.value)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSourceSelections(prev => [...prev, { value: option.value, label: option.label }]);
+                        } else {
+                          setSourceSelections(prev => prev.filter(s => s.value !== option.value));
+                        }
+                        onFilterChange?.("source", checked
+                          ? [...sourceSelections.map(s => s.value), option.value]
+                          : sourceSelections.filter(s => s.value !== option.value).map(s => s.value)
+                        );
+                      }}
+                      onSelect={e => e.preventDefault()}
+                    >
+                      <span className="flex-1">{option.label}</span>
+                      {option.count !== undefined && (
+                        <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>
+                      )}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </div>
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
+
+          {/* Approval Status sub-flyout */}
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger className="flex items-center gap-2">
+              <i className="bi bi-check-circle text-sm text-muted-foreground" />
+              <span>Approval Status</span>
+              {approvalStatusSelections.length > 0 && (
+                <span className="ml-auto inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                  {approvalStatusSelections.length}
+                </span>
+              )}
+            </DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
+                <div className="max-h-[280px] overflow-y-auto">
+                  {approvalStatusOptions.map(option => (
+                    <DropdownMenuCheckboxItem
+                      key={option.value}
+                      checked={approvalStatusSelections.some(s => s.value === option.value)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setApprovalStatusSelections(prev => [...prev, { value: option.value, label: option.label }]);
+                        } else {
+                          setApprovalStatusSelections(prev => prev.filter(s => s.value !== option.value));
+                        }
+                        onFilterChange?.("approval-status", checked
+                          ? [...approvalStatusSelections.map(s => s.value), option.value]
+                          : approvalStatusSelections.filter(s => s.value !== option.value).map(s => s.value)
+                        );
+                      }}
+                      onSelect={e => e.preventDefault()}
+                    >
+                      {option.label}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </div>
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Unviewed Only pill */}
+      <TogglePill
+        label="Unviewed Only"
+        iconClass="bi-eye-slash"
+        isActive={isUnviewedActive}
+        onClick={() => onUnviewedToggle?.(!isUnviewedActive)}
+      />
+
       {/* Favorites Toggle */}
       <Button
         variant="outline"
@@ -287,15 +412,6 @@ export function GalleryDetailsFilterBar({
         }}
       >
         <i className={cn("bi h-4 w-4", isFavoritesActive ? "bi-heart-fill" : "bi-heart")} />
-      </Button>
-
-      {/* Settings Button */}
-      <Button
-        variant="outline"
-        size="icon"
-        className="h-10 w-10 flex-shrink-0 rounded-md border-gray-300 bg-white text-[#6e84a3]"
-      >
-        <i className="bi bi-gear h-4 w-4" />
       </Button>
     </div>
   );

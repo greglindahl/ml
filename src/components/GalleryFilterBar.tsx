@@ -1,14 +1,13 @@
 import { useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger } from
 "@/components/ui/dropdown-menu";
+import { TogglePill } from "./TogglePill";
 
 interface FilterOption {
   label: string;
@@ -81,15 +80,17 @@ const galleryFilters: FilterConfig[] = [
 
 
 interface GalleryFilterBarProps {
-  onArchivedChange?: (archived: boolean) => void;
+  isArchivedActive?: boolean;
+  onArchivedToggle?: (active: boolean) => void;
 }
 
-export function GalleryFilterBar({ onArchivedChange }: GalleryFilterBarProps = {}) {
+export function GalleryFilterBar({
+  isArchivedActive = false,
+  onArchivedToggle,
+}: GalleryFilterBarProps = {}) {
   const [activeFilters, setActiveFilters] = useState<
     Record<string, {value: string;label: string;}[]>>(
     {});
-  const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
-  const [showArchived, setShowArchived] = useState(false);
 
   const handleMultiSelect = (
   filterId: string,
@@ -246,13 +247,13 @@ export function GalleryFilterBar({ onArchivedChange }: GalleryFilterBarProps = {
 
       })}
 
-      {/* Archived toggle */}
-      <div className="inline-flex items-center gap-2 h-8 px-2">
-        <span className="text-[15px] font-normal text-muted-foreground whitespace-nowrap">
-          Archived Only
-        </span>
-        <Switch checked={showArchived} onCheckedChange={(v) => { setShowArchived(v); onArchivedChange?.(v); }} className="scale-75" />
-      </div>
+      {/* Archived pill */}
+      <TogglePill
+        label="Archived"
+        iconClass="bi-archive"
+        isActive={isArchivedActive}
+        onClick={() => onArchivedToggle?.(!isArchivedActive)}
+      />
     </div>);
 
 }
