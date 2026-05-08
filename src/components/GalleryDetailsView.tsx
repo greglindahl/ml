@@ -1,5 +1,4 @@
 import { useState, useCallback, useMemo, useRef } from "react";
-import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, Share2, Upload, MoreVertical, Move, Trash2, X } from "lucide-react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { AssetTableView } from "@/components/AssetTableView";
@@ -27,9 +26,9 @@ import { AssetCard, AssetCardState } from "@/components/AssetCard";
 function AssetTypeIcon({ type, className }: { type: LibraryAsset["type"]; className?: string }) {
   switch (type) {
     case "video":
-      return <Video className={className} />;
+      return <i className={`bi bi-camera-video ${className || ""}`} />;
     default:
-      return <Image className={className} />;
+      return <i className={`bi bi-image ${className || ""}`} />;
   }
 }
 
@@ -195,7 +194,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
       <nav className="flex items-center gap-[6px] text-[13px] tracking-[-0.13px] mb-2 flex-shrink-0 h-[44px] items-end">
         {breadcrumbPath.map((item, index) => (
           <div key={item.id} className="flex items-center gap-[6px]">
-            {index > 0 && <ChevronRight className="w-[11px] h-[11px] text-[#95aac9]" />}
+            {index > 0 && <i className="bi bi-chevron-right text-[11px] text-[#95aac9]" />}
             {index < breadcrumbPath.length - 1 ? (
               <button
                 onClick={() => onNavigate(item.id)}
@@ -255,25 +254,25 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-2">
             <Button className="gap-2">
-              <Upload className="w-4 h-4" />
+              <i className="bi bi-upload w-4 h-4" />
               Upload
             </Button>
             <Button variant="outline" className="gap-2 border-primary text-primary hover:bg-primary/5">
-              <Share2 className="w-4 h-4" />
+              <i className="bi bi-share w-4 h-4" />
               Share
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon" className="border-primary text-primary hover:bg-primary/5">
-                  <MoreVertical className="w-4 h-4" />
+                  <i className="bi bi-three-dots-vertical w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setMoveGalleriesOpen(true)}>
-                  <Move className="w-4 h-4 mr-2" /> Move
+                  <i className="bi bi-arrows-move w-4 h-4 mr-2" /> Move
                 </DropdownMenuItem>
                 <DropdownMenuItem className="text-destructive focus:text-destructive">
-                  <Trash2 className="w-4 h-4 mr-2" /> Delete
+                  <i className="bi bi-trash w-4 h-4 mr-2" /> Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -311,7 +310,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                     Sort
-                    <ChevronDown className="w-4 h-4" />
+                    <i className="bi bi-chevron-down w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-white">
@@ -329,7 +328,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${assetsViewMode === "grid" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("grid")}
                 >
-                  <Grid3X3 className="w-4 h-4" />
+                  <i className="bi bi-grid-3x3 w-4 h-4" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -337,7 +336,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${assetsViewMode === "list" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("list")}
                 >
-                  <List className="w-4 h-4" />
+                  <i className="bi bi-list w-4 h-4" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -351,7 +350,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                     }
                   }}
                 >
-                  <CheckSquare className="w-4 h-4" />
+                  <i className="bi bi-check-square w-4 h-4" />
                 </Button>
               </div>
             </div>
@@ -371,7 +370,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                     onClick={() => filterBarHandleRef.current?.removeValue(chip.filterId, chip.value)}
                   >
                     {chip.label}
-                    <X className="w-3.5 h-3.5 ml-0.5" />
+                    <i className="bi bi-x text-sm ml-0.5" />
                   </Badge>
                 ))}
                 <button
@@ -408,7 +407,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                     40 per page
-                    <ChevronDown className="w-4 h-4" />
+                    <i className="bi bi-chevron-down w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-white">
@@ -424,7 +423,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                     <i className="bi bi-table text-base" />
                     Manage Columns
-                    <ChevronDown className="w-4 h-4" />
+                    <i className="bi bi-chevron-down w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-white">
@@ -463,7 +462,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
               </div>
             ) : filteredResults.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <Image className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                <i className="bi bi-image text-5xl text-muted-foreground/30 mb-4" />
                 <h3 className="text-lg font-medium mb-1">No assets found</h3>
                 <p className="text-sm text-muted-foreground">Try adjusting your filters or search terms</p>
               </div>

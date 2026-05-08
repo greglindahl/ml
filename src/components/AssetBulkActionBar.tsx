@@ -1,4 +1,4 @@
-import { Heart, Archive, MoreHorizontal, Download, Share2, Images, Trash2 } from "lucide-react";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -57,7 +57,7 @@ export function AssetBulkActionBar({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onFavorite}>
-              <Heart className="w-4 h-4" />
+              <i className="bi bi-heart w-4 h-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Favorite</TooltipContent>
@@ -65,7 +65,7 @@ export function AssetBulkActionBar({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onArchive}>
-              <Archive className="w-4 h-4" />
+              <i className="bi bi-archive w-4 h-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Archive</TooltipContent>
@@ -73,18 +73,18 @@ export function AssetBulkActionBar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="w-4 h-4" />
+              <i className="bi bi-three-dots w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-popover">
             <DropdownMenuItem onClick={onDownload}>
-              <Download className="w-4 h-4 mr-2" /> Download
+              <i className="bi bi-download w-4 h-4 mr-2" /> Download
             </DropdownMenuItem>
             <Tooltip>
               <TooltipTrigger asChild>
                 <div>
                   <DropdownMenuItem disabled={isOverLimit} onClick={onShare}>
-                    <Share2 className="w-4 h-4 mr-2" /> Share
+                    <i className="bi bi-share w-4 h-4 mr-2" /> Share
                   </DropdownMenuItem>
                 </div>
               </TooltipTrigger>
@@ -94,14 +94,14 @@ export function AssetBulkActionBar({
               <TooltipTrigger asChild>
                 <div>
                   <DropdownMenuItem disabled={isOverLimit} onClick={onGalleryAction}>
-                    <Images className="w-4 h-4 mr-2" /> {galleryActionLabel}
+                    <i className="bi bi-images w-4 h-4 mr-2" /> {galleryActionLabel}
                   </DropdownMenuItem>
                 </div>
               </TooltipTrigger>
               {isOverLimit && <TooltipContent side="left">{ASSET_LIMIT_MESSAGE}</TooltipContent>}
             </Tooltip>
             <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
-              <Trash2 className="w-4 h-4 mr-2" /> Delete
+              <i className="bi bi-trash w-4 h-4 mr-2" /> Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

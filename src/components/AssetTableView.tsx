@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MoreHorizontal, Video, Image, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import { LibraryAsset, getRelativeTime } from "@/lib/mockLibraryData";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -32,12 +32,8 @@ type SortDirection = "asc" | "desc";
 
 // Icon component for asset types
 function AssetTypeIcon({ type, className }: { type: LibraryAsset["type"]; className?: string }) {
-  switch (type) {
-    case "video":
-      return <Video className={className} />;
-    default:
-      return <Image className={className} />;
-  }
+  const iconClass = type === "video" ? "bi-camera-video" : "bi-image";
+  return <i className={`bi ${iconClass} ${className || ""}`} />;
 }
 
 // Format file size for display
@@ -104,11 +100,11 @@ export function AssetTableView({ assets, isLoading = false, selectedAssets: exte
 
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) {
-      return <ArrowUpDown className="w-3 h-3 ml-1 opacity-50" />;
+      return <i className="bi bi-arrow-down-up w-3 h-3 ml-1 opacity-50" />;
     }
-    return sortDirection === "asc" 
-      ? <ArrowUp className="w-3 h-3 ml-1" />
-      : <ArrowDown className="w-3 h-3 ml-1" />;
+    return sortDirection === "asc"
+      ? <i className="bi bi-arrow-up w-3 h-3 ml-1" />
+      : <i className="bi bi-arrow-down w-3 h-3 ml-1" />;
   };
 
   // Sort assets
@@ -332,7 +328,7 @@ export function AssetTableView({ assets, isLoading = false, selectedAssets: exte
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="w-4 h-4" />
+                      <i className="bi bi-three-dots w-4 h-4" />
                       <span className="sr-only">Open menu</span>
                     </Button>
                   </DropdownMenuTrigger>

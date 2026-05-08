@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronDown, Calendar as CalendarIcon, X, Search, ChevronRight, Folder, Images, Palette, Image as ImageIcon, Video, RectangleHorizontal, Square, RectangleVertical, Proportions, Info, type LucideIcon } from "lucide-react";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import type { DateRange } from "react-day-picker";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ interface FilterOption {
   type?: "folder" | "gallery";
   group?: string;
   count?: number;
-  icon?: LucideIcon;
+  iconClass?: string;
 }
 interface FilterConfig {
   id: string;
@@ -144,10 +144,10 @@ const filters: FilterConfig[] = [{
     mockLibraryAssets.forEach(asset => {
       counts[asset.type] = (counts[asset.type] || 0) + 1;
     });
-    const typeIcons: Record<string, LucideIcon> = { image: ImageIcon, video: Video };
+    const typeIcons: Record<string, string> = { image: "bi-image", video: "bi-camera-video" };
     return Object.entries(counts)
       .sort(([, a], [, b]) => b - a)
-      .map(([type, count]) => ({ label: type.charAt(0).toUpperCase() + type.slice(1), value: type, count, icon: typeIcons[type] }));
+      .map(([type, count]) => ({ label: type.charAt(0).toUpperCase() + type.slice(1), value: type, count, iconClass: typeIcons[type] }));
   })(),
 }, {
   id: "folders",
@@ -192,10 +192,10 @@ const filters: FilterConfig[] = [{
     mockLibraryAssets.forEach(asset => {
       counts[asset.aspectRatio] = (counts[asset.aspectRatio] || 0) + 1;
     });
-    const ratioIcons: Record<string, LucideIcon> = { "16:9": RectangleHorizontal, "1:1": Square, "9:16": RectangleVertical, "4:3": Proportions };
+    const ratioIcons: Record<string, string> = { "16:9": "bi-aspect-ratio", "1:1": "bi-square", "9:16": "bi-aspect-ratio", "4:3": "bi-aspect-ratio-fill" };
     return Object.entries(counts)
       .sort(([, a], [, b]) => b - a)
-      .map(([ratio, count]) => ({ label: ratio, value: ratio, count, icon: ratioIcons[ratio] }));
+      .map(([ratio, count]) => ({ label: ratio, value: ratio, count, iconClass: ratioIcons[ratio] }));
   })(),
 }];
 
@@ -401,7 +401,7 @@ export function FilterBar({
                 <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-primary/10 border-primary text-primary">
                   <span>{filter.label}</span>
                   <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">{totalActiveCount}</span>
-                  <ChevronDown className="w-4 h-4 opacity-50" />
+                  <i className="bi bi-chevron-down w-4 h-4 opacity-50" />
                 </Button>
               ) : <div className="inline-flex items-center gap-1 h-8 px-1.5 border border-input rounded-md bg-white min-w-[120px] max-w-[280px]">
                   <div className="flex flex-wrap gap-1 flex-1">
@@ -410,7 +410,7 @@ export function FilterBar({
                   e.stopPropagation();
                   handleRemoveValue(filter.id, item.value);
                 }} className="text-muted-foreground hover:text-foreground" aria-label={`Remove ${filter.label} filter: ${item.label}`}>
-                          <X className="w-3 h-3" />
+                          <i className="bi bi-x text-xs" />
                         </button>
                         {item.label}
                       </span>)}
@@ -420,13 +420,13 @@ export function FilterBar({
                 e.stopPropagation();
                 clearFilter(filter.id);
               }} className="text-muted-foreground hover:text-foreground" aria-label={`Clear ${filter.label} filter`}>
-                      <X className="w-3.5 h-3.5" />
+                      <i className="bi bi-x text-sm" />
                     </button>
-                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                    <i className="bi bi-chevron-down text-sm text-muted-foreground" />
                   </div>
                 </div>) : <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]" ref={isDateFilter ? dateFilterRef : undefined}>
                   <span>{filter.label}</span>
-                  <ChevronDown className="w-4 h-4" />
+                  <i className="bi bi-chevron-down w-4 h-4" />
                 </Button>}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="bg-white z-50 min-w-[200px]" onCloseAutoFocus={e => e.preventDefault()}>
@@ -471,7 +471,7 @@ export function FilterBar({
                     {filter.options.map(option => {
                 const isTreeItem = filter.isTreeStructure && option.depth !== undefined;
                 const indent = isTreeItem ? option.depth! * 12 : 0;
-                const Icon = option.type === "gallery" ? Images : Folder;
+                const treeIconClass = option.type === "gallery" ? "bi-images" : "bi-folder";
                 const categoryMap: Record<string, string> = { people: "People", scene: "Scene", brand: "Brand", tags: "Tag" };
                 const isDisabledBySearch = disabledValues.some(
                   dv => dv.value.toLowerCase() === option.value.toLowerCase() && dv.category.toLowerCase() === (categoryMap[filter.id] || "").toLowerCase()
@@ -485,8 +485,8 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
                 }} style={{
                   paddingLeft: isTreeItem ? `${8 + indent}px` : undefined
                 }} className="flex items-center gap-2" onSelect={e => e.preventDefault()}>
-                            {isTreeItem && <Icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
-                            {option.icon && !isTreeItem && <option.icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 group-data-[state=checked]:text-white" />}
+                            {isTreeItem && <i className={`bi ${treeIconClass} text-sm text-muted-foreground flex-shrink-0`} />}
+                            {option.iconClass && !isTreeItem && <i className={`bi ${option.iconClass} text-sm text-muted-foreground flex-shrink-0 group-data-[state=checked]:text-white`} />}
                             <span className={cn("flex-1", option.depth === 0 ? "font-medium" : "")}>{option.label}</span>
                             {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto group-data-[state=checked]:text-white">{option.count}</span>}
                           </DropdownMenuCheckboxItem> : <DropdownMenuCheckboxItem key={option.value} checked={selected.some(s => s.value === option.value)} onCheckedChange={() => handleSingleSelect(filter.id, option.value, option.label)}>
@@ -544,7 +544,7 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
                     <span className="text-xs text-primary font-medium">Choose a Date Range</span>
                   </div>
                   <div className="flex items-start gap-1.5 mt-3 px-1">
-                    <Info className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                    <i className="bi bi-info-circle text-sm text-muted-foreground flex-shrink-0 mt-0.5" />
                     <span className="text-xs text-muted-foreground">
                       For optimal performance, limit your search selection to 12 months.
                     </span>
@@ -599,7 +599,7 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
               <Button variant="outline" size="sm" className={cn("h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]", moreCount > 0 && "bg-primary/10 border-primary text-primary")}>
                 <span>More</span>
                 {moreCount > 0 && <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">{moreCount}</span>}
-                <ChevronDown className="w-4 h-4" />
+                <i className="bi bi-chevron-down w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="bg-white z-50 min-w-[180px]">
@@ -670,7 +670,7 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
           onBrandedToggle?.(next);
         }}
       >
-        <Palette className={cn("h-4 w-4", isBrandedActive && "fill-current")} />
+        <i className={cn("bi bi-palette h-4 w-4", isBrandedActive && "bi-palette-fill")} />
       </Button>
     </div>;
 }

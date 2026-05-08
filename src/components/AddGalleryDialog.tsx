@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, Plus, Images, Info } from "lucide-react";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
@@ -64,7 +64,7 @@ export function AddGalleryDialog({ open, onOpenChange, galleries, onSelectGaller
 
         <div className="flex items-center gap-2 mb-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search galleries..."
               value={searchQuery}
@@ -81,7 +81,7 @@ export function AddGalleryDialog({ open, onOpenChange, galleries, onSelectGaller
               onCreateNew();
             }}
           >
-            <Plus className="w-4 h-4" />
+            <i className="bi bi-plus w-4 h-4" />
             New Gallery
           </Button>
         </div>
@@ -89,7 +89,7 @@ export function AddGalleryDialog({ open, onOpenChange, galleries, onSelectGaller
         <div className="flex-1 overflow-y-auto border rounded-md divide-y max-h-[340px]">
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <Images className="w-8 h-8 text-muted-foreground/40 mb-2" />
+              <i className="bi bi-images text-3xl text-muted-foreground/40 mb-2" />
               <p className="text-sm text-muted-foreground">No galleries found</p>
             </div>
           ) : (
@@ -103,7 +103,7 @@ export function AddGalleryDialog({ open, onOpenChange, galleries, onSelectGaller
                   onClick={() => toggleSelect(gallery.id)}
                 >
                   <div className="w-10 h-10 rounded bg-muted flex items-center justify-center flex-shrink-0">
-                    <Images className="w-5 h-5 text-muted-foreground/50" />
+                    <i className="bi bi-images text-lg text-muted-foreground/50" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium truncate">{gallery.name}</div>
@@ -118,7 +118,7 @@ export function AddGalleryDialog({ open, onOpenChange, galleries, onSelectGaller
                         <TooltipTrigger asChild>
                           <div className="flex items-center gap-1.5 cursor-help">
                             <span className="text-xs text-muted-foreground">In Folder</span>
-                            <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                            <i className="bi bi-info-circle h-3.5 w-3.5 text-muted-foreground" />
                           </div>
                         </TooltipTrigger>
                         <TooltipContent side="left" className="max-w-[220px]">
@@ -143,7 +143,7 @@ export function AddGalleryDialog({ open, onOpenChange, galleries, onSelectGaller
         </div>
 
         <div className="flex items-center gap-1.5 pt-2">
-          <Info className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+          <i className="bi bi-info-circle h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
           <span className="text-xs text-muted-foreground">Galleries can only belong to one folder.</span>
         </div>
 

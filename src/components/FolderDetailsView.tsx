@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useRef } from "react";
-import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, MoreVertical, MoreHorizontal, Upload, FolderOpen, Pencil, Move, Archive, Trash2, Folder, Plus, Heart, ArchiveRestore, Search, X } from "lucide-react";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import { AssetTableView } from "@/components/AssetTableView";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { GalleryTableView, GalleryTableItem } from "@/components/GalleryTableView";
@@ -46,9 +46,9 @@ const ASSET_BULK_LIMIT = 20;
 function AssetTypeIcon({ type, className }: { type: LibraryAsset["type"]; className?: string }) {
   switch (type) {
     case "video":
-      return <Video className={className} />;
+      return <i className={`bi bi-camera-video ${className || ""}`} />;
     default:
-      return <Image className={className} />;
+      return <i className={`bi bi-image ${className || ""}`} />;
   }
 }
 
@@ -305,7 +305,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
       <nav className="flex items-center gap-[6px] text-[13px] tracking-[-0.13px] mb-2 flex-shrink-0 h-[44px] items-end">
         {breadcrumbPath.map((item, index) => (
           <div key={item.id} className="flex items-center gap-[6px]">
-            {index > 0 && <ChevronRight className="w-[11px] h-[11px] text-[#95aac9]" />}
+            {index > 0 && <i className="bi bi-chevron-right text-[11px] text-[#95aac9]" />}
             {index < breadcrumbPath.length - 1 ? (
               <button
                 onClick={() => onNavigate(item.id)}
@@ -328,54 +328,54 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-2">
                 New
-                <ChevronDown className="w-4 h-4" />
+                <i className="bi bi-chevron-down w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {canCreateSubfolder && (
                 <DropdownMenuItem onClick={() => setNewFolderDialogOpen(true)}>
-                  <Folder className="w-4 h-4 mr-2" />
+                  <i className="bi bi-folder w-4 h-4 mr-2" />
                   New Folder
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem onClick={() => setNewGalleryDialogOpen(true)}>
-                <Plus className="w-4 h-4 mr-2" />
+                <i className="bi bi-plus w-4 h-4 mr-2" />
                 New Gallery
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setAddGalleryDialogOpen(true)}>
-                <Images className="w-4 h-4 mr-2" />
+                <i className="bi bi-images w-4 h-4 mr-2" />
                 Add Existing Gallery
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button className="gap-2">
-            <Upload className="w-4 h-4" />
+            <i className="bi bi-upload w-4 h-4" />
             Upload
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
-                <MoreVertical className="w-4 h-4" />
+                <i className="bi bi-three-dots-vertical w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                <Pencil className="w-4 h-4 mr-2" /> Edit
+                <i className="bi bi-pencil w-4 h-4 mr-2" /> Edit
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setMoveOpen(true)}>
-                <Move className="w-4 h-4 mr-2" /> Move
+                <i className="bi bi-arrows-move w-4 h-4 mr-2" /> Move
               </DropdownMenuItem>
               {folder.archived ? (
                 <DropdownMenuItem onClick={() => setUnarchiveOpen(true)}>
-                  <ArchiveRestore className="w-4 h-4 mr-2" /> Unarchive
+                  <i className="bi bi-archive w-4 h-4 mr-2" /> Unarchive
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem onClick={() => setArchiveOpen(true)}>
-                  <Archive className="w-4 h-4 mr-2" /> Archive
+                  <i className="bi bi-archive w-4 h-4 mr-2" /> Archive
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem onClick={() => setDeleteOpen(true)} className="text-destructive focus:text-destructive">
-                <Trash2 className="w-4 h-4 mr-2" /> Delete
+                <i className="bi bi-trash w-4 h-4 mr-2" /> Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -408,7 +408,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                     Sort: Added Date
-                    <ChevronDown className="w-4 h-4" />
+                    <i className="bi bi-chevron-down w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -426,7 +426,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${assetsViewMode === "grid" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("grid")}
                 >
-                  <Grid3X3 className="w-4 h-4" />
+                  <i className="bi bi-grid-3x3 w-4 h-4" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -434,7 +434,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${assetsViewMode === "list" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("list")}
                 >
-                  <List className="w-4 h-4" />
+                  <i className="bi bi-list w-4 h-4" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -448,7 +448,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                     }
                   }}
                 >
-                  <CheckSquare className="w-4 h-4" />
+                  <i className="bi bi-check-square w-4 h-4" />
                 </Button>
               </div>
             </div>
@@ -481,7 +481,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                       onClick={() => filterBarHandleRef.current?.removeValue(chip.sourceId, chip.value)}
                     >
                       {chip.label}
-                      <X className="w-3.5 h-3.5 ml-0.5" />
+                      <i className="bi bi-x text-sm ml-0.5" />
                     </Badge>
                   ))}
                   <button
@@ -519,7 +519,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                     40 per page
-                    <ChevronDown className="w-4 h-4" />
+                    <i className="bi bi-chevron-down w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-white">
@@ -535,7 +535,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                     <i className="bi bi-table text-base" />
                     Manage Columns
-                    <ChevronDown className="w-4 h-4" />
+                    <i className="bi bi-chevron-down w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-white">
@@ -574,7 +574,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               </div>
             ) : filteredResults.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <Image className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                <i className="bi bi-image text-5xl text-muted-foreground/30 mb-4" />
                 <h3 className="text-lg font-medium mb-1">No assets found</h3>
                 <p className="text-sm text-muted-foreground">Try adjusting your filters or search terms</p>
               </div>
@@ -633,7 +633,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300">
                     Creator
-                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    <i className="bi bi-chevron-down w-4 h-4 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -647,7 +647,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300">
                     Groups
-                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    <i className="bi bi-chevron-down w-4 h-4 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -659,7 +659,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300">
                     Date Range
-                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    <i className="bi bi-chevron-down w-4 h-4 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -673,7 +673,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300">
                     Last Added Date
-                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    <i className="bi bi-chevron-down w-4 h-4 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -695,7 +695,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                     Sort: Added Date
-                    <ChevronDown className="w-4 h-4" />
+                    <i className="bi bi-chevron-down w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -713,7 +713,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${galleriesViewMode === "grid" ? "bg-gray-100" : ""}`}
                   onClick={() => setGalleriesViewMode("grid")}
                 >
-                  <Grid3X3 className="w-4 h-4" />
+                  <i className="bi bi-grid-3x3 w-4 h-4" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -721,7 +721,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   className={`h-10 w-10 rounded-none border-l border-gray-300 text-[#6e84a3] ${galleriesViewMode === "list" ? "bg-gray-100" : ""}`}
                   onClick={() => setGalleriesViewMode("list")}
                 >
-                  <List className="w-4 h-4" />
+                  <i className="bi bi-list w-4 h-4" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -729,7 +729,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   className={`h-10 w-10 rounded-l-none border-l border-gray-300 text-[#6e84a3] ${isAnyGallerySelected ? "bg-gray-100" : ""}`}
                   onClick={() => toggleSelectAllGalleries()}
                 >
-                  <CheckSquare className="w-4 h-4" />
+                  <i className="bi bi-check-square w-4 h-4" />
                 </Button>
               </div>
             </div>
@@ -752,15 +752,15 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               </div>
               <div className="flex items-center gap-1">
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({ title: "Favorited", description: `${selectedGalleries.size} ${selectedGalleries.size === 1 ? "gallery" : "galleries"} favorited.` })}>
-                  <Heart className="w-4 h-4" />
+                  <i className="bi bi-heart w-4 h-4" />
                 </Button>
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({ title: "Archived", description: `${selectedGalleries.size} ${selectedGalleries.size === 1 ? "gallery" : "galleries"} archived.` })}>
-                  <Archive className="w-4 h-4" />
+                  <i className="bi bi-archive w-4 h-4" />
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="w-4 h-4" />
+                      <i className="bi bi-three-dots w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -772,7 +772,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                               disabled={selectedGalleries.size > GALLERY_MOVE_LIMIT}
                               onClick={handleBulkMoveGalleries}
                             >
-                              <Move className="w-4 h-4 mr-2" /> Move
+                              <i className="bi bi-arrows-move w-4 h-4 mr-2" /> Move
                             </DropdownMenuItem>
                           </div>
                         </TooltipTrigger>
@@ -784,7 +784,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                       </Tooltip>
                     </TooltipProvider>
                     <DropdownMenuItem className="text-destructive focus:text-destructive">
-                      <Trash2 className="w-4 h-4 mr-2" /> Delete
+                      <i className="bi bi-trash w-4 h-4 mr-2" /> Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -799,7 +799,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                     40 per page
-                    <ChevronDown className="w-4 h-4" />
+                    <i className="bi bi-chevron-down w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-white">
@@ -815,7 +815,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                     <i className="bi bi-table text-base" />
                     Manage Columns
-                    <ChevronDown className="w-4 h-4" />
+                    <i className="bi bi-chevron-down w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-white">
@@ -846,7 +846,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             if (filteredGalleries.length === 0) {
               return (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <Images className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                  <i className="bi bi-images text-5xl text-muted-foreground/30 mb-4" />
                   <h3 className="text-xl font-semibold mb-2">{archivedGalleriesOnly ? "No archived galleries" : "No galleries yet"}</h3>
                   <p className="text-sm text-muted-foreground max-w-sm mb-8">
                     {archivedGalleriesOnly ? "Archive a gallery to see it here." : "Add existing galleries to this folder or create a new one."}
@@ -923,10 +923,10 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             )}
             <div className="flex items-center border border-gray-300 rounded-md bg-white">
               <Button variant="ghost" size="icon" className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${folderViewMode === "grid" ? "bg-gray-100" : ""}`} onClick={() => setFolderViewMode("grid")}>
-                <Grid3X3 className="w-4 h-4" />
+                <i className="bi bi-grid-3x3 w-4 h-4" />
               </Button>
               <Button variant="ghost" size="icon" className={`h-10 w-10 rounded-l-none border-l border-gray-300 text-[#6e84a3] ${folderViewMode === "table" ? "bg-gray-100" : ""}`} onClick={() => setFolderViewMode("table")}>
-                <List className="w-4 h-4" />
+                <i className="bi bi-list w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -948,8 +948,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               return (
                 <div className="flex-1 flex flex-col items-center justify-center py-16 text-center">
                   <div className="relative mb-6">
-                    <FolderOpen className="h-16 w-16 text-muted-foreground/30" />
-                    <Images className="h-6 w-6 text-muted-foreground/40 absolute -bottom-1 -right-2" />
+                    <i className="bi bi-folder2-open text-6xl text-muted-foreground/30" />
+                    <i className="bi bi-images text-xl text-muted-foreground/40 absolute -bottom-1 -right-2" />
                   </div>
                   {canCreateSubfolder ? (
                     <>
@@ -979,7 +979,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             if (filteredChildFolders.length === 0) {
               return (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <Folder className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                  <i className="bi bi-folder text-5xl text-muted-foreground/30 mb-4" />
                   <h3 className="text-lg font-medium mb-1">{archivedFoldersOnly ? "No archived folders" : "No folders"}</h3>
                   <p className="text-sm text-muted-foreground">{archivedFoldersOnly ? "Archive a folder to see it here." : "No sub-folders in this folder."}</p>
                 </div>

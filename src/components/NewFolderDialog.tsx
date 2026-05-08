@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
-import { Images, Plus, X, ChevronsUpDown, Check } from "lucide-react";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import { cn } from "@/lib/utils";
 import type { FlattenedFolder, Gallery, FolderItem } from "@/lib/mockFolderData";
 import { collectAssignedGalleryIds } from "@/lib/mockFolderData";
@@ -147,7 +147,7 @@ export function NewFolderDialog({
                     className="w-full justify-between font-normal"
                   >
                     {selectedLocationLabel}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    <i className="bi bi-chevron-expand ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start" container={contentRef.current}>
@@ -163,7 +163,7 @@ export function NewFolderDialog({
                             setLocationPopoverOpen(false);
                           }}
                         >
-                          <Check className={cn("mr-2 h-4 w-4", !locationId ? "opacity-100" : "opacity-0")} />
+                          <i className={cn("bi bi-check mr-2 h-4 w-4", !locationId ? "opacity-100" : "opacity-0")} />
                           All Media
                         </CommandItem>
                         {flattenedFolders
@@ -177,7 +177,7 @@ export function NewFolderDialog({
                                 setLocationPopoverOpen(false);
                               }}
                             >
-                              <Check className={cn("mr-2 h-4 w-4", locationId === f.id ? "opacity-100" : "opacity-0")} />
+                              <i className={cn("bi bi-check mr-2 h-4 w-4", locationId === f.id ? "opacity-100" : "opacity-0")} />
                               {f.displayName}
                             </CommandItem>
                           ))}
@@ -196,7 +196,7 @@ export function NewFolderDialog({
                 onClick={() => setAddGalleryOpen(true)}
               >
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Images className="w-4 h-4" />
+                  <i className="bi bi-images w-4 h-4" />
                   <span>Select Gallery</span>
                 </div>
                 <Button
@@ -209,7 +209,7 @@ export function NewFolderDialog({
                     setAddGalleryOpen(true);
                   }}
                 >
-                  <Plus className="w-4 h-4" />
+                  <i className="bi bi-plus w-4 h-4" />
                 </Button>
               </div>
 
@@ -221,7 +221,7 @@ export function NewFolderDialog({
                       className="flex items-center justify-between rounded-md border px-3 py-1.5 text-sm"
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <Images className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <i className="bi bi-images w-4 h-4 text-muted-foreground flex-shrink-0" />
                         <span className="truncate">{g.name}</span>
                       </div>
                       <Button
@@ -231,7 +231,7 @@ export function NewFolderDialog({
                         className="h-5 w-5 flex-shrink-0"
                         onClick={() => removeGallery(g.id)}
                       >
-                        <X className="w-3 h-3" />
+                        <i className="bi bi-x text-xs" />
                       </Button>
                     </div>
                   ))}

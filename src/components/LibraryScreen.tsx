@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, Folder, ChevronDown, Plus, PlusCircle, Upload, Grid3X3, List, CheckSquare, Image, Images, FileText, Music, Video, Loader2, Settings2, Palette, X, User, Tag, Sparkles, Search, MoreHorizontal, FolderInput, Trash2, Heart, Archive } from "lucide-react";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -46,9 +46,9 @@ const MOVE_LIMIT_MESSAGE = "Too many galleries selected. You may only move up to
 function AssetTypeIcon({ type, className }: { type: LibraryAsset["type"]; className?: string }) {
   switch (type) {
     case "video":
-      return <Video className={className} />;
+      return <i className={`bi bi-camera-video ${className || ""}`} />;
     default:
-      return <Image className={className} />;
+      return <i className={`bi bi-image ${className || ""}`} />;
   }
 }
 
@@ -773,24 +773,24 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   variant="outline"
                   className="h-10 px-3 py-2 gap-2 text-primary border-primary hover:bg-primary/5"
                 >
-                  <PlusCircle className="w-4 h-4" />
+                  <i className="bi bi-plus-circle w-4 h-4" />
                   New
-                  <ChevronDown className="w-4 h-4" />
+                  <i className="bi bi-chevron-down w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setNewFolderDialogOpen(true)}>
-                  <Folder className="w-4 h-4 mr-2" />
+                  <i className="bi bi-folder w-4 h-4 mr-2" />
                   New Folder
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setNewGalleryDialogOpen(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
+                  <i className="bi bi-plus w-4 h-4 mr-2" />
                   New Gallery
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <Button className="h-10 px-3 py-2 gap-2">
-              <Upload className="w-4 h-4" />
+              <i className="bi bi-upload w-4 h-4" />
               Upload
             </Button>
           </div>
@@ -824,7 +824,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                       Sort{sortField ? `: ${SORT_LABELS[sortField]}` : ""}
-                      <ChevronDown className="w-4 h-4" />
+                      <i className="bi bi-chevron-down w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-white w-48">
@@ -844,7 +844,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${assetsViewMode === "grid" ? "bg-gray-100" : ""}`}
                     onClick={() => setAssetsViewMode("grid")}
                   >
-                    <Grid3X3 className="w-4 h-4" />
+                    <i className="bi bi-grid-3x3 w-4 h-4" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -852,7 +852,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${assetsViewMode === "list" ? "bg-gray-100" : ""}`}
                     onClick={() => setAssetsViewMode("list")}
                   >
-                    <List className="w-4 h-4" />
+                    <i className="bi bi-list w-4 h-4" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -866,7 +866,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                       }
                     }}
                   >
-                    <CheckSquare className="w-4 h-4" />
+                    <i className="bi bi-check-square w-4 h-4" />
                   </Button>
                 </div>
               </div>
@@ -888,26 +888,26 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     label: f.value.replace(/__manual$/, ''),
                     value: f.value,
                     sourceId: "search",
-                    icon: isSearch ? <Search className="w-3.5 h-3.5" /> : isPeople ? <User className="w-3.5 h-3.5" /> : isBrand ? <i className="bi bi-badge-tm text-sm" /> : isAi ? <Sparkles className="w-3.5 h-3.5" /> : <Tag className="w-3.5 h-3.5" />,
+                    icon: isSearch ? <i className="bi bi-search text-sm" /> : isPeople ? <i className="bi bi-person text-sm" /> : isBrand ? <i className="bi bi-badge-tm text-sm" /> : isAi ? <i className="bi bi-stars text-sm" /> : <i className="bi bi-tag text-sm" />,
                   });
                 });
 
                 // FilterBar filters
-                peopleFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "people", icon: <User className="w-3.5 h-3.5" /> }));
-                sceneFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "scene", icon: <Sparkles className="w-3.5 h-3.5" /> }));
+                peopleFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "people", icon: <i className="bi bi-person text-sm" /> }));
+                sceneFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "scene", icon: <i className="bi bi-stars text-sm" /> }));
                 brandFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "brand", icon: <i className="bi bi-badge-tm text-sm" /> }));
-                tagsFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "tags", icon: <Tag className="w-3.5 h-3.5" /> }));
-                creatorFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "creator", icon: <User className="w-3.5 h-3.5" /> }));
-                contentTypeFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "content-type", icon: <Image className="w-3.5 h-3.5" /> }));
-                aspectRatioFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "aspect-ratio", icon: <Tag className="w-3.5 h-3.5" /> }));
+                tagsFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "tags", icon: <i className="bi bi-tag text-sm" /> }));
+                creatorFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "creator", icon: <i className="bi bi-person text-sm" /> }));
+                contentTypeFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "content-type", icon: <i className="bi bi-image text-sm" /> }));
+                aspectRatioFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "aspect-ratio", icon: <i className="bi bi-tag text-sm" /> }));
                 if (dateRangeFilter) {
                   const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 Days", month: "Last 30 Days", quarter: "Last 90 Days", year: "Last Year", custom: "Custom Date" };
-                  chips.push({ label: dateLabels[dateRangeFilter] || dateRangeFilter, value: dateRangeFilter, sourceId: "date-range", icon: <Tag className="w-3.5 h-3.5" /> });
+                  chips.push({ label: dateLabels[dateRangeFilter] || dateRangeFilter, value: dateRangeFilter, sourceId: "date-range", icon: <i className="bi bi-tag text-sm" /> });
                 }
-                folderFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "folders", icon: <Folder className="w-3.5 h-3.5" /> }));
-                sourceFilter.forEach(v => chips.push({ label: v.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), value: v, sourceId: "source", icon: <Upload className="w-3.5 h-3.5" /> }));
-                approvalStatusFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "status", icon: <CheckSquare className="w-3.5 h-3.5" /> }));
-                orgStatusFilter.forEach(v => chips.push({ label: v === "organized" ? "Sorted" : v === "unorganized" ? "Unsorted" : v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "organization-status", icon: <Settings2 className="w-3.5 h-3.5" /> }));
+                folderFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "folders", icon: <i className="bi bi-folder text-sm" /> }));
+                sourceFilter.forEach(v => chips.push({ label: v.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), value: v, sourceId: "source", icon: <i className="bi bi-upload text-sm" /> }));
+                approvalStatusFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "status", icon: <i className="bi bi-check-square text-sm" /> }));
+                orgStatusFilter.forEach(v => chips.push({ label: v === "organized" ? "Sorted" : v === "unorganized" ? "Unsorted" : v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "organization-status", icon: <i className="bi bi-gear text-sm" /> }));
 
                 if (chips.length === 0) return null;
 
@@ -937,7 +937,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                       >
                         {chip.icon}
                         {chip.label}
-                        <X className="w-3.5 h-3.5 ml-0.5" />
+                        <i className="bi bi-x text-sm ml-0.5" />
                       </Badge>
                     ))}
                     <button
@@ -974,7 +974,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                       40 per page
-                      <ChevronDown className="w-4 h-4" />
+                      <i className="bi bi-chevron-down w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-white">
@@ -990,7 +990,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                       <i className="bi bi-table text-base" />
                       Manage Columns
-                      <ChevronDown className="w-4 h-4" />
+                      <i className="bi bi-chevron-down w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-white">
@@ -1027,7 +1027,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               </div>
             ) : sortedResults.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <Image className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                <i className="bi bi-image text-5xl text-muted-foreground/30 mb-4" />
                 <h3 className="text-lg font-medium mb-1">No assets found</h3>
                 <p className="text-sm text-muted-foreground">Try adjusting your filters or search terms</p>
               </div>
@@ -1087,7 +1087,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                       Sort{sortField ? `: ${SORT_LABELS[sortField]}` : ""}
-                      <ChevronDown className="w-4 h-4" />
+                      <i className="bi bi-chevron-down w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-white w-48">
@@ -1107,7 +1107,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${galleriesViewMode === "grid" ? "bg-gray-100" : ""}`}
                     onClick={() => setGalleriesViewMode("grid")}
                   >
-                    <Grid3X3 className="w-4 h-4" />
+                    <i className="bi bi-grid-3x3 w-4 h-4" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -1115,7 +1115,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${galleriesViewMode === "list" ? "bg-gray-100" : ""}`}
                     onClick={() => setGalleriesViewMode("list")}
                   >
-                    <List className="w-4 h-4" />
+                    <i className="bi bi-list w-4 h-4" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -1123,7 +1123,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${isAnyGallerySelected ? "bg-gray-100" : ""}`}
                     onClick={() => setSelectedGalleries(prev => (prev.size > 0 ? new Set() : new Set(galleryList.map(g => g.id))))}
                   >
-                    <CheckSquare className="w-4 h-4" />
+                    <i className="bi bi-check-square w-4 h-4" />
                   </Button>
                 </div>
               </div>
@@ -1148,7 +1148,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Heart className="w-4 h-4" />
+                        <i className="bi bi-heart w-4 h-4" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Favorite</TooltipContent>
@@ -1162,7 +1162,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                         });
                         setSelectedGalleries(new Set());
                       }}>
-                        <Archive className="w-4 h-4" />
+                        <i className="bi bi-archive w-4 h-4" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Archive</TooltipContent>
@@ -1170,7 +1170,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="w-4 h-4" />
+                      <i className="bi bi-three-dots w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -1182,7 +1182,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                               disabled={selectedGalleries.size > GALLERY_MOVE_LIMIT}
                               onClick={() => handleMoveGalleries(Array.from(selectedGalleries))}
                             >
-                              <FolderInput className="w-4 h-4 mr-2" /> Move
+                              <i className="bi bi-folder-symlink w-4 h-4 mr-2" /> Move
                             </DropdownMenuItem>
                           </div>
                         </TooltipTrigger>
@@ -1194,7 +1194,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                       </Tooltip>
                     </TooltipProvider>
                     <DropdownMenuItem className="text-destructive focus:text-destructive">
-                      <Trash2 className="w-4 h-4 mr-2" /> Delete
+                      <i className="bi bi-trash w-4 h-4 mr-2" /> Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -1209,7 +1209,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                       40 per page
-                      <ChevronDown className="w-4 h-4" />
+                      <i className="bi bi-chevron-down w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-white">
@@ -1225,7 +1225,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                       <i className="bi bi-table text-base" />
                       Manage Columns
-                      <ChevronDown className="w-4 h-4" />
+                      <i className="bi bi-chevron-down w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-white">
@@ -1292,10 +1292,10 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             <div className="flex items-center justify-end mb-6">
               <div className="flex items-center border rounded-md bg-card">
                 <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-r-none text-[#6e84a3] ${folderViewMode === "grid" ? "bg-accent" : ""}`} onClick={() => setFolderViewMode("grid")}>
-                  <Grid3X3 className="w-4 h-4" />
+                  <i className="bi bi-grid-3x3 w-4 h-4" />
                 </Button>
                 <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-l-none border-l text-[#6e84a3] ${folderViewMode === "table" ? "bg-accent" : ""}`} onClick={() => setFolderViewMode("table")}>
-                  <List className="w-4 h-4" />
+                  <i className="bi bi-list w-4 h-4" />
                 </Button>
               </div>
             </div>
@@ -1307,7 +1307,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                       40 per page
-                      <ChevronDown className="w-4 h-4" />
+                      <i className="bi bi-chevron-down w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-white">
@@ -1323,7 +1323,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                       <i className="bi bi-table text-base" />
                       Manage Columns
-                      <ChevronDown className="w-4 h-4" />
+                      <i className="bi bi-chevron-down w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-white">
@@ -1341,7 +1341,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 .map(f => ({ id: f.id, name: f.name, galleryCount: f.count || 0, timeAgo: "—" }));
               return filteredFolderCards.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <Folder className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                  <i className="bi bi-folder text-5xl text-muted-foreground/30 mb-4" />
                   <h3 className="text-lg font-medium mb-1">{archivedFoldersOnly ? "No archived folders" : "No folders"}</h3>
                   <p className="text-sm text-muted-foreground">{archivedFoldersOnly ? "Archive a folder to see it here." : "Create a folder to get started."}</p>
                 </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, X, Search } from "lucide-react";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -173,7 +173,7 @@ export function GalleryFilterBar({ onArchivedChange }: GalleryFilterBarProps = {
                       className="text-muted-foreground hover:text-foreground"
                       aria-label={`Remove ${filter.label} filter: ${item.label}`}>
                       
-                          <X className="w-3 h-3" />
+                          <i className="bi bi-x text-xs" />
                         </button>
                         {item.label}
                       </span>
@@ -190,9 +190,9 @@ export function GalleryFilterBar({ onArchivedChange }: GalleryFilterBarProps = {
                     className="text-muted-foreground hover:text-foreground"
                     aria-label={`Clear ${filter.label} filter`}>
                     
-                      <X className="w-3.5 h-3.5" />
+                      <i className="bi bi-x text-sm" />
                     </button>
-                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                    <i className="bi bi-chevron-down w-3.5 h-3.5 text-muted-foreground" />
                   </div>
                 </div> :
 
@@ -202,7 +202,7 @@ export function GalleryFilterBar({ onArchivedChange }: GalleryFilterBarProps = {
                 className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
 
                   <span>{filter.label}</span>
-                  <ChevronDown className="w-4 h-4" />
+                  <i className="bi bi-chevron-down w-4 h-4" />
                 </Button>
               }
             </DropdownMenuTrigger>

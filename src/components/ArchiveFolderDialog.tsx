@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Info, Folder } from "lucide-react";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import type { FolderItem } from "@/lib/mockFolderData";
 import { collectNestedFolders } from "@/lib/mockFolderData";
 
@@ -62,7 +62,7 @@ export function ArchiveFolderDialog({ open, onOpenChange, onArchive, folder, bre
                     <TableRow key={i}>
                       <TableCell className="py-2">
                         <div className="flex items-center gap-2">
-                          <Folder className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <i className="bi bi-folder w-4 h-4 text-muted-foreground flex-shrink-0" />
                           <span className="text-sm font-medium">{row.name}</span>
                         </div>
                       </TableCell>
@@ -76,7 +76,7 @@ export function ArchiveFolderDialog({ open, onOpenChange, onArchive, folder, bre
 
           {/* Info banner */}
           <div className="flex items-start gap-2 p-3 rounded-lg border bg-muted/50 text-sm text-muted-foreground">
-            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <i className="bi bi-info-circle w-4 h-4 flex-shrink-0 mt-0.5" />
             <p>Galleries and assets are not deleted.</p>
           </div>
         </div>

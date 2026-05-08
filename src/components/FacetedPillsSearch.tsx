@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { X, ChevronDown, Search } from "lucide-react";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import { LibraryAsset } from "@/lib/mockLibraryData";
 
 interface Facet {
@@ -274,7 +274,7 @@ export function FacetedPillsSearch({ onSearch, assets = [] }: FacetedPillsSearch
         className="flex flex-wrap items-center gap-2 min-h-[44px] px-3 py-2 border rounded-lg bg-background focus-within:ring-2 focus-within:ring-ring focus-within:border-transparent cursor-text"
         onClick={() => inputRef.current?.focus()}
       >
-        <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+        <i className="bi bi-search w-4 h-4 text-muted-foreground flex-shrink-0" />
         
         {/* Selected Facet Pills */}
         {selectedFacets.map((facet, index) => (
@@ -290,7 +290,7 @@ export function FacetedPillsSearch({ onSearch, assets = [] }: FacetedPillsSearch
               }}
               className="hover:bg-primary/20 rounded p-0.5 transition-colors"
             >
-              <X className="w-3 h-3" />
+              <i className="bi bi-x text-xs" />
             </button>
           </span>
         ))}
@@ -342,7 +342,7 @@ export function FacetedPillsSearch({ onSearch, assets = [] }: FacetedPillsSearch
                 }}
                 className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-2 px-2"
               >
-                <ChevronDown className="w-3 h-3 rotate-90" />
+                <i className="bi bi-chevron-down text-xs rotate-90" />
                 Back to fields
               </button>
               <div className="text-xs font-medium text-muted-foreground px-2 mb-1">
@@ -390,7 +390,7 @@ export function FacetedPillsSearch({ onSearch, assets = [] }: FacetedPillsSearch
                     }`}
                   >
                     <span>{opt.fieldLabel}</span>
-                    <ChevronDown className="w-4 h-4 -rotate-90 text-muted-foreground" />
+                    <i className="bi bi-chevron-down w-4 h-4 -rotate-90 text-muted-foreground" />
                   </button>
                 ))
               ) : (
