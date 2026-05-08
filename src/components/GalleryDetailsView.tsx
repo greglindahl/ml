@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useRef } from "react";
-import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, Share2, Upload, MoreVertical, Settings2, Move, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, Share2, Upload, MoreVertical, Move, Trash2, X } from "lucide-react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { AssetTableView } from "@/components/AssetTableView";
@@ -310,27 +310,6 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    120 per Page
-                    <ChevronDown className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-white">
-                  <DropdownMenuItem>24 per Page</DropdownMenuItem>
-                  <DropdownMenuItem>48 per Page</DropdownMenuItem>
-                  <DropdownMenuItem>120 per Page</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {assetsViewMode === "list" && (
-                <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                  <Settings2 className="w-4 h-4" />
-                  Manage Columns
-                </Button>
-              )}
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                     Sort
                     <ChevronDown className="w-4 h-4" />
                   </Button>
@@ -420,6 +399,39 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
               }}
               galleryActionLabel="Remove from Gallery"
             />
+          )}
+
+          {/* Table Controls - shown above table in list view */}
+          {assetsViewMode === "list" && (
+            <div className="flex items-center justify-between mb-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                    40 per page
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-white">
+                  <DropdownMenuItem>20 per page</DropdownMenuItem>
+                  <DropdownMenuItem>40 per page</DropdownMenuItem>
+                  <DropdownMenuItem>80 per page</DropdownMenuItem>
+                  <DropdownMenuItem>120 per page</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                    <i className="bi bi-table text-base" />
+                    Manage Columns
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-white">
+                  <DropdownMenuItem>Configure columns...</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           )}
 
           {/* Assets Grid/Table with Loading State */}

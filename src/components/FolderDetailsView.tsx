@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useRef } from "react";
-import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, MoreVertical, MoreHorizontal, Upload, Settings2, FolderOpen, Pencil, Move, Archive, Trash2, Folder, Plus, Heart, ArchiveRestore, Search, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, MoreVertical, MoreHorizontal, Upload, FolderOpen, Pencil, Move, Archive, Trash2, Folder, Plus, Heart, ArchiveRestore, Search, X } from "lucide-react";
 import { AssetTableView } from "@/components/AssetTableView";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { GalleryTableView, GalleryTableItem } from "@/components/GalleryTableView";
@@ -407,27 +407,6 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    120 per Page
-                    <ChevronDown className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem>24 per Page</DropdownMenuItem>
-                  <DropdownMenuItem>48 per Page</DropdownMenuItem>
-                  <DropdownMenuItem>120 per Page</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {assetsViewMode === "list" && (
-                <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                  <Settings2 className="w-4 h-4" />
-                  Manage Columns
-                </Button>
-              )}
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                     Sort: Added Date
                     <ChevronDown className="w-4 h-4" />
                   </Button>
@@ -531,6 +510,39 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               }}
               galleryActionLabel="Add to Gallery"
             />
+          )}
+
+          {/* Table Controls - shown above table in list view */}
+          {assetsViewMode === "list" && (
+            <div className="flex items-center justify-between mb-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                    40 per page
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-white">
+                  <DropdownMenuItem>20 per page</DropdownMenuItem>
+                  <DropdownMenuItem>40 per page</DropdownMenuItem>
+                  <DropdownMenuItem>80 per page</DropdownMenuItem>
+                  <DropdownMenuItem>120 per page</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                    <i className="bi bi-table text-base" />
+                    Manage Columns
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-white">
+                  <DropdownMenuItem>Configure columns...</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           )}
 
           {/* Assets Grid/Table with Loading State */}
@@ -682,27 +694,6 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    120 per Page
-                    <ChevronDown className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem>24 per Page</DropdownMenuItem>
-                  <DropdownMenuItem>48 per Page</DropdownMenuItem>
-                  <DropdownMenuItem>120 per Page</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {galleriesViewMode === "list" && (
-                <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                  <Settings2 className="w-4 h-4" />
-                  Manage Columns
-                </Button>
-              )}
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                     Sort: Added Date
                     <ChevronDown className="w-4 h-4" />
                   </Button>
@@ -742,6 +733,11 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 </Button>
               </div>
             </div>
+          </div>
+
+          {/* Applied Filter Chips - reserved height to prevent layout shift */}
+          <div className="min-h-[24px] mb-4">
+            {/* Filter chips would go here when filters are active */}
           </div>
 
           {/* Bulk Action Bar */}
@@ -796,9 +792,42 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             </div>
           )}
 
+          {/* Table Controls - shown above table in list view */}
+          {galleriesViewMode === "list" && (
+            <div className="flex items-center justify-between mb-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                    40 per page
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-white">
+                  <DropdownMenuItem>20 per page</DropdownMenuItem>
+                  <DropdownMenuItem>40 per page</DropdownMenuItem>
+                  <DropdownMenuItem>80 per page</DropdownMenuItem>
+                  <DropdownMenuItem>120 per page</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                    <i className="bi bi-table text-base" />
+                    Manage Columns
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-white">
+                  <DropdownMenuItem>Configure columns...</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
+
           {(() => {
             const filteredGalleries = childGalleries.filter(g => archivedGalleriesOnly ? g.archived === true : g.archived !== true);
-            
+
             if (galleriesViewMode === "list") {
               return (
                 <GalleryTableView 
@@ -900,6 +929,11 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <List className="w-4 h-4" />
               </Button>
             </div>
+          </div>
+
+          {/* Applied Filter Chips - reserved height to prevent layout shift */}
+          <div className="min-h-[24px] mb-4">
+            {/* Filter chips would go here when filters are active */}
           </div>
 
           {/* Empty state or folder children */}

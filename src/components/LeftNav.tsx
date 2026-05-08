@@ -38,7 +38,7 @@ const mainNavItems: {
   { id: "network", icon: "bi-people", label: "Network" },
   { id: "connect", icon: "bi-plug", label: "Connect" },
   { id: "engage", icon: "bi-cloud-arrow-up", label: "Engage" },
-  { id: "requests", icon: "bi-lightning", label: "Activations" },
+  { id: "requests", icon: "bi-camera", label: "Requests" },
   { id: "stats", icon: "bi-bar-chart", label: "Insights" },
 ];
 

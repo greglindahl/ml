@@ -805,6 +805,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               <TabsTrigger value="folders">Folders</TabsTrigger>
               <TabsTrigger value="favorites">Favorites</TabsTrigger>
               <TabsTrigger value="branding">Branding</TabsTrigger>
+              <TabsTrigger value="workflows">Workflows</TabsTrigger>
             </TabsList>
           </div>
 
@@ -835,13 +836,6 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
-
-                {assetsViewMode === "list" && (
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    <Settings2 className="w-4 h-4" />
-                    Manage Columns
-                  </Button>
-                )}
 
                 <div className="flex items-center border border-gray-300 rounded-md bg-white">
                   <Button
@@ -973,6 +967,39 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               />
             )}
 
+            {/* Table Controls - shown above table in list view */}
+            {assetsViewMode === "list" && (
+              <div className="flex items-center justify-between mb-4">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                      40 per page
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-white">
+                    <DropdownMenuItem>20 per page</DropdownMenuItem>
+                    <DropdownMenuItem>40 per page</DropdownMenuItem>
+                    <DropdownMenuItem>80 per page</DropdownMenuItem>
+                    <DropdownMenuItem>120 per page</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                      <i className="bi bi-table text-base" />
+                      Manage Columns
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-white">
+                    <DropdownMenuItem>Configure columns...</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+
             {/* Assets Grid/Table with Loading State */}
             <div className="min-h-[400px]">
             {assetsViewMode === "list" ? (
@@ -1073,13 +1100,6 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                {galleriesViewMode === "list" && (
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    <Settings2 className="w-4 h-4" />
-                    Manage Columns
-                  </Button>
-                )}
-
                 <div className="flex items-center border border-gray-300 rounded-md bg-white">
                   <Button
                     variant="ghost"
@@ -1107,6 +1127,11 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   </Button>
                 </div>
               </div>
+            </div>
+
+            {/* Applied Filter Chips - reserved height to prevent layout shift */}
+            <div className="min-h-[24px] mb-4">
+              {/* Filter chips would go here when filters are active */}
             </div>
 
             {/* Bulk Action Bar */}
@@ -1177,6 +1202,39 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               </div>
             )}
 
+            {/* Table Controls - shown above table in list view */}
+            {galleriesViewMode === "list" && (
+              <div className="flex items-center justify-between mb-4">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                      40 per page
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-white">
+                    <DropdownMenuItem>20 per page</DropdownMenuItem>
+                    <DropdownMenuItem>40 per page</DropdownMenuItem>
+                    <DropdownMenuItem>80 per page</DropdownMenuItem>
+                    <DropdownMenuItem>120 per page</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                      <i className="bi bi-table text-base" />
+                      Manage Columns
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-white">
+                    <DropdownMenuItem>Configure columns...</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+
             {/* Galleries Grid/Table */}
             <div className="min-h-[400px]">
               {galleriesViewMode === "list" ? (
@@ -1242,6 +1300,39 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               </div>
             </div>
 
+            {/* Table Controls - shown above table in list view */}
+            {folderViewMode === "table" && (
+              <div className="flex items-center justify-between mb-4">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                      40 per page
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-white">
+                    <DropdownMenuItem>20 per page</DropdownMenuItem>
+                    <DropdownMenuItem>40 per page</DropdownMenuItem>
+                    <DropdownMenuItem>80 per page</DropdownMenuItem>
+                    <DropdownMenuItem>120 per page</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                      <i className="bi bi-table text-base" />
+                      Manage Columns
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-white">
+                    <DropdownMenuItem>Configure columns...</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+
             {/* Folders Grid */}
             {(() => {
               const topLevelFolders = folderTree.filter(f => f.id !== "all" && f.type === "folder");
@@ -1298,6 +1389,12 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           <TabsContent value="branding" className="flex-1 overflow-y-auto py-6 mt-0">
             <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
               <p>Branding content placeholder</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="workflows" className="flex-1 overflow-y-auto py-6 mt-0">
+            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
+              <p>Workflows content placeholder</p>
             </div>
           </TabsContent>
         </Tabs>
