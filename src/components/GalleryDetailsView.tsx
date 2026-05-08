@@ -52,20 +52,52 @@ interface GalleryDetailsViewProps {
   onNavigate: (folderId: string) => void;
   isMobile?: boolean;
   folderTree: FolderItem[];
+  onOpenSettings?: () => void;
 }
 
-export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = false, folderTree }: GalleryDetailsViewProps) {
+// Sort options for gallery assets
+type SortField = "dateCreated" | "captureDate" | "name" | "creator" | null;
+type SortDir = "asc" | "desc";
+
+const SORT_OPTIONS: { value: NonNullable<SortField>; label: string }[] = [
+  { value: "dateCreated", label: "Date Created" },
+  { value: "captureDate", label: "Capture Date" },
+  { value: "name", label: "Name" },
+  { value: "creator", label: "Creator" },
+];
+
+const SORT_LABELS: Record<NonNullable<SortField>, string> = {
+  dateCreated: "Date Created",
+  captureDate: "Capture Date",
+  name: "Name",
+  creator: "Creator",
+};
+
+export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = false, folderTree, onOpenSettings }: GalleryDetailsViewProps) {
   const [activeTab, setActiveTab] = useState("assets");
   const [moveGalleriesOpen, setMoveGalleriesOpen] = useState(false);
   // View mode state (grid vs list)
   const [assetsViewMode, setAssetsViewMode] = useState<"grid" | "list">("grid");
-  
+
   // Asset selection state for bulk actions
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
-  
+
   // Filter chips state and ref
   const [filterChips, setFilterChips] = useState<ActiveFilterChip[]>([]);
   const filterBarHandleRef = useRef<GalleryDetailsFilterBarHandle | null>(null);
+
+  // Sort state
+  const [sortField, setSortField] = useState<SortField>("dateCreated");
+  const [sortDirection, setSortDirection] = useState<SortDir>("desc");
+
+  const handleSortChange = useCallback((field: NonNullable<SortField>) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("desc");
+    }
+  }, [sortField]);
 
   // Filter state (driven by FilterBar)
   const [contentTypeFilter, setContentTypeFilter] = useState<Array<LibraryAsset["type"]>>([]);
@@ -292,32 +324,27 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
         </div>
 
         <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">
-          {/* Faceted Search */}
-          <div className="mb-3">
-            <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
-          </div>
+          {/* Search Row with Utility Cluster */}
+          <div className="flex items-center gap-4 mb-3 cq-search-row">
+            <div className="flex-1 min-w-0 cq-search-input">
+              <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
+            </div>
 
-          {/* Filters and Controls - Single Row */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
-            <GalleryDetailsFilterBar
-              onFilterChange={handleFilterChange}
-              onActiveFiltersChange={setFilterChips}
-              handleRef={filterBarHandleRef}
-            />
-
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    Sort
+                    Sort{sortField ? `: ${SORT_LABELS[sortField]}` : ""}
                     <i className="bi bi-chevron-down w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-white">
-                  <DropdownMenuItem>Date (Newest)</DropdownMenuItem>
-                  <DropdownMenuItem>Date (Oldest)</DropdownMenuItem>
-                  <DropdownMenuItem>Name (A-Z)</DropdownMenuItem>
-                  <DropdownMenuItem>Name (Z-A)</DropdownMenuItem>
+                <DropdownMenuContent className="bg-white w-48">
+                  {SORT_OPTIONS.map(opt => (
+                    <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
+                      {opt.label}
+                      {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -353,7 +380,26 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   <i className="bi bi-check-square w-4 h-4" />
                 </Button>
               </div>
+
+              {/* Settings button */}
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
+                onClick={() => onOpenSettings?.()}
+              >
+                <i className="bi bi-gear w-4 h-4" />
+              </Button>
             </div>
+          </div>
+
+          {/* Filter Row */}
+          <div className="mb-3">
+            <GalleryDetailsFilterBar
+              onFilterChange={handleFilterChange}
+              onActiveFiltersChange={setFilterChips}
+              handleRef={filterBarHandleRef}
+            />
           </div>
 
           {/* Applied Filter Chips - reserved height to prevent layout shift */}

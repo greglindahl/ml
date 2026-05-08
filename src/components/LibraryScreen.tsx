@@ -741,12 +741,13 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
 
       {/* Main Content Area - Show GalleryDetailsView, FolderDetailsView, or Library content */}
       {activeGallery ? (
-        <GalleryDetailsView 
-          galleryId={activeGallery.id} 
-          gallery={activeGallery} 
+        <GalleryDetailsView
+          galleryId={activeGallery.id}
+          gallery={activeGallery}
           onNavigate={handleNavigate}
           isMobile={isMobile}
           folderTree={folderTree}
+          onOpenSettings={() => setSettingsDrawerOpen(true)}
         />
       ) : activeFolderItem ? (
         <FolderDetailsView 
@@ -819,31 +820,13 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           </div>
 
           <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">
-            {/* Faceted Search */}
-            <div className="mb-3">
-              <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} onSelectedFacetsChange={setSearchSelectedFacets} handleRef={searchHandleRef} placeholder="Search by people, tags, filenames…" />
-            </div>
-
-            {/* Filters and Controls - Single Row */}
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-3 cq-stack-xs">
-              <div className="filter-bar-container flex-1 min-w-0">
-                <FilterBar
-                onFilterChange={handleFilterChange}
-                onCustomDateChange={handleCustomDateChange}
-                compactMode={true}
-                handleRef={filterBarHandleRef}
-                disabledValues={searchSelectedFacets.filter(f => f.type !== "search").map(f => ({ value: f.value, category: f.category }))}
-                onRemoveDisabledValue={(value) => { searchHandleRef.current?.removeFacet(value); }}
-                isUnsortedActive={isUnsortedActive}
-                onUnsortedToggle={setIsUnsortedActive}
-                isUnviewedActive={isUnviewedActive}
-                onUnviewedToggle={setIsUnviewedActive}
-                isBrandingActive={isBrandedActive}
-                onBrandingToggle={setIsBrandedActive}
-              />
+            {/* Search Row with Utility Cluster */}
+            <div className="flex items-center gap-4 mb-3 cq-search-row">
+              <div className="flex-1 min-w-0 cq-search-input">
+                <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} onSelectedFacetsChange={setSearchSelectedFacets} handleRef={searchHandleRef} placeholder="Search by people, tags, filenames…" />
               </div>
 
-              <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0">
+              <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
@@ -904,6 +887,24 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <i className="bi bi-gear w-4 h-4" />
                 </Button>
               </div>
+            </div>
+
+            {/* Filter Row */}
+            <div className="mb-3">
+              <FilterBar
+                onFilterChange={handleFilterChange}
+                onCustomDateChange={handleCustomDateChange}
+                compactMode={true}
+                handleRef={filterBarHandleRef}
+                disabledValues={searchSelectedFacets.filter(f => f.type !== "search").map(f => ({ value: f.value, category: f.category }))}
+                onRemoveDisabledValue={(value) => { searchHandleRef.current?.removeFacet(value); }}
+                isUnsortedActive={isUnsortedActive}
+                onUnsortedToggle={setIsUnsortedActive}
+                isUnviewedActive={isUnviewedActive}
+                onUnviewedToggle={setIsUnviewedActive}
+                isBrandingActive={isBrandedActive}
+                onBrandingToggle={setIsBrandedActive}
+              />
             </div>
 
             {/* Applied Filter Chips - reserved height to prevent layout shift */}
@@ -1107,19 +1108,13 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           </TabsContent>
 
           <TabsContent value="galleries" className="flex-1 overflow-y-auto py-6 mt-0">
-            {/* Faceted Search */}
-            <div className="mb-3">
-              <FacetedSearchWithTypeahead placeholder="Search" />
-            </div>
+            {/* Search Row with Utility Cluster */}
+            <div className="flex items-center gap-4 mb-3 cq-search-row">
+              <div className="flex-1 min-w-0 cq-search-input">
+                <FacetedSearchWithTypeahead placeholder="Search" />
+              </div>
 
-            {/* Filters and Controls */}
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-              <GalleryFilterBar
-                isArchivedActive={archivedGalleriesOnly}
-                onArchivedToggle={setArchivedGalleriesOnly}
-              />
-
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
@@ -1174,6 +1169,14 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <i className="bi bi-gear w-4 h-4" />
                 </Button>
               </div>
+            </div>
+
+            {/* Filter Row */}
+            <div className="mb-3">
+              <GalleryFilterBar
+                isArchivedActive={archivedGalleriesOnly}
+                onArchivedToggle={setArchivedGalleriesOnly}
+              />
             </div>
 
             {/* Applied Filter Chips - reserved height to prevent layout shift */}

@@ -425,6 +425,23 @@
   }
 }
 
+/* Search row wrap behavior - utility cluster drops to its own row */
+@container content (max-width: 699px) {
+  .cq-search-row {
+    flex-wrap: wrap;
+  }
+
+  .cq-search-row .cq-search-input {
+    flex-basis: 100%;
+    min-width: 100%;
+  }
+
+  .cq-search-row .cq-utility-cluster {
+    margin-left: auto;
+    margin-top: 0.5rem;
+  }
+}
+
 /* Compact filter pills on medium containers */
 @container content (min-width: 640px) and (max-width: 899px) {
   .cq-compact-md {
