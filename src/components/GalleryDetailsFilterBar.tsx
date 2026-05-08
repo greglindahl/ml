@@ -167,10 +167,12 @@ export function GalleryDetailsFilterBar({
           });
         },
         clearAll: () => {
-          Object.keys(activeFilters).forEach(filterId => {
-            onFilterChange?.(filterId, []);
+          setActiveFilters(prev => {
+            Object.keys(prev).forEach(filterId => {
+              onFilterChange?.(filterId, []);
+            });
+            return {};
           });
-          setActiveFilters({});
         },
       };
     }

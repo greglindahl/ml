@@ -22,7 +22,7 @@ const screenTitles: Record<Screen, string> = {
   network: "Network",
   connect: "Connect",
   engage: "Engage",
-  requests: "Activations",
+  requests: "Requests",
   stats: "Insights",
 };
 
@@ -32,7 +32,7 @@ const screenDescriptions: Record<Screen, string> = {
   network: "Manage your network and members",
   connect: "Integrations and connected services",
   engage: "Customer engagement and conversations",
-  requests: "Activations and campaigns",
+  requests: "Content requests and campaigns",
   stats: "Analytics and performance metrics",
 };
 

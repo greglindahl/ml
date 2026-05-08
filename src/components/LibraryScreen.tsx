@@ -805,97 +805,18 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               <TabsTrigger value="folders">Folders</TabsTrigger>
               <TabsTrigger value="favorites">Favorites</TabsTrigger>
               <TabsTrigger value="branding">Branding</TabsTrigger>
+              <TabsTrigger value="workflows">Workflows</TabsTrigger>
             </TabsList>
           </div>
 
           <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">
             {/* Faceted Search */}
-            <div className="mb-2">
+            <div className="mb-3">
               <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} onSelectedFacetsChange={setSearchSelectedFacets} handleRef={searchHandleRef} placeholder="Search by people, tags, filenames…" />
             </div>
 
-            {/* Unified Applied Filter Chips - reserved height to prevent layout shift */}
-            <div className="min-h-[24px] mb-2">
-            {(() => {
-              // Build chip objects from all sources
-              const chips: { label: string; value: string; sourceId: string; icon: React.ReactNode }[] = [];
-
-              // Search facets
-              searchSelectedFacets.forEach(f => {
-                const isPeople = f.category === "People";
-                const isBrand = f.category === "Brand";
-                const isSearch = f.type === "search";
-                const isAi = f.isAiGenerated;
-                chips.push({
-                  label: f.value.replace(/__manual$/, ''),
-                  value: f.value,
-                  sourceId: "search",
-                  icon: isSearch ? <Search className="w-3.5 h-3.5" /> : isPeople ? <User className="w-3.5 h-3.5" /> : isBrand ? <i className="bi bi-badge-tm text-sm" /> : isAi ? <Sparkles className="w-3.5 h-3.5" /> : <Tag className="w-3.5 h-3.5" />,
-                });
-              });
-
-              // FilterBar filters
-              peopleFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "people", icon: <User className="w-3.5 h-3.5" /> }));
-              sceneFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "scene", icon: <Sparkles className="w-3.5 h-3.5" /> }));
-              brandFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "brand", icon: <i className="bi bi-badge-tm text-sm" /> }));
-              tagsFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "tags", icon: <Tag className="w-3.5 h-3.5" /> }));
-              creatorFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "creator", icon: <User className="w-3.5 h-3.5" /> }));
-              contentTypeFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "content-type", icon: <Image className="w-3.5 h-3.5" /> }));
-              aspectRatioFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "aspect-ratio", icon: <Tag className="w-3.5 h-3.5" /> }));
-              if (dateRangeFilter) {
-                const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 Days", month: "Last 30 Days", quarter: "Last 90 Days", year: "Last Year", custom: "Custom Date" };
-                chips.push({ label: dateLabels[dateRangeFilter] || dateRangeFilter, value: dateRangeFilter, sourceId: "date-range", icon: <Tag className="w-3.5 h-3.5" /> });
-              }
-              folderFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "folders", icon: <Folder className="w-3.5 h-3.5" /> }));
-              sourceFilter.forEach(v => chips.push({ label: v.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), value: v, sourceId: "source", icon: <Upload className="w-3.5 h-3.5" /> }));
-              approvalStatusFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "status", icon: <CheckSquare className="w-3.5 h-3.5" /> }));
-              orgStatusFilter.forEach(v => chips.push({ label: v === "organized" ? "Sorted" : v === "unorganized" ? "Unsorted" : v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "organization-status", icon: <Settings2 className="w-3.5 h-3.5" /> }));
-
-              if (chips.length === 0) return null;
-
-              const handleRemoveChip = (chip: typeof chips[0]) => {
-                if (chip.sourceId === "search") {
-                  searchHandleRef.current?.removeFacet(chip.value);
-                } else {
-                  // Use FilterBar's imperative handle to sync internal state
-                  filterBarHandleRef.current?.removeValue(chip.sourceId, chip.value);
-                }
-              };
-
-              const handleClearAllChips = () => {
-                searchHandleRef.current?.clearFacetsOnly();
-                filterBarHandleRef.current?.clearAll();
-              };
-
-              return (
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {chips.map((chip, i) => (
-                    <Badge
-                      key={`${chip.sourceId}-${chip.value}-${i}`}
-                      colorStyle="primary"
-                      theme="soft"
-                      shape="rounded"
-                      className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-primary/30 text-[13px] normal-case tracking-normal font-normal"
-                      onClick={() => handleRemoveChip(chip)}
-                    >
-                      {chip.icon}
-                      {chip.label}
-                      <X className="w-3.5 h-3.5 ml-0.5" />
-                    </Badge>
-                  ))}
-                  <button
-                    onClick={handleClearAllChips}
-                    className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
-                  >
-                    Clear all
-                  </button>
-                </div>
-              );
-            })()}
-            </div>
-
             {/* Filters and Controls - Single Row */}
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
               <FilterBar onFilterChange={handleFilterChange} onCustomDateChange={handleCustomDateChange} onBrandedToggle={setIsBrandedActive} compactMode={true} handleRef={filterBarHandleRef} disabledValues={searchSelectedFacets.filter(f => f.type !== "search").map(f => ({ value: f.value, category: f.category }))} onRemoveDisabledValue={(value) => { searchHandleRef.current?.removeFacet(value); }} />
 
               <div className="flex items-center gap-2">
@@ -915,13 +836,6 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
-
-                {assetsViewMode === "list" && (
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    <Settings2 className="w-4 h-4" />
-                    Manage Columns
-                  </Button>
-                )}
 
                 <div className="flex items-center border border-gray-300 rounded-md bg-white">
                   <Button
@@ -958,6 +872,85 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               </div>
             </div>
 
+            {/* Applied Filter Chips - reserved height to prevent layout shift */}
+            <div className="min-h-[24px] mb-4">
+              {(() => {
+                // Build chip objects from all sources
+                const chips: { label: string; value: string; sourceId: string; icon: React.ReactNode }[] = [];
+
+                // Search facets
+                searchSelectedFacets.forEach(f => {
+                  const isPeople = f.category === "People";
+                  const isBrand = f.category === "Brand";
+                  const isSearch = f.type === "search";
+                  const isAi = f.isAiGenerated;
+                  chips.push({
+                    label: f.value.replace(/__manual$/, ''),
+                    value: f.value,
+                    sourceId: "search",
+                    icon: isSearch ? <Search className="w-3.5 h-3.5" /> : isPeople ? <User className="w-3.5 h-3.5" /> : isBrand ? <i className="bi bi-badge-tm text-sm" /> : isAi ? <Sparkles className="w-3.5 h-3.5" /> : <Tag className="w-3.5 h-3.5" />,
+                  });
+                });
+
+                // FilterBar filters
+                peopleFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "people", icon: <User className="w-3.5 h-3.5" /> }));
+                sceneFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "scene", icon: <Sparkles className="w-3.5 h-3.5" /> }));
+                brandFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "brand", icon: <i className="bi bi-badge-tm text-sm" /> }));
+                tagsFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "tags", icon: <Tag className="w-3.5 h-3.5" /> }));
+                creatorFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "creator", icon: <User className="w-3.5 h-3.5" /> }));
+                contentTypeFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "content-type", icon: <Image className="w-3.5 h-3.5" /> }));
+                aspectRatioFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "aspect-ratio", icon: <Tag className="w-3.5 h-3.5" /> }));
+                if (dateRangeFilter) {
+                  const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 Days", month: "Last 30 Days", quarter: "Last 90 Days", year: "Last Year", custom: "Custom Date" };
+                  chips.push({ label: dateLabels[dateRangeFilter] || dateRangeFilter, value: dateRangeFilter, sourceId: "date-range", icon: <Tag className="w-3.5 h-3.5" /> });
+                }
+                folderFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "folders", icon: <Folder className="w-3.5 h-3.5" /> }));
+                sourceFilter.forEach(v => chips.push({ label: v.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), value: v, sourceId: "source", icon: <Upload className="w-3.5 h-3.5" /> }));
+                approvalStatusFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "status", icon: <CheckSquare className="w-3.5 h-3.5" /> }));
+                orgStatusFilter.forEach(v => chips.push({ label: v === "organized" ? "Sorted" : v === "unorganized" ? "Unsorted" : v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "organization-status", icon: <Settings2 className="w-3.5 h-3.5" /> }));
+
+                if (chips.length === 0) return null;
+
+                const handleRemoveChip = (chip: typeof chips[0]) => {
+                  if (chip.sourceId === "search") {
+                    searchHandleRef.current?.removeFacet(chip.value);
+                  } else {
+                    filterBarHandleRef.current?.removeValue(chip.sourceId, chip.value);
+                  }
+                };
+
+                const handleClearAllChips = () => {
+                  searchHandleRef.current?.clearFacetsOnly();
+                  filterBarHandleRef.current?.clearAll();
+                };
+
+                return (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {chips.map((chip, i) => (
+                      <Badge
+                        key={`${chip.sourceId}-${chip.value}-${i}`}
+                        colorStyle="primary"
+                        theme="soft"
+                        shape="rounded"
+                        className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-primary/30 text-[13px] normal-case tracking-normal font-normal"
+                        onClick={() => handleRemoveChip(chip)}
+                      >
+                        {chip.icon}
+                        {chip.label}
+                        <X className="w-3.5 h-3.5 ml-0.5" />
+                      </Badge>
+                    ))}
+                    <button
+                      onClick={handleClearAllChips}
+                      className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+                    >
+                      Clear all
+                    </button>
+                  </div>
+                );
+              })()}
+            </div>
+
             {/* Asset Bulk Action Bar */}
             {selectedAssets.size > 0 && (
               <AssetBulkActionBar
@@ -972,6 +965,39 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   }
                 }}
               />
+            )}
+
+            {/* Table Controls - shown above table in list view */}
+            {assetsViewMode === "list" && (
+              <div className="flex items-center justify-between mb-4">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                      40 per page
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-white">
+                    <DropdownMenuItem>20 per page</DropdownMenuItem>
+                    <DropdownMenuItem>40 per page</DropdownMenuItem>
+                    <DropdownMenuItem>80 per page</DropdownMenuItem>
+                    <DropdownMenuItem>120 per page</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                      <i className="bi bi-table text-base" />
+                      Manage Columns
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-white">
+                    <DropdownMenuItem>Configure columns...</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             )}
 
             {/* Assets Grid/Table with Loading State */}
@@ -1048,15 +1074,12 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
 
           <TabsContent value="galleries" className="flex-1 overflow-y-auto py-6 mt-0">
             {/* Faceted Search */}
-            <div className="mb-2">
+            <div className="mb-3">
               <FacetedSearchWithTypeahead placeholder="Search" />
             </div>
 
-            {/* Filter Chips - reserved height to prevent layout shift */}
-            <div className="min-h-[24px] mb-2" />
-
             {/* Filters and Controls */}
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
               <GalleryFilterBar onArchivedChange={setArchivedGalleriesOnly} />
 
               <div className="flex items-center gap-2">
@@ -1076,13 +1099,6 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
-
-                {galleriesViewMode === "list" && (
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    <Settings2 className="w-4 h-4" />
-                    Manage Columns
-                  </Button>
-                )}
 
                 <div className="flex items-center border border-gray-300 rounded-md bg-white">
                   <Button
@@ -1111,6 +1127,11 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   </Button>
                 </div>
               </div>
+            </div>
+
+            {/* Applied Filter Chips - reserved height to prevent layout shift */}
+            <div className="min-h-[24px] mb-4">
+              {/* Filter chips would go here when filters are active */}
             </div>
 
             {/* Bulk Action Bar */}
@@ -1181,6 +1202,39 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               </div>
             )}
 
+            {/* Table Controls - shown above table in list view */}
+            {galleriesViewMode === "list" && (
+              <div className="flex items-center justify-between mb-4">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                      40 per page
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-white">
+                    <DropdownMenuItem>20 per page</DropdownMenuItem>
+                    <DropdownMenuItem>40 per page</DropdownMenuItem>
+                    <DropdownMenuItem>80 per page</DropdownMenuItem>
+                    <DropdownMenuItem>120 per page</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                      <i className="bi bi-table text-base" />
+                      Manage Columns
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-white">
+                    <DropdownMenuItem>Configure columns...</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+
             {/* Galleries Grid/Table */}
             <div className="min-h-[400px]">
               {galleriesViewMode === "list" ? (
@@ -1246,6 +1300,39 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               </div>
             </div>
 
+            {/* Table Controls - shown above table in list view */}
+            {folderViewMode === "table" && (
+              <div className="flex items-center justify-between mb-4">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                      40 per page
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-white">
+                    <DropdownMenuItem>20 per page</DropdownMenuItem>
+                    <DropdownMenuItem>40 per page</DropdownMenuItem>
+                    <DropdownMenuItem>80 per page</DropdownMenuItem>
+                    <DropdownMenuItem>120 per page</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                      <i className="bi bi-table text-base" />
+                      Manage Columns
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-white">
+                    <DropdownMenuItem>Configure columns...</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+
             {/* Folders Grid */}
             {(() => {
               const topLevelFolders = folderTree.filter(f => f.id !== "all" && f.type === "folder");
@@ -1302,6 +1389,12 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           <TabsContent value="branding" className="flex-1 overflow-y-auto py-6 mt-0">
             <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
               <p>Branding content placeholder</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="workflows" className="flex-1 overflow-y-auto py-6 mt-0">
+            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
+              <p>Workflows content placeholder</p>
             </div>
           </TabsContent>
         </Tabs>

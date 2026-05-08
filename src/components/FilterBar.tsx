@@ -361,10 +361,12 @@ export function FilterBar({
     });
   };
   const clearAllFilters = () => {
-    Object.keys(activeFilters).forEach(filterId => {
-      onFilterChange?.(filterId, []);
+    setActiveFilters(prev => {
+      Object.keys(prev).forEach(filterId => {
+        onFilterChange?.(filterId, []);
+      });
+      return {};
     });
-    setActiveFilters({});
     setCustomDateRange({
       from: undefined,
       to: undefined

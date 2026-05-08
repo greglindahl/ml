@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useRef } from "react";
-import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, Share2, Upload, MoreVertical, Settings2, Move, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Grid3X3, List, CheckSquare, Image, Images, Video, Share2, Upload, MoreVertical, Move, Trash2, X } from "lucide-react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { AssetTableView } from "@/components/AssetTableView";
@@ -294,39 +294,12 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
 
         <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">
           {/* Faceted Search */}
-          <div className="mb-2">
+          <div className="mb-3">
             <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
           </div>
 
-          {/* Active Filter Chips - reserved height to prevent layout shift */}
-          <div className="min-h-[24px] mb-2">
-            {filterChips.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1.5">
-                {filterChips.map((chip, i) => (
-                  <Badge
-                    key={`${chip.filterId}-${chip.value}-${i}`}
-                    colorStyle="primary"
-                    theme="soft"
-                    shape="rounded"
-                    className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-primary/30 text-[13px] normal-case tracking-normal font-normal"
-                    onClick={() => filterBarHandleRef.current?.removeValue(chip.filterId, chip.value)}
-                  >
-                    {chip.label}
-                    <X className="w-3.5 h-3.5 ml-0.5" />
-                  </Badge>
-                ))}
-                <button
-                  onClick={() => filterBarHandleRef.current?.clearAll()}
-                  className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
-                >
-                  Clear all
-                </button>
-              </div>
-            )}
-          </div>
-
           {/* Filters and Controls - Single Row */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
             <GalleryDetailsFilterBar
               onFilterChange={handleFilterChange}
               onActiveFiltersChange={setFilterChips}
@@ -334,27 +307,6 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             />
 
             <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    120 per Page
-                    <ChevronDown className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-white">
-                  <DropdownMenuItem>24 per Page</DropdownMenuItem>
-                  <DropdownMenuItem>48 per Page</DropdownMenuItem>
-                  <DropdownMenuItem>120 per Page</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {assetsViewMode === "list" && (
-                <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                  <Settings2 className="w-4 h-4" />
-                  Manage Columns
-                </Button>
-              )}
-
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
@@ -405,6 +357,33 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             </div>
           </div>
 
+          {/* Applied Filter Chips - reserved height to prevent layout shift */}
+          <div className="min-h-[24px] mb-4">
+            {filterChips.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {filterChips.map((chip, i) => (
+                  <Badge
+                    key={`${chip.filterId}-${chip.value}-${i}`}
+                    colorStyle="primary"
+                    theme="soft"
+                    shape="rounded"
+                    className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-primary/30 text-[13px] normal-case tracking-normal font-normal"
+                    onClick={() => filterBarHandleRef.current?.removeValue(chip.filterId, chip.value)}
+                  >
+                    {chip.label}
+                    <X className="w-3.5 h-3.5 ml-0.5" />
+                  </Badge>
+                ))}
+                <button
+                  onClick={() => filterBarHandleRef.current?.clearAll()}
+                  className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Asset Bulk Action Bar */}
           {selectedAssets.size > 0 && (
             <AssetBulkActionBar
@@ -420,6 +399,39 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
               }}
               galleryActionLabel="Remove from Gallery"
             />
+          )}
+
+          {/* Table Controls - shown above table in list view */}
+          {assetsViewMode === "list" && (
+            <div className="flex items-center justify-between mb-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                    40 per page
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-white">
+                  <DropdownMenuItem>20 per page</DropdownMenuItem>
+                  <DropdownMenuItem>40 per page</DropdownMenuItem>
+                  <DropdownMenuItem>80 per page</DropdownMenuItem>
+                  <DropdownMenuItem>120 per page</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                    <i className="bi bi-table text-base" />
+                    Manage Columns
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-white">
+                  <DropdownMenuItem>Configure columns...</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           )}
 
           {/* Assets Grid/Table with Loading State */}
