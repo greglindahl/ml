@@ -448,39 +448,6 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             />
           )}
 
-          {/* Table Controls - shown above table in list view */}
-          {assetsViewMode === "list" && (
-            <div className="flex items-center justify-between mb-4">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    40 per page
-                    <i className="bi bi-chevron-down w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-white">
-                  <DropdownMenuItem>20 per page</DropdownMenuItem>
-                  <DropdownMenuItem>40 per page</DropdownMenuItem>
-                  <DropdownMenuItem>80 per page</DropdownMenuItem>
-                  <DropdownMenuItem>120 per page</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    <i className="bi bi-table text-base" />
-                    Manage Columns
-                    <i className="bi bi-chevron-down w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-white">
-                  <DropdownMenuItem>Configure columns...</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          )}
-
           {/* Assets Grid/Table with Loading State */}
           <div className="min-h-[400px]">
             {assetsViewMode === "list" ? (
