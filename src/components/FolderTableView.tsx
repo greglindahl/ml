@@ -17,6 +17,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+// Column definitions for manage columns
+const COLUMNS = [
+  { key: "icon", label: "Icon" },
+  { key: "name", label: "Name" },
+  { key: "subfolders", label: "Subfolders" },
+  { key: "created", label: "Created" },
+  { key: "createdBy", label: "Created By" },
+] as const;
+
+type ColumnKey = typeof COLUMNS[number]["key"];
+type ColumnVisibility = Record<ColumnKey, boolean>;
+
+const PER_PAGE_OPTIONS = [10, 20, 40, 80] as const;
 
 interface FolderTableViewProps {
   folders: FolderItem[];
@@ -49,6 +68,19 @@ export function FolderTableView({ folders, onNavigate, isLoading = false, archiv
   const [selectedFolders, setSelectedFolders] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [perPage, setPerPage] = useState<number>(40);
+  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
+    icon: true,
+    name: true,
+    subfolders: true,
+    created: true,
+    createdBy: true,
+  });
+
+  const toggleColumn = (key: ColumnKey) => {
+    setColumnVisibility(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
   const enrichedFolders = folders.map((f, i) => enrichFolder(f, i));
 
   const handleSelectAll = (checked: boolean) => {
@@ -91,6 +123,9 @@ export function FolderTableView({ folders, onNavigate, isLoading = false, archiv
     return sortDirection === "asc" ? cmp : -cmp;
   });
 
+  // Apply pagination
+  const paginatedFolders = sorted.slice(0, perPage);
+
   const allSelected = folders.length > 0 && selectedFolders.size === folders.length;
   const someSelected = selectedFolders.size > 0 && selectedFolders.size < folders.length;
 
@@ -108,26 +143,36 @@ export function FolderTableView({ folders, onNavigate, isLoading = false, archiv
           aria-label={`Select ${folder.name}`}
         />
       </TableCell>
-      <TableCell>
-        <i className="bi bi-folder2-open text-lg text-muted-foreground" />
-      </TableCell>
-      <TableCell>
-        <button
-          onClick={() => onNavigate(folder.id)}
-          className="font-medium text-sm text-primary hover:underline text-left truncate max-w-[200px]"
-        >
-          {folder.name}
-        </button>
-      </TableCell>
-      <TableCell>
-        <span className="text-sm">{folder.subfolderCount}</span>
-      </TableCell>
-      <TableCell>
-        <span className="text-sm">{formatDate(folder.createdDate)}</span>
-      </TableCell>
-      <TableCell>
-        <span className="text-sm">{folder.creator}</span>
-      </TableCell>
+      {columnVisibility.icon && (
+        <TableCell>
+          <i className="bi bi-folder2-open text-lg text-muted-foreground" />
+        </TableCell>
+      )}
+      {columnVisibility.name && (
+        <TableCell>
+          <button
+            onClick={() => onNavigate(folder.id)}
+            className="font-medium text-sm text-primary hover:underline text-left truncate max-w-[200px]"
+          >
+            {folder.name}
+          </button>
+        </TableCell>
+      )}
+      {columnVisibility.subfolders && (
+        <TableCell>
+          <span className="text-sm">{folder.subfolderCount}</span>
+        </TableCell>
+      )}
+      {columnVisibility.created && (
+        <TableCell>
+          <span className="text-sm">{formatDate(folder.createdDate)}</span>
+        </TableCell>
+      )}
+      {columnVisibility.createdBy && (
+        <TableCell>
+          <span className="text-sm">{folder.creator}</span>
+        </TableCell>
+      )}
       <TableCell>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -192,44 +237,96 @@ export function FolderTableView({ folders, onNavigate, isLoading = false, archiv
   }
 
   return (
-    <div className="border rounded-lg bg-card">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-12">
-              <Checkbox
-                checked={allSelected}
-                onCheckedChange={handleSelectAll}
-                aria-label="Select all folders"
-                {...(someSelected ? { "data-state": "indeterminate" } : {})}
-              />
-            </TableHead>
-            <TableHead className="w-12"></TableHead>
-            <TableHead className="min-w-[180px]">
-              <button onClick={() => handleSort("name")} className="flex items-center hover:text-foreground transition-colors uppercase text-xs tracking-wider">
-                Name{getSortIcon("name")}
-              </button>
-            </TableHead>
-            <TableHead className="min-w-[100px]">
-              <button onClick={() => handleSort("subfolders")} className="flex items-center hover:text-foreground transition-colors uppercase text-xs tracking-wider">
-                Subfolders{getSortIcon("subfolders")}
-              </button>
-            </TableHead>
-            <TableHead className="min-w-[100px]">
-              <button onClick={() => handleSort("created")} className="flex items-center hover:text-foreground transition-colors uppercase text-xs tracking-wider">
-                Created{getSortIcon("created")}
-              </button>
-            </TableHead>
-            <TableHead className="min-w-[140px]">
-              <span className="uppercase text-xs tracking-wider">Created By</span>
-            </TableHead>
-            <TableHead className="w-12"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sorted.map(folder => renderRow(folder))}
-        </TableBody>
-      </Table>
+    <div>
+      {/* Table Controls Row */}
+      <div className="flex justify-end gap-2 mb-3">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+              {perPage} per page
+              <i className="bi bi-chevron-down w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="bg-white">
+            {PER_PAGE_OPTIONS.map(option => (
+              <DropdownMenuItem key={option} onClick={() => setPerPage(option)}>
+                {option} per page
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+              <i className="bi bi-table w-4 h-4" />
+              Manage Columns
+              <i className="bi bi-chevron-down w-4 h-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-48 p-2" align="end">
+            <div className="space-y-2">
+              {COLUMNS.map(col => (
+                <label key={col.key} className="flex items-center gap-2 cursor-pointer hover:bg-accent px-2 py-1 rounded">
+                  <Checkbox
+                    checked={columnVisibility[col.key]}
+                    onCheckedChange={() => toggleColumn(col.key)}
+                  />
+                  <span className="text-sm">{col.label}</span>
+                </label>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      <div className="border rounded-lg bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={handleSelectAll}
+                  aria-label="Select all folders"
+                  {...(someSelected ? { "data-state": "indeterminate" } : {})}
+                />
+              </TableHead>
+              {columnVisibility.icon && <TableHead className="w-12"></TableHead>}
+              {columnVisibility.name && (
+                <TableHead className="min-w-[180px]">
+                  <button onClick={() => handleSort("name")} className="flex items-center hover:text-foreground transition-colors uppercase text-xs tracking-wider">
+                    Name{getSortIcon("name")}
+                  </button>
+                </TableHead>
+              )}
+              {columnVisibility.subfolders && (
+                <TableHead className="min-w-[100px]">
+                  <button onClick={() => handleSort("subfolders")} className="flex items-center hover:text-foreground transition-colors uppercase text-xs tracking-wider">
+                    Subfolders{getSortIcon("subfolders")}
+                  </button>
+                </TableHead>
+              )}
+              {columnVisibility.created && (
+                <TableHead className="min-w-[100px]">
+                  <button onClick={() => handleSort("created")} className="flex items-center hover:text-foreground transition-colors uppercase text-xs tracking-wider">
+                    Created{getSortIcon("created")}
+                  </button>
+                </TableHead>
+              )}
+              {columnVisibility.createdBy && (
+                <TableHead className="min-w-[140px]">
+                  <span className="uppercase text-xs tracking-wider">Created By</span>
+                </TableHead>
+              )}
+              <TableHead className="w-12"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedFolders.map(folder => renderRow(folder))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

@@ -331,22 +331,24 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             </div>
 
             <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    Sort{sortField ? `: ${SORT_LABELS[sortField]}` : ""}
-                    <i className="bi bi-chevron-down w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-white w-48">
-                  {SORT_OPTIONS.map(opt => (
-                    <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
-                      {opt.label}
-                      {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {assetsViewMode === "grid" && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                      Sort{sortField ? `: ${SORT_LABELS[sortField]}` : ""}
+                      <i className="bi bi-chevron-down w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-white w-48">
+                    {SORT_OPTIONS.map(opt => (
+                      <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
+                        {opt.label}
+                        {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
 
               <div className="flex items-center border border-gray-300 rounded-md bg-white">
                 <Button
@@ -355,7 +357,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${assetsViewMode === "grid" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("grid")}
                 >
-                  <i className="bi bi-grid-3x3 w-4 h-4" />
+                  <i className="bi bi-grid w-4 h-4" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -363,7 +365,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${assetsViewMode === "list" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("list")}
                 >
-                  <i className="bi bi-list w-4 h-4" />
+                  <i className="bi bi-table w-4 h-4" />
                 </Button>
                 <Button
                   variant="ghost"

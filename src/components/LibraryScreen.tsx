@@ -827,22 +827,24 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               </div>
 
               <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                      Sort{sortField ? `: ${SORT_LABELS[sortField]}` : ""}
-                      <i className="bi bi-chevron-down w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-white w-48">
-                    {SORT_OPTIONS.map(opt => (
-                      <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
-                        {opt.label}
-                        {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {assetsViewMode === "grid" && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                        Sort{sortField ? `: ${SORT_LABELS[sortField]}` : ""}
+                        <i className="bi bi-chevron-down w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="bg-white w-48">
+                      {SORT_OPTIONS.map(opt => (
+                        <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
+                          {opt.label}
+                          {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
 
                 <div className="flex items-center border border-gray-300 rounded-md bg-white">
                   <Button
@@ -851,7 +853,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${assetsViewMode === "grid" ? "bg-gray-100" : ""}`}
                     onClick={() => setAssetsViewMode("grid")}
                   >
-                    <i className="bi bi-grid-3x3 w-4 h-4" />
+                    <i className="bi bi-grid w-4 h-4" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -859,7 +861,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${assetsViewMode === "list" ? "bg-gray-100" : ""}`}
                     onClick={() => setAssetsViewMode("list")}
                   >
-                    <i className="bi bi-list w-4 h-4" />
+                    <i className="bi bi-table w-4 h-4" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -1115,22 +1117,24 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               </div>
 
               <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                      Sort{sortField ? `: ${SORT_LABELS[sortField]}` : ""}
-                      <i className="bi bi-chevron-down w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-white w-48">
-                    {SORT_OPTIONS.map(opt => (
-                      <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
-                        {opt.label}
-                        {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {galleriesViewMode === "grid" && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                        Sort{sortField ? `: ${SORT_LABELS[sortField]}` : ""}
+                        <i className="bi bi-chevron-down w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="bg-white w-48">
+                      {SORT_OPTIONS.map(opt => (
+                        <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
+                          {opt.label}
+                          {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
 
                 <div className="flex items-center border border-gray-300 rounded-md bg-white">
                   <Button
@@ -1139,7 +1143,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${galleriesViewMode === "grid" ? "bg-gray-100" : ""}`}
                     onClick={() => setGalleriesViewMode("grid")}
                   >
-                    <i className="bi bi-grid-3x3 w-4 h-4" />
+                    <i className="bi bi-grid w-4 h-4" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -1147,7 +1151,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${galleriesViewMode === "list" ? "bg-gray-100" : ""}`}
                     onClick={() => setGalleriesViewMode("list")}
                   >
-                    <i className="bi bi-list w-4 h-4" />
+                    <i className="bi bi-table w-4 h-4" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -1342,10 +1346,10 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             <div className="flex items-center justify-end mb-6">
               <div className="flex items-center border rounded-md bg-card">
                 <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-r-none text-[#6e84a3] ${folderViewMode === "grid" ? "bg-accent" : ""}`} onClick={() => setFolderViewMode("grid")}>
-                  <i className="bi bi-grid-3x3 w-4 h-4" />
+                  <i className="bi bi-grid w-4 h-4" />
                 </Button>
                 <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-l-none border-l text-[#6e84a3] ${folderViewMode === "table" ? "bg-accent" : ""}`} onClick={() => setFolderViewMode("table")}>
-                  <i className="bi bi-list w-4 h-4" />
+                  <i className="bi bi-table w-4 h-4" />
                 </Button>
               </div>
             </div>

@@ -17,6 +17,27 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+// Column definitions for manage columns
+const COLUMNS = [
+  { key: "thumbnail", label: "Thumbnail" },
+  { key: "creator", label: "Creator" },
+  { key: "added", label: "Added" },
+  { key: "captured", label: "Captured" },
+  { key: "details", label: "Details" },
+  { key: "metadata", label: "Metadata" },
+  { key: "downloads", label: "Downloads" },
+] as const;
+
+type ColumnKey = typeof COLUMNS[number]["key"];
+type ColumnVisibility = Record<ColumnKey, boolean>;
+
+const PER_PAGE_OPTIONS = [10, 20, 40, 80] as const;
 
 interface AssetTableViewProps {
   assets: LibraryAsset[];
@@ -61,6 +82,20 @@ export function AssetTableView({ assets, isLoading = false, selectedAssets: exte
   const [internalSelected, setInternalSelected] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>("dateCreated");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [perPage, setPerPage] = useState<number>(40);
+  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
+    thumbnail: true,
+    creator: true,
+    added: true,
+    captured: true,
+    details: true,
+    metadata: true,
+    downloads: true,
+  });
+
+  const toggleColumn = (key: ColumnKey) => {
+    setColumnVisibility(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   // Use external selection state when provided, otherwise internal
   const selectedAssets = externalSelected ?? internalSelected;
@@ -138,6 +173,9 @@ export function AssetTableView({ assets, isLoading = false, selectedAssets: exte
     return sortDirection === "asc" ? comparison : -comparison;
   });
 
+  // Apply pagination
+  const paginatedAssets = sortedAssets.slice(0, perPage);
+
   const allSelected = assets.length > 0 && selectedAssets.size === assets.length;
   const someSelected = selectedAssets.size > 0 && selectedAssets.size < assets.length;
 
@@ -179,150 +217,213 @@ export function AssetTableView({ assets, isLoading = false, selectedAssets: exte
   }
 
   return (
-    <div className="border rounded-lg bg-card">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-12">
-              <Checkbox 
-                checked={allSelected}
-                onCheckedChange={handleSelectAll}
-                aria-label="Select all assets"
-                {...(someSelected ? { "data-state": "indeterminate" } : {})}
-              />
-            </TableHead>
-            <TableHead className="w-24">Thumbnail</TableHead>
-            <TableHead className="min-w-[120px]">
-              <button 
-                onClick={() => handleSort("creator")}
-                className="flex items-center hover:text-foreground transition-colors"
-              >
-                Creator
-                {getSortIcon("creator")}
-              </button>
-            </TableHead>
-            <TableHead className="min-w-[100px]">
-              <button 
-                onClick={() => handleSort("dateCreated")}
-                className="flex items-center hover:text-foreground transition-colors"
-              >
-                Added
-                {getSortIcon("dateCreated")}
-              </button>
-            </TableHead>
-            <TableHead className="min-w-[100px]">
-              <button 
-                onClick={() => handleSort("captureDate")}
-                className="flex items-center hover:text-foreground transition-colors"
-              >
-                Captured
-                {getSortIcon("captureDate")}
-              </button>
-            </TableHead>
-            <TableHead className="min-w-[200px]">Details</TableHead>
-            <TableHead className="min-w-[140px]">Metadata</TableHead>
-            <TableHead className="text-right min-w-[90px]">
-              <button 
-                onClick={() => handleSort("downloads")}
-                className="flex items-center justify-end w-full hover:text-foreground transition-colors"
-              >
-                Downloads
-                {getSortIcon("downloads")}
-              </button>
-            </TableHead>
-            <TableHead className="w-12"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sortedAssets.map((asset) => (
+    <div>
+      {/* Table Controls Row */}
+      <div className="flex justify-end gap-2 mb-3">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+              {perPage} per page
+              <i className="bi bi-chevron-down w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="bg-white">
+            {PER_PAGE_OPTIONS.map(option => (
+              <DropdownMenuItem key={option} onClick={() => setPerPage(option)}>
+                {option} per page
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+              <i className="bi bi-table w-4 h-4" />
+              Manage Columns
+              <i className="bi bi-chevron-down w-4 h-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-48 p-2" align="end">
+            <div className="space-y-2">
+              {COLUMNS.map(col => (
+                <label key={col.key} className="flex items-center gap-2 cursor-pointer hover:bg-accent px-2 py-1 rounded">
+                  <Checkbox
+                    checked={columnVisibility[col.key]}
+                    onCheckedChange={() => toggleColumn(col.key)}
+                  />
+                  <span className="text-sm">{col.label}</span>
+                </label>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      <div className="border rounded-lg bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={handleSelectAll}
+                  aria-label="Select all assets"
+                  {...(someSelected ? { "data-state": "indeterminate" } : {})}
+                />
+              </TableHead>
+              {columnVisibility.thumbnail && <TableHead className="w-24">Thumbnail</TableHead>}
+              {columnVisibility.creator && (
+                <TableHead className="min-w-[120px]">
+                  <button
+                    onClick={() => handleSort("creator")}
+                    className="flex items-center hover:text-foreground transition-colors"
+                  >
+                    Creator
+                    {getSortIcon("creator")}
+                  </button>
+                </TableHead>
+              )}
+              {columnVisibility.added && (
+                <TableHead className="min-w-[100px]">
+                  <button
+                    onClick={() => handleSort("dateCreated")}
+                    className="flex items-center hover:text-foreground transition-colors"
+                  >
+                    Added
+                    {getSortIcon("dateCreated")}
+                  </button>
+                </TableHead>
+              )}
+              {columnVisibility.captured && (
+                <TableHead className="min-w-[100px]">
+                  <button
+                    onClick={() => handleSort("captureDate")}
+                    className="flex items-center hover:text-foreground transition-colors"
+                  >
+                    Captured
+                    {getSortIcon("captureDate")}
+                  </button>
+                </TableHead>
+              )}
+              {columnVisibility.details && <TableHead className="min-w-[200px]">Details</TableHead>}
+              {columnVisibility.metadata && <TableHead className="min-w-[140px]">Metadata</TableHead>}
+              {columnVisibility.downloads && (
+                <TableHead className="text-right min-w-[90px]">
+                  <button
+                    onClick={() => handleSort("downloads")}
+                    className="flex items-center justify-end w-full hover:text-foreground transition-colors"
+                  >
+                    Downloads
+                    {getSortIcon("downloads")}
+                  </button>
+                </TableHead>
+              )}
+              <TableHead className="w-12"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedAssets.map((asset) => (
             <TableRow 
               key={asset.id}
               data-state={selectedAssets.has(asset.id) ? "selected" : undefined}
             >
               {/* Checkbox */}
               <TableCell>
-                <Checkbox 
+                <Checkbox
                   checked={selectedAssets.has(asset.id)}
                   onCheckedChange={(checked) => handleSelectAsset(asset.id, !!checked)}
                   aria-label={`Select ${asset.name}`}
                 />
               </TableCell>
-              
+
               {/* Thumbnail */}
-              <TableCell>
-                <div className="relative w-16 h-12 bg-muted rounded overflow-hidden flex items-center justify-center">
-                  <AssetTypeIcon type={asset.type} className="w-6 h-6 text-muted-foreground/40" />
-                  {/* Video duration overlay */}
-                  {asset.type === "video" && asset.duration && (
-                    <span className="absolute bottom-0.5 right-0.5 text-[9px] font-medium text-white bg-black/70 px-1 rounded">
-                      {asset.duration}
-                    </span>
-                  )}
-                  {/* Status indicator */}
-                  <span 
-                    className={`absolute top-0.5 left-0.5 w-2 h-2 rounded-full ${
-                      asset.status === "approved" ? "bg-green-500" :
-                      asset.status === "pending" ? "bg-yellow-500" : "bg-gray-400"
-                    }`}
-                  />
-                </div>
-              </TableCell>
-              
+              {columnVisibility.thumbnail && (
+                <TableCell>
+                  <div className="relative w-16 h-12 bg-muted rounded overflow-hidden flex items-center justify-center">
+                    <AssetTypeIcon type={asset.type} className="w-6 h-6 text-muted-foreground/40" />
+                    {asset.type === "video" && asset.duration && (
+                      <span className="absolute bottom-0.5 right-0.5 text-[9px] font-medium text-white bg-black/70 px-1 rounded">
+                        {asset.duration}
+                      </span>
+                    )}
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-2 h-2 rounded-full ${
+                        asset.status === "approved" ? "bg-green-500" :
+                        asset.status === "pending" ? "bg-yellow-500" : "bg-gray-400"
+                      }`}
+                    />
+                  </div>
+                </TableCell>
+              )}
+
               {/* Creator */}
-              <TableCell>
-                <div className="flex flex-col">
-                  <span className="font-medium text-sm">{asset.creator}</span>
-                  {asset.tags.length > 0 && (
-                    <span className="text-xs text-muted-foreground truncate max-w-[150px]">
-                      {asset.tags.slice(0, 2).join(", ")}
-                    </span>
-                  )}
-                </div>
-              </TableCell>
-              
+              {columnVisibility.creator && (
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span className="font-medium text-sm">{asset.creator}</span>
+                    {asset.tags.length > 0 && (
+                      <span className="text-xs text-muted-foreground truncate max-w-[150px]">
+                        {asset.tags.slice(0, 2).join(", ")}
+                      </span>
+                    )}
+                  </div>
+                </TableCell>
+              )}
+
               {/* Added Date */}
-              <TableCell>
-                <span className="text-sm">{getRelativeTime(asset.dateCreated)}</span>
-              </TableCell>
-              
-              {/* Capture Date (using same date for mock) */}
-              <TableCell>
-                <span className="text-sm text-muted-foreground">
-                  {asset.dateCreated.toLocaleDateString("en-US", { 
-                    month: "short", 
-                    day: "numeric",
-                    year: "2-digit"
-                  })}
-                </span>
-              </TableCell>
-              
-              {/* Details (Title / Notes) */}
-              <TableCell>
-                <div className="flex flex-col">
-                  <span className="font-medium text-sm truncate max-w-[250px]" title={asset.name}>
-                    {asset.name}
+              {columnVisibility.added && (
+                <TableCell>
+                  <span className="text-sm">{getRelativeTime(asset.dateCreated)}</span>
+                </TableCell>
+              )}
+
+              {/* Capture Date */}
+              {columnVisibility.captured && (
+                <TableCell>
+                  <span className="text-sm text-muted-foreground">
+                    {asset.dateCreated.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "2-digit"
+                    })}
                   </span>
-                  <span className="text-xs text-muted-foreground">
-                    {asset.type === "video" ? "Video" : "Image"} • {asset.fileSize}
-                  </span>
-                </div>
-              </TableCell>
-              
+                </TableCell>
+              )}
+
+              {/* Details */}
+              {columnVisibility.details && (
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span className="font-medium text-sm truncate max-w-[250px]" title={asset.name}>
+                      {asset.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {asset.type === "video" ? "Video" : "Image"} • {asset.fileSize}
+                    </span>
+                  </div>
+                </TableCell>
+              )}
+
               {/* Metadata */}
-              <TableCell>
-                <div className="flex flex-col text-sm">
-                  <span>{getOrientation(asset.aspectRatio)}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {asset.aspectRatio} • {asset.dimensions || "N/A"}
-                  </span>
-                </div>
-              </TableCell>
-              
+              {columnVisibility.metadata && (
+                <TableCell>
+                  <div className="flex flex-col text-sm">
+                    <span>{getOrientation(asset.aspectRatio)}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {asset.aspectRatio} • {asset.dimensions || "N/A"}
+                    </span>
+                  </div>
+                </TableCell>
+              )}
+
               {/* Downloads */}
-              <TableCell className="text-right">
-                <span className="text-sm font-medium">{asset.downloads}</span>
-              </TableCell>
-              
+              {columnVisibility.downloads && (
+                <TableCell className="text-right">
+                  <span className="text-sm font-medium">{asset.downloads}</span>
+                </TableCell>
+              )}
+
               {/* Actions Menu */}
               <TableCell>
                 <DropdownMenu>
@@ -343,8 +444,9 @@ export function AssetTableView({ assets, isLoading = false, selectedAssets: exte
               </TableCell>
             </TableRow>
           ))}
-        </TableBody>
-      </Table>
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
