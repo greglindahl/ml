@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
 import { GalleryDetailsFilterBar, GalleryDetailsFilterBarHandle, ActiveFilterChip } from "@/components/GalleryDetailsFilterBar";
+import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
 import { FolderItem, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay } from "@/lib/mockFolderData";
@@ -85,6 +86,9 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
   // Filter chips state and ref
   const [filterChips, setFilterChips] = useState<ActiveFilterChip[]>([]);
   const filterBarHandleRef = useRef<GalleryDetailsFilterBarHandle | null>(null);
+
+  // Filters sheet state for narrow widths
+  const [filtersSheetOpen, setFiltersSheetOpen] = useState(false);
 
   // Sort state
   const [sortField, setSortField] = useState<SortField>("dateCreated");
@@ -402,6 +406,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
               onFilterChange={handleFilterChange}
               onActiveFiltersChange={setFilterChips}
               handleRef={filterBarHandleRef}
+              onOpenFiltersSheet={() => setFiltersSheetOpen(true)}
             />
           </div>
 
@@ -589,6 +594,33 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           toast({ title: "Gallery moved", description: `"${gallery.name}" has been moved successfully.` });
         }}
       />
+
+      {/* Filters Sheet (for narrow widths) */}
+      <FiltersSheet
+        open={filtersSheetOpen}
+        onOpenChange={setFiltersSheetOpen}
+        value={{}}
+        onApply={() => {
+          // TODO: Apply draft filters when controls are wired up
+        }}
+        title="Gallery Asset Filters"
+      >
+        <FilterSection label="Type" icon="bi-image">
+          <div className="text-sm text-muted-foreground">Content type filters will go here</div>
+        </FilterSection>
+        <FilterSection label="Tags" icon="bi-tag">
+          <div className="text-sm text-muted-foreground">Tags filters will go here</div>
+        </FilterSection>
+        <FilterSection label="Creator" icon="bi-person">
+          <div className="text-sm text-muted-foreground">Creator filters will go here</div>
+        </FilterSection>
+        <FilterSection label="Capture Date" icon="bi-calendar">
+          <div className="text-sm text-muted-foreground">Date range filters will go here</div>
+        </FilterSection>
+        <FilterSection label="More Filters" icon="bi-sliders">
+          <div className="text-sm text-muted-foreground">Source and Approval Status filters will go here</div>
+        </FilterSection>
+      </FiltersSheet>
     </div>
   );
 }

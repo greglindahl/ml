@@ -214,6 +214,8 @@ interface FilterBarProps {
   onRemoveDisabledValue?: (value: string, category: string) => void;
   compactMode?: boolean;
   handleRef?: React.MutableRefObject<FilterBarHandle | null>;
+  // Collapsed filters sheet
+  onOpenFiltersSheet?: () => void;
 }
 
 export function FilterBar({
@@ -230,6 +232,7 @@ export function FilterBar({
   onRemoveDisabledValue,
   compactMode = false,
   handleRef,
+  onOpenFiltersSheet,
 }: FilterBarProps) {
   const visibleFilters = filters.filter(f => !hideFilters.includes(f.id));
   const [activeFilters, setActiveFilters] = useState<Record<string, { value: string; label: string }[]>>({});
@@ -370,8 +373,31 @@ export function FilterBar({
   const statusSelected = activeFilters["status"] || [];
   const moreCount = sourceSelected.length + statusSelected.length;
 
+  // Calculate total active filter count for collapsed button
+  const standardFiltersCount = Object.values(activeFilters).reduce((sum, arr) => sum + arr.length, 0);
+  const totalActiveCount = standardFiltersCount + aiTagsCount + moreCount;
+
   return (
     <div className="filter-bar-container cq-filterbar-hide-label flex flex-wrap items-center gap-1.5">
+      {/* Collapsed Filters Button (visible at narrow widths) */}
+      <Button
+        variant="outline"
+        size="sm"
+        className="filters-collapsed-button h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
+        onClick={onOpenFiltersSheet}
+      >
+        <i className="bi bi-funnel w-4 h-4 inline-flex items-center justify-center leading-none" />
+        <span>Filters</span>
+        {totalActiveCount > 0 && (
+          <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+            {totalActiveCount}
+          </span>
+        )}
+        <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+      </Button>
+
+      {/* Expanded Filters (visible at wide widths) */}
+      <div className="filters-expanded contents">
       {/* AI Tags Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -832,8 +858,9 @@ export function FilterBar({
           </DropdownMenuSub>
         </DropdownMenuContent>
       </DropdownMenu>
+      </div>{/* End filters-expanded */}
 
-      {/* Toggle Pills */}
+      {/* Toggle Pills (always visible) */}
       <TogglePill
         label="Unsorted"
         iconClass="bi-folder-x"

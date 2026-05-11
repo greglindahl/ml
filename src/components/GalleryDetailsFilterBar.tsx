@@ -133,6 +133,7 @@ interface GalleryDetailsFilterBarProps {
   // Toggle pill states
   isUnviewedActive?: boolean;
   onUnviewedToggle?: (active: boolean) => void;
+  onOpenFiltersSheet?: () => void;
 }
 
 export function GalleryDetailsFilterBar({
@@ -142,6 +143,7 @@ export function GalleryDetailsFilterBar({
   handleRef,
   isUnviewedActive = false,
   onUnviewedToggle,
+  onOpenFiltersSheet,
 }: GalleryDetailsFilterBarProps) {
   const [activeFilters, setActiveFilters] = useState<Record<string, { value: string; label: string }[]>>({});
   const [isFavoritesActive, setIsFavoritesActive] = useState(false);
@@ -152,6 +154,10 @@ export function GalleryDetailsFilterBar({
   const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
   // Search state for sub-flyouts (More)
   const [subSearchQueries, setSubSearchQueries] = useState<Record<string, string>>({});
+
+  // Calculate total active filter count for collapsed button
+  const standardFiltersCount = Object.values(activeFilters).reduce((sum, arr) => sum + arr.length, 0);
+  const totalActiveCount = standardFiltersCount + sourceSelections.length + approvalStatusSelections.length;
 
   // Build chips and notify parent when filters change
   useEffect(() => {
@@ -236,6 +242,25 @@ export function GalleryDetailsFilterBar({
 
   return (
     <div className="filter-bar-container cq-filterbar-hide-label flex flex-wrap items-center gap-1.5">
+      {/* Collapsed Filters Button (visible at narrow widths) */}
+      <Button
+        variant="outline"
+        size="sm"
+        className="filters-collapsed-button h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
+        onClick={onOpenFiltersSheet}
+      >
+        <i className="bi bi-funnel w-4 h-4 inline-flex items-center justify-center leading-none" />
+        <span>Filters</span>
+        {totalActiveCount > 0 && (
+          <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+            {totalActiveCount}
+          </span>
+        )}
+        <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+      </Button>
+
+      {/* Expanded Filters (visible at wide widths) */}
+      <div className="filters-expanded contents">
       {filters.map(filter => {
         const selected = activeFilters[filter.id] || [];
         const isActive = selected.length > 0;
@@ -444,6 +469,7 @@ export function GalleryDetailsFilterBar({
           </DropdownMenuSub>
         </DropdownMenuContent>
       </DropdownMenu>
+      </div>{/* End filters-expanded */}
 
       {/* Unviewed Only pill */}
       <TogglePill

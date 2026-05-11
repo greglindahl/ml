@@ -473,3 +473,23 @@
     display: none;
   }
 }
+
+/* Responsive filter bar: collapse to "Filters" button at narrow widths */
+@container filterbar (max-width: 767px) {
+  .filters-expanded {
+    display: none;
+  }
+}
+
+@container filterbar (min-width: 768px) {
+  .filters-collapsed-button {
+    display: none;
+  }
+}
+
+/* Hide folder sidebar at narrow content widths */
+@container content (max-width: 767px) {
+  .folder-tree-sidebar {
+    display: none;
+  }
+}

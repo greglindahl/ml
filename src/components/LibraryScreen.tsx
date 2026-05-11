@@ -35,6 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { GalleryFilterBar } from "@/components/GalleryFilterBar";
+import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
 import { GalleryCard, GalleryCardState } from "@/components/GalleryCard";
 import { AssetCard, AssetCardState } from "@/components/AssetCard";
 import { FolderCard, FolderCardState } from "@/components/FolderCard";
@@ -102,6 +103,10 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   // Toggle pill states for FilterBar
   const [isUnsortedActive, setIsUnsortedActive] = useState(false);
   const [isUnviewedActive, setIsUnviewedActive] = useState(false);
+
+  // Filters sheet state for narrow widths
+  const [assetsFiltersSheetOpen, setAssetsFiltersSheetOpen] = useState(false);
+  const [galleriesFiltersSheetOpen, setGalleriesFiltersSheetOpen] = useState(false);
 
   const flatFolders = useMemo(() => flattenFolders(folderTree), [folderTree]);
 
@@ -907,6 +912,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 onUnviewedToggle={setIsUnviewedActive}
                 isBrandingActive={isBrandedActive}
                 onBrandingToggle={setIsBrandedActive}
+                onOpenFiltersSheet={() => setAssetsFiltersSheetOpen(true)}
               />
             </div>
 
@@ -1149,6 +1155,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               <GalleryFilterBar
                 isArchivedActive={archivedGalleriesOnly}
                 onArchivedToggle={setArchivedGalleriesOnly}
+                onOpenFiltersSheet={() => setGalleriesFiltersSheetOpen(true)}
               />
             </div>
 
@@ -1393,6 +1400,56 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         displayLabel={displayLabel}
         onDisplayLabelChange={setDisplayLabel}
       />
+
+      {/* Assets Filters Sheet (for narrow widths) */}
+      <FiltersSheet
+        open={assetsFiltersSheetOpen}
+        onOpenChange={setAssetsFiltersSheetOpen}
+        value={{}}
+        onApply={() => {
+          // TODO: Apply draft filters when controls are wired up
+        }}
+      >
+        <FilterSection label="Content Type" icon="bi-image">
+          <div className="text-sm text-muted-foreground">Content type filters will go here</div>
+        </FilterSection>
+        <FilterSection label="AI Tags" icon="bi-stars">
+          <div className="text-sm text-muted-foreground">AI tags filters will go here</div>
+        </FilterSection>
+        <FilterSection label="Creator" icon="bi-person">
+          <div className="text-sm text-muted-foreground">Creator filters will go here</div>
+        </FilterSection>
+        <FilterSection label="Date Range" icon="bi-calendar">
+          <div className="text-sm text-muted-foreground">Date range filters will go here</div>
+        </FilterSection>
+        <FilterSection label="More Filters" icon="bi-sliders">
+          <div className="text-sm text-muted-foreground">Source, Status, and other filters will go here</div>
+        </FilterSection>
+      </FiltersSheet>
+
+      {/* Galleries Filters Sheet (for narrow widths) */}
+      <FiltersSheet
+        open={galleriesFiltersSheetOpen}
+        onOpenChange={setGalleriesFiltersSheetOpen}
+        value={{}}
+        onApply={() => {
+          // TODO: Apply draft filters when controls are wired up
+        }}
+        title="Gallery Filters"
+      >
+        <FilterSection label="Gallery Options" icon="bi-collection">
+          <div className="text-sm text-muted-foreground">Gallery options filters will go here</div>
+        </FilterSection>
+        <FilterSection label="Creator" icon="bi-person">
+          <div className="text-sm text-muted-foreground">Creator filters will go here</div>
+        </FilterSection>
+        <FilterSection label="Groups" icon="bi-people">
+          <div className="text-sm text-muted-foreground">Groups filters will go here</div>
+        </FilterSection>
+        <FilterSection label="Created Date" icon="bi-calendar">
+          <div className="text-sm text-muted-foreground">Created date filters will go here</div>
+        </FilterSection>
+      </FiltersSheet>
     </div>
   );
 }
