@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
 import { GalleryDetailsFilterBar, GalleryDetailsFilterBarHandle, ActiveFilterChip } from "@/components/GalleryDetailsFilterBar";
+import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
 import { FolderItem, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay } from "@/lib/mockFolderData";
@@ -52,20 +53,55 @@ interface GalleryDetailsViewProps {
   onNavigate: (folderId: string) => void;
   isMobile?: boolean;
   folderTree: FolderItem[];
+  onOpenSettings?: () => void;
 }
 
-export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = false, folderTree }: GalleryDetailsViewProps) {
+// Sort options for gallery assets
+type SortField = "dateCreated" | "captureDate" | "name" | "creator" | null;
+type SortDir = "asc" | "desc";
+
+const SORT_OPTIONS: { value: NonNullable<SortField>; label: string }[] = [
+  { value: "dateCreated", label: "Date Created" },
+  { value: "captureDate", label: "Capture Date" },
+  { value: "name", label: "Name" },
+  { value: "creator", label: "Creator" },
+];
+
+const SORT_LABELS: Record<NonNullable<SortField>, string> = {
+  dateCreated: "Date Created",
+  captureDate: "Capture Date",
+  name: "Name",
+  creator: "Creator",
+};
+
+export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = false, folderTree, onOpenSettings }: GalleryDetailsViewProps) {
   const [activeTab, setActiveTab] = useState("assets");
   const [moveGalleriesOpen, setMoveGalleriesOpen] = useState(false);
   // View mode state (grid vs list)
   const [assetsViewMode, setAssetsViewMode] = useState<"grid" | "list">("grid");
-  
+
   // Asset selection state for bulk actions
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
-  
+
   // Filter chips state and ref
   const [filterChips, setFilterChips] = useState<ActiveFilterChip[]>([]);
   const filterBarHandleRef = useRef<GalleryDetailsFilterBarHandle | null>(null);
+
+  // Filters sheet state for narrow widths
+  const [filtersSheetOpen, setFiltersSheetOpen] = useState(false);
+
+  // Sort state
+  const [sortField, setSortField] = useState<SortField>("dateCreated");
+  const [sortDirection, setSortDirection] = useState<SortDir>("desc");
+
+  const handleSortChange = useCallback((field: NonNullable<SortField>) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("desc");
+    }
+  }, [sortField]);
 
   // Filter state (driven by FilterBar)
   const [contentTypeFilter, setContentTypeFilter] = useState<Array<LibraryAsset["type"]>>([]);
@@ -189,7 +225,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
   }, []);
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-4 md:px-8 xl:px-16">
+    <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-4 md:px-8 xl:px-16 content-container">
       {/* Breadcrumb Navigation - fixed height to prevent layout shift */}
       <nav className="flex items-center gap-[6px] text-[13px] tracking-[-0.13px] mb-2 flex-shrink-0 h-[44px] items-end">
         {breadcrumbPath.map((item, index) => (
@@ -264,7 +300,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon" className="border-primary text-primary hover:bg-primary/5">
-                  <i className="bi bi-three-dots-vertical w-4 h-4" />
+                  <i className="bi bi-three-dots-vertical w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -292,34 +328,32 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
         </div>
 
         <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">
-          {/* Faceted Search */}
-          <div className="mb-3">
-            <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
-          </div>
+          {/* Search Row with Utility Cluster */}
+          <div className="flex items-center gap-4 mb-3 cq-search-row">
+            <div className="flex-1 min-w-0 cq-search-input">
+              <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
+            </div>
 
-          {/* Filters and Controls - Single Row */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
-            <GalleryDetailsFilterBar
-              onFilterChange={handleFilterChange}
-              onActiveFiltersChange={setFilterChips}
-              handleRef={filterBarHandleRef}
-            />
-
-            <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    Sort
-                    <i className="bi bi-chevron-down w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-white">
-                  <DropdownMenuItem>Date (Newest)</DropdownMenuItem>
-                  <DropdownMenuItem>Date (Oldest)</DropdownMenuItem>
-                  <DropdownMenuItem>Name (A-Z)</DropdownMenuItem>
-                  <DropdownMenuItem>Name (Z-A)</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
+              {assetsViewMode === "grid" && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-10 gap-2 px-3 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]" title={`Sort: ${sortField ? SORT_LABELS[sortField] : "Default"}`}>
+                      <i className="bi bi-arrow-down-up w-4 h-4 inline-flex items-center justify-center leading-none" />
+                      <span className="sort-label">{sortField ? SORT_LABELS[sortField] : "Default"}</span>
+                      <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-white w-48">
+                    {SORT_OPTIONS.map(opt => (
+                      <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
+                        {opt.label}
+                        {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
 
               <div className="flex items-center border border-gray-300 rounded-md bg-white">
                 <Button
@@ -328,7 +362,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${assetsViewMode === "grid" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("grid")}
                 >
-                  <i className="bi bi-grid-3x3 w-4 h-4" />
+                  <i className="bi bi-grid w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -336,7 +370,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${assetsViewMode === "list" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("list")}
                 >
-                  <i className="bi bi-list w-4 h-4" />
+                  <i className="bi bi-table w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -350,10 +384,30 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                     }
                   }}
                 >
-                  <i className="bi bi-check-square w-4 h-4" />
+                  <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
               </div>
+
+              {/* Settings button */}
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
+                onClick={() => onOpenSettings?.()}
+              >
+                <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
+              </Button>
             </div>
+          </div>
+
+          {/* Filter Row */}
+          <div className="mb-3">
+            <GalleryDetailsFilterBar
+              onFilterChange={handleFilterChange}
+              onActiveFiltersChange={setFilterChips}
+              handleRef={filterBarHandleRef}
+              onOpenFiltersSheet={() => setFiltersSheetOpen(true)}
+            />
           </div>
 
           {/* Applied Filter Chips - reserved height to prevent layout shift */}
@@ -398,39 +452,6 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
               }}
               galleryActionLabel="Remove from Gallery"
             />
-          )}
-
-          {/* Table Controls - shown above table in list view */}
-          {assetsViewMode === "list" && (
-            <div className="flex items-center justify-between mb-4">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    40 per page
-                    <i className="bi bi-chevron-down w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-white">
-                  <DropdownMenuItem>20 per page</DropdownMenuItem>
-                  <DropdownMenuItem>40 per page</DropdownMenuItem>
-                  <DropdownMenuItem>80 per page</DropdownMenuItem>
-                  <DropdownMenuItem>120 per page</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    <i className="bi bi-table text-base" />
-                    Manage Columns
-                    <i className="bi bi-chevron-down w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-white">
-                  <DropdownMenuItem>Configure columns...</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
           )}
 
           {/* Assets Grid/Table with Loading State */}
@@ -573,6 +594,33 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           toast({ title: "Gallery moved", description: `"${gallery.name}" has been moved successfully.` });
         }}
       />
+
+      {/* Filters Sheet (for narrow widths) */}
+      <FiltersSheet
+        open={filtersSheetOpen}
+        onOpenChange={setFiltersSheetOpen}
+        value={{}}
+        onApply={() => {
+          // TODO: Apply draft filters when controls are wired up
+        }}
+        title="Gallery Asset Filters"
+      >
+        <FilterSection label="Type" icon="bi-image">
+          <div className="text-sm text-muted-foreground">Content type filters will go here</div>
+        </FilterSection>
+        <FilterSection label="Tags" icon="bi-tag">
+          <div className="text-sm text-muted-foreground">Tags filters will go here</div>
+        </FilterSection>
+        <FilterSection label="Creator" icon="bi-person">
+          <div className="text-sm text-muted-foreground">Creator filters will go here</div>
+        </FilterSection>
+        <FilterSection label="Capture Date" icon="bi-calendar">
+          <div className="text-sm text-muted-foreground">Date range filters will go here</div>
+        </FilterSection>
+        <FilterSection label="More Filters" icon="bi-sliders">
+          <div className="text-sm text-muted-foreground">Source and Approval Status filters will go here</div>
+        </FilterSection>
+      </FiltersSheet>
     </div>
   );
 }

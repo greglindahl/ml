@@ -300,7 +300,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   }, [selectedGalleries, handleMoveGalleries]);
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-4 md:px-8 xl:px-16">
+    <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-4 md:px-8 xl:px-16 content-container">
       {/* Breadcrumb Navigation - fixed height to prevent layout shift */}
       <nav className="flex items-center gap-[6px] text-[13px] tracking-[-0.13px] mb-2 flex-shrink-0 h-[44px] items-end">
         {breadcrumbPath.map((item, index) => (

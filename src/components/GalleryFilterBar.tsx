@@ -1,14 +1,13 @@
 import { useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger } from
 "@/components/ui/dropdown-menu";
+import { TogglePill } from "./TogglePill";
 
 interface FilterOption {
   label: string;
@@ -18,6 +17,7 @@ interface FilterOption {
 interface FilterConfig {
   id: string;
   label: string;
+  icon: React.ReactNode;
   options: FilterOption[];
   multiSelect?: boolean;
 }
@@ -26,6 +26,7 @@ const galleryFilters: FilterConfig[] = [
 {
   id: "gallery-options",
   label: "Gallery Options",
+  icon: <i className="bi bi-collection" />,
   multiSelect: true,
   options: [
   { label: "View Only", value: "view-only" },
@@ -36,6 +37,7 @@ const galleryFilters: FilterConfig[] = [
 {
   id: "creator",
   label: "Creator",
+  icon: <i className="bi bi-person" />,
   multiSelect: true,
   options: [
   { label: "John Smith", value: "john" },
@@ -46,6 +48,7 @@ const galleryFilters: FilterConfig[] = [
 {
   id: "groups",
   label: "Groups",
+  icon: <i className="bi bi-people" />,
   multiSelect: true,
   options: [
   { label: "Marketing", value: "marketing" },
@@ -57,6 +60,7 @@ const galleryFilters: FilterConfig[] = [
 {
   id: "created-date",
   label: "Created Date",
+  icon: <i className="bi bi-calendar" />,
   options: [
   { label: "Today", value: "today" },
   { label: "Last 7 Days", value: "week" },
@@ -69,6 +73,7 @@ const galleryFilters: FilterConfig[] = [
 {
   id: "assets-last-added",
   label: "Assets Last Added Date",
+  icon: <i className="bi bi-calendar" />,
   options: [
   { label: "Today", value: "today" },
   { label: "Last 7 Days", value: "week" },
@@ -81,15 +86,19 @@ const galleryFilters: FilterConfig[] = [
 
 
 interface GalleryFilterBarProps {
-  onArchivedChange?: (archived: boolean) => void;
+  isArchivedActive?: boolean;
+  onArchivedToggle?: (active: boolean) => void;
+  onOpenFiltersSheet?: () => void;
 }
 
-export function GalleryFilterBar({ onArchivedChange }: GalleryFilterBarProps = {}) {
+export function GalleryFilterBar({
+  isArchivedActive = false,
+  onArchivedToggle,
+  onOpenFiltersSheet,
+}: GalleryFilterBarProps = {}) {
   const [activeFilters, setActiveFilters] = useState<
     Record<string, {value: string;label: string;}[]>>(
     {});
-  const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
-  const [showArchived, setShowArchived] = useState(false);
 
   const handleMultiSelect = (
   filterId: string,
@@ -145,8 +154,30 @@ export function GalleryFilterBar({ onArchivedChange }: GalleryFilterBarProps = {
     });
   };
 
+  // Calculate total active filter count for collapsed button
+  const totalActiveCount = Object.values(activeFilters).reduce((sum, arr) => sum + arr.length, 0);
+
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="filter-bar-container cq-filterbar-hide-label flex flex-wrap items-center gap-1.5">
+      {/* Collapsed Filters Button (visible at narrow widths) */}
+      <Button
+        variant="outline"
+        size="sm"
+        className="filters-collapsed-button h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
+        onClick={onOpenFiltersSheet}
+      >
+        <i className="bi bi-funnel w-4 h-4 inline-flex items-center justify-center leading-none" />
+        <span>Filters</span>
+        {totalActiveCount > 0 && (
+          <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+            {totalActiveCount}
+          </span>
+        )}
+        <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+      </Button>
+
+      {/* Expanded Filters (visible at wide widths) */}
+      <div className="filters-expanded contents">
       {galleryFilters.map((filter) => {
         const selected = activeFilters[filter.id] || [];
         const isActive = selected.length > 0;
@@ -192,7 +223,7 @@ export function GalleryFilterBar({ onArchivedChange }: GalleryFilterBarProps = {
                     
                       <i className="bi bi-x text-sm" />
                     </button>
-                    <i className="bi bi-chevron-down w-3.5 h-3.5 text-muted-foreground" />
+                    <i className="bi bi-chevron-down w-3.5 h-3.5 inline-flex items-center justify-center leading-none text-muted-foreground" />
                   </div>
                 </div> :
 
@@ -201,8 +232,8 @@ export function GalleryFilterBar({ onArchivedChange }: GalleryFilterBarProps = {
                 size="sm"
                 className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
 
-                  <span>{filter.label}</span>
-                  <i className="bi bi-chevron-down w-4 h-4" />
+                  {filter.icon}<span className="filter-label">{filter.label}</span>
+                  <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
               }
             </DropdownMenuTrigger>
@@ -245,14 +276,15 @@ export function GalleryFilterBar({ onArchivedChange }: GalleryFilterBarProps = {
           </DropdownMenu>);
 
       })}
+      </div>{/* End filters-expanded */}
 
-      {/* Archived toggle */}
-      <div className="inline-flex items-center gap-2 h-8 px-2">
-        <span className="text-[15px] font-normal text-muted-foreground whitespace-nowrap">
-          Archived Only
-        </span>
-        <Switch checked={showArchived} onCheckedChange={(v) => { setShowArchived(v); onArchivedChange?.(v); }} className="scale-75" />
-      </div>
+      {/* Archived pill (always visible) */}
+      <TogglePill
+        label="Archived"
+        iconClass="bi-archive"
+        isActive={isArchivedActive}
+        onClick={() => onArchivedToggle?.(!isArchivedActive)}
+      />
     </div>);
 
 }

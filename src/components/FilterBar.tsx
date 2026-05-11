@@ -3,14 +3,14 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import type { DateRange } from "react-day-picker";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
-// Popover removed — custom date uses a plain positioned div
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { folders, FolderItem } from "@/lib/mockFolderData";
-import { AI_GENERATED_TAGS, mockLibraryAssets } from "@/lib/mockLibraryData";
+import { mockLibraryAssets } from "@/lib/mockLibraryData";
+import { TogglePill } from "@/components/TogglePill";
+
 interface FilterOption {
   label: string;
   value: string;
@@ -20,6 +20,7 @@ interface FilterOption {
   count?: number;
   iconClass?: string;
 }
+
 interface FilterConfig {
   id: string;
   label: string;
@@ -27,7 +28,7 @@ interface FilterConfig {
   options: FilterOption[];
   multiSelect?: boolean;
   isTreeStructure?: boolean;
-  hasGroups?: boolean; // Whether options are grouped
+  hasGroups?: boolean;
 }
 
 // Helper to flatten folder tree into options with depth (folders only, no galleries)
@@ -35,7 +36,6 @@ function flattenFolderTree(items: FolderItem[], depth = 0): FilterOption[] {
   const result: FilterOption[] = [];
   items.forEach(item => {
     if (item.id !== "all" && item.type === "folder") {
-      // Skip "All Files" and galleries
       result.push({
         label: item.name,
         value: item.id,
@@ -49,7 +49,9 @@ function flattenFolderTree(items: FolderItem[], depth = 0): FilterOption[] {
   });
   return result;
 }
+
 const folderOptions = flattenFolderTree(folders);
+
 // Known filter values to match against asset tags
 const PEOPLE_NAMES = ["Lebron James", "Steph Curry", "Kevin Durant", "Giannis Antetokounmpo", "Luka Doncic"];
 const SCENE_VALUES: Record<string, string> = {
@@ -79,28 +81,16 @@ function computeTagMatchCounts(values: string[], labelMap?: Record<string, strin
     .map(([v, count]) => ({ label: labelMap ? labelMap[v] || v : v, value: v, count }));
 }
 
+// AI Tags sub-filter options
+const peopleOptions = computeTagMatchCounts(PEOPLE_NAMES);
+const sceneOptions = computeTagMatchCounts(Object.keys(SCENE_VALUES), SCENE_VALUES);
+const brandOptions = computeTagMatchCounts(Object.keys(BRAND_VALUES), BRAND_VALUES);
+
+// Main filters array (without People, Scene, Brand - those are in AI Tags now)
 const filters: FilterConfig[] = [{
-  id: "people",
-  label: "People",
-  icon: null,
-  multiSelect: true,
-  options: computeTagMatchCounts(PEOPLE_NAMES),
-}, {
-  id: "scene",
-  label: "Scene",
-  icon: null,
-  multiSelect: true,
-  options: computeTagMatchCounts(Object.keys(SCENE_VALUES), SCENE_VALUES),
-}, {
-  id: "brand",
-  label: "Brand",
-  icon: null,
-  multiSelect: true,
-  options: computeTagMatchCounts(Object.keys(BRAND_VALUES), BRAND_VALUES),
-}, {
   id: "tags",
   label: "Tags",
-  icon: null,
+  icon: <i className="bi bi-tag" />,
   multiSelect: true,
   hasGroups: false,
   options: (() => {
@@ -120,46 +110,9 @@ const filters: FilterConfig[] = [{
       }));
   })(),
 }, {
-  id: "creator",
-  label: "Creator",
-  icon: null,
-  multiSelect: true,
-  options: (() => {
-    const counts: Record<string, number> = {};
-    mockLibraryAssets.forEach(asset => {
-      counts[asset.creatorId] = (counts[asset.creatorId] || 0) + 1;
-    });
-    return Object.entries(counts)
-      .filter(([, c]) => c > 0)
-      .sort(([, a], [, b]) => b - a)
-      .map(([id, count]) => ({ label: CREATOR_MAP[id] || id, value: id, count }));
-  })(),
-}, {
-  id: "content-type",
-  label: "Type",
-  icon: null,
-  multiSelect: true,
-  options: (() => {
-    const counts: Record<string, number> = {};
-    mockLibraryAssets.forEach(asset => {
-      counts[asset.type] = (counts[asset.type] || 0) + 1;
-    });
-    const typeIcons: Record<string, string> = { image: "bi-image", video: "bi-camera-video" };
-    return Object.entries(counts)
-      .sort(([, a], [, b]) => b - a)
-      .map(([type, count]) => ({ label: type.charAt(0).toUpperCase() + type.slice(1), value: type, count, iconClass: typeIcons[type] }));
-  })(),
-}, {
-  id: "folders",
-  label: "Folders",
-  icon: null,
-  multiSelect: true,
-  isTreeStructure: true,
-  options: folderOptions
-}, {
   id: "date-range",
   label: "Date",
-  icon: null,
+  icon: <i className="bi bi-calendar" />,
   options: [{
     label: "Last 7 days",
     value: "week"
@@ -183,9 +136,39 @@ const filters: FilterConfig[] = [{
     value: "custom"
   }]
 }, {
+  id: "creator",
+  label: "Creator",
+  icon: <i className="bi bi-person" />,
+  multiSelect: true,
+  options: (() => {
+    const counts: Record<string, number> = {};
+    mockLibraryAssets.forEach(asset => {
+      counts[asset.creatorId] = (counts[asset.creatorId] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .filter(([, c]) => c > 0)
+      .sort(([, a], [, b]) => b - a)
+      .map(([id, count]) => ({ label: CREATOR_MAP[id] || id, value: id, count }));
+  })(),
+}, {
+  id: "content-type",
+  label: "Type",
+  icon: <i className="bi bi-image" />,
+  multiSelect: true,
+  options: (() => {
+    const counts: Record<string, number> = {};
+    mockLibraryAssets.forEach(asset => {
+      counts[asset.type] = (counts[asset.type] || 0) + 1;
+    });
+    const typeIcons: Record<string, string> = { image: "bi-image", video: "bi-camera-video" };
+    return Object.entries(counts)
+      .sort(([, a], [, b]) => b - a)
+      .map(([type, count]) => ({ label: type.charAt(0).toUpperCase() + type.slice(1), value: type, count, iconClass: typeIcons[type] }));
+  })(),
+}, {
   id: "aspect-ratio",
   label: "Ratio",
-  icon: null,
+  icon: <i className="bi bi-crop" />,
   multiSelect: true,
   options: (() => {
     const counts: Record<string, number> = {};
@@ -197,12 +180,20 @@ const filters: FilterConfig[] = [{
       .sort(([, a], [, b]) => b - a)
       .map(([ratio, count]) => ({ label: ratio, value: ratio, count, iconClass: ratioIcons[ratio] }));
   })(),
+}, {
+  id: "folders",
+  label: "Folders",
+  icon: <i className="bi bi-folder" />,
+  multiSelect: true,
+  isTreeStructure: true,
+  options: folderOptions
 }];
 
 export interface CustomDateRange {
   from: Date | undefined;
   to: Date | undefined;
 }
+
 export interface FilterBarHandle {
   removeValue: (filterId: string, value: string) => void;
   clearAll: () => void;
@@ -212,55 +203,58 @@ interface FilterBarProps {
   onFilterChange?: (filterId: string, values: string[]) => void;
   onCustomDateChange?: (range: CustomDateRange) => void;
   hideFilters?: string[];
-  onBrandedToggle?: (active: boolean) => void;
+  // Toggle pill states
+  isUnsortedActive?: boolean;
+  onUnsortedToggle?: (active: boolean) => void;
+  isUnviewedActive?: boolean;
+  onUnviewedToggle?: (active: boolean) => void;
+  isBrandingActive?: boolean;
+  onBrandingToggle?: (active: boolean) => void;
   disabledValues?: { value: string; category: string }[];
   onRemoveDisabledValue?: (value: string, category: string) => void;
   compactMode?: boolean;
   handleRef?: React.MutableRefObject<FilterBarHandle | null>;
+  // Collapsed filters sheet
+  onOpenFiltersSheet?: () => void;
 }
+
 export function FilterBar({
   onFilterChange,
   onCustomDateChange,
   hideFilters = [],
-  onBrandedToggle,
+  isUnsortedActive = false,
+  onUnsortedToggle,
+  isUnviewedActive = false,
+  onUnviewedToggle,
+  isBrandingActive = false,
+  onBrandingToggle,
   disabledValues = [],
   onRemoveDisabledValue,
   compactMode = false,
   handleRef,
+  onOpenFiltersSheet,
 }: FilterBarProps) {
-  // Filter out hidden filters
   const visibleFilters = filters.filter(f => !hideFilters.includes(f.id));
-  const [activeFilters, setActiveFilters] = useState<Record<string, {
-    value: string;
-    label: string;
-  }[]>>({});
-  const [isBrandedActive, setIsBrandedActive] = useState(false);
-  const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
-  const [customDateRange, setCustomDateRange] = useState<CustomDateRange>({
-    from: undefined,
-    to: undefined
-  });
+  const [activeFilters, setActiveFilters] = useState<Record<string, { value: string; label: string }[]>>({});
+  const [customDateRange, setCustomDateRange] = useState<CustomDateRange>({ from: undefined, to: undefined });
   const [tempDateRange, setTempDateRange] = useState<DateRange | undefined>(undefined);
   const [customDateOpen, setCustomDateOpen] = useState(false);
   const dateFilterRef = useRef<HTMLButtonElement>(null);
+  // Search state for standard filter dropdowns
+  const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
+  // Search state for sub-flyouts (AI Tags and More)
+  const [subSearchQueries, setSubSearchQueries] = useState<Record<string, string>>({});
+
   const handleMultiSelect = (filterId: string, value: string, label: string, checked: boolean) => {
     setActiveFilters(prev => {
       const current = prev[filterId] || [];
-      let updated: {
-        value: string;
-        label: string;
-      }[];
+      let updated: { value: string; label: string }[];
       if (checked) {
-        updated = [...current, {
-          value,
-          label
-        }];
+        updated = [...current, { value, label }];
       } else {
         updated = current.filter(item => item.value !== value);
       }
-      const newFilters = {
-        ...prev
-      };
+      const newFilters = { ...prev };
       if (updated.length === 0) {
         delete newFilters[filterId];
       } else {
@@ -270,6 +264,7 @@ export function FilterBar({
       return newFilters;
     });
   };
+
   const handleSingleSelect = (filterId: string, value: string, label: string) => {
     if (filterId === "date-range" && value === "custom") {
       setTempDateRange(customDateRange.from ? { from: customDateRange.from, to: customDateRange.to } : undefined);
@@ -277,22 +272,18 @@ export function FilterBar({
       return;
     }
     setActiveFilters(prev => {
-      const newFilters = {
-        ...prev
-      };
+      const newFilters = { ...prev };
       if (value === "all") {
         delete newFilters[filterId];
         onFilterChange?.(filterId, []);
       } else {
-        newFilters[filterId] = [{
-          value,
-          label
-        }];
+        newFilters[filterId] = [{ value, label }];
         onFilterChange?.(filterId, [value]);
       }
       return newFilters;
     });
   };
+
   const handleCustomDateApply = () => {
     if (tempDateRange?.from) {
       const from = tempDateRange.from;
@@ -301,16 +292,14 @@ export function FilterBar({
       setCustomDateRange({ from, to });
       setActiveFilters(prev => ({
         ...prev,
-        "date-range": [{
-          value: "custom",
-          label
-        }]
+        "date-range": [{ value: "custom", label }]
       }));
       onFilterChange?.("date-range", ["custom"]);
       onCustomDateChange?.({ from, to });
       setCustomDateOpen(false);
     }
   };
+
   const handleCustomDateClear = () => {
     setTempDateRange(undefined);
     setCustomDateRange({ from: undefined, to: undefined });
@@ -322,19 +311,15 @@ export function FilterBar({
     });
     setCustomDateOpen(false);
   };
+
   const handleRemoveValue = (filterId: string, value: string) => {
     if (filterId === "date-range" && value === "custom") {
-      setCustomDateRange({
-        from: undefined,
-        to: undefined
-      });
+      setCustomDateRange({ from: undefined, to: undefined });
     }
     setActiveFilters(prev => {
       const current = prev[filterId] || [];
       const updated = current.filter(item => item.value !== value);
-      const newFilters = {
-        ...prev
-      };
+      const newFilters = { ...prev };
       if (updated.length === 0) {
         delete newFilters[filterId];
       } else {
@@ -344,22 +329,19 @@ export function FilterBar({
       return newFilters;
     });
   };
+
   const clearFilter = (filterId: string) => {
     if (filterId === "date-range") {
-      setCustomDateRange({
-        from: undefined,
-        to: undefined
-      });
+      setCustomDateRange({ from: undefined, to: undefined });
     }
     setActiveFilters(prev => {
-      const newFilters = {
-        ...prev
-      };
+      const newFilters = { ...prev };
       delete newFilters[filterId];
       onFilterChange?.(filterId, []);
       return newFilters;
     });
   };
+
   const clearAllFilters = () => {
     setActiveFilters(prev => {
       Object.keys(prev).forEach(filterId => {
@@ -367,10 +349,7 @@ export function FilterBar({
       });
       return {};
     });
-    setCustomDateRange({
-      from: undefined,
-      to: undefined
-    });
+    setCustomDateRange({ from: undefined, to: undefined });
   };
 
   // Expose imperative handle for parent chip removal
@@ -383,230 +362,457 @@ export function FilterBar({
     }
   });
 
-  const activeFilterCount = Object.keys(activeFilters).length;
-  return <div className="flex flex-wrap items-center gap-1.5">
+  // AI Tags selections
+  const peopleSelected = activeFilters["people"] || [];
+  const sceneSelected = activeFilters["scene"] || [];
+  const brandSelected = activeFilters["brand"] || [];
+  const aiTagsCount = peopleSelected.length + sceneSelected.length + brandSelected.length;
+
+  // More dropdown selections
+  const sourceSelected = activeFilters["source"] || [];
+  const statusSelected = activeFilters["status"] || [];
+  const moreCount = sourceSelected.length + statusSelected.length;
+
+  // Calculate total active filter count for collapsed button
+  const standardFiltersCount = Object.values(activeFilters).reduce((sum, arr) => sum + arr.length, 0);
+  const totalActiveCount = standardFiltersCount + aiTagsCount + moreCount;
+
+  return (
+    <div className="filter-bar-container cq-filterbar-hide-label flex flex-wrap items-center gap-1.5">
+      {/* Collapsed Filters Button (visible at narrow widths) */}
+      <Button
+        variant="outline"
+        size="sm"
+        className="filters-collapsed-button h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
+        onClick={onOpenFiltersSheet}
+      >
+        <i className="bi bi-funnel w-4 h-4 inline-flex items-center justify-center leading-none" />
+        <span>Filters</span>
+        {totalActiveCount > 0 && (
+          <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+            {totalActiveCount}
+          </span>
+        )}
+        <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+      </Button>
+
+      {/* Expanded Filters (visible at wide widths) */}
+      <div className="filters-expanded contents">
+      {/* AI Tags Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
+              aiTagsCount > 0 && "bg-primary/10 border-primary text-primary"
+            )}
+          >
+            <i className="bi bi-stars w-4 h-4 inline-flex items-center justify-center leading-none" />
+            <span className="filter-label">AI Tags</span>
+            {aiTagsCount > 0 && (
+              <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                {aiTagsCount}
+              </span>
+            )}
+            <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="bg-white z-50 min-w-[180px]">
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger className="text-sm">
+              <i className="bi bi-person mr-2" />
+              People
+              {peopleSelected.length > 0 && (
+                <span className="ml-auto text-xs text-primary">{peopleSelected.length}</span>
+              )}
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
+              <div className="px-2 py-2 border-b">
+                <div className="relative">
+                  <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+                  <input
+                    type="text"
+                    placeholder="Search people..."
+                    value={subSearchQueries["people"] ?? ""}
+                    onChange={e => setSubSearchQueries(prev => ({ ...prev, people: e.target.value }))}
+                    onClick={e => e.stopPropagation()}
+                    onKeyDown={e => e.stopPropagation()}
+                    className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5 bg-muted/30">
+                <i className="bi bi-stars text-primary/70" />
+                AI-Identified
+              </div>
+              <div className="max-h-[280px] overflow-y-auto">
+                {peopleOptions
+                  .filter(opt => opt.label.toLowerCase().includes((subSearchQueries["people"] ?? "").toLowerCase()))
+                  .map(opt => (
+                    <DropdownMenuCheckboxItem
+                      key={opt.value}
+                      checked={peopleSelected.some(s => s.value === opt.value)}
+                      onCheckedChange={(checked) => handleMultiSelect("people", opt.value, opt.label, !!checked)}
+                      onSelect={e => e.preventDefault()}
+                    >
+                      <span className="flex-1">{opt.label}</span>
+                      {opt.count !== undefined && (
+                        <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
+                      )}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                {peopleOptions.filter(opt => opt.label.toLowerCase().includes((subSearchQueries["people"] ?? "").toLowerCase())).length === 0 && (
+                  <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
+                )}
+              </div>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger className="text-sm">
+              <i className="bi bi-camera-reels mr-2" />
+              Scene
+              {sceneSelected.length > 0 && (
+                <span className="ml-auto text-xs text-primary">{sceneSelected.length}</span>
+              )}
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
+              <div className="px-2 py-2 border-b">
+                <div className="relative">
+                  <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+                  <input
+                    type="text"
+                    placeholder="Search scenes..."
+                    value={subSearchQueries["scene"] ?? ""}
+                    onChange={e => setSubSearchQueries(prev => ({ ...prev, scene: e.target.value }))}
+                    onClick={e => e.stopPropagation()}
+                    onKeyDown={e => e.stopPropagation()}
+                    className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5 bg-muted/30">
+                <i className="bi bi-stars text-primary/70" />
+                AI-Identified
+              </div>
+              <div className="max-h-[280px] overflow-y-auto">
+                {sceneOptions
+                  .filter(opt => opt.label.toLowerCase().includes((subSearchQueries["scene"] ?? "").toLowerCase()))
+                  .map(opt => (
+                    <DropdownMenuCheckboxItem
+                      key={opt.value}
+                      checked={sceneSelected.some(s => s.value === opt.value)}
+                      onCheckedChange={(checked) => handleMultiSelect("scene", opt.value, opt.label, !!checked)}
+                      onSelect={e => e.preventDefault()}
+                    >
+                      <span className="flex-1">{opt.label}</span>
+                      {opt.count !== undefined && (
+                        <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
+                      )}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                {sceneOptions.filter(opt => opt.label.toLowerCase().includes((subSearchQueries["scene"] ?? "").toLowerCase())).length === 0 && (
+                  <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
+                )}
+              </div>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger className="text-sm">
+              <i className="bi bi-badge-tm mr-2" />
+              Brand
+              {brandSelected.length > 0 && (
+                <span className="ml-auto text-xs text-primary">{brandSelected.length}</span>
+              )}
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
+              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5 bg-muted/30">
+                <i className="bi bi-stars text-primary/70" />
+                AI-Identified
+              </div>
+              {brandOptions.map(opt => (
+                <DropdownMenuCheckboxItem
+                  key={opt.value}
+                  checked={brandSelected.some(s => s.value === opt.value)}
+                  onCheckedChange={(checked) => handleMultiSelect("brand", opt.value, opt.label, !!checked)}
+                  onSelect={e => e.preventDefault()}
+                >
+                  <span className="flex-1">{opt.label}</span>
+                  {opt.count !== undefined && (
+                    <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
+                  )}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Standard Filter Dropdowns */}
       {visibleFilters.map(filter => {
-      const selected = activeFilters[filter.id] || [];
-      const categoryMap: Record<string, string> = { people: "People", scene: "Scene", brand: "Brand", tags: "Tag" };
-      const disabledForFilter = disabledValues.filter(
-        dv => dv.category.toLowerCase() === (categoryMap[filter.id] || "").toLowerCase()
-      );
-      const totalActiveCount = selected.length + disabledForFilter.length;
-      const isActive = totalActiveCount > 0;
-      const isMulti = filter.multiSelect;
-      const isDateFilter = filter.id === "date-range";
-      const dropdownMenu = <DropdownMenu key={filter.id}>
+        const selected = activeFilters[filter.id] || [];
+        const categoryMap: Record<string, string> = { tags: "Tag" };
+        const disabledForFilter = disabledValues.filter(
+          dv => dv.category.toLowerCase() === (categoryMap[filter.id] || "").toLowerCase()
+        );
+        const totalActiveCount = selected.length + disabledForFilter.length;
+        const isActive = totalActiveCount > 0;
+        const isMulti = filter.multiSelect;
+        const isDateFilter = filter.id === "date-range";
+
+        const dropdownMenu = (
+          <DropdownMenu key={filter.id}>
             <DropdownMenuTrigger asChild>
-              {isActive ? (compactMode ? (
-                <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-primary/10 border-primary text-primary">
-                  <span>{filter.label}</span>
-                  <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">{totalActiveCount}</span>
-                  <i className="bi bi-chevron-down w-4 h-4 opacity-50" />
+              {isActive ? (
+                compactMode ? (
+                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-primary/10 border-primary text-primary">
+                    <span>{filter.label}</span>
+                    <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">{totalActiveCount}</span>
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none opacity-50" />
+                  </Button>
+                ) : (
+                  <div className="inline-flex items-center gap-1 h-8 px-1.5 border border-input rounded-md bg-white min-w-[120px] max-w-[280px]">
+                    <div className="flex flex-wrap gap-1 flex-1">
+                      {selected.map(item => (
+                        <span key={item.value} className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted rounded text-xs">
+                          <button
+                            type="button"
+                            onPointerDown={e => e.stopPropagation()}
+                            onClick={e => {
+                              e.stopPropagation();
+                              handleRemoveValue(filter.id, item.value);
+                            }}
+                            className="text-muted-foreground hover:text-foreground"
+                            aria-label={`Remove ${filter.label} filter: ${item.label}`}
+                          >
+                            <i className="bi bi-x text-xs" />
+                          </button>
+                          {item.label}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-1 ml-auto pl-1">
+                      <button
+                        type="button"
+                        onPointerDown={e => e.stopPropagation()}
+                        onClick={e => {
+                          e.stopPropagation();
+                          clearFilter(filter.id);
+                        }}
+                        className="text-muted-foreground hover:text-foreground"
+                        aria-label={`Clear ${filter.label} filter`}
+                      >
+                        <i className="bi bi-x text-sm" />
+                      </button>
+                      <i className="bi bi-chevron-down text-sm text-muted-foreground" />
+                    </div>
+                  </div>
+                )
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
+                  ref={isDateFilter ? dateFilterRef : undefined}
+                >
+                  {filter.icon}<span className="filter-label">{filter.label}</span>
+                  <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
-              ) : <div className="inline-flex items-center gap-1 h-8 px-1.5 border border-input rounded-md bg-white min-w-[120px] max-w-[280px]">
-                  <div className="flex flex-wrap gap-1 flex-1">
-                    {selected.map(item => <span key={item.value} className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted rounded text-xs">
-                        <button type="button" onPointerDown={e => e.stopPropagation()} onClick={e => {
-                  e.stopPropagation();
-                  handleRemoveValue(filter.id, item.value);
-                }} className="text-muted-foreground hover:text-foreground" aria-label={`Remove ${filter.label} filter: ${item.label}`}>
-                          <i className="bi bi-x text-xs" />
-                        </button>
-                        {item.label}
-                      </span>)}
-                  </div>
-                  <div className="flex items-center gap-1 ml-auto pl-1">
-                    <button type="button" onPointerDown={e => e.stopPropagation()} onClick={e => {
-                e.stopPropagation();
-                clearFilter(filter.id);
-              }} className="text-muted-foreground hover:text-foreground" aria-label={`Clear ${filter.label} filter`}>
-                      <i className="bi bi-x text-sm" />
-                    </button>
-                    <i className="bi bi-chevron-down text-sm text-muted-foreground" />
-                  </div>
-                </div>) : <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]" ref={isDateFilter ? dateFilterRef : undefined}>
-                  <span>{filter.label}</span>
-                  <i className="bi bi-chevron-down w-4 h-4" />
-                </Button>}
+              )}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="bg-white z-50 min-w-[200px]" onCloseAutoFocus={e => e.preventDefault()}>
+              {/* Search input for filters with many options (tags, folders) */}
+              {(filter.id === "tags" || filter.id === "folders") && (
+                <div className="px-2 py-2 border-b">
+                  <div className="relative">
+                    <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+                    <input
+                      type="text"
+                      placeholder={`Search ${filter.label.toLowerCase()}...`}
+                      value={searchQueries[filter.id] ?? ""}
+                      onChange={e => setSearchQueries(prev => ({ ...prev, [filter.id]: e.target.value }))}
+                      onClick={e => e.stopPropagation()}
+                      onKeyDown={e => e.stopPropagation()}
+                      className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+              )}
               <div className="max-h-[280px] overflow-y-auto">
-                {/* Sub-header for People, Scene, Brand filters */}
-                {(filter.id === "people" || filter.id === "scene" || filter.id === "brand") && <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5 bg-muted/30">
-                    <i className="bi bi-stars text-primary/70" />
-                    AI-Identified
-                  </div>}
-                {/* Grouped options for filters with hasGroups */}
-                {filter.hasGroups ? (() => {
-              const filteredOptions = filter.options;
+                {filter.options
+                  .filter(option => {
+                    if (filter.id !== "tags" && filter.id !== "folders") return true;
+                    const query = (searchQueries[filter.id] ?? "").toLowerCase();
+                    return option.label.toLowerCase().includes(query);
+                  })
+                  .map(option => {
+                    const isTreeItem = filter.isTreeStructure && option.depth !== undefined;
+                    const indent = isTreeItem ? option.depth! * 12 : 0;
+                    const treeIconClass = option.type === "gallery" ? "bi-images" : "bi-folder";
+                    const isDisabledBySearch = disabledValues.some(
+                      dv => dv.value.toLowerCase() === option.value.toLowerCase() && dv.category.toLowerCase() === (categoryMap[filter.id] || "").toLowerCase()
+                    );
 
-              // Group options by their group property
-              const groups = filteredOptions.reduce((acc, option) => {
-                const group = option.group || "Other";
-                if (!acc[group]) acc[group] = [];
-                acc[group].push(option);
-                return acc;
-              }, {} as Record<string, FilterOption[]>);
-              const groupOrder = ["Sports", "Teams", "Categories", "Shot Types", "Other"];
-              const sortedGroups = Object.entries(groups).sort(([a], [b]) => groupOrder.indexOf(a) - groupOrder.indexOf(b));
-              if (filteredOptions.length === 0) {
-                return <div className="px-2 py-1.5 text-xs text-muted-foreground text-center">
-                          No results found
-                        </div>;
-              }
-              return sortedGroups.map(([groupName, options]) => <div key={groupName}>
-                        <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider mt-1 first:mt-0">
-                          {groupName}
-                        </div>
-                        {options.map(option => {
-                  const isAiGenerated = AI_GENERATED_TAGS.has(option.value) || AI_GENERATED_TAGS.has(option.label);
-                  const showSparkle = isAiGenerated && option.group !== "Sports";
-                  return <DropdownMenuCheckboxItem key={option.value} checked={selected.some(s => s.value === option.value)} onCheckedChange={checked => handleMultiSelect(filter.id, option.value, option.label, checked)} className="flex items-center justify-between gap-2">
-                              <span>{option.label}</span>
-                              {showSparkle && <i className="bi bi-stars text-primary/70 text-xs" />}
-                            </DropdownMenuCheckboxItem>;
-                })}
-                      </div>);
-            })() : <>
-                    {filter.options.map(option => {
-                const isTreeItem = filter.isTreeStructure && option.depth !== undefined;
-                const indent = isTreeItem ? option.depth! * 12 : 0;
-                const treeIconClass = option.type === "gallery" ? "bi-images" : "bi-folder";
-                const categoryMap: Record<string, string> = { people: "People", scene: "Scene", brand: "Brand", tags: "Tag" };
-                const isDisabledBySearch = disabledValues.some(
-                  dv => dv.value.toLowerCase() === option.value.toLowerCase() && dv.category.toLowerCase() === (categoryMap[filter.id] || "").toLowerCase()
-                );
-return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.some(s => s.value === option.value) || isDisabledBySearch} onCheckedChange={checked => {
-                  if (isDisabledBySearch) {
-                    onRemoveDisabledValue?.(option.value, categoryMap[filter.id] || "");
-                  } else {
-                    handleMultiSelect(filter.id, option.value, option.label, checked);
-                  }
-                }} style={{
-                  paddingLeft: isTreeItem ? `${8 + indent}px` : undefined
-                }} className="flex items-center gap-2" onSelect={e => e.preventDefault()}>
-                            {isTreeItem && <i className={`bi ${treeIconClass} text-sm text-muted-foreground flex-shrink-0`} />}
-                            {option.iconClass && !isTreeItem && <i className={`bi ${option.iconClass} text-sm text-muted-foreground flex-shrink-0 group-data-[state=checked]:text-white`} />}
-                            <span className={cn("flex-1", option.depth === 0 ? "font-medium" : "")}>{option.label}</span>
-                            {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto group-data-[state=checked]:text-white">{option.count}</span>}
-                          </DropdownMenuCheckboxItem> : <DropdownMenuCheckboxItem key={option.value} checked={selected.some(s => s.value === option.value)} onCheckedChange={() => handleSingleSelect(filter.id, option.value, option.label)}>
-                            {option.label}
-                          </DropdownMenuCheckboxItem>;
-              })}
-                    {filter.options.filter(option => option.label.toLowerCase().includes((searchQueries[filter.id] || "").toLowerCase())).length === 0 && <div className="px-2 py-1.5 text-xs text-muted-foreground text-center">
-                        No results found
-                      </div>}
-                  </>}
+                    return isMulti ? (
+                      <DropdownMenuCheckboxItem
+                        key={option.value}
+                        checked={selected.some(s => s.value === option.value) || isDisabledBySearch}
+                        onCheckedChange={checked => {
+                          if (isDisabledBySearch) {
+                            onRemoveDisabledValue?.(option.value, categoryMap[filter.id] || "");
+                          } else {
+                            handleMultiSelect(filter.id, option.value, option.label, checked);
+                          }
+                        }}
+                        style={{ paddingLeft: isTreeItem ? `${8 + indent}px` : undefined }}
+                        className="flex items-center gap-2"
+                        onSelect={e => e.preventDefault()}
+                      >
+                        {isTreeItem && <i className={`bi ${treeIconClass} text-sm text-muted-foreground flex-shrink-0`} />}
+                        {option.iconClass && !isTreeItem && <i className={`bi ${option.iconClass} text-sm text-muted-foreground flex-shrink-0`} />}
+                        <span className={cn("flex-1", option.depth === 0 ? "font-medium" : "")}>{option.label}</span>
+                        {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>}
+                      </DropdownMenuCheckboxItem>
+                    ) : (
+                      <DropdownMenuCheckboxItem
+                        key={option.value}
+                        checked={selected.some(s => s.value === option.value)}
+                        onCheckedChange={() => handleSingleSelect(filter.id, option.value, option.label)}
+                      >
+                        {option.label}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+                {/* No results message */}
+                {(filter.id === "tags" || filter.id === "folders") &&
+                  filter.options.filter(opt => opt.label.toLowerCase().includes((searchQueries[filter.id] ?? "").toLowerCase())).length === 0 && (
+                    <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
+                  )}
               </div>
             </DropdownMenuContent>
-          </DropdownMenu>;
+          </DropdownMenu>
+        );
 
-      if (isDateFilter) {
-        return <div key={filter.id} className="relative">
-          {dropdownMenu}
-          {customDateOpen && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setCustomDateOpen(false)} />
-              <div className="absolute top-full left-0 mt-1 z-50 w-auto p-0 bg-white rounded-lg shadow-lg border animate-in fade-in-0 zoom-in-95">
-                <div className="p-4 pb-0">
-                  <Calendar
-                    mode="range"
-                    selected={tempDateRange}
-                    onSelect={setTempDateRange}
-                    disabled={date => date > new Date()}
-                    showOutsideDays
-                    className="pointer-events-auto"
-                    classNames={{
-                      months: "flex flex-col",
-                      month: "space-y-3",
-                      caption: "flex justify-center pt-1 relative items-center",
-                      caption_label: "text-sm font-semibold",
-                      nav: "space-x-1 flex items-center",
-                      nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 inline-flex items-center justify-center rounded-md border border-input",
-                      nav_button_previous: "absolute left-1",
-                      nav_button_next: "absolute right-1",
-                      table: "w-full border-collapse",
-                      head_row: "flex",
-                      head_cell: "text-muted-foreground rounded-md w-10 font-normal text-xs",
-                      row: "flex w-full mt-1",
-                      cell: "h-10 w-10 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                      day: "h-10 w-10 p-0 font-normal aria-selected:opacity-100 hover:bg-accent rounded-md inline-flex items-center justify-center",
-                      day_range_end: "day-range-end",
-                      day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                      day_today: "ring-1 ring-primary text-primary font-semibold",
-                      day_outside: "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
-                      day_disabled: "text-muted-foreground opacity-50",
-                      day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
-                      day_hidden: "invisible",
-                    }}
+        if (isDateFilter) {
+          return (
+            <div key={filter.id} className="relative">
+              {dropdownMenu}
+              {customDateOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setCustomDateOpen(false)} />
+                  <div className="absolute top-full left-0 mt-1 z-50 w-auto p-0 bg-white rounded-lg shadow-lg border animate-in fade-in-0 zoom-in-95">
+                    <div className="p-4 pb-0">
+                      <Calendar
+                        mode="range"
+                        selected={tempDateRange}
+                        onSelect={setTempDateRange}
+                        disabled={date => date > new Date()}
+                        showOutsideDays
+                        className="pointer-events-auto"
+                        classNames={{
+                          months: "flex flex-col",
+                          month: "space-y-3",
+                          caption: "flex justify-center pt-1 relative items-center",
+                          caption_label: "text-sm font-semibold",
+                          nav: "space-x-1 flex items-center",
+                          nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 inline-flex items-center justify-center rounded-md border border-input",
+                          nav_button_previous: "absolute left-1",
+                          nav_button_next: "absolute right-1",
+                          table: "w-full border-collapse",
+                          head_row: "flex",
+                          head_cell: "text-muted-foreground rounded-md w-10 font-normal text-xs",
+                          row: "flex w-full mt-1",
+                          cell: "h-10 w-10 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                          day: "h-10 w-10 p-0 font-normal aria-selected:opacity-100 hover:bg-accent rounded-md inline-flex items-center justify-center",
+                          day_range_end: "day-range-end",
+                          day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                          day_today: "ring-1 ring-primary text-primary font-semibold",
+                          day_outside: "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
+                          day_disabled: "text-muted-foreground opacity-50",
+                          day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+                          day_hidden: "invisible",
+                        }}
+                      />
+                      <div className="text-center mt-3">
+                        <span className="text-xs text-primary font-medium">Choose a Date Range</span>
+                      </div>
+                      <div className="flex items-start gap-1.5 mt-3 px-1">
+                        <i className="bi bi-info-circle text-sm text-muted-foreground flex-shrink-0 mt-0.5" />
+                        <span className="text-xs text-muted-foreground">
+                          For optimal performance, limit your search selection to 12 months.
+                        </span>
+                      </div>
+                    </div>
+                    <Separator className="mt-4" />
+                    <div className="flex items-center justify-between p-3">
+                      <Button variant="ghost" size="sm" className="text-xs" onClick={handleCustomDateClear}>
+                        Clear
+                      </Button>
+                      <Button size="sm" className="text-xs px-6" onClick={handleCustomDateApply} disabled={!tempDateRange?.from}>
+                        Save
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        }
+
+        return dropdownMenu;
+      })}
+
+      {/* More Dropdown with Source & Approval Status flyouts */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
+              moreCount > 0 && "bg-primary/10 border-primary text-primary"
+            )}
+          >
+            <i className="bi bi-three-dots w-4 h-4 inline-flex items-center justify-center leading-none" />
+            <span className="filter-label">More</span>
+            {moreCount > 0 && (
+              <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                {moreCount}
+              </span>
+            )}
+            <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="bg-white z-50 min-w-[180px]">
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger className="text-sm">Source</DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
+              <div className="px-2 py-2 border-b">
+                <div className="relative">
+                  <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+                  <input
+                    type="text"
+                    placeholder="Search source..."
+                    value={subSearchQueries["source"] ?? ""}
+                    onChange={e => setSubSearchQueries(prev => ({ ...prev, source: e.target.value }))}
+                    onClick={e => e.stopPropagation()}
+                    onKeyDown={e => e.stopPropagation()}
+                    className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
                   />
-                  <div className="text-center mt-3">
-                    <span className="text-xs text-primary font-medium">Choose a Date Range</span>
-                  </div>
-                  <div className="flex items-start gap-1.5 mt-3 px-1">
-                    <i className="bi bi-info-circle text-sm text-muted-foreground flex-shrink-0 mt-0.5" />
-                    <span className="text-xs text-muted-foreground">
-                      For optimal performance, limit your search selection to 12 months.
-                    </span>
-                  </div>
-                </div>
-                <Separator className="mt-4" />
-                <div className="flex items-center justify-between p-3">
-                  <Button variant="ghost" size="sm" className="text-xs" onClick={handleCustomDateClear}>
-                    Clear
-                  </Button>
-                  <Button size="sm" className="text-xs px-6" onClick={handleCustomDateApply} disabled={!tempDateRange?.from}>
-                    Save
-                  </Button>
                 </div>
               </div>
-            </>
-          )}
-        </div>;
-      }
-
-      return dropdownMenu;
-    })}
-
-
-      {/* More Dropdown with Source & Status flyouts */}
-      {(() => {
-        const sourceOptions = [
-          { label: "Posted Content", value: "posted-content", count: 12 },
-          { label: "Imported Content", value: "imported-content", count: 8 },
-          { label: "Published Content", value: "published-content", count: 15 },
-          { label: "Uploaded Content", value: "uploaded-content", count: 22 },
-          { label: "Engage Content", value: "engage-content", count: 5 },
-          { label: "Requested Content", value: "requested-content", count: 3 },
-        ];
-        const statusOptions = [
-          { label: "Pending", value: "pending", count: 14 },
-          { label: "Approved", value: "approved", count: 38 },
-          { label: "Rejected", value: "rejected", count: 7 },
-        ];
-        const orgStatusOptions = [
-          { label: "All", value: "all", count: 65 },
-          { label: "Sorted", value: "organized", count: 42 },
-          { label: "Unsorted", value: "unorganized", count: 23 },
-        ];
-        const sourceSelected = activeFilters["source"] || [];
-        const statusSelected = activeFilters["status"] || [];
-        const orgStatusSelected = activeFilters["organization-status"] || [];
-        const moreCount = sourceSelected.length + statusSelected.length + orgStatusSelected.length;
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className={cn("h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]", moreCount > 0 && "bg-primary/10 border-primary text-primary")}>
-                <span>More</span>
-                {moreCount > 0 && <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">{moreCount}</span>}
-                <i className="bi bi-chevron-down w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="bg-white z-50 min-w-[180px]">
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="text-sm">Source</DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
-                  {sourceOptions.map(opt => (
+              <div className="max-h-[280px] overflow-y-auto">
+                {[
+                  { label: "Posted Content", value: "posted-content", count: 12 },
+                  { label: "Imported Content", value: "imported-content", count: 8 },
+                  { label: "Published Content", value: "published-content", count: 15 },
+                  { label: "Uploaded Content", value: "uploaded-content", count: 22 },
+                  { label: "Engage Content", value: "engage-content", count: 5 },
+                  { label: "Requested Content", value: "requested-content", count: 3 },
+                ]
+                  .filter(opt => opt.label.toLowerCase().includes((subSearchQueries["source"] ?? "").toLowerCase()))
+                  .map(opt => (
                     <DropdownMenuCheckboxItem
                       key={opt.value}
                       checked={sourceSelected.some(s => s.value === opt.value)}
@@ -614,63 +820,65 @@ return isMulti ? <DropdownMenuCheckboxItem key={option.value} checked={selected.
                       onSelect={e => e.preventDefault()}
                     >
                       <span className="flex-1">{opt.label}</span>
-                      <span className="text-xs text-muted-foreground ml-auto group-data-[state=checked]:text-white">{opt.count}</span>
+                      <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
                     </DropdownMenuCheckboxItem>
                   ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="text-sm">Approval Status</DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="bg-white z-50 min-w-[180px]">
-                  {statusOptions.map(opt => (
-                    <DropdownMenuCheckboxItem
-                      key={opt.value}
-                      checked={statusSelected.some(s => s.value === opt.value)}
-                      onCheckedChange={(checked) => handleMultiSelect("status", opt.value, opt.label, !!checked)}
-                      onSelect={e => e.preventDefault()}
-                    >
-                      <span className="flex-1">{opt.label}</span>
-                      <span className="text-xs text-muted-foreground ml-auto group-data-[state=checked]:text-white">{opt.count}</span>
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="text-sm">Sorted</DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="bg-white z-50 min-w-[180px]">
-                  {orgStatusOptions.map(opt => (
-                    <DropdownMenuCheckboxItem
-                      key={opt.value}
-                      checked={orgStatusSelected.some(s => s.value === opt.value)}
-                      onCheckedChange={(checked) => handleMultiSelect("organization-status", opt.value, opt.label, !!checked)}
-                      onSelect={e => e.preventDefault()}
-                    >
-                      <span className="flex-1">{opt.label}</span>
-                      <span className="text-xs text-muted-foreground ml-auto group-data-[state=checked]:text-white">{opt.count}</span>
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      })()}
+                {[
+                  { label: "Posted Content", value: "posted-content" },
+                  { label: "Imported Content", value: "imported-content" },
+                  { label: "Published Content", value: "published-content" },
+                  { label: "Uploaded Content", value: "uploaded-content" },
+                  { label: "Engage Content", value: "engage-content" },
+                  { label: "Requested Content", value: "requested-content" },
+                ].filter(opt => opt.label.toLowerCase().includes((subSearchQueries["source"] ?? "").toLowerCase())).length === 0 && (
+                  <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
+                )}
+              </div>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger className="text-sm">Approval Status</DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="bg-white z-50 min-w-[180px]">
+              {[
+                { label: "Pending", value: "pending", count: 14 },
+                { label: "Approved", value: "approved", count: 38 },
+                { label: "Rejected", value: "rejected", count: 7 },
+              ].map(opt => (
+                <DropdownMenuCheckboxItem
+                  key={opt.value}
+                  checked={statusSelected.some(s => s.value === opt.value)}
+                  onCheckedChange={(checked) => handleMultiSelect("status", opt.value, opt.label, !!checked)}
+                  onSelect={e => e.preventDefault()}
+                >
+                  <span className="flex-1">{opt.label}</span>
+                  <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      </div>{/* End filters-expanded */}
 
-      {/* Branded Toggle */}
-      <Button
-        variant="outline"
-        size="icon"
-        className={cn(
-          "h-10 w-10 flex-shrink-0 rounded-md border-gray-300 bg-white text-[#6e84a3]",
-          isBrandedActive && "bg-primary/10 border-primary text-primary"
-        )}
-        onClick={() => {
-          const next = !isBrandedActive;
-          setIsBrandedActive(next);
-          onBrandedToggle?.(next);
-        }}
-      >
-        <i className={cn("bi bi-palette h-4 w-4", isBrandedActive && "bi-palette-fill")} />
-      </Button>
-    </div>;
+      {/* Toggle Pills (always visible) */}
+      <TogglePill
+        label="Unsorted"
+        iconClass="bi-folder-x"
+        isActive={isUnsortedActive}
+        onClick={() => onUnsortedToggle?.(!isUnsortedActive)}
+      />
+      <TogglePill
+        label="Unviewed Only"
+        iconClass="bi-eye-slash"
+        isActive={isUnviewedActive}
+        onClick={() => onUnviewedToggle?.(!isUnviewedActive)}
+      />
+      <TogglePill
+        label="Branding"
+        iconClass="bi-palette"
+        isActive={isBrandingActive}
+        onClick={() => onBrandingToggle?.(!isBrandingActive)}
+      />
+    </div>
+  );
 }
