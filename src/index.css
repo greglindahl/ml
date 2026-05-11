@@ -487,8 +487,8 @@
   }
 }
 
-/* Hide folder sidebar at narrow viewport widths (below lg breakpoint) */
-@media (max-width: 991px) {
+/* Hide folder sidebar at narrow viewport widths */
+@media (max-width: 767px) {
   .folder-tree-sidebar {
     display: none;
   }
