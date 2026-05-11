@@ -648,7 +648,6 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           const isTableView = assetsViewMode === "list";
           return (
             <div className="space-y-4">
-              <Label className="text-[15px] font-medium">Table preferences</Label>
               {!isTableView && (
                 <p className="text-[13px] text-muted-foreground">
                   Switch to table view to manage these settings.
