@@ -17,6 +17,7 @@ interface FilterOption {
 interface FilterConfig {
   id: string;
   label: string;
+  icon: React.ReactNode;
   options: FilterOption[];
   multiSelect?: boolean;
 }
@@ -25,6 +26,7 @@ const galleryFilters: FilterConfig[] = [
 {
   id: "gallery-options",
   label: "Gallery Options",
+  icon: <i className="bi bi-collection" />,
   multiSelect: true,
   options: [
   { label: "View Only", value: "view-only" },
@@ -35,6 +37,7 @@ const galleryFilters: FilterConfig[] = [
 {
   id: "creator",
   label: "Creator",
+  icon: <i className="bi bi-person" />,
   multiSelect: true,
   options: [
   { label: "John Smith", value: "john" },
@@ -45,6 +48,7 @@ const galleryFilters: FilterConfig[] = [
 {
   id: "groups",
   label: "Groups",
+  icon: <i className="bi bi-people" />,
   multiSelect: true,
   options: [
   { label: "Marketing", value: "marketing" },
@@ -56,6 +60,7 @@ const galleryFilters: FilterConfig[] = [
 {
   id: "created-date",
   label: "Created Date",
+  icon: <i className="bi bi-calendar" />,
   options: [
   { label: "Today", value: "today" },
   { label: "Last 7 Days", value: "week" },
@@ -68,6 +73,7 @@ const galleryFilters: FilterConfig[] = [
 {
   id: "assets-last-added",
   label: "Assets Last Added Date",
+  icon: <i className="bi bi-calendar" />,
   options: [
   { label: "Today", value: "today" },
   { label: "Last 7 Days", value: "week" },
@@ -147,7 +153,7 @@ export function GalleryFilterBar({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="filter-bar-container cq-filterbar-hide-label cq-filterbar-pill-icon-only flex flex-wrap items-center gap-1.5">
       {galleryFilters.map((filter) => {
         const selected = activeFilters[filter.id] || [];
         const isActive = selected.length > 0;
@@ -202,7 +208,7 @@ export function GalleryFilterBar({
                 size="sm"
                 className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
 
-                  <span>{filter.label}</span>
+                  {filter.icon}<span className="filter-label">{filter.label}</span>
                   <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
               }

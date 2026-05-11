@@ -35,7 +35,7 @@ export function TogglePill({
       )}
     >
       <i className={cn("bi", iconClass)} />
-      <span>{label}</span>
+      <span className="pill-label">{label}</span>
     </button>
   );
 }

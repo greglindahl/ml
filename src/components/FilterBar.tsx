@@ -90,7 +90,7 @@ const brandOptions = computeTagMatchCounts(Object.keys(BRAND_VALUES), BRAND_VALU
 const filters: FilterConfig[] = [{
   id: "tags",
   label: "Tags",
-  icon: null,
+  icon: <i className="bi bi-tag" />,
   multiSelect: true,
   hasGroups: false,
   options: (() => {
@@ -112,7 +112,7 @@ const filters: FilterConfig[] = [{
 }, {
   id: "date-range",
   label: "Date",
-  icon: null,
+  icon: <i className="bi bi-calendar" />,
   options: [{
     label: "Last 7 days",
     value: "week"
@@ -138,7 +138,7 @@ const filters: FilterConfig[] = [{
 }, {
   id: "creator",
   label: "Creator",
-  icon: null,
+  icon: <i className="bi bi-person" />,
   multiSelect: true,
   options: (() => {
     const counts: Record<string, number> = {};
@@ -153,7 +153,7 @@ const filters: FilterConfig[] = [{
 }, {
   id: "content-type",
   label: "Type",
-  icon: null,
+  icon: <i className="bi bi-image" />,
   multiSelect: true,
   options: (() => {
     const counts: Record<string, number> = {};
@@ -168,7 +168,7 @@ const filters: FilterConfig[] = [{
 }, {
   id: "aspect-ratio",
   label: "Ratio",
-  icon: null,
+  icon: <i className="bi bi-crop" />,
   multiSelect: true,
   options: (() => {
     const counts: Record<string, number> = {};
@@ -183,7 +183,7 @@ const filters: FilterConfig[] = [{
 }, {
   id: "folders",
   label: "Folders",
-  icon: null,
+  icon: <i className="bi bi-folder" />,
   multiSelect: true,
   isTreeStructure: true,
   options: folderOptions
@@ -367,7 +367,7 @@ export function FilterBar({
   const moreCount = sourceSelected.length + statusSelected.length;
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="filter-bar-container cq-filterbar-hide-label cq-filterbar-pill-icon-only flex flex-wrap items-center gap-1.5">
       {/* AI Tags Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -544,7 +544,7 @@ export function FilterBar({
                   className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
                   ref={isDateFilter ? dateFilterRef : undefined}
                 >
-                  <span>{filter.label}</span>
+                  {filter.icon}<span className="filter-label">{filter.label}</span>
                   <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
               )}

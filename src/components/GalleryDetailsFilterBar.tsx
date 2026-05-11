@@ -25,6 +25,7 @@ interface FilterOption {
 interface FilterConfig {
   id: string;
   label: string;
+  icon: React.ReactNode;
   options: FilterOption[];
   multiSelect?: boolean;
 }
@@ -34,6 +35,7 @@ const CREATOR_MAP: Record<string, string> = { john: "John Smith", jane: "Jane Do
 const filters: FilterConfig[] = [{
   id: "content-type",
   label: "Type",
+  icon: <i className="bi bi-image" />,
   multiSelect: true,
   options: (() => {
     const counts: Record<string, number> = {};
@@ -48,6 +50,7 @@ const filters: FilterConfig[] = [{
 }, {
   id: "tags",
   label: "Tags",
+  icon: <i className="bi bi-tag" />,
   multiSelect: true,
   options: (() => {
     const tagCounts: Record<string, number> = {};
@@ -68,6 +71,7 @@ const filters: FilterConfig[] = [{
 }, {
   id: "creator",
   label: "Creator",
+  icon: <i className="bi bi-person" />,
   multiSelect: true,
   options: (() => {
     const counts: Record<string, number> = {};
@@ -82,6 +86,7 @@ const filters: FilterConfig[] = [{
 }, {
   id: "date-range",
   label: "Capture Date",
+  icon: <i className="bi bi-calendar" />,
   options: [
     { label: "Last 7 days", value: "week" },
     { label: "Last 14 days", value: "two-weeks" },
@@ -226,7 +231,7 @@ export function GalleryDetailsFilterBar({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="filter-bar-container cq-filterbar-hide-label cq-filterbar-pill-icon-only flex flex-wrap items-center gap-1.5">
       {filters.map(filter => {
         const selected = activeFilters[filter.id] || [];
         const isActive = selected.length > 0;
@@ -243,7 +248,7 @@ export function GalleryDetailsFilterBar({
                   isActive && "bg-primary/10 border-primary text-primary"
                 )}
               >
-                <span>{filter.label}</span>
+                {filter.icon}<span className="filter-label">{filter.label}</span>
                 {isActive && (
                   <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
                     {selected.length}

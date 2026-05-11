@@ -426,7 +426,7 @@
 }
 
 /* Search row wrap behavior - utility cluster drops to its own row */
-@container content (max-width: 699px) {
+@container content (max-width: 1023px) {
   .cq-search-row {
     flex-wrap: wrap;
   }
@@ -461,28 +461,12 @@
 }
 
 /* Filter bar specific container queries */
-@container filterbar (max-width: 599px) {
-  .cq-filterbar-compact {
-    gap: 0.25rem;
-  }
-
+@container filterbar (max-width: 1023px) {
   .cq-filterbar-hide-label .filter-label {
     display: none;
   }
 
   .cq-filterbar-pill-icon-only .pill-label {
     display: none;
-  }
-}
-
-@container filterbar (min-width: 600px) and (max-width: 899px) {
-  .cq-filterbar-wrap {
-    flex-wrap: wrap;
-  }
-}
-
-@container filterbar (min-width: 900px) {
-  .cq-filterbar-nowrap {
-    flex-wrap: nowrap;
   }
 }
