@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useRef } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import { cn } from "@/lib/utils";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { AssetTableView, DEFAULT_ASSET_COLUMN_VISIBILITY, ASSET_COLUMNS, type AssetColumnVisibility } from "@/components/AssetTableView";
 import { SettingsDrawer, useDisplayLabel, usePerPagePreference, useColumnVisibility } from "@/components/SettingsDrawer";
@@ -642,45 +643,55 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
         displayLabel={displayLabel}
         onDisplayLabelChange={setDisplayLabel}
       >
-        {/* Table preferences - shown when in list view mode */}
-        {assetsViewMode === "list" && (
-          <div className="space-y-4">
-            {/* Per page dropdown */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Rows per page</Label>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="w-full justify-between">
-                    {assetPerPage} per page
-                    <i className="bi bi-chevron-down w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-full bg-white">
-                  {[10, 20, 40, 80].map(option => (
-                    <DropdownMenuItem key={option} onClick={() => setAssetPerPage(option)}>
-                      {option} per page
-                    </DropdownMenuItem>
+        {/* Table preferences - always shown, disabled when not in table view */}
+        {(() => {
+          const isTableView = assetsViewMode === "list";
+          return (
+            <div className="space-y-4">
+              <Label className="text-[15px] font-medium">Table preferences</Label>
+              {!isTableView && (
+                <p className="text-[13px] text-muted-foreground">
+                  Switch to table view to manage these settings.
+                </p>
+              )}
+              {/* Per page dropdown */}
+              <div className={cn("space-y-2", !isTableView && "opacity-50")}>
+                <Label className="text-sm font-medium">Rows per page</Label>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild disabled={!isTableView}>
+                    <Button variant="outline" className="w-full justify-between" disabled={!isTableView}>
+                      {assetPerPage} per page
+                      <i className="bi bi-chevron-down w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-full bg-white">
+                    {[10, 20, 40, 80].map(option => (
+                      <DropdownMenuItem key={option} onClick={() => setAssetPerPage(option)}>
+                        {option} per page
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              {/* Column visibility */}
+              <div className={cn("space-y-2", !isTableView && "opacity-50")}>
+                <Label className="text-sm font-medium">Visible columns</Label>
+                <div className="space-y-2">
+                  {ASSET_COLUMNS.map(col => (
+                    <label key={col.key} className={cn("flex items-center gap-2", isTableView ? "cursor-pointer" : "cursor-not-allowed")}>
+                      <Checkbox
+                        checked={assetColumnVisibility[col.key]}
+                        onCheckedChange={() => isTableView && setAssetColumnVisibility(prev => ({ ...prev, [col.key]: !prev[col.key] }))}
+                        disabled={!isTableView}
+                      />
+                      <span className="text-sm">{col.label}</span>
+                    </label>
                   ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            {/* Column visibility */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Visible columns</Label>
-              <div className="space-y-2">
-                {ASSET_COLUMNS.map(col => (
-                  <label key={col.key} className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox
-                      checked={assetColumnVisibility[col.key]}
-                      onCheckedChange={() => setAssetColumnVisibility(prev => ({ ...prev, [col.key]: !prev[col.key] }))}
-                    />
-                    <span className="text-sm">{col.label}</span>
-                  </label>
-                ))}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </SettingsDrawer>
     </div>
   );
