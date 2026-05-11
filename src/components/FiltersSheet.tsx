@@ -63,8 +63,8 @@ export function FiltersSheet<T extends FilterSnapshot>({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        side="right"
-        className="w-full sm:max-w-md flex flex-col p-0"
+        side="bottom"
+        className="h-[85vh] max-h-[700px] flex flex-col p-0 rounded-t-lg"
       >
         <SheetHeader className="px-4 py-3 border-b flex-shrink-0">
           <div className="flex items-center gap-2">
