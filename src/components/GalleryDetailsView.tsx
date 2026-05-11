@@ -334,8 +334,8 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
               {assetsViewMode === "grid" && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                      Sort{sortField ? `: ${SORT_LABELS[sortField]}` : ""}
+                    <Button variant="outline" size="sm" className="h-10 gap-1 px-2 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]" title={`Sort: ${sortField ? SORT_LABELS[sortField] : "Default"}`}>
+                      <i className="bi bi-arrow-down-up w-4 h-4 inline-flex items-center justify-center leading-none" />
                       <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                     </Button>
                   </DropdownMenuTrigger>

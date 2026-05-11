@@ -426,7 +426,7 @@
 }
 
 /* Search row wrap behavior - utility cluster drops to its own row */
-@container content (max-width: 1023px) {
+@container content (max-width: 499px) {
   .cq-search-row {
     flex-wrap: wrap;
   }
