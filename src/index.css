@@ -437,8 +437,8 @@
   }
 
   .cq-search-row .cq-utility-cluster {
-    margin-left: auto;
     margin-top: 0.5rem;
+    /* margin-left: auto removed — left-align with filters row below */
   }
 }
 
