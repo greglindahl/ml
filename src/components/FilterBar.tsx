@@ -379,8 +379,8 @@ export function FilterBar({
               aiTagsCount > 0 && "bg-primary/10 border-primary text-primary"
             )}
           >
-            <i className="bi bi-stars" />
-            <span>AI Tags</span>
+            <i className="bi bi-stars w-4 h-4 inline-flex items-center justify-center leading-none" />
+            <span className="filter-label">AI Tags</span>
             {aiTagsCount > 0 && (
               <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
                 {aiTagsCount}
@@ -674,7 +674,8 @@ export function FilterBar({
               moreCount > 0 && "bg-primary/10 border-primary text-primary"
             )}
           >
-            <span>More</span>
+            <i className="bi bi-three-dots w-4 h-4 inline-flex items-center justify-center leading-none" />
+            <span className="filter-label">More</span>
             {moreCount > 0 && (
               <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
                 {moreCount}
