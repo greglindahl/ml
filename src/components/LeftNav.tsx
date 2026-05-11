@@ -143,7 +143,7 @@ export function LeftNav({
             className="absolute top-8 -translate-y-1/2 -right-3 z-10 w-6 h-6 bg-nav-background border border-nav-border rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-sidebar-accent"
             aria-label={isExpanded ? "Collapse navigation" : "Expand navigation"}
           >
-            <i className="bi bi-layout-sidebar text-nav-text text-xs" />
+            <i className={`bi ${isExpanded ? "bi-chevron-double-left" : "bi-chevron-double-right"} text-nav-text text-[15px]`} />
           </button>
         </TooltipTrigger>
         <TooltipContent side="right">
