@@ -17,8 +17,8 @@ export function StatsScreen({ isMobile = false }: StatsScreenProps) {
         <div className="border-b">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="social-shares">Social Shares</TabsTrigger>
           </TabsList>
         </div>
@@ -29,15 +29,15 @@ export function StatsScreen({ isMobile = false }: StatsScreenProps) {
           </div>
         </TabsContent>
 
-        <TabsContent value="users" className="flex-1 py-6 mt-0">
-          <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
-            <p>Users content placeholder</p>
-          </div>
-        </TabsContent>
-
         <TabsContent value="activity" className="flex-1 py-6 mt-0">
           <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
             <p>Activity content placeholder</p>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="users" className="flex-1 py-6 mt-0">
+          <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
+            <p>Users content placeholder</p>
           </div>
         </TabsContent>
 
