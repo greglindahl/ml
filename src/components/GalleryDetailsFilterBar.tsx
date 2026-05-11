@@ -231,7 +231,7 @@ export function GalleryDetailsFilterBar({
   };
 
   return (
-    <div className="filter-bar-container cq-filterbar-hide-label cq-filterbar-pill-icon-only flex flex-wrap items-center gap-1.5">
+    <div className="filter-bar-container cq-filterbar-hide-label flex flex-wrap items-center gap-1.5">
       {filters.map(filter => {
         const selected = activeFilters[filter.id] || [];
         const isActive = selected.length > 0;

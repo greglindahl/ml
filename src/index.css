@@ -465,8 +465,4 @@
   .cq-filterbar-hide-label .filter-label {
     display: none;
   }
-
-  .cq-filterbar-pill-icon-only .pill-label {
-    display: none;
-  }
 }
