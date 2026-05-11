@@ -421,7 +421,7 @@ export function FilterBar({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="bg-white z-50 min-w-[180px]">
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="text-sm">
+            <DropdownMenuSubTrigger>
               <i className="bi bi-person mr-2" />
               People
               {peopleSelected.length > 0 && (
@@ -470,7 +470,7 @@ export function FilterBar({
             </DropdownMenuSubContent>
           </DropdownMenuSub>
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="text-sm">
+            <DropdownMenuSubTrigger>
               <i className="bi bi-camera-reels mr-2" />
               Scene
               {sceneSelected.length > 0 && (
@@ -519,7 +519,7 @@ export function FilterBar({
             </DropdownMenuSubContent>
           </DropdownMenuSub>
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="text-sm">
+            <DropdownMenuSubTrigger>
               <i className="bi bi-badge-tm mr-2" />
               Brand
               {brandSelected.length > 0 && (
@@ -786,7 +786,7 @@ export function FilterBar({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="bg-white z-50 min-w-[180px]">
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="text-sm">Source</DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger>Source</DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
               <div className="px-2 py-2 border-b">
                 <div className="relative">
@@ -837,7 +837,7 @@ export function FilterBar({
             </DropdownMenuSubContent>
           </DropdownMenuSub>
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="text-sm">Approval Status</DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger>Approval Status</DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="bg-white z-50 min-w-[180px]">
               {[
                 { label: "Pending", value: "pending", count: 14 },

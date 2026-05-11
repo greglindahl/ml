@@ -103,7 +103,7 @@ export function FilterSection({ label, icon, children }: FilterSectionProps) {
     <div className="mb-4 last:mb-0">
       <div className="flex items-center gap-2 mb-2">
         {icon && <i className={`bi ${icon} text-muted-foreground`} />}
-        <span className="text-sm font-medium">{label}</span>
+        <span className="text-[15px] font-medium">{label}</span>
       </div>
       {children}
     </div>
