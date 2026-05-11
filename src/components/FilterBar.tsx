@@ -237,6 +237,10 @@ export function FilterBar({
   const [tempDateRange, setTempDateRange] = useState<DateRange | undefined>(undefined);
   const [customDateOpen, setCustomDateOpen] = useState(false);
   const dateFilterRef = useRef<HTMLButtonElement>(null);
+  // Search state for standard filter dropdowns
+  const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
+  // Search state for sub-flyouts (AI Tags and More)
+  const [subSearchQueries, setSubSearchQueries] = useState<Record<string, string>>({});
 
   const handleMultiSelect = (filterId: string, value: string, label: string, checked: boolean) => {
     setActiveFilters(prev => {
@@ -399,23 +403,44 @@ export function FilterBar({
               )}
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
+              <div className="px-2 py-2 border-b">
+                <div className="relative">
+                  <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+                  <input
+                    type="text"
+                    placeholder="Search people..."
+                    value={subSearchQueries["people"] ?? ""}
+                    onChange={e => setSubSearchQueries(prev => ({ ...prev, people: e.target.value }))}
+                    onClick={e => e.stopPropagation()}
+                    onKeyDown={e => e.stopPropagation()}
+                    className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
               <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5 bg-muted/30">
                 <i className="bi bi-stars text-primary/70" />
                 AI-Identified
               </div>
-              {peopleOptions.map(opt => (
-                <DropdownMenuCheckboxItem
-                  key={opt.value}
-                  checked={peopleSelected.some(s => s.value === opt.value)}
-                  onCheckedChange={(checked) => handleMultiSelect("people", opt.value, opt.label, !!checked)}
-                  onSelect={e => e.preventDefault()}
-                >
-                  <span className="flex-1">{opt.label}</span>
-                  {opt.count !== undefined && (
-                    <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
-                  )}
-                </DropdownMenuCheckboxItem>
-              ))}
+              <div className="max-h-[280px] overflow-y-auto">
+                {peopleOptions
+                  .filter(opt => opt.label.toLowerCase().includes((subSearchQueries["people"] ?? "").toLowerCase()))
+                  .map(opt => (
+                    <DropdownMenuCheckboxItem
+                      key={opt.value}
+                      checked={peopleSelected.some(s => s.value === opt.value)}
+                      onCheckedChange={(checked) => handleMultiSelect("people", opt.value, opt.label, !!checked)}
+                      onSelect={e => e.preventDefault()}
+                    >
+                      <span className="flex-1">{opt.label}</span>
+                      {opt.count !== undefined && (
+                        <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
+                      )}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                {peopleOptions.filter(opt => opt.label.toLowerCase().includes((subSearchQueries["people"] ?? "").toLowerCase())).length === 0 && (
+                  <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
+                )}
+              </div>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
           <DropdownMenuSub>
@@ -427,23 +452,44 @@ export function FilterBar({
               )}
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
+              <div className="px-2 py-2 border-b">
+                <div className="relative">
+                  <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+                  <input
+                    type="text"
+                    placeholder="Search scenes..."
+                    value={subSearchQueries["scene"] ?? ""}
+                    onChange={e => setSubSearchQueries(prev => ({ ...prev, scene: e.target.value }))}
+                    onClick={e => e.stopPropagation()}
+                    onKeyDown={e => e.stopPropagation()}
+                    className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
               <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5 bg-muted/30">
                 <i className="bi bi-stars text-primary/70" />
                 AI-Identified
               </div>
-              {sceneOptions.map(opt => (
-                <DropdownMenuCheckboxItem
-                  key={opt.value}
-                  checked={sceneSelected.some(s => s.value === opt.value)}
-                  onCheckedChange={(checked) => handleMultiSelect("scene", opt.value, opt.label, !!checked)}
-                  onSelect={e => e.preventDefault()}
-                >
-                  <span className="flex-1">{opt.label}</span>
-                  {opt.count !== undefined && (
-                    <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
-                  )}
-                </DropdownMenuCheckboxItem>
-              ))}
+              <div className="max-h-[280px] overflow-y-auto">
+                {sceneOptions
+                  .filter(opt => opt.label.toLowerCase().includes((subSearchQueries["scene"] ?? "").toLowerCase()))
+                  .map(opt => (
+                    <DropdownMenuCheckboxItem
+                      key={opt.value}
+                      checked={sceneSelected.some(s => s.value === opt.value)}
+                      onCheckedChange={(checked) => handleMultiSelect("scene", opt.value, opt.label, !!checked)}
+                      onSelect={e => e.preventDefault()}
+                    >
+                      <span className="flex-1">{opt.label}</span>
+                      {opt.count !== undefined && (
+                        <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
+                      )}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                {sceneOptions.filter(opt => opt.label.toLowerCase().includes((subSearchQueries["scene"] ?? "").toLowerCase())).length === 0 && (
+                  <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
+                )}
+              </div>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
           <DropdownMenuSub>
@@ -550,45 +596,73 @@ export function FilterBar({
               )}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="bg-white z-50 min-w-[200px]" onCloseAutoFocus={e => e.preventDefault()}>
+              {/* Search input for filters with many options (tags, folders) */}
+              {(filter.id === "tags" || filter.id === "folders") && (
+                <div className="px-2 py-2 border-b">
+                  <div className="relative">
+                    <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+                    <input
+                      type="text"
+                      placeholder={`Search ${filter.label.toLowerCase()}...`}
+                      value={searchQueries[filter.id] ?? ""}
+                      onChange={e => setSearchQueries(prev => ({ ...prev, [filter.id]: e.target.value }))}
+                      onClick={e => e.stopPropagation()}
+                      onKeyDown={e => e.stopPropagation()}
+                      className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+              )}
               <div className="max-h-[280px] overflow-y-auto">
-                {filter.options.map(option => {
-                  const isTreeItem = filter.isTreeStructure && option.depth !== undefined;
-                  const indent = isTreeItem ? option.depth! * 12 : 0;
-                  const treeIconClass = option.type === "gallery" ? "bi-images" : "bi-folder";
-                  const isDisabledBySearch = disabledValues.some(
-                    dv => dv.value.toLowerCase() === option.value.toLowerCase() && dv.category.toLowerCase() === (categoryMap[filter.id] || "").toLowerCase()
-                  );
+                {filter.options
+                  .filter(option => {
+                    if (filter.id !== "tags" && filter.id !== "folders") return true;
+                    const query = (searchQueries[filter.id] ?? "").toLowerCase();
+                    return option.label.toLowerCase().includes(query);
+                  })
+                  .map(option => {
+                    const isTreeItem = filter.isTreeStructure && option.depth !== undefined;
+                    const indent = isTreeItem ? option.depth! * 12 : 0;
+                    const treeIconClass = option.type === "gallery" ? "bi-images" : "bi-folder";
+                    const isDisabledBySearch = disabledValues.some(
+                      dv => dv.value.toLowerCase() === option.value.toLowerCase() && dv.category.toLowerCase() === (categoryMap[filter.id] || "").toLowerCase()
+                    );
 
-                  return isMulti ? (
-                    <DropdownMenuCheckboxItem
-                      key={option.value}
-                      checked={selected.some(s => s.value === option.value) || isDisabledBySearch}
-                      onCheckedChange={checked => {
-                        if (isDisabledBySearch) {
-                          onRemoveDisabledValue?.(option.value, categoryMap[filter.id] || "");
-                        } else {
-                          handleMultiSelect(filter.id, option.value, option.label, checked);
-                        }
-                      }}
-                      style={{ paddingLeft: isTreeItem ? `${8 + indent}px` : undefined }}
-                      className="flex items-center gap-2"
-                      onSelect={e => e.preventDefault()}
-                    >
-                      {isTreeItem && <i className={`bi ${treeIconClass} text-sm text-muted-foreground flex-shrink-0`} />}
-                      {option.iconClass && !isTreeItem && <i className={`bi ${option.iconClass} text-sm text-muted-foreground flex-shrink-0`} />}
-                      <span className={cn("flex-1", option.depth === 0 ? "font-medium" : "")}>{option.label}</span>
-                      {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>}
-                    </DropdownMenuCheckboxItem>
-                  ) : (
-                    <DropdownMenuCheckboxItem
-                      key={option.value}
-                      checked={selected.some(s => s.value === option.value)}
-                      onCheckedChange={() => handleSingleSelect(filter.id, option.value, option.label)}
-                    >
-                      {option.label}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
+                    return isMulti ? (
+                      <DropdownMenuCheckboxItem
+                        key={option.value}
+                        checked={selected.some(s => s.value === option.value) || isDisabledBySearch}
+                        onCheckedChange={checked => {
+                          if (isDisabledBySearch) {
+                            onRemoveDisabledValue?.(option.value, categoryMap[filter.id] || "");
+                          } else {
+                            handleMultiSelect(filter.id, option.value, option.label, checked);
+                          }
+                        }}
+                        style={{ paddingLeft: isTreeItem ? `${8 + indent}px` : undefined }}
+                        className="flex items-center gap-2"
+                        onSelect={e => e.preventDefault()}
+                      >
+                        {isTreeItem && <i className={`bi ${treeIconClass} text-sm text-muted-foreground flex-shrink-0`} />}
+                        {option.iconClass && !isTreeItem && <i className={`bi ${option.iconClass} text-sm text-muted-foreground flex-shrink-0`} />}
+                        <span className={cn("flex-1", option.depth === 0 ? "font-medium" : "")}>{option.label}</span>
+                        {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>}
+                      </DropdownMenuCheckboxItem>
+                    ) : (
+                      <DropdownMenuCheckboxItem
+                        key={option.value}
+                        checked={selected.some(s => s.value === option.value)}
+                        onCheckedChange={() => handleSingleSelect(filter.id, option.value, option.label)}
+                      >
+                        {option.label}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+                {/* No results message */}
+                {(filter.id === "tags" || filter.id === "folders") &&
+                  filter.options.filter(opt => opt.label.toLowerCase().includes((searchQueries[filter.id] ?? "").toLowerCase())).length === 0 && (
+                    <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
+                  )}
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -688,24 +762,52 @@ export function FilterBar({
           <DropdownMenuSub>
             <DropdownMenuSubTrigger className="text-sm">Source</DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
-              {[
-                { label: "Posted Content", value: "posted-content", count: 12 },
-                { label: "Imported Content", value: "imported-content", count: 8 },
-                { label: "Published Content", value: "published-content", count: 15 },
-                { label: "Uploaded Content", value: "uploaded-content", count: 22 },
-                { label: "Engage Content", value: "engage-content", count: 5 },
-                { label: "Requested Content", value: "requested-content", count: 3 },
-              ].map(opt => (
-                <DropdownMenuCheckboxItem
-                  key={opt.value}
-                  checked={sourceSelected.some(s => s.value === opt.value)}
-                  onCheckedChange={(checked) => handleMultiSelect("source", opt.value, opt.label, !!checked)}
-                  onSelect={e => e.preventDefault()}
-                >
-                  <span className="flex-1">{opt.label}</span>
-                  <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
-                </DropdownMenuCheckboxItem>
-              ))}
+              <div className="px-2 py-2 border-b">
+                <div className="relative">
+                  <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+                  <input
+                    type="text"
+                    placeholder="Search source..."
+                    value={subSearchQueries["source"] ?? ""}
+                    onChange={e => setSubSearchQueries(prev => ({ ...prev, source: e.target.value }))}
+                    onClick={e => e.stopPropagation()}
+                    onKeyDown={e => e.stopPropagation()}
+                    className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+              <div className="max-h-[280px] overflow-y-auto">
+                {[
+                  { label: "Posted Content", value: "posted-content", count: 12 },
+                  { label: "Imported Content", value: "imported-content", count: 8 },
+                  { label: "Published Content", value: "published-content", count: 15 },
+                  { label: "Uploaded Content", value: "uploaded-content", count: 22 },
+                  { label: "Engage Content", value: "engage-content", count: 5 },
+                  { label: "Requested Content", value: "requested-content", count: 3 },
+                ]
+                  .filter(opt => opt.label.toLowerCase().includes((subSearchQueries["source"] ?? "").toLowerCase()))
+                  .map(opt => (
+                    <DropdownMenuCheckboxItem
+                      key={opt.value}
+                      checked={sourceSelected.some(s => s.value === opt.value)}
+                      onCheckedChange={(checked) => handleMultiSelect("source", opt.value, opt.label, !!checked)}
+                      onSelect={e => e.preventDefault()}
+                    >
+                      <span className="flex-1">{opt.label}</span>
+                      <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                {[
+                  { label: "Posted Content", value: "posted-content" },
+                  { label: "Imported Content", value: "imported-content" },
+                  { label: "Published Content", value: "published-content" },
+                  { label: "Uploaded Content", value: "uploaded-content" },
+                  { label: "Engage Content", value: "engage-content" },
+                  { label: "Requested Content", value: "requested-content" },
+                ].filter(opt => opt.label.toLowerCase().includes((subSearchQueries["source"] ?? "").toLowerCase())).length === 0 && (
+                  <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
+                )}
+              </div>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
           <DropdownMenuSub>
