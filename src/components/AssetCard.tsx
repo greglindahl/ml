@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import type { DisplayLabelOption } from "@/components/SettingsDrawer";
 
 export type AssetCardState =
   | "default"
@@ -11,6 +12,10 @@ export type AssetCardState =
 
 interface AssetCardProps {
   creatorName: string;
+  /** Asset title/filename for display when displayLabel is "title" */
+  title?: string;
+  /** Which label to display: "title", "creator", or "none". Defaults to "creator" for backwards compat. */
+  displayLabel?: DisplayLabelOption;
   timestamp?: string;
   thumbnailUrl?: string;
   duration?: string;
@@ -29,6 +34,8 @@ interface AssetCardProps {
 
 export function AssetCard({
   creatorName,
+  title,
+  displayLabel = "creator",
   timestamp = "1/14/26, 1:56 PM",
   thumbnailUrl,
   duration,
@@ -303,9 +310,12 @@ export function AssetCard({
             </div>
           )}
 
-          {/* Creator Name */}
-          <p className="text-[15px] text-white font-normal leading-[1.2] tracking-tight">
-            {creatorName}
+          {/* Label - title, creator, or none based on displayLabel preference */}
+          <p className={cn(
+            "text-[15px] text-white font-normal leading-[1.2] tracking-tight",
+            displayLabel === "none" && "invisible"
+          )}>
+            {displayLabel === "title" ? (title || creatorName) : creatorName}
           </p>
 
           {/* Timestamp */}

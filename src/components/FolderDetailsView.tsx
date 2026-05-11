@@ -34,6 +34,7 @@ import { toast } from "@/hooks/use-toast";
 import { toast as sonnerToast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AssetCard, AssetCardState } from "@/components/AssetCard";
+import { useDisplayLabel } from "@/components/SettingsDrawer";
 import { GalleryCard, GalleryCardState } from "@/components/GalleryCard";
 import { FolderCard, FolderCardState } from "@/components/FolderCard";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
@@ -119,7 +120,10 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   
   // Asset selection state for bulk actions
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
-  
+
+  // Display label preference (from localStorage)
+  const [displayLabel] = useDisplayLabel();
+
   // View mode state (grid vs list) - independent for assets and galleries
   const [assetsViewMode, setAssetsViewMode] = useState<"grid" | "list">("grid");
   const [galleriesViewMode, setGalleriesViewMode] = useState<"grid" | "list">("grid");
@@ -595,6 +599,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                     <AssetCard
                       key={asset.id}
                       creatorName={asset.creator}
+                      title={asset.name}
+                      displayLabel={displayLabel}
                       duration={asset.duration}
                       timestamp={getRelativeTime(asset.dateCreated)}
                       thumbnailUrl={asset.thumbnailUrl}

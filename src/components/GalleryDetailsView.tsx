@@ -515,6 +515,8 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                     <AssetCard
                       key={asset.id}
                       creatorName={asset.creator}
+                      title={asset.name}
+                      displayLabel={displayLabel}
                       duration={asset.duration}
                       timestamp={getRelativeTime(asset.dateCreated)}
                       thumbnailUrl={asset.thumbnailUrl}
