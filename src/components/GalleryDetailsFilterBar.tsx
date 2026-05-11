@@ -249,7 +249,7 @@ export function GalleryDetailsFilterBar({
                     {selected.length}
                   </span>
                 )}
-                <i className="bi bi-chevron-down w-4 h-4" />
+                <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="bg-white z-50 min-w-[200px]">
@@ -302,7 +302,7 @@ export function GalleryDetailsFilterBar({
                 {sourceSelections.length + approvalStatusSelections.length}
               </span>
             )}
-            <i className="bi bi-chevron-down w-4 h-4" />
+            <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="bg-white z-50 min-w-[200px]">

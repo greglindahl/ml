@@ -785,7 +785,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 >
                   <i className="bi bi-plus-circle w-4 h-4" />
                   New
-                  <i className="bi bi-chevron-down w-4 h-4" />
+                  <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -800,7 +800,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               </DropdownMenuContent>
             </DropdownMenu>
             <Button className="h-10 px-3 py-2 gap-2">
-              <i className="bi bi-upload w-4 h-4" />
+              <i className="bi bi-upload w-4 h-4 inline-flex items-center justify-center leading-none" />
               Upload
             </Button>
           </div>
@@ -832,7 +832,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                         Sort{sortField ? `: ${SORT_LABELS[sortField]}` : ""}
-                        <i className="bi bi-chevron-down w-4 h-4" />
+                        <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="bg-white w-48">
@@ -853,7 +853,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${assetsViewMode === "grid" ? "bg-gray-100" : ""}`}
                     onClick={() => setAssetsViewMode("grid")}
                   >
-                    <i className="bi bi-grid w-4 h-4" />
+                    <i className="bi bi-grid w-4 h-4 inline-flex items-center justify-center leading-none" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -861,7 +861,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${assetsViewMode === "list" ? "bg-gray-100" : ""}`}
                     onClick={() => setAssetsViewMode("list")}
                   >
-                    <i className="bi bi-table w-4 h-4" />
+                    <i className="bi bi-table w-4 h-4 inline-flex items-center justify-center leading-none" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -875,7 +875,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                       }
                     }}
                   >
-                    <i className="bi bi-check-square w-4 h-4" />
+                    <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
                   </Button>
                 </div>
 
@@ -886,7 +886,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
                   onClick={() => setSettingsDrawerOpen(true)}
                 >
-                  <i className="bi bi-gear w-4 h-4" />
+                  <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
               </div>
             </div>
@@ -1089,7 +1089,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                         Sort{sortField ? `: ${SORT_LABELS[sortField]}` : ""}
-                        <i className="bi bi-chevron-down w-4 h-4" />
+                        <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="bg-white w-48">
@@ -1110,7 +1110,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${galleriesViewMode === "grid" ? "bg-gray-100" : ""}`}
                     onClick={() => setGalleriesViewMode("grid")}
                   >
-                    <i className="bi bi-grid w-4 h-4" />
+                    <i className="bi bi-grid w-4 h-4 inline-flex items-center justify-center leading-none" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -1118,7 +1118,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${galleriesViewMode === "list" ? "bg-gray-100" : ""}`}
                     onClick={() => setGalleriesViewMode("list")}
                   >
-                    <i className="bi bi-table w-4 h-4" />
+                    <i className="bi bi-table w-4 h-4 inline-flex items-center justify-center leading-none" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -1126,7 +1126,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${isAnyGallerySelected ? "bg-gray-100" : ""}`}
                     onClick={() => setSelectedGalleries(prev => (prev.size > 0 ? new Set() : new Set(galleryList.map(g => g.id))))}
                   >
-                    <i className="bi bi-check-square w-4 h-4" />
+                    <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
                   </Button>
                 </div>
 
@@ -1137,7 +1137,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
                   onClick={() => setSettingsDrawerOpen(true)}
                 >
-                  <i className="bi bi-gear w-4 h-4" />
+                  <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
               </div>
             </div>
@@ -1169,7 +1169,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <i className="bi bi-heart w-4 h-4" />
+                        <i className="bi bi-heart w-4 h-4 inline-flex items-center justify-center leading-none" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Favorite</TooltipContent>
@@ -1183,7 +1183,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                         });
                         setSelectedGalleries(new Set());
                       }}>
-                        <i className="bi bi-archive w-4 h-4" />
+                        <i className="bi bi-archive w-4 h-4 inline-flex items-center justify-center leading-none" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Archive</TooltipContent>
@@ -1191,7 +1191,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <i className="bi bi-three-dots w-4 h-4" />
+                      <i className="bi bi-three-dots w-4 h-4 inline-flex items-center justify-center leading-none" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -1280,10 +1280,10 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             <div className="flex items-center justify-end mb-6">
               <div className="flex items-center border rounded-md bg-card">
                 <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-r-none text-[#6e84a3] ${folderViewMode === "grid" ? "bg-accent" : ""}`} onClick={() => setFolderViewMode("grid")}>
-                  <i className="bi bi-grid w-4 h-4" />
+                  <i className="bi bi-grid w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
                 <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-l-none border-l text-[#6e84a3] ${folderViewMode === "table" ? "bg-accent" : ""}`} onClick={() => setFolderViewMode("table")}>
-                  <i className="bi bi-table w-4 h-4" />
+                  <i className="bi bi-table w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
               </div>
             </div>

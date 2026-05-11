@@ -386,7 +386,7 @@ export function FilterBar({
                 {aiTagsCount}
               </span>
             )}
-            <i className="bi bi-chevron-down w-4 h-4" />
+            <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="bg-white z-50 min-w-[180px]">
@@ -497,7 +497,7 @@ export function FilterBar({
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-primary/10 border-primary text-primary">
                     <span>{filter.label}</span>
                     <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">{totalActiveCount}</span>
-                    <i className="bi bi-chevron-down w-4 h-4 opacity-50" />
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none opacity-50" />
                   </Button>
                 ) : (
                   <div className="inline-flex items-center gap-1 h-8 px-1.5 border border-input rounded-md bg-white min-w-[120px] max-w-[280px]">
@@ -545,7 +545,7 @@ export function FilterBar({
                   ref={isDateFilter ? dateFilterRef : undefined}
                 >
                   <span>{filter.label}</span>
-                  <i className="bi bi-chevron-down w-4 h-4" />
+                  <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
               )}
             </DropdownMenuTrigger>
@@ -680,7 +680,7 @@ export function FilterBar({
                 {moreCount}
               </span>
             )}
-            <i className="bi bi-chevron-down w-4 h-4" />
+            <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="bg-white z-50 min-w-[180px]">

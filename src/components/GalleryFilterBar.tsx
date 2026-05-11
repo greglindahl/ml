@@ -193,7 +193,7 @@ export function GalleryFilterBar({
                     
                       <i className="bi bi-x text-sm" />
                     </button>
-                    <i className="bi bi-chevron-down w-3.5 h-3.5 text-muted-foreground" />
+                    <i className="bi bi-chevron-down w-3.5 h-3.5 inline-flex items-center justify-center leading-none text-muted-foreground" />
                   </div>
                 </div> :
 
@@ -203,7 +203,7 @@ export function GalleryFilterBar({
                 className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
 
                   <span>{filter.label}</span>
-                  <i className="bi bi-chevron-down w-4 h-4" />
+                  <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
               }
             </DropdownMenuTrigger>

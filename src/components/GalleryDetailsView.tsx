@@ -296,7 +296,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon" className="border-primary text-primary hover:bg-primary/5">
-                  <i className="bi bi-three-dots-vertical w-4 h-4" />
+                  <i className="bi bi-three-dots-vertical w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -336,7 +336,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                       Sort{sortField ? `: ${SORT_LABELS[sortField]}` : ""}
-                      <i className="bi bi-chevron-down w-4 h-4" />
+                      <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-white w-48">
@@ -357,7 +357,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${assetsViewMode === "grid" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("grid")}
                 >
-                  <i className="bi bi-grid w-4 h-4" />
+                  <i className="bi bi-grid w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -365,7 +365,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${assetsViewMode === "list" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("list")}
                 >
-                  <i className="bi bi-table w-4 h-4" />
+                  <i className="bi bi-table w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -379,7 +379,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                     }
                   }}
                 >
-                  <i className="bi bi-check-square w-4 h-4" />
+                  <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
               </div>
 
@@ -390,7 +390,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
                 onClick={() => onOpenSettings?.()}
               >
-                <i className="bi bi-gear w-4 h-4" />
+                <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
               </Button>
             </div>
           </div>

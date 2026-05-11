@@ -217,14 +217,14 @@ export function AssetTableView({ assets, isLoading = false, selectedAssets: exte
   }
 
   return (
-    <div>
+    <div className="border rounded-lg bg-card">
       {/* Table Controls Row */}
-      <div className="flex justify-end gap-2 mb-3">
+      <div className="flex justify-end gap-2 p-3 border-b">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
               {perPage} per page
-              <i className="bi bi-chevron-down w-4 h-4" />
+              <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="bg-white">
@@ -239,9 +239,9 @@ export function AssetTableView({ assets, isLoading = false, selectedAssets: exte
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-              <i className="bi bi-table w-4 h-4" />
+              <i className="bi bi-table w-4 h-4 inline-flex items-center justify-center leading-none" />
               Manage Columns
-              <i className="bi bi-chevron-down w-4 h-4" />
+              <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-48 p-2" align="end">
@@ -260,8 +260,7 @@ export function AssetTableView({ assets, isLoading = false, selectedAssets: exte
         </Popover>
       </div>
 
-      <div className="border rounded-lg bg-card">
-        <Table>
+      <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-12">
@@ -429,7 +428,7 @@ export function AssetTableView({ assets, isLoading = false, selectedAssets: exte
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <i className="bi bi-three-dots w-4 h-4" />
+                      <i className="bi bi-three-dots w-4 h-4 inline-flex items-center justify-center leading-none" />
                       <span className="sr-only">Open menu</span>
                     </Button>
                   </DropdownMenuTrigger>
@@ -446,7 +445,6 @@ export function AssetTableView({ assets, isLoading = false, selectedAssets: exte
           ))}
           </TableBody>
         </Table>
-      </div>
     </div>
   );
 }
