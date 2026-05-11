@@ -7,6 +7,8 @@ interface TogglePillProps {
   isActive: boolean;
   onClick: () => void;
   className?: string;
+  /** Optional tooltip text. Falls back to label if not provided. */
+  tooltip?: string;
 }
 
 /**
@@ -20,11 +22,12 @@ export function TogglePill({
   isActive,
   onClick,
   className,
+  tooltip,
 }: TogglePillProps) {
   return (
     <button
       type="button"
-      title={label}
+      title={tooltip ?? label}
       onClick={onClick}
       className={cn(
         "inline-flex items-center justify-center h-10 w-10 rounded-md transition-colors",

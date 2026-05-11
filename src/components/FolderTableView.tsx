@@ -17,14 +17,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 // Column definitions for manage columns
-const COLUMNS = [
+export const FOLDER_COLUMNS = [
   { key: "icon", label: "Icon" },
   { key: "name", label: "Name" },
   { key: "subfolders", label: "Subfolders" },
@@ -32,10 +27,16 @@ const COLUMNS = [
   { key: "createdBy", label: "Created By" },
 ] as const;
 
-type ColumnKey = typeof COLUMNS[number]["key"];
-type ColumnVisibility = Record<ColumnKey, boolean>;
+export type FolderColumnKey = typeof FOLDER_COLUMNS[number]["key"];
+export type FolderColumnVisibility = Record<FolderColumnKey, boolean>;
 
-const PER_PAGE_OPTIONS = [10, 20, 40, 80] as const;
+export const DEFAULT_FOLDER_COLUMN_VISIBILITY: FolderColumnVisibility = {
+  icon: true,
+  name: true,
+  subfolders: true,
+  created: true,
+  createdBy: true,
+};
 
 interface FolderTableViewProps {
   folders: FolderItem[];
@@ -43,6 +44,10 @@ interface FolderTableViewProps {
   isLoading?: boolean;
   archivedFoldersOnly?: boolean;
   onUnarchiveFolder?: (folderId: string) => void;
+  /** Controlled perPage value */
+  perPage: number;
+  /** Controlled column visibility */
+  columnVisibility: FolderColumnVisibility;
 }
 
 type SortField = "name" | "subfolders" | "created" | null;
@@ -64,22 +69,18 @@ function enrichFolder(folder: FolderItem, index: number) {
 
 type EnrichedFolder = ReturnType<typeof enrichFolder>;
 
-export function FolderTableView({ folders, onNavigate, isLoading = false, archivedFoldersOnly = false, onUnarchiveFolder }: FolderTableViewProps) {
+export function FolderTableView({
+  folders,
+  onNavigate,
+  isLoading = false,
+  archivedFoldersOnly = false,
+  onUnarchiveFolder,
+  perPage,
+  columnVisibility,
+}: FolderTableViewProps) {
   const [selectedFolders, setSelectedFolders] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-  const [perPage, setPerPage] = useState<number>(40);
-  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
-    icon: true,
-    name: true,
-    subfolders: true,
-    created: true,
-    createdBy: true,
-  });
-
-  const toggleColumn = (key: ColumnKey) => {
-    setColumnVisibility(prev => ({ ...prev, [key]: !prev[key] }));
-  };
 
   const enrichedFolders = folders.map((f, i) => enrichFolder(f, i));
 
@@ -238,48 +239,6 @@ export function FolderTableView({ folders, onNavigate, isLoading = false, archiv
 
   return (
     <div className="border rounded-lg bg-card">
-      {/* Table Controls Row */}
-      <div className="flex justify-end gap-2 p-3 border-b">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-              {perPage} per page
-              <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="bg-white">
-            {PER_PAGE_OPTIONS.map(option => (
-              <DropdownMenuItem key={option} onClick={() => setPerPage(option)}>
-                {option} per page
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-              <i className="bi bi-table w-4 h-4 inline-flex items-center justify-center leading-none" />
-              Manage Columns
-              <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-48 p-2" align="end">
-            <div className="space-y-2">
-              {COLUMNS.map(col => (
-                <label key={col.key} className="flex items-center gap-2 cursor-pointer hover:bg-accent px-2 py-1 rounded">
-                  <Checkbox
-                    checked={columnVisibility[col.key]}
-                    onCheckedChange={() => toggleColumn(col.key)}
-                  />
-                  <span className="text-sm">{col.label}</span>
-                </label>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
-
       <Table>
           <TableHeader>
             <TableRow>

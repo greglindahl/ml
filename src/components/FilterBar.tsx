@@ -863,7 +863,8 @@ export function FilterBar({
       {/* Toggle Pills (always visible) */}
       <TogglePill
         label="Unsorted"
-        iconClass="bi-folder-x"
+        iconClass="bi-inbox"
+        tooltip="Show only assets not in any gallery"
         isActive={isUnsortedActive}
         onClick={() => onUnsortedToggle?.(!isUnsortedActive)}
       />
