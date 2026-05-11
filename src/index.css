@@ -442,6 +442,13 @@
   }
 }
 
+/* Sort label collapses to icon-only at narrow content widths */
+@container content (max-width: 699px) {
+  .sort-label {
+    display: none;
+  }
+}
+
 /* Compact filter pills on medium containers */
 @container content (min-width: 640px) and (max-width: 899px) {
   .cq-compact-md {
