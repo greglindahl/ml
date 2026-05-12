@@ -14,6 +14,7 @@ interface GalleryCardProps {
   timeAgo?: string;
   state?: GalleryCardState;
   onSelect?: () => void;
+  onOpen?: () => void;
   onFavorite?: () => void;
   onShare?: () => void;
   onMoreOptions?: () => void;
@@ -29,6 +30,7 @@ export function GalleryCard({
   timeAgo,
   state = "default",
   onSelect,
+  onOpen,
   onFavorite,
   onShare,
   onMoreOptions,
@@ -54,6 +56,7 @@ export function GalleryCard({
 
   return (
     <div
+      onClick={onOpen}
       className={cn(
         "relative flex flex-col items-center justify-center w-full aspect-[16/10] min-w-[200px] rounded-3xl overflow-hidden cursor-pointer group",
         isHover && "shadow-xl",
@@ -87,7 +90,7 @@ export function GalleryCard({
           <div className="flex items-center">
             {showCheckbox && (
               <button
-                onClick={onSelect}
+                onClick={(e) => { e.stopPropagation(); onSelect?.(); }}
                 className="flex items-center justify-center"
               >
                 {isChecked ? (
@@ -130,7 +133,7 @@ export function GalleryCard({
 
             {/* Favorite Button */}
             <button
-              onClick={onFavorite}
+              onClick={(e) => { e.stopPropagation(); onFavorite?.(); }}
               className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full hover:bg-black/30 transition-colors"
             >
               <i className="bi bi-heart text-white text-xs" />
@@ -138,7 +141,7 @@ export function GalleryCard({
 
             {/* Share Button */}
             <button
-              onClick={onShare}
+              onClick={(e) => { e.stopPropagation(); onShare?.(); }}
               className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full hover:bg-black/30 transition-colors"
             >
               <i className="bi bi-share text-white text-xs" />
@@ -179,7 +182,7 @@ export function GalleryCard({
 
           {/* More Options Button */}
           <button
-            onClick={onMoreOptions}
+            onClick={(e) => { e.stopPropagation(); onMoreOptions?.(); }}
             className="w-6 h-6 flex items-center justify-center hover:bg-black/20 rounded-full transition-colors"
           >
             <i className="bi bi-three-dots-vertical text-white text-sm" />

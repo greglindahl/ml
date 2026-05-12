@@ -1353,6 +1353,10 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                         state={cardState}
                         onSelect={() => {
                           if (archivedGalleriesOnly) return;
+                          toggleGallerySelection(gallery.id);
+                        }}
+                        onOpen={() => {
+                          if (archivedGalleriesOnly) return;
                           if (isAnyGallerySelected) {
                             toggleGallerySelection(gallery.id);
                           } else {
