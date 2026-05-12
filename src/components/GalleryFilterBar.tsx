@@ -311,6 +311,7 @@ export function GalleryFilterBar({
       <TogglePill
         label="Archived"
         iconClass="bi-archive"
+        tooltip="Show only archived galleries"
         isActive={isArchivedActive}
         onClick={() => onArchivedToggle?.(!isArchivedActive)}
       />

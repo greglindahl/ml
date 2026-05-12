@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { folders, FolderItem } from "@/lib/mockFolderData";
@@ -383,21 +384,26 @@ export function FilterBar({
   return (
     <div className="filter-bar-container cq-filterbar-hide-label flex flex-wrap items-center gap-1.5">
       {/* Collapsed Filters Button (visible at narrow widths) */}
-      <Button
-        variant="outline"
-        size="sm"
-        className="filters-collapsed-button h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
-        onClick={onOpenFiltersSheet}
-      >
-        <i className="bi bi-funnel w-4 h-4 inline-flex items-center justify-center leading-none" />
-        <span>Filters</span>
-        {totalActiveCount > 0 && (
-          <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
-            {totalActiveCount}
-          </span>
-        )}
-        <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-      </Button>
+      <Tooltip delayDuration={700}>
+        <TooltipTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="filters-collapsed-button h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
+            onClick={onOpenFiltersSheet}
+          >
+            <i className="bi bi-funnel w-4 h-4 inline-flex items-center justify-center leading-none" />
+            <span>Filters</span>
+            {totalActiveCount > 0 && (
+              <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                {totalActiveCount}
+              </span>
+            )}
+            <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Filters</TooltipContent>
+      </Tooltip>
 
       {/* Expanded Filters (visible at wide widths) */}
       <div className="filters-expanded contents">
@@ -963,12 +969,14 @@ export function FilterBar({
       <TogglePill
         label="Unviewed Only"
         iconClass="bi-eye-slash"
+        tooltip="Show only assets you haven't viewed yet"
         isActive={isUnviewedActive}
         onClick={() => onUnviewedToggle?.(!isUnviewedActive)}
       />
       <TogglePill
         label="Branding"
         iconClass="bi-palette"
+        tooltip="Show only branded assets"
         isActive={isBrandingActive}
         onClick={() => onBrandingToggle?.(!isBrandingActive)}
       />
