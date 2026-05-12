@@ -97,7 +97,7 @@ export function SettingsDrawer({
         <div className="mt-6 space-y-6">
           {/* Grid View Preferences Section */}
           <div className="space-y-6">
-            <SectionHeader icon="bi-grid-3x3-gap">Grid View Preferences</SectionHeader>
+            <SectionHeader icon="bi-grid">Grid View Preferences</SectionHeader>
             <div className="space-y-3">
               <p className="text-[13px] text-muted-foreground tracking-[-0.13px]">
                 Display by:
