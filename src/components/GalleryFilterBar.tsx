@@ -168,7 +168,7 @@ export function GalleryFilterBar({
         className="filters-collapsed-button h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
         onClick={onOpenFiltersSheet}
       >
-        <i className="bi bi-funnel w-4 h-4 inline-flex items-center justify-center leading-none" />
+        <i className="bi bi-filter w-4 h-4 inline-flex items-center justify-center leading-none" />
         <span>Filters</span>
         {totalActiveCount > 0 && (
           <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">

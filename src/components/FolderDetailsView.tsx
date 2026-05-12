@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
 import { FilterBar, FilterBarHandle } from "@/components/FilterBar";
+import { GalleryFilterBar } from "@/components/GalleryFilterBar";
+import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
 import { Badge } from "@/components/ui/badge";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
@@ -38,6 +40,19 @@ import { useDisplayLabel } from "@/components/SettingsDrawer";
 import { GalleryCard, GalleryCardState } from "@/components/GalleryCard";
 import { FolderCard, FolderCardState } from "@/components/FolderCard";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
+import {
+  AssetSettingsDrawer,
+  useAssetDisplayLabel,
+  useAssetPerPage,
+  useAssetColumnVisibility,
+  useAssetFilterVisibility,
+} from "@/components/AssetSettingsDrawer";
+import {
+  GallerySettingsDrawer,
+  useGalleryPerPage,
+  useGalleryColumnVisibility,
+  useGalleryFilterVisibility,
+} from "@/components/GallerySettingsDrawer";
 
 const GALLERY_MOVE_LIMIT = 5;
 const MOVE_LIMIT_MESSAGE = "Too many galleries selected. You may only move up to 5 at a time.";
@@ -123,6 +138,60 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
 
   // Display label preference (from localStorage)
   const [displayLabel] = useDisplayLabel();
+
+  // Asset settings - using new tabbed drawer hooks
+  const [assetDisplayLabel, setAssetDisplayLabel] = useAssetDisplayLabel();
+  const [assetPerPage, setAssetPerPage] = useAssetPerPage(40);
+  const [assetColumnVisibility, setAssetColumnVisibility] = useAssetColumnVisibility();
+  const [assetFilterVisibility, setAssetFilterVisibility] = useAssetFilterVisibility();
+
+  // Gallery settings - using new tabbed drawer hooks
+  const [galleryPerPage, setGalleryPerPage] = useGalleryPerPage(40);
+  const [galleryColumnVisibility, setGalleryColumnVisibility] = useGalleryColumnVisibility();
+  const [galleryFilterVisibility, setGalleryFilterVisibility] = useGalleryFilterVisibility();
+
+  // Settings drawer state
+  const [assetSettingsDrawerOpen, setAssetSettingsDrawerOpen] = useState(false);
+  const [gallerySettingsDrawerOpen, setGallerySettingsDrawerOpen] = useState(false);
+
+  // Filters sheet state for narrow widths
+  const [assetsFiltersSheetOpen, setAssetsFiltersSheetOpen] = useState(false);
+  const [galleriesFiltersSheetOpen, setGalleriesFiltersSheetOpen] = useState(false);
+
+  // Toggle pill states for FilterBar
+  const [isUnsortedActive, setIsUnsortedActive] = useState(false);
+  const [isUnviewedActive, setIsUnviewedActive] = useState(false);
+  const [isBrandedActive, setIsBrandedActive] = useState(false);
+
+  // Sort state
+  type SortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "favorites" | "lastDownloadDate" | null;
+  type SortDir = "asc" | "desc";
+  const [sortField, setSortField] = useState<SortField>("dateCreated");
+  const [sortDirection, setSortDirection] = useState<SortDir>("desc");
+
+  const SORT_OPTIONS: { value: NonNullable<SortField>; label: string }[] = [
+    { value: "creator", label: "Creator" },
+    { value: "dateCreated", label: "Added Date" },
+    { value: "captureDate", label: "Capture Date" },
+    { value: "downloads", label: "Downloads" },
+    { value: "shares", label: "Shares" },
+    { value: "galleries", label: "Galleries" },
+    { value: "tags", label: "Tags" },
+    { value: "viewers", label: "Viewers" },
+    { value: "favorites", label: "Favorites" },
+    { value: "lastDownloadDate", label: "Last Download Date" },
+  ];
+
+  const SORT_LABELS: Record<string, string> = Object.fromEntries(SORT_OPTIONS.map(o => [o.value, o.label]));
+
+  const handleSortChange = useCallback((field: NonNullable<SortField>) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("desc");
+    }
+  }, [sortField]);
 
   // View mode state (grid vs list) - independent for assets and galleries
   const [assetsViewMode, setAssetsViewMode] = useState<"grid" | "list">("grid");
@@ -227,6 +296,30 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
     dateRangeFilter,
     customDateRange,
   ]);
+
+  // Sort filtered results
+  const sortedResults = useMemo(() => {
+    if (!sortField) return filteredResults;
+    return [...filteredResults].sort((a, b) => {
+      let cmp = 0;
+      switch (sortField) {
+        case "creator": cmp = a.creator.localeCompare(b.creator); break;
+        case "dateCreated": cmp = a.dateCreated.getTime() - b.dateCreated.getTime(); break;
+        case "captureDate": cmp = a.captureDate.getTime() - b.captureDate.getTime(); break;
+        case "downloads": cmp = a.downloads - b.downloads; break;
+        case "shares": cmp = a.shares - b.shares; break;
+        case "galleries": cmp = a.galleries - b.galleries; break;
+        case "tags": cmp = a.tags.length - b.tags.length; break;
+        case "viewers": cmp = a.viewers - b.viewers; break;
+        case "publicViews": cmp = a.publicViews - b.publicViews; break;
+        case "favorites": cmp = a.favorites - b.favorites; break;
+        case "lastDownloadDate":
+          cmp = (a.lastDownloadDate?.getTime() ?? 0) - (b.lastDownloadDate?.getTime() ?? 0);
+          break;
+      }
+      return sortDirection === "asc" ? cmp : -cmp;
+    });
+  }, [filteredResults, sortField, sortDirection]);
 
   // Handle search from FacetedSearch component
   const handleSearch = useCallback(
@@ -398,30 +491,37 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
 
         {/* Assets Tab */}
         <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">
-          {/* Faceted Search */}
-          <div className="mb-3">
-            <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
-          </div>
+          {/* Search Row with Utility Cluster */}
+          <div className="flex items-center gap-4 mb-3 cq-search-row">
+            <div className="flex-1 min-w-0 cq-search-input">
+              <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
+            </div>
 
-          {/* Filters and Controls - Single Row */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
-            <FilterBar onFilterChange={handleFilterChange} onCustomDateChange={handleCustomDateChange} hideFilters={["folders"]} handleRef={filterBarHandleRef} />
-
-            <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    Sort: Added Date
-                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem>Date (Newest)</DropdownMenuItem>
-                  <DropdownMenuItem>Date (Oldest)</DropdownMenuItem>
-                  <DropdownMenuItem>Name (A-Z)</DropdownMenuItem>
-                  <DropdownMenuItem>Name (Z-A)</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
+              {assetsViewMode === "grid" && (
+                <Tooltip delayDuration={700}>
+                  <DropdownMenu>
+                    <TooltipTrigger asChild>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-10 gap-2 px-3 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                          <i className="bi bi-arrow-down-up w-4 h-4 inline-flex items-center justify-center leading-none" />
+                          <span className="sort-label">{sortField ? SORT_LABELS[sortField] : "Default"}</span>
+                          <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                    </TooltipTrigger>
+                    <DropdownMenuContent className="bg-white w-48">
+                      {SORT_OPTIONS.map(opt => (
+                        <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
+                          {opt.label}
+                          {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <TooltipContent side="bottom">Sort by...</TooltipContent>
+                </Tooltip>
+              )}
 
               <div className="flex items-center border border-gray-300 rounded-md bg-white">
                 <Button
@@ -430,7 +530,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${assetsViewMode === "grid" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("grid")}
                 >
-                  <i className="bi bi-grid-3x3 w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  <i className="bi bi-grid w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -438,7 +538,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${assetsViewMode === "list" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("list")}
                 >
-                  <i className="bi bi-list w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  <i className="bi bi-table w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -448,14 +548,42 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                     if (selectedAssets.size > 0) {
                       setSelectedAssets(new Set());
                     } else {
-                      setSelectedAssets(new Set(filteredResults.map(a => a.id)));
+                      setSelectedAssets(new Set(sortedResults.map(a => a.id)));
                     }
                   }}
                 >
                   <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
               </div>
+
+              {/* Settings button */}
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
+                onClick={() => setAssetSettingsDrawerOpen(true)}
+              >
+                <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
+              </Button>
             </div>
+          </div>
+
+          {/* Filter Row */}
+          <div className="mb-3">
+            <FilterBar
+              onFilterChange={handleFilterChange}
+              onCustomDateChange={handleCustomDateChange}
+              compactMode={true}
+              handleRef={filterBarHandleRef}
+              hideFilters={["folders"]}
+              isUnsortedActive={isUnsortedActive}
+              onUnsortedToggle={setIsUnsortedActive}
+              isUnviewedActive={isUnviewedActive}
+              onUnviewedToggle={setIsUnviewedActive}
+              isBrandingActive={isBrandedActive}
+              onBrandingToggle={setIsBrandedActive}
+              onOpenFiltersSheet={() => setAssetsFiltersSheetOpen(true)}
+            />
           </div>
 
           {/* Applied Filter Chips - reserved height to prevent layout shift */}
@@ -503,11 +631,11 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           {selectedAssets.size > 0 && (
             <AssetBulkActionBar
               selectedCount={selectedAssets.size}
-              allSelected={filteredResults.length > 0 && selectedAssets.size === filteredResults.length}
-              someSelected={selectedAssets.size > 0 && selectedAssets.size < filteredResults.length}
+              allSelected={sortedResults.length > 0 && selectedAssets.size === sortedResults.length}
+              someSelected={selectedAssets.size > 0 && selectedAssets.size < sortedResults.length}
               onSelectAll={(checked) => {
                 if (checked) {
-                  setSelectedAssets(new Set(filteredResults.map(a => a.id)));
+                  setSelectedAssets(new Set(sortedResults.map(a => a.id)));
                 } else {
                   setSelectedAssets(new Set());
                 }
@@ -516,44 +644,11 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             />
           )}
 
-          {/* Table Controls - shown above table in list view */}
-          {assetsViewMode === "list" && (
-            <div className="flex items-center justify-between mb-4">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    40 per page
-                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-white">
-                  <DropdownMenuItem>20 per page</DropdownMenuItem>
-                  <DropdownMenuItem>40 per page</DropdownMenuItem>
-                  <DropdownMenuItem>80 per page</DropdownMenuItem>
-                  <DropdownMenuItem>120 per page</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    <i className="bi bi-table text-base" />
-                    Manage Columns
-                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-white">
-                  <DropdownMenuItem>Configure columns...</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          )}
-
           {/* Assets Grid/Table with Loading State */}
           <div className="min-h-[400px]">
             {assetsViewMode === "list" ? (
-              <AssetTableView 
-                assets={filteredResults} 
+              <AssetTableView
+                assets={sortedResults}
                 isLoading={isLoading}
                 selectedAssets={selectedAssets}
                 onSelectAsset={(id, checked) => {
@@ -562,9 +657,11 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   setSelectedAssets(next);
                 }}
                 onSelectAll={(checked) => {
-                  if (checked) setSelectedAssets(new Set(filteredResults.map(a => a.id)));
+                  if (checked) setSelectedAssets(new Set(sortedResults.map(a => a.id)));
                   else setSelectedAssets(new Set());
                 }}
+                perPage={assetPerPage}
+                columnVisibility={assetColumnVisibility}
               />
             ) : isLoading ? (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
@@ -576,7 +673,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   </div>
                 ))}
               </div>
-            ) : filteredResults.length === 0 ? (
+            ) : sortedResults.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <i className="bi bi-image text-5xl text-muted-foreground/30 mb-4" />
                 <h3 className="text-lg font-medium mb-1">No assets found</h3>
@@ -584,7 +681,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               </div>
             ) : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
-                {filteredResults.map((asset) => {
+                {sortedResults.map((asset) => {
                   const isSelected = selectedAssets.has(asset.id);
                   const isAnySelected = selectedAssets.size > 0;
 
@@ -627,90 +724,32 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
 
         {/* Galleries Tab */}
         <TabsContent value="galleries" className="flex-1 overflow-y-auto py-6 mt-0">
-          {/* Faceted Search */}
-          <div className="mb-4">
-            <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} />
-          </div>
-
-          {/* Filters and Controls */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300">
-                    Creator
-                    <i className="bi bi-chevron-down w-4 h-4 text-muted-foreground inline-flex items-center justify-center leading-none" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem>All Creators</DropdownMenuItem>
-                  <DropdownMenuItem>John Smith</DropdownMenuItem>
-                  <DropdownMenuItem>Jane Doe</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300">
-                    Groups
-                    <i className="bi bi-chevron-down w-4 h-4 text-muted-foreground inline-flex items-center justify-center leading-none" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem>All Groups</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300">
-                    Date Range
-                    <i className="bi bi-chevron-down w-4 h-4 text-muted-foreground inline-flex items-center justify-center leading-none" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem>All Time</DropdownMenuItem>
-                  <DropdownMenuItem>Last 7 Days</DropdownMenuItem>
-                  <DropdownMenuItem>Last 30 Days</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300">
-                    Last Added Date
-                    <i className="bi bi-chevron-down w-4 h-4 text-muted-foreground inline-flex items-center justify-center leading-none" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem>Any Time</DropdownMenuItem>
-                  <DropdownMenuItem>Today</DropdownMenuItem>
-                  <DropdownMenuItem>This Week</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Archived toggle */}
-              <div className="inline-flex items-center gap-2 h-8 px-2">
-                <span className="text-[15px] font-normal text-muted-foreground whitespace-nowrap">Archived Only</span>
-                <Switch checked={archivedGalleriesOnly} onCheckedChange={setArchivedGalleriesOnly} className="scale-75" />
-              </div>
+          {/* Search Row with Utility Cluster */}
+          <div className="flex items-center gap-4 mb-3 cq-search-row">
+            <div className="flex-1 min-w-0 cq-search-input">
+              <FacetedSearchWithTypeahead placeholder="Search" />
             </div>
 
-            <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    Sort: Added Date
-                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem>Date (Newest)</DropdownMenuItem>
-                  <DropdownMenuItem>Date (Oldest)</DropdownMenuItem>
-                  <DropdownMenuItem>Name (A-Z)</DropdownMenuItem>
-                  <DropdownMenuItem>Name (Z-A)</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
+              {galleriesViewMode === "grid" && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-10 gap-2 px-3 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]" title={`Sort: ${sortField ? SORT_LABELS[sortField] : "Default"}`}>
+                      <i className="bi bi-arrow-down-up w-4 h-4 inline-flex items-center justify-center leading-none" />
+                      <span className="sort-label">{sortField ? SORT_LABELS[sortField] : "Default"}</span>
+                      <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-white w-48">
+                    {SORT_OPTIONS.map(opt => (
+                      <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
+                        {opt.label}
+                        {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
 
               <div className="flex items-center border border-gray-300 rounded-md bg-white">
                 <Button
@@ -719,26 +758,45 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${galleriesViewMode === "grid" ? "bg-gray-100" : ""}`}
                   onClick={() => setGalleriesViewMode("grid")}
                 >
-                  <i className="bi bi-grid-3x3 w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  <i className="bi bi-grid w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`h-10 w-10 rounded-none border-l border-gray-300 text-[#6e84a3] ${galleriesViewMode === "list" ? "bg-gray-100" : ""}`}
+                  className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${galleriesViewMode === "list" ? "bg-gray-100" : ""}`}
                   onClick={() => setGalleriesViewMode("list")}
                 >
-                  <i className="bi bi-list w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  <i className="bi bi-table w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`h-10 w-10 rounded-l-none border-l border-gray-300 text-[#6e84a3] ${isAnyGallerySelected ? "bg-gray-100" : ""}`}
-                  onClick={() => toggleSelectAllGalleries()}
+                  className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${isAnyGallerySelected ? "bg-gray-100" : ""}`}
+                  onClick={() => setSelectedGalleries(prev => (prev.size > 0 ? new Set() : new Set(childGalleries.map(g => g.id))))}
                 >
                   <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
               </div>
+
+              {/* Settings button */}
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
+                onClick={() => setGallerySettingsDrawerOpen(true)}
+              >
+                <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
+              </Button>
             </div>
+          </div>
+
+          {/* Filter Row */}
+          <div className="mb-3">
+            <GalleryFilterBar
+              isArchivedActive={archivedGalleriesOnly}
+              onArchivedToggle={setArchivedGalleriesOnly}
+              onOpenFiltersSheet={() => setGalleriesFiltersSheetOpen(true)}
+            />
           </div>
 
           {/* Applied Filter Chips - reserved height to prevent layout shift */}
@@ -799,52 +857,22 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           )}
 
           {/* Table Controls - shown above table in list view */}
-          {galleriesViewMode === "list" && (
-            <div className="flex items-center justify-between mb-4">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    40 per page
-                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-white">
-                  <DropdownMenuItem>20 per page</DropdownMenuItem>
-                  <DropdownMenuItem>40 per page</DropdownMenuItem>
-                  <DropdownMenuItem>80 per page</DropdownMenuItem>
-                  <DropdownMenuItem>120 per page</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                    <i className="bi bi-table text-base" />
-                    Manage Columns
-                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-white">
-                  <DropdownMenuItem>Configure columns...</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          )}
-
           {(() => {
             const filteredGalleries = childGalleries.filter(g => archivedGalleriesOnly ? g.archived === true : g.archived !== true);
 
             if (galleriesViewMode === "list") {
               return (
-                <GalleryTableView 
-                  galleries={filteredGalleries.map(g => ({ 
-                    id: g.id, 
-                    name: g.name, 
-                    assetCount: g.count || 0, 
-                    timeAgo: "2 days ago" 
-                  }))} 
+                <GalleryTableView
+                  galleries={filteredGalleries.map(g => ({
+                    id: g.id,
+                    name: g.name,
+                    assetCount: g.count || 0,
+                    timeAgo: "2 days ago"
+                  }))}
                   onNavigate={onNavigate}
                   onMoveGalleries={handleMoveGalleries}
+                  perPage={galleryPerPage}
+                  columnVisibility={galleryColumnVisibility}
                 />
               );
             }
@@ -1134,6 +1162,82 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           onMoveGalleries?.(idsToMove, locationId);
         }}
       />
+
+      {/* Asset Settings Drawer */}
+      <AssetSettingsDrawer
+        open={assetSettingsDrawerOpen}
+        onOpenChange={setAssetSettingsDrawerOpen}
+        displayLabel={assetDisplayLabel}
+        onDisplayLabelChange={setAssetDisplayLabel}
+        perPage={assetPerPage}
+        onPerPageChange={setAssetPerPage}
+        columnVisibility={assetColumnVisibility}
+        onColumnVisibilityChange={setAssetColumnVisibility}
+        filterVisibility={assetFilterVisibility}
+        onFilterVisibilityChange={setAssetFilterVisibility}
+      />
+
+      {/* Gallery Settings Drawer */}
+      <GallerySettingsDrawer
+        open={gallerySettingsDrawerOpen}
+        onOpenChange={setGallerySettingsDrawerOpen}
+        perPage={galleryPerPage}
+        onPerPageChange={setGalleryPerPage}
+        columnVisibility={galleryColumnVisibility}
+        onColumnVisibilityChange={setGalleryColumnVisibility}
+        filterVisibility={galleryFilterVisibility}
+        onFilterVisibilityChange={setGalleryFilterVisibility}
+      />
+
+      {/* Assets Filters Sheet (for narrow widths) */}
+      <FiltersSheet
+        open={assetsFiltersSheetOpen}
+        onOpenChange={setAssetsFiltersSheetOpen}
+        value={{}}
+        onApply={() => {
+          // TODO: Apply draft filters when controls are wired up
+        }}
+      >
+        <FilterSection label="Content Type" icon="bi-image">
+          <div className="text-sm text-muted-foreground">Content type filters will go here</div>
+        </FilterSection>
+        <FilterSection label="AI Tags" icon="bi-stars">
+          <div className="text-sm text-muted-foreground">AI tags filters will go here</div>
+        </FilterSection>
+        <FilterSection label="Creator" icon="bi-person">
+          <div className="text-sm text-muted-foreground">Creator filters will go here</div>
+        </FilterSection>
+        <FilterSection label="Date Range" icon="bi-calendar">
+          <div className="text-sm text-muted-foreground">Date range filters will go here</div>
+        </FilterSection>
+        <FilterSection label="More Filters" icon="bi-sliders">
+          <div className="text-sm text-muted-foreground">Source, Status, and other filters will go here</div>
+        </FilterSection>
+      </FiltersSheet>
+
+      {/* Galleries Filters Sheet (for narrow widths) */}
+      <FiltersSheet
+        open={galleriesFiltersSheetOpen}
+        onOpenChange={setGalleriesFiltersSheetOpen}
+        value={{}}
+        onApply={() => {
+          // TODO: Apply draft filters when controls are wired up
+        }}
+        title="Gallery Filters"
+      >
+        <FilterSection label="Gallery Options" icon="bi-collection">
+          <div className="text-sm text-muted-foreground">Gallery options filters will go here</div>
+        </FilterSection>
+        <FilterSection label="Creator" icon="bi-person">
+          <div className="text-sm text-muted-foreground">Creator filters will go here</div>
+        </FilterSection>
+        <FilterSection label="Groups" icon="bi-people">
+          <div className="text-sm text-muted-foreground">Groups filters will go here</div>
+        </FilterSection>
+        <FilterSection label="Created Date" icon="bi-calendar">
+          <div className="text-sm text-muted-foreground">Created date filters will go here</div>
+        </FilterSection>
+      </FiltersSheet>
     </div>
   );
 }
