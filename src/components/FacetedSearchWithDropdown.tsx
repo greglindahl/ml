@@ -135,7 +135,7 @@ export function FacetedSearchWithDropdown({ onSearch, assets = [] }: FacetedSear
     <div ref={containerRef} className="relative w-full">
       {/* Search Input */}
       <div className="relative">
-        <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground inline-flex items-center justify-center leading-none" />
         <Input
           ref={inputRef}
           type="text"
@@ -157,7 +157,7 @@ export function FacetedSearchWithDropdown({ onSearch, assets = [] }: FacetedSear
             onClick={handleClearAll}
             className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-accent rounded transition-colors"
           >
-            <i className="bi bi-x w-4 h-4 text-muted-foreground" />
+            <i className="bi bi-x w-4 h-4 text-muted-foreground inline-flex items-center justify-center leading-none" />
           </button>
         )}
       </div>
@@ -192,7 +192,7 @@ export function FacetedSearchWithDropdown({ onSearch, assets = [] }: FacetedSear
                     onClick={() => handleFieldSearchClick(field.label)}
                     className="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-left rounded hover:bg-accent transition-colors"
                   >
-                    <i className="bi bi-search w-4 h-4 text-muted-foreground" />
+                    <i className="bi bi-search w-4 h-4 text-muted-foreground inline-flex items-center justify-center leading-none" />
                     <span className="text-foreground">{field.label}:</span>
                   </button>
                 ))}

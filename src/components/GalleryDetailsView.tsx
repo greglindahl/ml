@@ -1,7 +1,10 @@
 import { useState, useCallback, useMemo, useRef } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import { cn } from "@/lib/utils";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
-import { AssetTableView } from "@/components/AssetTableView";
+import { AssetTableView, DEFAULT_ASSET_COLUMN_VISIBILITY, ASSET_COLUMNS, type AssetColumnVisibility } from "@/components/AssetTableView";
+import { SettingsDrawer, useDisplayLabel, usePerPagePreference, useColumnVisibility } from "@/components/SettingsDrawer";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -53,7 +56,6 @@ interface GalleryDetailsViewProps {
   onNavigate: (folderId: string) => void;
   isMobile?: boolean;
   folderTree: FolderItem[];
-  onOpenSettings?: () => void;
 }
 
 // Sort options for gallery assets
@@ -74,7 +76,7 @@ const SORT_LABELS: Record<NonNullable<SortField>, string> = {
   creator: "Creator",
 };
 
-export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = false, folderTree, onOpenSettings }: GalleryDetailsViewProps) {
+export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = false, folderTree }: GalleryDetailsViewProps) {
   const [activeTab, setActiveTab] = useState("assets");
   const [moveGalleriesOpen, setMoveGalleriesOpen] = useState(false);
   // View mode state (grid vs list)
@@ -82,6 +84,14 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
 
   // Asset selection state for bulk actions
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
+
+  // Settings drawer state
+  const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
+  const [displayLabel, setDisplayLabel] = useDisplayLabel();
+
+  // Table preferences - persistent across sessions
+  const [assetPerPage, setAssetPerPage] = usePerPagePreference("gallery-assets", 40);
+  const [assetColumnVisibility, setAssetColumnVisibility] = useColumnVisibility<AssetColumnVisibility>("gallery-assets", DEFAULT_ASSET_COLUMN_VISIBILITY);
 
   // Filter chips state and ref
   const [filterChips, setFilterChips] = useState<ActiveFilterChip[]>([]);
@@ -290,11 +300,11 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-2">
             <Button className="gap-2">
-              <i className="bi bi-upload w-4 h-4" />
+              <i className="bi bi-upload w-4 h-4 inline-flex items-center justify-center leading-none" />
               Upload
             </Button>
             <Button variant="outline" className="gap-2 border-primary text-primary hover:bg-primary/5">
-              <i className="bi bi-share w-4 h-4" />
+              <i className="bi bi-share w-4 h-4 inline-flex items-center justify-center leading-none" />
               Share
             </Button>
             <DropdownMenu>
@@ -305,10 +315,10 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setMoveGalleriesOpen(true)}>
-                  <i className="bi bi-arrows-move w-4 h-4 mr-2" /> Move
+                  <i className="bi bi-arrows-move w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Move
                 </DropdownMenuItem>
                 <DropdownMenuItem className="text-destructive focus:text-destructive">
-                  <i className="bi bi-trash w-4 h-4 mr-2" /> Delete
+                  <i className="bi bi-trash w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -393,7 +403,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 variant="outline"
                 size="icon"
                 className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
-                onClick={() => onOpenSettings?.()}
+                onClick={() => setSettingsDrawerOpen(true)}
               >
                 <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
               </Button>
@@ -457,8 +467,8 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           {/* Assets Grid/Table with Loading State */}
           <div className="min-h-[400px]">
             {assetsViewMode === "list" ? (
-              <AssetTableView 
-                assets={filteredResults} 
+              <AssetTableView
+                assets={filteredResults}
                 isLoading={isLoading}
                 selectedAssets={selectedAssets}
                 onSelectAsset={(id, checked) => {
@@ -470,6 +480,8 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   if (checked) setSelectedAssets(new Set(filteredResults.map(a => a.id)));
                   else setSelectedAssets(new Set());
                 }}
+                perPage={assetPerPage}
+                columnVisibility={assetColumnVisibility}
               />
             ) : isLoading ? (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
@@ -504,6 +516,8 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                     <AssetCard
                       key={asset.id}
                       creatorName={asset.creator}
+                      title={asset.name}
+                      displayLabel={displayLabel}
                       duration={asset.duration}
                       timestamp={getRelativeTime(asset.dateCreated)}
                       thumbnailUrl={asset.thumbnailUrl}
@@ -621,6 +635,68 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           <div className="text-sm text-muted-foreground">Source and Approval Status filters will go here</div>
         </FilterSection>
       </FiltersSheet>
+
+      {/* Settings Drawer */}
+      <SettingsDrawer
+        open={settingsDrawerOpen}
+        onOpenChange={setSettingsDrawerOpen}
+        displayLabel={displayLabel}
+        onDisplayLabelChange={setDisplayLabel}
+      >
+        {/* Table preferences - always shown, disabled when not in table view */}
+        {(() => {
+          const isTableView = assetsViewMode === "list";
+          return (
+            <div className="space-y-4">
+              {/* Per page dropdown */}
+              <div className={cn("space-y-2", !isTableView && "opacity-50")}>
+                <Label className="text-sm font-medium">Results per page</Label>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild disabled={!isTableView}>
+                    <Button variant="outline" className="w-full justify-between" disabled={!isTableView}>
+                      {assetPerPage} per page
+                      <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-full bg-white">
+                    {[10, 20, 40, 80].map(option => (
+                      <DropdownMenuItem key={option} onClick={() => setAssetPerPage(option)}>
+                        {option} per page
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              {/* Column visibility */}
+              <div className={cn("space-y-2", !isTableView && "opacity-50")}>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Manage Columns</Label>
+                  <button
+                    type="button"
+                    className="text-sm text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!isTableView}
+                    onClick={() => setAssetColumnVisibility(DEFAULT_ASSET_COLUMN_VISIBILITY)}
+                  >
+                    Default
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {ASSET_COLUMNS.map(col => (
+                    <label key={col.key} className={cn("flex items-center gap-2", isTableView ? "cursor-pointer" : "cursor-not-allowed")}>
+                      <Checkbox
+                        checked={assetColumnVisibility[col.key]}
+                        onCheckedChange={() => isTableView && setAssetColumnVisibility(prev => ({ ...prev, [col.key]: !prev[col.key] }))}
+                        disabled={!isTableView}
+                      />
+                      <span className="text-sm">{col.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+      </SettingsDrawer>
     </div>
   );
 }

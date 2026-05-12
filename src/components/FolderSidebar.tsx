@@ -325,7 +325,7 @@ export function FolderSidebar({
         <AlertDialogContent className="max-w-sm">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <i className="bi bi-info-circle w-5 h-5 text-destructive" />
+              <i className="bi bi-info-circle w-5 h-5 text-destructive inline-flex items-center justify-center leading-none" />
               Move not allowed
             </AlertDialogTitle>
             <AlertDialogDescription>

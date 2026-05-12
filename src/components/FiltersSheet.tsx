@@ -63,8 +63,8 @@ export function FiltersSheet<T extends FilterSnapshot>({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        side="right"
-        className="w-full sm:max-w-md flex flex-col p-0"
+        side="bottom"
+        className="h-[85vh] max-h-[700px] flex flex-col p-0 rounded-t-lg"
       >
         <SheetHeader className="px-4 py-3 border-b flex-shrink-0">
           <div className="flex items-center gap-2">
@@ -103,7 +103,7 @@ export function FilterSection({ label, icon, children }: FilterSectionProps) {
     <div className="mb-4 last:mb-0">
       <div className="flex items-center gap-2 mb-2">
         {icon && <i className={`bi ${icon} text-muted-foreground`} />}
-        <span className="text-sm font-medium">{label}</span>
+        <span className="text-[15px] font-medium">{label}</span>
       </div>
       {children}
     </div>

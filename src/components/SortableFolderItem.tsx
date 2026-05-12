@@ -86,7 +86,7 @@ export function SortableFolderItem({
               tabIndex={-1}
               aria-label="Drag to reorder"
             >
-              <i className="bi bi-grip-vertical w-3.5 h-3.5 text-[#6e84a3]" />
+              <i className="bi bi-grip-vertical w-3.5 h-3.5 text-[#6e84a3] inline-flex items-center justify-center leading-none" />
             </button>
           )
         )}

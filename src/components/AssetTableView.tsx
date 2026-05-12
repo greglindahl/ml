@@ -17,14 +17,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 // Column definitions for manage columns
-const COLUMNS = [
+export const ASSET_COLUMNS = [
   { key: "thumbnail", label: "Thumbnail" },
   { key: "creator", label: "Creator" },
   { key: "added", label: "Added" },
@@ -34,10 +29,18 @@ const COLUMNS = [
   { key: "downloads", label: "Downloads" },
 ] as const;
 
-type ColumnKey = typeof COLUMNS[number]["key"];
-type ColumnVisibility = Record<ColumnKey, boolean>;
+export type AssetColumnKey = typeof ASSET_COLUMNS[number]["key"];
+export type AssetColumnVisibility = Record<AssetColumnKey, boolean>;
 
-const PER_PAGE_OPTIONS = [10, 20, 40, 80] as const;
+export const DEFAULT_ASSET_COLUMN_VISIBILITY: AssetColumnVisibility = {
+  thumbnail: true,
+  creator: true,
+  added: true,
+  captured: true,
+  details: true,
+  metadata: true,
+  downloads: true,
+};
 
 interface AssetTableViewProps {
   assets: LibraryAsset[];
@@ -46,6 +49,10 @@ interface AssetTableViewProps {
   selectedAssets?: Set<string>;
   onSelectAsset?: (assetId: string, checked: boolean) => void;
   onSelectAll?: (checked: boolean) => void;
+  /** Controlled perPage value */
+  perPage: number;
+  /** Controlled column visibility */
+  columnVisibility: AssetColumnVisibility;
 }
 
 type SortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "status" | "favorites" | "lastDownloadDate" | null;
@@ -78,24 +85,18 @@ function getOrientation(aspectRatio: LibraryAsset["aspectRatio"]): string {
 }
 
 
-export function AssetTableView({ assets, isLoading = false, selectedAssets: externalSelected, onSelectAsset: externalSelectAsset, onSelectAll: externalSelectAll }: AssetTableViewProps) {
+export function AssetTableView({
+  assets,
+  isLoading = false,
+  selectedAssets: externalSelected,
+  onSelectAsset: externalSelectAsset,
+  onSelectAll: externalSelectAll,
+  perPage,
+  columnVisibility,
+}: AssetTableViewProps) {
   const [internalSelected, setInternalSelected] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>("dateCreated");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-  const [perPage, setPerPage] = useState<number>(40);
-  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
-    thumbnail: true,
-    creator: true,
-    added: true,
-    captured: true,
-    details: true,
-    metadata: true,
-    downloads: true,
-  });
-
-  const toggleColumn = (key: ColumnKey) => {
-    setColumnVisibility(prev => ({ ...prev, [key]: !prev[key] }));
-  };
 
   // Use external selection state when provided, otherwise internal
   const selectedAssets = externalSelected ?? internalSelected;
@@ -135,11 +136,11 @@ export function AssetTableView({ assets, isLoading = false, selectedAssets: exte
 
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) {
-      return <i className="bi bi-arrow-down-up w-3 h-3 ml-1 opacity-50" />;
+      return <i className="bi bi-arrow-down-up w-3 h-3 ml-1 opacity-50 inline-flex items-center justify-center leading-none" />;
     }
     return sortDirection === "asc"
-      ? <i className="bi bi-arrow-up w-3 h-3 ml-1" />
-      : <i className="bi bi-arrow-down w-3 h-3 ml-1" />;
+      ? <i className="bi bi-arrow-up w-3 h-3 ml-1 inline-flex items-center justify-center leading-none" />
+      : <i className="bi bi-arrow-down w-3 h-3 ml-1 inline-flex items-center justify-center leading-none" />;
   };
 
   // Sort assets
@@ -218,48 +219,6 @@ export function AssetTableView({ assets, isLoading = false, selectedAssets: exte
 
   return (
     <div className="border rounded-lg bg-card">
-      {/* Table Controls Row */}
-      <div className="flex justify-end gap-2 p-3 border-b">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-              {perPage} per page
-              <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="bg-white">
-            {PER_PAGE_OPTIONS.map(option => (
-              <DropdownMenuItem key={option} onClick={() => setPerPage(option)}>
-                {option} per page
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-              <i className="bi bi-table w-4 h-4 inline-flex items-center justify-center leading-none" />
-              Manage Columns
-              <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-48 p-2" align="end">
-            <div className="space-y-2">
-              {COLUMNS.map(col => (
-                <label key={col.key} className="flex items-center gap-2 cursor-pointer hover:bg-accent px-2 py-1 rounded">
-                  <Checkbox
-                    checked={columnVisibility[col.key]}
-                    onCheckedChange={() => toggleColumn(col.key)}
-                  />
-                  <span className="text-sm">{col.label}</span>
-                </label>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
-
       <Table>
           <TableHeader>
             <TableRow>

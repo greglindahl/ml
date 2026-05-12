@@ -116,7 +116,7 @@ export function MoveGalleriesDialog({
                 className="w-full justify-between font-normal"
               >
                 {selectedLocationLabel}
-                <i className="bi bi-chevron-expand ml-2 h-4 w-4 shrink-0 opacity-50" />
+                <i className="bi bi-chevron-expand ml-2 h-4 w-4 shrink-0 opacity-50 inline-flex items-center justify-center leading-none" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start" container={contentRef.current}>
@@ -158,7 +158,7 @@ export function MoveGalleriesDialog({
         </div>
 
         <Alert className="bg-muted/50 border-muted">
-          <i className="bi bi-info-circle h-4 w-4" />
+          <i className="bi bi-info-circle h-4 w-4 inline-flex items-center justify-center leading-none" />
           <AlertDescription className="text-xs text-muted-foreground">
             This move will affect 10,000 media items and may take some time to complete. The move will continue in the background. <strong>Content will not be searchable until the move is finished.</strong>
           </AlertDescription>

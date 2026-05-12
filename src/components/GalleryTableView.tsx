@@ -19,14 +19,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 // Column definitions for manage columns
-const COLUMNS = [
+export const GALLERY_COLUMNS = [
   { key: "thumbnail", label: "Thumbnail" },
   { key: "name", label: "Gallery Name" },
   { key: "description", label: "Description" },
@@ -38,10 +33,20 @@ const COLUMNS = [
   { key: "totalAssets", label: "Total Assets" },
 ] as const;
 
-type ColumnKey = typeof COLUMNS[number]["key"];
-type ColumnVisibility = Record<ColumnKey, boolean>;
+export type GalleryColumnKey = typeof GALLERY_COLUMNS[number]["key"];
+export type GalleryColumnVisibility = Record<GalleryColumnKey, boolean>;
 
-const PER_PAGE_OPTIONS = [10, 20, 40, 80] as const;
+export const DEFAULT_GALLERY_COLUMN_VISIBILITY: GalleryColumnVisibility = {
+  thumbnail: true,
+  name: true,
+  description: true,
+  creator: true,
+  created: true,
+  lastAdded: true,
+  sharing: true,
+  downloads: true,
+  totalAssets: true,
+};
 
 // Extended gallery type for table view
 export interface GalleryTableItem extends Gallery {
@@ -63,6 +68,10 @@ interface GalleryTableViewProps {
   isLoading?: boolean;
   onNavigate?: (galleryId: string) => void;
   onMoveGalleries?: (galleryIds: string[]) => void;
+  /** Controlled perPage value */
+  perPage: number;
+  /** Controlled column visibility */
+  columnVisibility: GalleryColumnVisibility;
 }
 
 type SortField = "name" | "description" | "creator" | "created" | "lastAdded" | "sharing" | "downloads" | "totalAssets" | null;
@@ -106,26 +115,17 @@ function enrichGallery(gallery: Gallery, index: number): GalleryTableItem {
   };
 }
 
-export function GalleryTableView({ galleries, isLoading = false, onNavigate, onMoveGalleries }: GalleryTableViewProps) {
+export function GalleryTableView({
+  galleries,
+  isLoading = false,
+  onNavigate,
+  onMoveGalleries,
+  perPage,
+  columnVisibility,
+}: GalleryTableViewProps) {
   const [selectedGalleries, setSelectedGalleries] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>("created");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-  const [perPage, setPerPage] = useState<number>(40);
-  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
-    thumbnail: true,
-    name: true,
-    description: true,
-    creator: true,
-    created: true,
-    lastAdded: true,
-    sharing: true,
-    downloads: true,
-    totalAssets: true,
-  });
-
-  const toggleColumn = (key: ColumnKey) => {
-    setColumnVisibility(prev => ({ ...prev, [key]: !prev[key] }));
-  };
 
   // Enrich galleries with additional data for display
   const enrichedGalleries = galleries.map((g, i) => enrichGallery(g, i));
@@ -159,11 +159,11 @@ export function GalleryTableView({ galleries, isLoading = false, onNavigate, onM
 
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) {
-      return <i className="bi bi-arrow-down-up w-3 h-3 ml-1 opacity-50" />;
+      return <i className="bi bi-arrow-down-up w-3 h-3 ml-1 opacity-50 inline-flex items-center justify-center leading-none" />;
     }
     return sortDirection === "asc"
-      ? <i className="bi bi-arrow-up w-3 h-3 ml-1" />
-      : <i className="bi bi-arrow-down w-3 h-3 ml-1" />;
+      ? <i className="bi bi-arrow-up w-3 h-3 ml-1 inline-flex items-center justify-center leading-none" />
+      : <i className="bi bi-arrow-down w-3 h-3 ml-1 inline-flex items-center justify-center leading-none" />;
   };
 
   // Sort galleries
@@ -267,48 +267,6 @@ export function GalleryTableView({ galleries, isLoading = false, onNavigate, onM
 
   return (
     <div className="border rounded-lg bg-card">
-      {/* Table Controls Row */}
-      <div className="flex justify-end gap-2 p-3 border-b">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-              {perPage} per page
-              <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="bg-white">
-            {PER_PAGE_OPTIONS.map(option => (
-              <DropdownMenuItem key={option} onClick={() => setPerPage(option)}>
-                {option} per page
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-              <i className="bi bi-table w-4 h-4 inline-flex items-center justify-center leading-none" />
-              Manage Columns
-              <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-48 p-2" align="end">
-            <div className="space-y-2">
-              {COLUMNS.map(col => (
-                <label key={col.key} className="flex items-center gap-2 cursor-pointer hover:bg-accent px-2 py-1 rounded">
-                  <Checkbox
-                    checked={columnVisibility[col.key]}
-                    onCheckedChange={() => toggleColumn(col.key)}
-                  />
-                  <span className="text-sm">{col.label}</span>
-                </label>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
-
       {/* Bulk action bar */}
       {selectedGalleries.size > 0 && onMoveGalleries && (
         <div className="flex items-center gap-3 px-4 py-2 bg-muted/50 border-b">
@@ -326,7 +284,7 @@ export function GalleryTableView({ galleries, isLoading = false, onNavigate, onM
                     disabled={selectedGalleries.size > GALLERY_MOVE_LIMIT}
                     onClick={() => onMoveGalleries(Array.from(selectedGalleries))}
                   >
-                    <i className="bi bi-arrows-move w-3 h-3" />
+                    <i className="bi bi-arrows-move w-3 h-3 inline-flex items-center justify-center leading-none" />
                     Move
                   </Button>
                 </div>

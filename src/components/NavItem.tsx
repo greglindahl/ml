@@ -33,7 +33,7 @@ export function NavItem({
     >
       <i className={`bi ${isActive ? `${icon}-fill` : icon} bi-md flex-shrink-0`} />
       {isExpanded && (
-        <span className="flex-1 text-left text-sm truncate">{label}</span>
+        <span className="flex-1 text-left text-[15px] truncate">{label}</span>
       )}
     </button>
   );

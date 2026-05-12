@@ -99,6 +99,8 @@ export function GalleryFilterBar({
   const [activeFilters, setActiveFilters] = useState<
     Record<string, {value: string;label: string;}[]>>(
     {});
+  // Search state for filter dropdowns
+  const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
 
   const handleMultiSelect = (
   filterId: string,
@@ -241,9 +243,31 @@ export function GalleryFilterBar({
               align="start"
               className="bg-popover z-50 min-w-[200px]"
               onCloseAutoFocus={(e) => e.preventDefault()}>
-              
+              {/* Search input for Creator and Groups filters */}
+              {(filter.id === "creator" || filter.id === "groups") && (
+                <div className="px-2 py-2 border-b">
+                  <div className="relative">
+                    <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+                    <input
+                      type="text"
+                      placeholder={`Search ${filter.label.toLowerCase()}...`}
+                      value={searchQueries[filter.id] ?? ""}
+                      onChange={e => setSearchQueries(prev => ({ ...prev, [filter.id]: e.target.value }))}
+                      onClick={e => e.stopPropagation()}
+                      onKeyDown={e => e.stopPropagation()}
+                      className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+              )}
               <div className="max-h-[280px] overflow-y-auto">
-                {filter.options.map((option) =>
+                {filter.options
+                  .filter(option => {
+                    if (filter.id !== "creator" && filter.id !== "groups") return true;
+                    const query = (searchQueries[filter.id] ?? "").toLowerCase();
+                    return option.label.toLowerCase().includes(query);
+                  })
+                  .map((option) =>
                 isMulti ?
                 <DropdownMenuCheckboxItem
                   key={option.value}
@@ -256,7 +280,7 @@ export function GalleryFilterBar({
                     checked as boolean
                   )
                   }>
-                  
+
                         {option.label}
                       </DropdownMenuCheckboxItem> :
 
@@ -266,11 +290,16 @@ export function GalleryFilterBar({
                   onCheckedChange={() =>
                   handleSingleSelect(filter.id, option.value, option.label)
                   }>
-                  
+
                         {option.label}
                       </DropdownMenuCheckboxItem>
 
                 )}
+                {/* No results message */}
+                {(filter.id === "creator" || filter.id === "groups") &&
+                  filter.options.filter(opt => opt.label.toLowerCase().includes((searchQueries[filter.id] ?? "").toLowerCase())).length === 0 && (
+                    <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
+                  )}
               </div>
             </DropdownMenuContent>
           </DropdownMenu>);
@@ -282,6 +311,7 @@ export function GalleryFilterBar({
       <TogglePill
         label="Archived"
         iconClass="bi-archive"
+        tooltip="Show only archived galleries"
         isActive={isArchivedActive}
         onClick={() => onArchivedToggle?.(!isArchivedActive)}
       />

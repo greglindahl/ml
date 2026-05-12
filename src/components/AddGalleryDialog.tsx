@@ -64,7 +64,7 @@ export function AddGalleryDialog({ open, onOpenChange, galleries, onSelectGaller
 
         <div className="flex items-center gap-2 mb-2">
           <div className="relative flex-1">
-            <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground inline-flex items-center justify-center leading-none" />
             <Input
               placeholder="Search galleries..."
               value={searchQuery}
@@ -81,7 +81,7 @@ export function AddGalleryDialog({ open, onOpenChange, galleries, onSelectGaller
               onCreateNew();
             }}
           >
-            <i className="bi bi-plus w-4 h-4" />
+            <i className="bi bi-plus w-4 h-4 inline-flex items-center justify-center leading-none" />
             New Gallery
           </Button>
         </div>
@@ -118,7 +118,7 @@ export function AddGalleryDialog({ open, onOpenChange, galleries, onSelectGaller
                         <TooltipTrigger asChild>
                           <div className="flex items-center gap-1.5 cursor-help">
                             <span className="text-xs text-muted-foreground">In Folder</span>
-                            <i className="bi bi-info-circle h-3.5 w-3.5 text-muted-foreground" />
+                            <i className="bi bi-info-circle h-3.5 w-3.5 text-muted-foreground inline-flex items-center justify-center leading-none" />
                           </div>
                         </TooltipTrigger>
                         <TooltipContent side="left" className="max-w-[220px]">
@@ -143,7 +143,7 @@ export function AddGalleryDialog({ open, onOpenChange, galleries, onSelectGaller
         </div>
 
         <div className="flex items-center gap-1.5 pt-2">
-          <i className="bi bi-info-circle h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+          <i className="bi bi-info-circle h-3.5 w-3.5 text-muted-foreground flex-shrink-0 inline-flex items-center justify-center leading-none" />
           <span className="text-xs text-muted-foreground">Galleries can only belong to one folder.</span>
         </div>
 

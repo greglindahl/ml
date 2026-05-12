@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,10 +12,10 @@ import { FilterBar } from "@/components/FilterBar";
 import type { FilterBarHandle } from "@/components/FilterBar";
 import { GalleryDetailsView } from "@/components/GalleryDetailsView";
 import { FolderDetailsView } from "@/components/FolderDetailsView";
-import { AssetTableView } from "@/components/AssetTableView";
+import { AssetTableView, DEFAULT_ASSET_COLUMN_VISIBILITY, ASSET_COLUMNS, type AssetColumnVisibility } from "@/components/AssetTableView";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
-import { GalleryTableView } from "@/components/GalleryTableView";
-import { FolderTableView } from "@/components/FolderTableView";
+import { GalleryTableView, DEFAULT_GALLERY_COLUMN_VISIBILITY, GALLERY_COLUMNS, type GalleryColumnVisibility } from "@/components/GalleryTableView";
+import { FolderTableView, DEFAULT_FOLDER_COLUMN_VISIBILITY, FOLDER_COLUMNS, type FolderColumnVisibility } from "@/components/FolderTableView";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
 import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds } from "@/lib/mockFolderData";
@@ -39,7 +40,8 @@ import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
 import { GalleryCard, GalleryCardState } from "@/components/GalleryCard";
 import { AssetCard, AssetCardState } from "@/components/AssetCard";
 import { FolderCard, FolderCardState } from "@/components/FolderCard";
-import { SettingsDrawer, useDisplayLabel } from "@/components/SettingsDrawer";
+import { SettingsDrawer, useDisplayLabel, usePerPagePreference, useColumnVisibility } from "@/components/SettingsDrawer";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const GALLERY_MOVE_LIMIT = 5;
 const MOVE_LIMIT_MESSAGE = "Too many galleries selected. You may only move up to 5 at a time.";
@@ -99,6 +101,14 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   // Settings drawer state
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
   const [displayLabel, setDisplayLabel] = useDisplayLabel();
+
+  // Table preferences - persistent across sessions
+  const [assetPerPage, setAssetPerPage] = usePerPagePreference("assets", 40);
+  const [assetColumnVisibility, setAssetColumnVisibility] = useColumnVisibility<AssetColumnVisibility>("assets", DEFAULT_ASSET_COLUMN_VISIBILITY);
+  const [galleryPerPage, setGalleryPerPage] = usePerPagePreference("galleries", 40);
+  const [galleryColumnVisibility, setGalleryColumnVisibility] = useColumnVisibility<GalleryColumnVisibility>("galleries", DEFAULT_GALLERY_COLUMN_VISIBILITY);
+  const [folderPerPage, setFolderPerPage] = usePerPagePreference("folders", 40);
+  const [folderColumnVisibility, setFolderColumnVisibility] = useColumnVisibility<FolderColumnVisibility>("folders", DEFAULT_FOLDER_COLUMN_VISIBILITY);
 
   // Toggle pill states for FilterBar
   const [isUnsortedActive, setIsUnsortedActive] = useState(false);
@@ -752,7 +762,6 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           onNavigate={handleNavigate}
           isMobile={isMobile}
           folderTree={folderTree}
-          onOpenSettings={() => setSettingsDrawerOpen(true)}
         />
       ) : activeFolderItem ? (
         <FolderDetailsView 
@@ -788,18 +797,18 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   variant="outline"
                   className="h-10 px-3 py-2 gap-2 text-primary border-primary hover:bg-primary/5"
                 >
-                  <i className="bi bi-plus-circle w-4 h-4" />
+                  <i className="bi bi-plus-circle w-4 h-4 inline-flex items-center justify-center leading-none" />
                   New
                   <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setNewFolderDialogOpen(true)}>
-                  <i className="bi bi-folder w-4 h-4 mr-2" />
+                  <i className="bi bi-folder w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
                   New Folder
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setNewGalleryDialogOpen(true)}>
-                  <i className="bi bi-plus w-4 h-4 mr-2" />
+                  <i className="bi bi-plus w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
                   New Gallery
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -833,23 +842,28 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
 
               <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
                 {assetsViewMode === "grid" && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-10 gap-2 px-3 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]" title={`Sort: ${sortField ? SORT_LABELS[sortField] : "Default"}`}>
-                        <i className="bi bi-arrow-down-up w-4 h-4 inline-flex items-center justify-center leading-none" />
-                        <span className="sort-label">{sortField ? SORT_LABELS[sortField] : "Default"}</span>
-                        <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="bg-white w-48">
-                      {SORT_OPTIONS.map(opt => (
-                        <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
-                          {opt.label}
-                          {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Tooltip delayDuration={700}>
+                    <DropdownMenu>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm" className="h-10 gap-2 px-3 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                            <i className="bi bi-arrow-down-up w-4 h-4 inline-flex items-center justify-center leading-none" />
+                            <span className="sort-label">{sortField ? SORT_LABELS[sortField] : "Default"}</span>
+                            <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <DropdownMenuContent className="bg-white w-48">
+                        {SORT_OPTIONS.map(opt => (
+                          <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
+                            {opt.label}
+                            {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <TooltipContent side="bottom">Sort by...</TooltipContent>
+                  </Tooltip>
                 )}
 
                 <div className="flex items-center border border-gray-300 rounded-md bg-white">
@@ -1014,8 +1028,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             {/* Assets Grid/Table with Loading State */}
             <div className="min-h-[400px]">
             {assetsViewMode === "list" ? (
-              <AssetTableView 
-                assets={sortedResults} 
+              <AssetTableView
+                assets={sortedResults}
                 isLoading={isLoading}
                 selectedAssets={selectedAssets}
                 onSelectAsset={(id, checked) => {
@@ -1027,6 +1041,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   if (checked) setSelectedAssets(new Set(sortedResults.map(a => a.id)));
                   else setSelectedAssets(new Set());
                 }}
+                perPage={assetPerPage}
+                columnVisibility={assetColumnVisibility}
               />
             ) : isLoading ? (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
@@ -1058,6 +1074,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     <AssetCard
                       key={asset.id}
                       creatorName={asset.creator}
+                      title={asset.name}
+                      displayLabel={displayLabel}
                       duration={asset.duration}
                       timestamp={getRelativeTime(asset.dateCreated)}
                       thumbnailUrl={asset.thumbnailUrl}
@@ -1212,7 +1230,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                               disabled={selectedGalleries.size > GALLERY_MOVE_LIMIT}
                               onClick={() => handleMoveGalleries(Array.from(selectedGalleries))}
                             >
-                              <i className="bi bi-folder-symlink w-4 h-4 mr-2" /> Move
+                              <i className="bi bi-folder-symlink w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Move
                             </DropdownMenuItem>
                           </div>
                         </TooltipTrigger>
@@ -1224,7 +1242,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                       </Tooltip>
                     </TooltipProvider>
                     <DropdownMenuItem className="text-destructive focus:text-destructive">
-                      <i className="bi bi-trash w-4 h-4 mr-2" /> Delete
+                      <i className="bi bi-trash w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -1235,7 +1253,13 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             {/* Galleries Grid/Table */}
             <div className="min-h-[400px]">
               {galleriesViewMode === "list" ? (
-                <GalleryTableView galleries={galleryList} onNavigate={handleNavigate} onMoveGalleries={handleMoveGalleries} />
+                <GalleryTableView
+                  galleries={galleryList}
+                  onNavigate={handleNavigate}
+                  onMoveGalleries={handleMoveGalleries}
+                  perPage={galleryPerPage}
+                  columnVisibility={galleryColumnVisibility}
+                />
               ) : (
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
                   {galleryList.filter(g => {
@@ -1319,6 +1343,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     const name = topLevelFolders.find(f => f.id === folderId)?.name || "Folder";
                     toast({ title: "Folder unarchived", description: `"${name}" has been unarchived.` });
                   }}
+                  perPage={folderPerPage}
+                  columnVisibility={folderColumnVisibility}
                 />
               ) : (
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
@@ -1399,7 +1425,167 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         onOpenChange={setSettingsDrawerOpen}
         displayLabel={displayLabel}
         onDisplayLabelChange={setDisplayLabel}
-      />
+        title="View Settings"
+        showGridViewPreferences={activeTab !== "galleries"}
+      >
+        {/* Table preferences - always shown, disabled when not in table view */}
+        {activeTab === "assets" && (() => {
+          const isTableView = assetsViewMode === "list";
+          return (
+            <div className="space-y-4">
+              {/* Per page dropdown */}
+              <div className={cn("space-y-2", !isTableView && "opacity-50")}>
+                <Label className="text-sm font-medium">Results per page</Label>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild disabled={!isTableView}>
+                    <Button variant="outline" className="w-full justify-between" disabled={!isTableView}>
+                      {assetPerPage} per page
+                      <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-full bg-white">
+                    {[10, 20, 40, 80].map(option => (
+                      <DropdownMenuItem key={option} onClick={() => setAssetPerPage(option)}>
+                        {option} per page
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              {/* Column visibility */}
+              <div className={cn("space-y-2", !isTableView && "opacity-50")}>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Manage Columns</Label>
+                  <button
+                    type="button"
+                    className="text-sm text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!isTableView}
+                    onClick={() => setAssetColumnVisibility(DEFAULT_ASSET_COLUMN_VISIBILITY)}
+                  >
+                    Default
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {ASSET_COLUMNS.map(col => (
+                    <label key={col.key} className={cn("flex items-center gap-2", isTableView ? "cursor-pointer" : "cursor-not-allowed")}>
+                      <Checkbox
+                        checked={assetColumnVisibility[col.key]}
+                        onCheckedChange={() => isTableView && setAssetColumnVisibility(prev => ({ ...prev, [col.key]: !prev[col.key] }))}
+                        disabled={!isTableView}
+                      />
+                      <span className="text-sm">{col.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+        {activeTab === "galleries" && (() => {
+          const isTableView = galleriesViewMode === "list";
+          return (
+            <div className="space-y-4">
+              {/* Per page dropdown */}
+              <div className={cn("space-y-2", !isTableView && "opacity-50")}>
+                <Label className="text-sm font-medium">Results per page</Label>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild disabled={!isTableView}>
+                    <Button variant="outline" className="w-full justify-between" disabled={!isTableView}>
+                      {galleryPerPage} per page
+                      <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-full bg-white">
+                    {[10, 20, 40, 80].map(option => (
+                      <DropdownMenuItem key={option} onClick={() => setGalleryPerPage(option)}>
+                        {option} per page
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              {/* Column visibility */}
+              <div className={cn("space-y-2", !isTableView && "opacity-50")}>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Manage Columns</Label>
+                  <button
+                    type="button"
+                    className="text-sm text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!isTableView}
+                    onClick={() => setGalleryColumnVisibility(DEFAULT_GALLERY_COLUMN_VISIBILITY)}
+                  >
+                    Default
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {GALLERY_COLUMNS.map(col => (
+                    <label key={col.key} className={cn("flex items-center gap-2", isTableView ? "cursor-pointer" : "cursor-not-allowed")}>
+                      <Checkbox
+                        checked={galleryColumnVisibility[col.key]}
+                        onCheckedChange={() => isTableView && setGalleryColumnVisibility(prev => ({ ...prev, [col.key]: !prev[col.key] }))}
+                        disabled={!isTableView}
+                      />
+                      <span className="text-sm">{col.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+        {activeTab === "folders" && (() => {
+          const isTableView = folderViewMode === "table";
+          return (
+            <div className="space-y-4">
+              {/* Per page dropdown */}
+              <div className={cn("space-y-2", !isTableView && "opacity-50")}>
+                <Label className="text-sm font-medium">Results per page</Label>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild disabled={!isTableView}>
+                    <Button variant="outline" className="w-full justify-between" disabled={!isTableView}>
+                      {folderPerPage} per page
+                      <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-full bg-white">
+                    {[10, 20, 40, 80].map(option => (
+                      <DropdownMenuItem key={option} onClick={() => setFolderPerPage(option)}>
+                        {option} per page
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              {/* Column visibility */}
+              <div className={cn("space-y-2", !isTableView && "opacity-50")}>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Manage Columns</Label>
+                  <button
+                    type="button"
+                    className="text-sm text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!isTableView}
+                    onClick={() => setFolderColumnVisibility(DEFAULT_FOLDER_COLUMN_VISIBILITY)}
+                  >
+                    Default
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {FOLDER_COLUMNS.map(col => (
+                    <label key={col.key} className={cn("flex items-center gap-2", isTableView ? "cursor-pointer" : "cursor-not-allowed")}>
+                      <Checkbox
+                        checked={folderColumnVisibility[col.key]}
+                        onCheckedChange={() => isTableView && setFolderColumnVisibility(prev => ({ ...prev, [col.key]: !prev[col.key] }))}
+                        disabled={!isTableView}
+                      />
+                      <span className="text-sm">{col.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+      </SettingsDrawer>
 
       {/* Assets Filters Sheet (for narrow widths) */}
       <FiltersSheet

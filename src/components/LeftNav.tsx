@@ -79,7 +79,7 @@ export function LeftNav({
             className="p-2 hover:bg-sidebar-accent rounded-md transition-colors text-nav-text hover:text-nav-text-hover"
             aria-label="Close navigation"
           >
-            <i className="bi bi-x-lg w-5 h-5" />
+            <i className="bi bi-x-lg w-5 h-5 inline-flex items-center justify-center leading-none" />
           </button>
         </div>
 
@@ -107,7 +107,7 @@ export function LeftNav({
       <div className="py-3 pb-4 flex items-center justify-between px-4">
         <Avatar className="h-10 w-10 cursor-pointer">
           <AvatarFallback className="bg-sidebar-accent text-nav-text">
-            <i className="bi bi-person h-5 w-5" />
+            <i className="bi bi-person h-5 w-5 inline-flex items-center justify-center leading-none" />
           </AvatarFallback>
         </Avatar>
         <div className="flex items-center gap-4">
@@ -143,7 +143,7 @@ export function LeftNav({
             className="absolute top-8 -translate-y-1/2 -right-3 z-10 w-6 h-6 bg-nav-background border border-nav-border rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-sidebar-accent"
             aria-label={isExpanded ? "Collapse navigation" : "Expand navigation"}
           >
-            <i className="bi bi-layout-sidebar text-nav-text text-xs" />
+            <i className={`bi ${isExpanded ? "bi-chevron-double-left" : "bi-chevron-double-right"} text-nav-text text-[15px]`} />
           </button>
         </TooltipTrigger>
         <TooltipContent side="right">
@@ -193,7 +193,7 @@ export function LeftNav({
         <div className="py-3 pb-4 flex items-center justify-between px-4">
           <Avatar className="h-10 w-10 cursor-pointer">
             <AvatarFallback className="bg-sidebar-accent text-nav-text">
-              <i className="bi bi-person h-5 w-5" />
+              <i className="bi bi-person h-5 w-5 inline-flex items-center justify-center leading-none" />
             </AvatarFallback>
           </Avatar>
           <div className="flex items-center gap-4">
@@ -227,7 +227,7 @@ export function LeftNav({
           </button>
           <Avatar className="h-10 w-10 cursor-pointer">
             <AvatarFallback className="bg-sidebar-accent text-nav-text">
-              <i className="bi bi-person h-5 w-5" />
+              <i className="bi bi-person h-5 w-5 inline-flex items-center justify-center leading-none" />
             </AvatarFallback>
           </Avatar>
         </div>

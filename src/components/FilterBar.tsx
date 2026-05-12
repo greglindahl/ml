@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { folders, FolderItem } from "@/lib/mockFolderData";
@@ -63,6 +64,9 @@ const BRAND_VALUES: Record<string, string> = {
   "nike": "Nike", "adidas": "Adidas", "under armour": "Under Armour", "puma": "Puma",
 };
 const CREATOR_MAP: Record<string, string> = { john: "John Smith", jane: "Jane Doe", alex: "Alex Johnson" };
+
+// Hardcoded recent tags for prototype
+const RECENT_TAGS = ["Lebron James", "Dunk", "Nike", "Celebration", "Kevin Durant"];
 
 function computeTagMatchCounts(values: string[], labelMap?: Record<string, string>): FilterOption[] {
   const counts: Record<string, number> = {};
@@ -380,21 +384,26 @@ export function FilterBar({
   return (
     <div className="filter-bar-container cq-filterbar-hide-label flex flex-wrap items-center gap-1.5">
       {/* Collapsed Filters Button (visible at narrow widths) */}
-      <Button
-        variant="outline"
-        size="sm"
-        className="filters-collapsed-button h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
-        onClick={onOpenFiltersSheet}
-      >
-        <i className="bi bi-funnel w-4 h-4 inline-flex items-center justify-center leading-none" />
-        <span>Filters</span>
-        {totalActiveCount > 0 && (
-          <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
-            {totalActiveCount}
-          </span>
-        )}
-        <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-      </Button>
+      <Tooltip delayDuration={700}>
+        <TooltipTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="filters-collapsed-button h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
+            onClick={onOpenFiltersSheet}
+          >
+            <i className="bi bi-funnel w-4 h-4 inline-flex items-center justify-center leading-none" />
+            <span>Filters</span>
+            {totalActiveCount > 0 && (
+              <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                {totalActiveCount}
+              </span>
+            )}
+            <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Filters</TooltipContent>
+      </Tooltip>
 
       {/* Expanded Filters (visible at wide widths) */}
       <div className="filters-expanded contents">
@@ -421,11 +430,11 @@ export function FilterBar({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="bg-white z-50 min-w-[180px]">
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="text-sm">
+            <DropdownMenuSubTrigger>
               <i className="bi bi-person mr-2" />
               People
               {peopleSelected.length > 0 && (
-                <span className="ml-auto text-xs text-primary">{peopleSelected.length}</span>
+                <span className="ml-auto text-[13px] text-primary">{peopleSelected.length}</span>
               )}
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
@@ -443,7 +452,7 @@ export function FilterBar({
                   />
                 </div>
               </div>
-              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5 bg-muted/30">
+              <div className="px-2 py-1.5 text-[13px] font-medium text-muted-foreground flex items-center gap-1.5 bg-white">
                 <i className="bi bi-stars text-primary/70" />
                 AI-Identified
               </div>
@@ -459,7 +468,7 @@ export function FilterBar({
                     >
                       <span className="flex-1">{opt.label}</span>
                       {opt.count !== undefined && (
-                        <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
+                        <span className="text-[13px] text-muted-foreground ml-auto">{opt.count}</span>
                       )}
                     </DropdownMenuCheckboxItem>
                   ))}
@@ -470,11 +479,11 @@ export function FilterBar({
             </DropdownMenuSubContent>
           </DropdownMenuSub>
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="text-sm">
+            <DropdownMenuSubTrigger>
               <i className="bi bi-camera-reels mr-2" />
               Scene
               {sceneSelected.length > 0 && (
-                <span className="ml-auto text-xs text-primary">{sceneSelected.length}</span>
+                <span className="ml-auto text-[13px] text-primary">{sceneSelected.length}</span>
               )}
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
@@ -492,7 +501,7 @@ export function FilterBar({
                   />
                 </div>
               </div>
-              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5 bg-muted/30">
+              <div className="px-2 py-1.5 text-[13px] font-medium text-muted-foreground flex items-center gap-1.5 bg-white">
                 <i className="bi bi-stars text-primary/70" />
                 AI-Identified
               </div>
@@ -508,7 +517,7 @@ export function FilterBar({
                     >
                       <span className="flex-1">{opt.label}</span>
                       {opt.count !== undefined && (
-                        <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
+                        <span className="text-[13px] text-muted-foreground ml-auto">{opt.count}</span>
                       )}
                     </DropdownMenuCheckboxItem>
                   ))}
@@ -519,15 +528,15 @@ export function FilterBar({
             </DropdownMenuSubContent>
           </DropdownMenuSub>
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="text-sm">
+            <DropdownMenuSubTrigger>
               <i className="bi bi-badge-tm mr-2" />
               Brand
               {brandSelected.length > 0 && (
-                <span className="ml-auto text-xs text-primary">{brandSelected.length}</span>
+                <span className="ml-auto text-[13px] text-primary">{brandSelected.length}</span>
               )}
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
-              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5 bg-muted/30">
+              <div className="px-2 py-1.5 text-[13px] font-medium text-muted-foreground flex items-center gap-1.5 bg-white">
                 <i className="bi bi-stars text-primary/70" />
                 AI-Identified
               </div>
@@ -540,7 +549,7 @@ export function FilterBar({
                 >
                   <span className="flex-1">{opt.label}</span>
                   {opt.count !== undefined && (
-                    <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
+                    <span className="text-[13px] text-muted-foreground ml-auto">{opt.count}</span>
                   )}
                 </DropdownMenuCheckboxItem>
               ))}
@@ -622,8 +631,8 @@ export function FilterBar({
               )}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="bg-white z-50 min-w-[200px]" onCloseAutoFocus={e => e.preventDefault()}>
-              {/* Search input for filters with many options (tags, folders) */}
-              {(filter.id === "tags" || filter.id === "folders") && (
+              {/* Search input for filters with many options (tags, folders, creator) */}
+              {(filter.id === "tags" || filter.id === "folders" || filter.id === "creator") && (
                 <div className="px-2 py-2 border-b">
                   <div className="relative">
                     <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
@@ -640,55 +649,144 @@ export function FilterBar({
                 </div>
               )}
               <div className="max-h-[280px] overflow-y-auto">
-                {filter.options
-                  .filter(option => {
-                    if (filter.id !== "tags" && filter.id !== "folders") return true;
-                    const query = (searchQueries[filter.id] ?? "").toLowerCase();
-                    return option.label.toLowerCase().includes(query);
-                  })
-                  .map(option => {
-                    const isTreeItem = filter.isTreeStructure && option.depth !== undefined;
-                    const indent = isTreeItem ? option.depth! * 12 : 0;
-                    const treeIconClass = option.type === "gallery" ? "bi-images" : "bi-folder";
-                    const isDisabledBySearch = disabledValues.some(
-                      dv => dv.value.toLowerCase() === option.value.toLowerCase() && dv.category.toLowerCase() === (categoryMap[filter.id] || "").toLowerCase()
-                    );
+                {/* Tags dropdown with Recent/All sections */}
+                {filter.id === "tags" ? (
+                  <>
+                    {/* Recent Tags Section */}
+                    {(() => {
+                      const query = (searchQueries["tags"] ?? "").toLowerCase();
+                      const filteredRecentTags = filter.options.filter(
+                        opt => RECENT_TAGS.includes(opt.label) && opt.label.toLowerCase().includes(query)
+                      );
+                      if (filteredRecentTags.length === 0) return null;
+                      return (
+                        <>
+                          <div className="px-2 py-1.5 text-[13px] font-medium text-muted-foreground bg-white">
+                            Recent Tags
+                          </div>
+                          {filteredRecentTags.map(option => {
+                            const isDisabledBySearch = disabledValues.some(
+                              dv => dv.value.toLowerCase() === option.value.toLowerCase() && dv.category.toLowerCase() === "tag"
+                            );
+                            return (
+                              <DropdownMenuCheckboxItem
+                                key={`recent-${option.value}`}
+                                checked={selected.some(s => s.value === option.value) || isDisabledBySearch}
+                                onCheckedChange={checked => {
+                                  if (isDisabledBySearch) {
+                                    onRemoveDisabledValue?.(option.value, "Tag");
+                                  } else {
+                                    handleMultiSelect("tags", option.value, option.label, checked);
+                                  }
+                                }}
+                                className="flex items-center gap-2"
+                                onSelect={e => e.preventDefault()}
+                              >
+                                <span className="flex-1">{option.label}</span>
+                                {option.count !== undefined && <span className="text-[13px] text-muted-foreground ml-auto">{option.count}</span>}
+                              </DropdownMenuCheckboxItem>
+                            );
+                          })}
+                        </>
+                      );
+                    })()}
+                    {/* All Tags Section */}
+                    {(() => {
+                      const query = (searchQueries["tags"] ?? "").toLowerCase();
+                      const filteredAllTags = filter.options.filter(
+                        opt => opt.label.toLowerCase().includes(query)
+                      );
+                      if (filteredAllTags.length === 0) return null;
+                      return (
+                        <>
+                          <div className="px-2 py-1.5 text-[13px] font-medium text-muted-foreground bg-white">
+                            All Tags
+                          </div>
+                          {filteredAllTags.map(option => {
+                            const isDisabledBySearch = disabledValues.some(
+                              dv => dv.value.toLowerCase() === option.value.toLowerCase() && dv.category.toLowerCase() === "tag"
+                            );
+                            return (
+                              <DropdownMenuCheckboxItem
+                                key={option.value}
+                                checked={selected.some(s => s.value === option.value) || isDisabledBySearch}
+                                onCheckedChange={checked => {
+                                  if (isDisabledBySearch) {
+                                    onRemoveDisabledValue?.(option.value, "Tag");
+                                  } else {
+                                    handleMultiSelect("tags", option.value, option.label, checked);
+                                  }
+                                }}
+                                className="flex items-center gap-2"
+                                onSelect={e => e.preventDefault()}
+                              >
+                                <span className="flex-1">{option.label}</span>
+                                {option.count !== undefined && <span className="text-[13px] text-muted-foreground ml-auto">{option.count}</span>}
+                              </DropdownMenuCheckboxItem>
+                            );
+                          })}
+                        </>
+                      );
+                    })()}
+                    {/* No results message for tags */}
+                    {filter.options.filter(opt => opt.label.toLowerCase().includes((searchQueries["tags"] ?? "").toLowerCase())).length === 0 && (
+                      <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
+                    )}
+                  </>
+                ) : (
+                  /* Standard rendering for other filters */
+                  <>
+                    {filter.options
+                      .filter(option => {
+                        if (filter.id !== "folders" && filter.id !== "creator") return true;
+                        const query = (searchQueries[filter.id] ?? "").toLowerCase();
+                        return option.label.toLowerCase().includes(query);
+                      })
+                      .map(option => {
+                        const isTreeItem = filter.isTreeStructure && option.depth !== undefined;
+                        const indent = isTreeItem ? option.depth! * 12 : 0;
+                        const treeIconClass = option.type === "gallery" ? "bi-images" : "bi-folder";
+                        const isDisabledBySearch = disabledValues.some(
+                          dv => dv.value.toLowerCase() === option.value.toLowerCase() && dv.category.toLowerCase() === (categoryMap[filter.id] || "").toLowerCase()
+                        );
 
-                    return isMulti ? (
-                      <DropdownMenuCheckboxItem
-                        key={option.value}
-                        checked={selected.some(s => s.value === option.value) || isDisabledBySearch}
-                        onCheckedChange={checked => {
-                          if (isDisabledBySearch) {
-                            onRemoveDisabledValue?.(option.value, categoryMap[filter.id] || "");
-                          } else {
-                            handleMultiSelect(filter.id, option.value, option.label, checked);
-                          }
-                        }}
-                        style={{ paddingLeft: isTreeItem ? `${8 + indent}px` : undefined }}
-                        className="flex items-center gap-2"
-                        onSelect={e => e.preventDefault()}
-                      >
-                        {isTreeItem && <i className={`bi ${treeIconClass} text-sm text-muted-foreground flex-shrink-0`} />}
-                        {option.iconClass && !isTreeItem && <i className={`bi ${option.iconClass} text-sm text-muted-foreground flex-shrink-0`} />}
-                        <span className={cn("flex-1", option.depth === 0 ? "font-medium" : "")}>{option.label}</span>
-                        {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>}
-                      </DropdownMenuCheckboxItem>
-                    ) : (
-                      <DropdownMenuCheckboxItem
-                        key={option.value}
-                        checked={selected.some(s => s.value === option.value)}
-                        onCheckedChange={() => handleSingleSelect(filter.id, option.value, option.label)}
-                      >
-                        {option.label}
-                      </DropdownMenuCheckboxItem>
-                    );
-                  })}
-                {/* No results message */}
-                {(filter.id === "tags" || filter.id === "folders") &&
-                  filter.options.filter(opt => opt.label.toLowerCase().includes((searchQueries[filter.id] ?? "").toLowerCase())).length === 0 && (
-                    <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
-                  )}
+                        return isMulti ? (
+                          <DropdownMenuCheckboxItem
+                            key={option.value}
+                            checked={selected.some(s => s.value === option.value) || isDisabledBySearch}
+                            onCheckedChange={checked => {
+                              if (isDisabledBySearch) {
+                                onRemoveDisabledValue?.(option.value, categoryMap[filter.id] || "");
+                              } else {
+                                handleMultiSelect(filter.id, option.value, option.label, checked);
+                              }
+                            }}
+                            style={{ paddingLeft: isTreeItem ? `${8 + indent}px` : undefined }}
+                            className="flex items-center gap-2"
+                            onSelect={e => e.preventDefault()}
+                          >
+                            {isTreeItem && <i className={`bi ${treeIconClass} text-sm text-muted-foreground flex-shrink-0`} />}
+                            {option.iconClass && !isTreeItem && <i className={`bi ${option.iconClass} text-sm text-muted-foreground flex-shrink-0`} />}
+                            <span className={cn("flex-1", option.depth === 0 ? "font-medium" : "")}>{option.label}</span>
+                            {option.count !== undefined && <span className="text-[13px] text-muted-foreground ml-auto">{option.count}</span>}
+                          </DropdownMenuCheckboxItem>
+                        ) : (
+                          <DropdownMenuCheckboxItem
+                            key={option.value}
+                            checked={selected.some(s => s.value === option.value)}
+                            onCheckedChange={() => handleSingleSelect(filter.id, option.value, option.label)}
+                          >
+                            {option.label}
+                          </DropdownMenuCheckboxItem>
+                        );
+                      })}
+                    {/* No results message for folders and creator */}
+                    {(filter.id === "folders" || filter.id === "creator") &&
+                      filter.options.filter(opt => opt.label.toLowerCase().includes((searchQueries[filter.id] ?? "").toLowerCase())).length === 0 && (
+                        <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
+                      )}
+                  </>
+                )}
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -786,7 +884,7 @@ export function FilterBar({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="bg-white z-50 min-w-[180px]">
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="text-sm">Source</DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger>Source</DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
               <div className="px-2 py-2 border-b">
                 <div className="relative">
@@ -820,7 +918,7 @@ export function FilterBar({
                       onSelect={e => e.preventDefault()}
                     >
                       <span className="flex-1">{opt.label}</span>
-                      <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
+                      <span className="text-[13px] text-muted-foreground ml-auto">{opt.count}</span>
                     </DropdownMenuCheckboxItem>
                   ))}
                 {[
@@ -837,7 +935,7 @@ export function FilterBar({
             </DropdownMenuSubContent>
           </DropdownMenuSub>
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="text-sm">Approval Status</DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger>Approval Status</DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="bg-white z-50 min-w-[180px]">
               {[
                 { label: "Pending", value: "pending", count: 14 },
@@ -851,7 +949,7 @@ export function FilterBar({
                   onSelect={e => e.preventDefault()}
                 >
                   <span className="flex-1">{opt.label}</span>
-                  <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
+                  <span className="text-[13px] text-muted-foreground ml-auto">{opt.count}</span>
                 </DropdownMenuCheckboxItem>
               ))}
             </DropdownMenuSubContent>
@@ -863,19 +961,22 @@ export function FilterBar({
       {/* Toggle Pills (always visible) */}
       <TogglePill
         label="Unsorted"
-        iconClass="bi-folder-x"
+        iconClass="bi-images icon-gallery-slash"
+        tooltip="Show only assets not in any gallery"
         isActive={isUnsortedActive}
         onClick={() => onUnsortedToggle?.(!isUnsortedActive)}
       />
       <TogglePill
         label="Unviewed Only"
         iconClass="bi-eye-slash"
+        tooltip="Show only assets you haven't viewed yet"
         isActive={isUnviewedActive}
         onClick={() => onUnviewedToggle?.(!isUnviewedActive)}
       />
       <TogglePill
         label="Branding"
         iconClass="bi-palette"
+        tooltip="Show only branded assets"
         isActive={isBrandingActive}
         onClick={() => onBrandingToggle?.(!isBrandingActive)}
       />

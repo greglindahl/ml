@@ -375,6 +375,27 @@
   font-size: 1.5rem;
 }
 
+/* Composed icon: gallery with diagonal slash (for "not in any gallery") */
+.icon-gallery-slash {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-gallery-slash::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1.1em;
+  height: 1.5px;
+  background: currentColor;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  pointer-events: none;
+  border-radius: 1px;
+}
+
 /* ===== Container Query Support ===== */
 
 /* Define the content container for container queries */
@@ -426,7 +447,7 @@
 }
 
 /* Search row wrap behavior - utility cluster drops to its own row */
-@container content (max-width: 499px) {
+@container content (max-width: 699px) {
   .cq-search-row {
     flex-wrap: wrap;
   }
@@ -437,8 +458,8 @@
   }
 
   .cq-search-row .cq-utility-cluster {
-    margin-left: auto;
     margin-top: 0.5rem;
+    /* margin-left: auto removed — left-align with filters row below */
   }
 }
 
@@ -487,8 +508,8 @@
   }
 }
 
-/* Hide folder sidebar at narrow content widths */
-@container content (max-width: 767px) {
+/* Hide folder sidebar at narrow viewport widths */
+@media (max-width: 767px) {
   .folder-tree-sidebar {
     display: none;
   }
