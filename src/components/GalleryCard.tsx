@@ -1,11 +1,14 @@
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { useMemo } from "react";
 
 export type GalleryCardState = "default" | "hover" | "bulk-select" | "selected" | "empty";
 
 interface GalleryCardProps {
   name: string;
   assetCount?: number;
+  /** Number of new assets added to gallery (shows as badge). If not provided, randomized for demo. */
+  newAssetCount?: number;
   thumbnailUrl?: string;
   isNew?: boolean;
   timeAgo?: string;
@@ -20,6 +23,7 @@ interface GalleryCardProps {
 export function GalleryCard({
   name,
   assetCount = 0,
+  newAssetCount,
   thumbnailUrl,
   isNew = false,
   timeAgo,
@@ -38,6 +42,15 @@ export function GalleryCard({
 
   const showCheckbox = isHover || isBulkSelect || isSelected || isEmpty;
   const isChecked = isSelected || isEmpty;
+
+  // Randomize new asset count for demo if not provided (deterministic based on name)
+  const displayNewAssetCount = useMemo(() => {
+    if (newAssetCount !== undefined) return newAssetCount;
+    // Hash the name to get a deterministic "random" value
+    const hash = name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    // ~30% chance of having new assets, count between 1-12
+    return hash % 3 === 0 ? (hash % 12) + 1 : 0;
+  }, [name, newAssetCount]);
 
   return (
     <div
@@ -95,7 +108,7 @@ export function GalleryCard({
             {isNew && (
               <Badge
                 colorStyle="success"
-                theme="subtle"
+                theme="solid"
                 shape="rounded"
                 className="text-[10px] font-medium px-1.5 py-1"
               >
@@ -103,15 +116,15 @@ export function GalleryCard({
               </Badge>
             )}
 
-            {/* Asset Count Badge */}
-            {!isEmpty && assetCount > 0 && (
+            {/* New Asset Count Badge - only shows when there are new assets */}
+            {!isEmpty && displayNewAssetCount > 0 && (
               <Badge
                 colorStyle="danger"
-                theme="subtle"
+                theme="solid"
                 shape="rounded"
                 className="text-[10px] font-medium px-1.5 py-0.5 min-w-[24px] justify-center"
               >
-                {assetCount > 99 ? "99+" : assetCount}
+                {displayNewAssetCount > 99 ? "99+" : displayNewAssetCount}
               </Badge>
             )}
 
