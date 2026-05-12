@@ -1420,6 +1420,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         onOpenChange={setSettingsDrawerOpen}
         displayLabel={displayLabel}
         onDisplayLabelChange={setDisplayLabel}
+        title={activeTab === "galleries" ? "Galleries Settings" : "Library Settings"}
+        showGridViewPreferences={activeTab !== "galleries"}
       >
         {/* Table preferences - always shown, disabled when not in table view */}
         {activeTab === "assets" && (() => {

@@ -64,9 +64,11 @@ export function useColumnVisibility<T extends Record<string, boolean>>(
 interface SettingsDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  displayLabel: DisplayLabelOption;
-  onDisplayLabelChange: (value: DisplayLabelOption) => void;
+  displayLabel?: DisplayLabelOption;
+  onDisplayLabelChange?: (value: DisplayLabelOption) => void;
   children?: React.ReactNode;
+  title?: string;
+  showGridViewPreferences?: boolean;
 }
 
 function SectionHeader({ icon, children }: { icon: string; children: React.ReactNode }) {
@@ -86,53 +88,57 @@ export function SettingsDrawer({
   displayLabel,
   onDisplayLabelChange,
   children,
+  title = "Library Settings",
+  showGridViewPreferences = true,
 }: SettingsDrawerProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-[320px] sm:w-[360px]">
         <SheetHeader>
-          <SheetTitle>Library Settings</SheetTitle>
+          <SheetTitle>{title}</SheetTitle>
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
           {/* Grid View Preferences Section */}
-          <div className="space-y-6">
-            <SectionHeader icon="bi-grid">Grid View Preferences</SectionHeader>
-            <div className="space-y-3">
-              <p className="text-[13px] text-muted-foreground tracking-[-0.13px]">
-                Display by:
-              </p>
-              <RadioGroup
-                value={displayLabel}
-                onValueChange={(value) => onDisplayLabelChange(value as DisplayLabelOption)}
-                className="flex flex-col gap-3"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="title" id="display-title" />
-                  <Label htmlFor="display-title" className="font-normal cursor-pointer">
-                    Title
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="creator" id="display-creator" />
-                  <Label htmlFor="display-creator" className="font-normal cursor-pointer">
-                    Creator
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="none" id="display-none" />
-                  <Label htmlFor="display-none" className="font-normal cursor-pointer">
-                    None
-                  </Label>
-                </div>
-              </RadioGroup>
+          {showGridViewPreferences && displayLabel && onDisplayLabelChange && (
+            <div className="space-y-6">
+              <SectionHeader icon="bi-grid">Grid View Preferences</SectionHeader>
+              <div className="space-y-3">
+                <p className="text-[13px] text-muted-foreground tracking-[-0.13px]">
+                  Display by:
+                </p>
+                <RadioGroup
+                  value={displayLabel}
+                  onValueChange={(value) => onDisplayLabelChange(value as DisplayLabelOption)}
+                  className="flex flex-col gap-3"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="title" id="display-title" />
+                    <Label htmlFor="display-title" className="font-normal cursor-pointer">
+                      Title
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="creator" id="display-creator" />
+                    <Label htmlFor="display-creator" className="font-normal cursor-pointer">
+                      Creator
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="none" id="display-none" />
+                    <Label htmlFor="display-none" className="font-normal cursor-pointer">
+                      None
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Table View Preferences Section */}
           {children && (
             <>
-              <Separator />
+              {showGridViewPreferences && displayLabel && <Separator />}
               <div className="space-y-6">
                 <SectionHeader icon="bi-table">Table View Preferences</SectionHeader>
                 {children}
