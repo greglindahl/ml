@@ -43,6 +43,7 @@ import { FolderCard, FolderCardState } from "@/components/FolderCard";
 import { SettingsDrawer, useDisplayLabel, usePerPagePreference, useColumnVisibility } from "@/components/SettingsDrawer";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { UploadModal } from "@/components/UploadModal";
+import { AssetDetailModal } from "@/components/AssetDetailModal";
 
 const GALLERY_MOVE_LIMIT = 5;
 const MOVE_LIMIT_MESSAGE = "Too many galleries selected. You may only move up to 5 at a time.";
@@ -99,6 +100,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const [folderViewMode, setFolderViewMode] = useState<"grid" | "table">("grid");
   const [archivedGalleriesOnly, setArchivedGalleriesOnly] = useState(false);
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
+  const [viewingAssetId, setViewingAssetId] = useState<string | null>(null);
 
   // Settings drawer state
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
@@ -647,6 +649,33 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   // Compute dynamic filter counts based on current results
   const filterCounts = useMemo(() => computeFilterCounts(filteredResults), [filteredResults]);
 
+  // Asset detail modal helpers
+  const viewingAsset = useMemo(() => {
+    if (!viewingAssetId) return null;
+    return sortedResults.find((a) => a.id === viewingAssetId) || null;
+  }, [viewingAssetId, sortedResults]);
+
+  const viewingAssetIndex = useMemo(() => {
+    if (!viewingAssetId) return -1;
+    return sortedResults.findIndex((a) => a.id === viewingAssetId);
+  }, [viewingAssetId, sortedResults]);
+
+  const handleViewAsset = useCallback((assetId: string) => {
+    setViewingAssetId(assetId);
+  }, []);
+
+  const handlePreviousAsset = useCallback(() => {
+    if (viewingAssetIndex > 0) {
+      setViewingAssetId(sortedResults[viewingAssetIndex - 1].id);
+    }
+  }, [viewingAssetIndex, sortedResults]);
+
+  const handleNextAsset = useCallback(() => {
+    if (viewingAssetIndex < sortedResults.length - 1) {
+      setViewingAssetId(sortedResults[viewingAssetIndex + 1].id);
+    }
+  }, [viewingAssetIndex, sortedResults]);
+
   // Handle search from FacetedSearch component
   const handleSearch = useCallback(
     (query: string, selectedFacets: string[]) => {
@@ -1073,29 +1102,46 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   }
 
                   return (
-                    <AssetCard
+                    <div
                       key={asset.id}
-                      creatorName={asset.creator}
-                      title={asset.name}
-                      displayLabel={displayLabel}
-                      duration={asset.duration}
-                      timestamp={getRelativeTime(asset.dateCreated)}
-                      thumbnailUrl={asset.thumbnailUrl}
-                      isBranded={isBrandedActive && asset.isBranded}
-                      state={cardState}
-                      onSelect={() => {
-                        const next = new Set(selectedAssets);
-                        if (next.has(asset.id)) {
-                          next.delete(asset.id);
+                      onClick={() => {
+                        // If in bulk select mode, toggle selection instead of opening detail
+                        if (selectedAssets.size > 0) {
+                          const next = new Set(selectedAssets);
+                          if (next.has(asset.id)) {
+                            next.delete(asset.id);
+                          } else {
+                            next.add(asset.id);
+                          }
+                          setSelectedAssets(next);
                         } else {
-                          next.add(asset.id);
+                          handleViewAsset(asset.id);
                         }
-                        setSelectedAssets(next);
                       }}
-                      onFavorite={() => {
-                        // TODO: Implement favorite functionality
-                      }}
-                    />
+                    >
+                      <AssetCard
+                        creatorName={asset.creator}
+                        title={asset.name}
+                        displayLabel={displayLabel}
+                        duration={asset.duration}
+                        timestamp={getRelativeTime(asset.dateCreated)}
+                        thumbnailUrl={asset.thumbnailUrl}
+                        isBranded={isBrandedActive && asset.isBranded}
+                        state={cardState}
+                        onSelect={() => {
+                          const next = new Set(selectedAssets);
+                          if (next.has(asset.id)) {
+                            next.delete(asset.id);
+                          } else {
+                            next.add(asset.id);
+                          }
+                          setSelectedAssets(next);
+                        }}
+                        onFavorite={() => {
+                          // TODO: Implement favorite functionality
+                        }}
+                      />
+                    </div>
                   );
                 })}
               </div>
@@ -1643,6 +1689,19 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
       <UploadModal
         open={uploadModalOpen}
         onOpenChange={setUploadModalOpen}
+      />
+
+      {/* Asset Detail Modal */}
+      <AssetDetailModal
+        open={viewingAssetId !== null}
+        onOpenChange={(open) => {
+          if (!open) setViewingAssetId(null);
+        }}
+        asset={viewingAsset}
+        currentIndex={viewingAssetIndex}
+        totalAssets={sortedResults.length}
+        onPrevious={handlePreviousAsset}
+        onNext={handleNextAsset}
       />
     </div>
   );
