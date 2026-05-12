@@ -428,7 +428,7 @@ export function FilterBar({
               <i className="bi bi-person mr-2" />
               People
               {peopleSelected.length > 0 && (
-                <span className="ml-auto text-xs text-primary">{peopleSelected.length}</span>
+                <span className="ml-auto text-[13px] text-primary">{peopleSelected.length}</span>
               )}
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
@@ -446,7 +446,7 @@ export function FilterBar({
                   />
                 </div>
               </div>
-              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5 bg-muted/30">
+              <div className="px-2 py-1.5 text-[13px] font-medium text-muted-foreground flex items-center gap-1.5 bg-white">
                 <i className="bi bi-stars text-primary/70" />
                 AI-Identified
               </div>
@@ -462,7 +462,7 @@ export function FilterBar({
                     >
                       <span className="flex-1">{opt.label}</span>
                       {opt.count !== undefined && (
-                        <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
+                        <span className="text-[13px] text-muted-foreground ml-auto">{opt.count}</span>
                       )}
                     </DropdownMenuCheckboxItem>
                   ))}
@@ -477,7 +477,7 @@ export function FilterBar({
               <i className="bi bi-camera-reels mr-2" />
               Scene
               {sceneSelected.length > 0 && (
-                <span className="ml-auto text-xs text-primary">{sceneSelected.length}</span>
+                <span className="ml-auto text-[13px] text-primary">{sceneSelected.length}</span>
               )}
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
@@ -495,7 +495,7 @@ export function FilterBar({
                   />
                 </div>
               </div>
-              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5 bg-muted/30">
+              <div className="px-2 py-1.5 text-[13px] font-medium text-muted-foreground flex items-center gap-1.5 bg-white">
                 <i className="bi bi-stars text-primary/70" />
                 AI-Identified
               </div>
@@ -511,7 +511,7 @@ export function FilterBar({
                     >
                       <span className="flex-1">{opt.label}</span>
                       {opt.count !== undefined && (
-                        <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
+                        <span className="text-[13px] text-muted-foreground ml-auto">{opt.count}</span>
                       )}
                     </DropdownMenuCheckboxItem>
                   ))}
@@ -526,11 +526,11 @@ export function FilterBar({
               <i className="bi bi-badge-tm mr-2" />
               Brand
               {brandSelected.length > 0 && (
-                <span className="ml-auto text-xs text-primary">{brandSelected.length}</span>
+                <span className="ml-auto text-[13px] text-primary">{brandSelected.length}</span>
               )}
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
-              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5 bg-muted/30">
+              <div className="px-2 py-1.5 text-[13px] font-medium text-muted-foreground flex items-center gap-1.5 bg-white">
                 <i className="bi bi-stars text-primary/70" />
                 AI-Identified
               </div>
@@ -543,7 +543,7 @@ export function FilterBar({
                 >
                   <span className="flex-1">{opt.label}</span>
                   {opt.count !== undefined && (
-                    <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
+                    <span className="text-[13px] text-muted-foreground ml-auto">{opt.count}</span>
                   )}
                 </DropdownMenuCheckboxItem>
               ))}
@@ -625,8 +625,8 @@ export function FilterBar({
               )}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="bg-white z-50 min-w-[200px]" onCloseAutoFocus={e => e.preventDefault()}>
-              {/* Search input for filters with many options (tags, folders) */}
-              {(filter.id === "tags" || filter.id === "folders") && (
+              {/* Search input for filters with many options (tags, folders, creator) */}
+              {(filter.id === "tags" || filter.id === "folders" || filter.id === "creator") && (
                 <div className="px-2 py-2 border-b">
                   <div className="relative">
                     <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
@@ -655,7 +655,7 @@ export function FilterBar({
                       if (filteredRecentTags.length === 0) return null;
                       return (
                         <>
-                          <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground bg-muted/30">
+                          <div className="px-2 py-1.5 text-[13px] font-medium text-muted-foreground bg-white">
                             Recent Tags
                           </div>
                           {filteredRecentTags.map(option => {
@@ -677,7 +677,7 @@ export function FilterBar({
                                 onSelect={e => e.preventDefault()}
                               >
                                 <span className="flex-1">{option.label}</span>
-                                {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>}
+                                {option.count !== undefined && <span className="text-[13px] text-muted-foreground ml-auto">{option.count}</span>}
                               </DropdownMenuCheckboxItem>
                             );
                           })}
@@ -693,7 +693,7 @@ export function FilterBar({
                       if (filteredAllTags.length === 0) return null;
                       return (
                         <>
-                          <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground bg-muted/30">
+                          <div className="px-2 py-1.5 text-[13px] font-medium text-muted-foreground bg-white">
                             All Tags
                           </div>
                           {filteredAllTags.map(option => {
@@ -715,7 +715,7 @@ export function FilterBar({
                                 onSelect={e => e.preventDefault()}
                               >
                                 <span className="flex-1">{option.label}</span>
-                                {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>}
+                                {option.count !== undefined && <span className="text-[13px] text-muted-foreground ml-auto">{option.count}</span>}
                               </DropdownMenuCheckboxItem>
                             );
                           })}
@@ -732,7 +732,7 @@ export function FilterBar({
                   <>
                     {filter.options
                       .filter(option => {
-                        if (filter.id !== "folders") return true;
+                        if (filter.id !== "folders" && filter.id !== "creator") return true;
                         const query = (searchQueries[filter.id] ?? "").toLowerCase();
                         return option.label.toLowerCase().includes(query);
                       })
@@ -762,7 +762,7 @@ export function FilterBar({
                             {isTreeItem && <i className={`bi ${treeIconClass} text-sm text-muted-foreground flex-shrink-0`} />}
                             {option.iconClass && !isTreeItem && <i className={`bi ${option.iconClass} text-sm text-muted-foreground flex-shrink-0`} />}
                             <span className={cn("flex-1", option.depth === 0 ? "font-medium" : "")}>{option.label}</span>
-                            {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>}
+                            {option.count !== undefined && <span className="text-[13px] text-muted-foreground ml-auto">{option.count}</span>}
                           </DropdownMenuCheckboxItem>
                         ) : (
                           <DropdownMenuCheckboxItem
@@ -774,8 +774,8 @@ export function FilterBar({
                           </DropdownMenuCheckboxItem>
                         );
                       })}
-                    {/* No results message for folders */}
-                    {filter.id === "folders" &&
+                    {/* No results message for folders and creator */}
+                    {(filter.id === "folders" || filter.id === "creator") &&
                       filter.options.filter(opt => opt.label.toLowerCase().includes((searchQueries[filter.id] ?? "").toLowerCase())).length === 0 && (
                         <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
                       )}
@@ -912,7 +912,7 @@ export function FilterBar({
                       onSelect={e => e.preventDefault()}
                     >
                       <span className="flex-1">{opt.label}</span>
-                      <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
+                      <span className="text-[13px] text-muted-foreground ml-auto">{opt.count}</span>
                     </DropdownMenuCheckboxItem>
                   ))}
                 {[
@@ -943,7 +943,7 @@ export function FilterBar({
                   onSelect={e => e.preventDefault()}
                 >
                   <span className="flex-1">{opt.label}</span>
-                  <span className="text-xs text-muted-foreground ml-auto">{opt.count}</span>
+                  <span className="text-[13px] text-muted-foreground ml-auto">{opt.count}</span>
                 </DropdownMenuCheckboxItem>
               ))}
             </DropdownMenuSubContent>

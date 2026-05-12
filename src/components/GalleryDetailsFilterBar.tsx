@@ -320,7 +320,7 @@ export function GalleryDetailsFilterBar({
                       if (filteredRecentTags.length === 0) return null;
                       return (
                         <>
-                          <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground bg-muted/30">
+                          <div className="px-2 py-1.5 text-[13px] font-medium text-muted-foreground bg-white">
                             Recent Tags
                           </div>
                           {filteredRecentTags.map(option => (
@@ -333,7 +333,7 @@ export function GalleryDetailsFilterBar({
                             >
                               <span className="flex-1">{option.label}</span>
                               {option.count !== undefined && (
-                                <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>
+                                <span className="text-[13px] text-muted-foreground ml-auto">{option.count}</span>
                               )}
                             </DropdownMenuCheckboxItem>
                           ))}
@@ -349,7 +349,7 @@ export function GalleryDetailsFilterBar({
                       if (filteredAllTags.length === 0) return null;
                       return (
                         <>
-                          <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground bg-muted/30">
+                          <div className="px-2 py-1.5 text-[13px] font-medium text-muted-foreground bg-white">
                             All Tags
                           </div>
                           {filteredAllTags.map(option => (
@@ -362,7 +362,7 @@ export function GalleryDetailsFilterBar({
                             >
                               <span className="flex-1">{option.label}</span>
                               {option.count !== undefined && (
-                                <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>
+                                <span className="text-[13px] text-muted-foreground ml-auto">{option.count}</span>
                               )}
                             </DropdownMenuCheckboxItem>
                           ))}
@@ -395,7 +395,7 @@ export function GalleryDetailsFilterBar({
                             {option.iconClass && <i className={`bi ${option.iconClass} text-sm text-muted-foreground flex-shrink-0`} />}
                             <span className="flex-1">{option.label}</span>
                             {option.count !== undefined && (
-                              <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>
+                              <span className="text-[13px] text-muted-foreground ml-auto">{option.count}</span>
                             )}
                           </DropdownMenuCheckboxItem>
                         ) : (
@@ -491,7 +491,7 @@ export function GalleryDetailsFilterBar({
                       >
                         <span className="flex-1">{option.label}</span>
                         {option.count !== undefined && (
-                          <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>
+                          <span className="text-[13px] text-muted-foreground ml-auto">{option.count}</span>
                         )}
                       </DropdownMenuCheckboxItem>
                     ))}
