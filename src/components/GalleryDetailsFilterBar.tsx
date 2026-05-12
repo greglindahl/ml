@@ -32,6 +32,9 @@ interface FilterConfig {
 
 const CREATOR_MAP: Record<string, string> = { john: "John Smith", jane: "Jane Doe", alex: "Alex Johnson" };
 
+// Hardcoded recent tags for prototype
+const RECENT_TAGS = ["Lebron James", "Dunk", "Nike", "Celebration", "Kevin Durant"];
+
 const filters: FilterConfig[] = [{
   id: "content-type",
   label: "Type",
@@ -287,8 +290,8 @@ export function GalleryDetailsFilterBar({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="bg-white z-50 min-w-[200px]" onCloseAutoFocus={e => e.preventDefault()}>
-              {/* Search input for filters with many options (tags) */}
-              {filter.id === "tags" && (
+              {/* Search input for filters with many options (tags, creator) */}
+              {(filter.id === "tags" || filter.id === "creator") && (
                 <div className="px-2 py-2 border-b">
                   <div className="relative">
                     <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
@@ -305,42 +308,113 @@ export function GalleryDetailsFilterBar({
                 </div>
               )}
               <div className="max-h-[280px] overflow-y-auto">
-                {filter.options
-                  .filter(option => {
-                    if (filter.id !== "tags") return true;
-                    const query = (searchQueries[filter.id] ?? "").toLowerCase();
-                    return option.label.toLowerCase().includes(query);
-                  })
-                  .map(option => (
-                    isMulti ? (
-                      <DropdownMenuCheckboxItem
-                        key={option.value}
-                        checked={selected.some(s => s.value === option.value)}
-                        onCheckedChange={checked => handleMultiSelect(filter.id, option.value, option.label, checked)}
-                        className="flex items-center gap-2"
-                        onSelect={e => e.preventDefault()}
-                      >
-                        {option.iconClass && <i className={`bi ${option.iconClass} text-sm text-muted-foreground flex-shrink-0`} />}
-                        <span className="flex-1">{option.label}</span>
-                        {option.count !== undefined && (
-                          <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>
-                        )}
-                      </DropdownMenuCheckboxItem>
-                    ) : (
-                      <DropdownMenuCheckboxItem
-                        key={option.value}
-                        checked={selected.some(s => s.value === option.value)}
-                        onCheckedChange={() => handleSingleSelect(filter.id, option.value, option.label)}
-                      >
-                        {option.label}
-                      </DropdownMenuCheckboxItem>
-                    )
-                  ))}
-                {/* No results message */}
-                {filter.id === "tags" &&
-                  filter.options.filter(opt => opt.label.toLowerCase().includes((searchQueries[filter.id] ?? "").toLowerCase())).length === 0 && (
-                    <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
-                  )}
+                {/* Tags dropdown with Recent/All sections */}
+                {filter.id === "tags" ? (
+                  <>
+                    {/* Recent Tags Section */}
+                    {(() => {
+                      const query = (searchQueries["tags"] ?? "").toLowerCase();
+                      const filteredRecentTags = filter.options.filter(
+                        opt => RECENT_TAGS.includes(opt.label) && opt.label.toLowerCase().includes(query)
+                      );
+                      if (filteredRecentTags.length === 0) return null;
+                      return (
+                        <>
+                          <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground bg-muted/30">
+                            Recent Tags
+                          </div>
+                          {filteredRecentTags.map(option => (
+                            <DropdownMenuCheckboxItem
+                              key={`recent-${option.value}`}
+                              checked={selected.some(s => s.value === option.value)}
+                              onCheckedChange={checked => handleMultiSelect("tags", option.value, option.label, checked)}
+                              className="flex items-center gap-2"
+                              onSelect={e => e.preventDefault()}
+                            >
+                              <span className="flex-1">{option.label}</span>
+                              {option.count !== undefined && (
+                                <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>
+                              )}
+                            </DropdownMenuCheckboxItem>
+                          ))}
+                        </>
+                      );
+                    })()}
+                    {/* All Tags Section */}
+                    {(() => {
+                      const query = (searchQueries["tags"] ?? "").toLowerCase();
+                      const filteredAllTags = filter.options.filter(
+                        opt => opt.label.toLowerCase().includes(query)
+                      );
+                      if (filteredAllTags.length === 0) return null;
+                      return (
+                        <>
+                          <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground bg-muted/30">
+                            All Tags
+                          </div>
+                          {filteredAllTags.map(option => (
+                            <DropdownMenuCheckboxItem
+                              key={option.value}
+                              checked={selected.some(s => s.value === option.value)}
+                              onCheckedChange={checked => handleMultiSelect("tags", option.value, option.label, checked)}
+                              className="flex items-center gap-2"
+                              onSelect={e => e.preventDefault()}
+                            >
+                              <span className="flex-1">{option.label}</span>
+                              {option.count !== undefined && (
+                                <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>
+                              )}
+                            </DropdownMenuCheckboxItem>
+                          ))}
+                        </>
+                      );
+                    })()}
+                    {/* No results message for tags */}
+                    {filter.options.filter(opt => opt.label.toLowerCase().includes((searchQueries["tags"] ?? "").toLowerCase())).length === 0 && (
+                      <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
+                    )}
+                  </>
+                ) : (
+                  /* Standard rendering for other filters */
+                  <>
+                    {filter.options
+                      .filter(option => {
+                        if (filter.id !== "creator") return true;
+                        const query = (searchQueries[filter.id] ?? "").toLowerCase();
+                        return option.label.toLowerCase().includes(query);
+                      })
+                      .map(option => (
+                        isMulti ? (
+                          <DropdownMenuCheckboxItem
+                            key={option.value}
+                            checked={selected.some(s => s.value === option.value)}
+                            onCheckedChange={checked => handleMultiSelect(filter.id, option.value, option.label, checked)}
+                            className="flex items-center gap-2"
+                            onSelect={e => e.preventDefault()}
+                          >
+                            {option.iconClass && <i className={`bi ${option.iconClass} text-sm text-muted-foreground flex-shrink-0`} />}
+                            <span className="flex-1">{option.label}</span>
+                            {option.count !== undefined && (
+                              <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>
+                            )}
+                          </DropdownMenuCheckboxItem>
+                        ) : (
+                          <DropdownMenuCheckboxItem
+                            key={option.value}
+                            checked={selected.some(s => s.value === option.value)}
+                            onCheckedChange={() => handleSingleSelect(filter.id, option.value, option.label)}
+                          >
+                            {option.label}
+                          </DropdownMenuCheckboxItem>
+                        )
+                      ))}
+                    {/* No results message for creator */}
+                    {filter.id === "creator" &&
+                      filter.options.filter(opt => opt.label.toLowerCase().includes((searchQueries[filter.id] ?? "").toLowerCase())).length === 0 && (
+                        <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
+                      )}
+                  </>
+                )}
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -442,8 +516,24 @@ export function GalleryDetailsFilterBar({
             </DropdownMenuSubTrigger>
             <DropdownMenuPortal>
               <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
+                <div className="px-2 py-2 border-b">
+                  <div className="relative">
+                    <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+                    <input
+                      type="text"
+                      placeholder="Search status..."
+                      value={subSearchQueries["approval-status"] ?? ""}
+                      onChange={e => setSubSearchQueries(prev => ({ ...prev, "approval-status": e.target.value }))}
+                      onClick={e => e.stopPropagation()}
+                      onKeyDown={e => e.stopPropagation()}
+                      className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                </div>
                 <div className="max-h-[280px] overflow-y-auto">
-                  {approvalStatusOptions.map(option => (
+                  {approvalStatusOptions
+                    .filter(opt => opt.label.toLowerCase().includes((subSearchQueries["approval-status"] ?? "").toLowerCase()))
+                    .map(option => (
                     <DropdownMenuCheckboxItem
                       key={option.value}
                       checked={approvalStatusSelections.some(s => s.value === option.value)}
@@ -463,6 +553,9 @@ export function GalleryDetailsFilterBar({
                       {option.label}
                     </DropdownMenuCheckboxItem>
                   ))}
+                  {approvalStatusOptions.filter(opt => opt.label.toLowerCase().includes((subSearchQueries["approval-status"] ?? "").toLowerCase())).length === 0 && (
+                    <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
+                  )}
                 </div>
               </DropdownMenuSubContent>
             </DropdownMenuPortal>

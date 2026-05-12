@@ -64,6 +64,9 @@ const BRAND_VALUES: Record<string, string> = {
 };
 const CREATOR_MAP: Record<string, string> = { john: "John Smith", jane: "Jane Doe", alex: "Alex Johnson" };
 
+// Hardcoded recent tags for prototype
+const RECENT_TAGS = ["Lebron James", "Dunk", "Nike", "Celebration", "Kevin Durant"];
+
 function computeTagMatchCounts(values: string[], labelMap?: Record<string, string>): FilterOption[] {
   const counts: Record<string, number> = {};
   values.forEach(v => { counts[v] = 0; });
@@ -640,55 +643,144 @@ export function FilterBar({
                 </div>
               )}
               <div className="max-h-[280px] overflow-y-auto">
-                {filter.options
-                  .filter(option => {
-                    if (filter.id !== "tags" && filter.id !== "folders") return true;
-                    const query = (searchQueries[filter.id] ?? "").toLowerCase();
-                    return option.label.toLowerCase().includes(query);
-                  })
-                  .map(option => {
-                    const isTreeItem = filter.isTreeStructure && option.depth !== undefined;
-                    const indent = isTreeItem ? option.depth! * 12 : 0;
-                    const treeIconClass = option.type === "gallery" ? "bi-images" : "bi-folder";
-                    const isDisabledBySearch = disabledValues.some(
-                      dv => dv.value.toLowerCase() === option.value.toLowerCase() && dv.category.toLowerCase() === (categoryMap[filter.id] || "").toLowerCase()
-                    );
+                {/* Tags dropdown with Recent/All sections */}
+                {filter.id === "tags" ? (
+                  <>
+                    {/* Recent Tags Section */}
+                    {(() => {
+                      const query = (searchQueries["tags"] ?? "").toLowerCase();
+                      const filteredRecentTags = filter.options.filter(
+                        opt => RECENT_TAGS.includes(opt.label) && opt.label.toLowerCase().includes(query)
+                      );
+                      if (filteredRecentTags.length === 0) return null;
+                      return (
+                        <>
+                          <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground bg-muted/30">
+                            Recent Tags
+                          </div>
+                          {filteredRecentTags.map(option => {
+                            const isDisabledBySearch = disabledValues.some(
+                              dv => dv.value.toLowerCase() === option.value.toLowerCase() && dv.category.toLowerCase() === "tag"
+                            );
+                            return (
+                              <DropdownMenuCheckboxItem
+                                key={`recent-${option.value}`}
+                                checked={selected.some(s => s.value === option.value) || isDisabledBySearch}
+                                onCheckedChange={checked => {
+                                  if (isDisabledBySearch) {
+                                    onRemoveDisabledValue?.(option.value, "Tag");
+                                  } else {
+                                    handleMultiSelect("tags", option.value, option.label, checked);
+                                  }
+                                }}
+                                className="flex items-center gap-2"
+                                onSelect={e => e.preventDefault()}
+                              >
+                                <span className="flex-1">{option.label}</span>
+                                {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>}
+                              </DropdownMenuCheckboxItem>
+                            );
+                          })}
+                        </>
+                      );
+                    })()}
+                    {/* All Tags Section */}
+                    {(() => {
+                      const query = (searchQueries["tags"] ?? "").toLowerCase();
+                      const filteredAllTags = filter.options.filter(
+                        opt => opt.label.toLowerCase().includes(query)
+                      );
+                      if (filteredAllTags.length === 0) return null;
+                      return (
+                        <>
+                          <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground bg-muted/30">
+                            All Tags
+                          </div>
+                          {filteredAllTags.map(option => {
+                            const isDisabledBySearch = disabledValues.some(
+                              dv => dv.value.toLowerCase() === option.value.toLowerCase() && dv.category.toLowerCase() === "tag"
+                            );
+                            return (
+                              <DropdownMenuCheckboxItem
+                                key={option.value}
+                                checked={selected.some(s => s.value === option.value) || isDisabledBySearch}
+                                onCheckedChange={checked => {
+                                  if (isDisabledBySearch) {
+                                    onRemoveDisabledValue?.(option.value, "Tag");
+                                  } else {
+                                    handleMultiSelect("tags", option.value, option.label, checked);
+                                  }
+                                }}
+                                className="flex items-center gap-2"
+                                onSelect={e => e.preventDefault()}
+                              >
+                                <span className="flex-1">{option.label}</span>
+                                {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>}
+                              </DropdownMenuCheckboxItem>
+                            );
+                          })}
+                        </>
+                      );
+                    })()}
+                    {/* No results message for tags */}
+                    {filter.options.filter(opt => opt.label.toLowerCase().includes((searchQueries["tags"] ?? "").toLowerCase())).length === 0 && (
+                      <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
+                    )}
+                  </>
+                ) : (
+                  /* Standard rendering for other filters */
+                  <>
+                    {filter.options
+                      .filter(option => {
+                        if (filter.id !== "folders") return true;
+                        const query = (searchQueries[filter.id] ?? "").toLowerCase();
+                        return option.label.toLowerCase().includes(query);
+                      })
+                      .map(option => {
+                        const isTreeItem = filter.isTreeStructure && option.depth !== undefined;
+                        const indent = isTreeItem ? option.depth! * 12 : 0;
+                        const treeIconClass = option.type === "gallery" ? "bi-images" : "bi-folder";
+                        const isDisabledBySearch = disabledValues.some(
+                          dv => dv.value.toLowerCase() === option.value.toLowerCase() && dv.category.toLowerCase() === (categoryMap[filter.id] || "").toLowerCase()
+                        );
 
-                    return isMulti ? (
-                      <DropdownMenuCheckboxItem
-                        key={option.value}
-                        checked={selected.some(s => s.value === option.value) || isDisabledBySearch}
-                        onCheckedChange={checked => {
-                          if (isDisabledBySearch) {
-                            onRemoveDisabledValue?.(option.value, categoryMap[filter.id] || "");
-                          } else {
-                            handleMultiSelect(filter.id, option.value, option.label, checked);
-                          }
-                        }}
-                        style={{ paddingLeft: isTreeItem ? `${8 + indent}px` : undefined }}
-                        className="flex items-center gap-2"
-                        onSelect={e => e.preventDefault()}
-                      >
-                        {isTreeItem && <i className={`bi ${treeIconClass} text-sm text-muted-foreground flex-shrink-0`} />}
-                        {option.iconClass && !isTreeItem && <i className={`bi ${option.iconClass} text-sm text-muted-foreground flex-shrink-0`} />}
-                        <span className={cn("flex-1", option.depth === 0 ? "font-medium" : "")}>{option.label}</span>
-                        {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>}
-                      </DropdownMenuCheckboxItem>
-                    ) : (
-                      <DropdownMenuCheckboxItem
-                        key={option.value}
-                        checked={selected.some(s => s.value === option.value)}
-                        onCheckedChange={() => handleSingleSelect(filter.id, option.value, option.label)}
-                      >
-                        {option.label}
-                      </DropdownMenuCheckboxItem>
-                    );
-                  })}
-                {/* No results message */}
-                {(filter.id === "tags" || filter.id === "folders") &&
-                  filter.options.filter(opt => opt.label.toLowerCase().includes((searchQueries[filter.id] ?? "").toLowerCase())).length === 0 && (
-                    <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
-                  )}
+                        return isMulti ? (
+                          <DropdownMenuCheckboxItem
+                            key={option.value}
+                            checked={selected.some(s => s.value === option.value) || isDisabledBySearch}
+                            onCheckedChange={checked => {
+                              if (isDisabledBySearch) {
+                                onRemoveDisabledValue?.(option.value, categoryMap[filter.id] || "");
+                              } else {
+                                handleMultiSelect(filter.id, option.value, option.label, checked);
+                              }
+                            }}
+                            style={{ paddingLeft: isTreeItem ? `${8 + indent}px` : undefined }}
+                            className="flex items-center gap-2"
+                            onSelect={e => e.preventDefault()}
+                          >
+                            {isTreeItem && <i className={`bi ${treeIconClass} text-sm text-muted-foreground flex-shrink-0`} />}
+                            {option.iconClass && !isTreeItem && <i className={`bi ${option.iconClass} text-sm text-muted-foreground flex-shrink-0`} />}
+                            <span className={cn("flex-1", option.depth === 0 ? "font-medium" : "")}>{option.label}</span>
+                            {option.count !== undefined && <span className="text-xs text-muted-foreground ml-auto">{option.count}</span>}
+                          </DropdownMenuCheckboxItem>
+                        ) : (
+                          <DropdownMenuCheckboxItem
+                            key={option.value}
+                            checked={selected.some(s => s.value === option.value)}
+                            onCheckedChange={() => handleSingleSelect(filter.id, option.value, option.label)}
+                          >
+                            {option.label}
+                          </DropdownMenuCheckboxItem>
+                        );
+                      })}
+                    {/* No results message for folders */}
+                    {filter.id === "folders" &&
+                      filter.options.filter(opt => opt.label.toLowerCase().includes((searchQueries[filter.id] ?? "").toLowerCase())).length === 0 && (
+                        <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
+                      )}
+                  </>
+                )}
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
