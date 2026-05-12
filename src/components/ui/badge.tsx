@@ -48,11 +48,11 @@ const badgeVariants = cva(
       { colorStyle: "secondary", theme: "soft", className: "bg-[#6E84A3]/20 text-[#6E84A3] border-transparent" },
       // Success
       { colorStyle: "success", theme: "default", className: "bg-[#00D97E] text-white border-transparent" },
-      { colorStyle: "success", theme: "subtle", className: "bg-[#00D97E]/10 text-[#00D97E] border-transparent" },
+      { colorStyle: "success", theme: "subtle", className: "bg-[#CCF2E0] text-[#00D97E] border-transparent" },
       { colorStyle: "success", theme: "soft", className: "bg-[#00D97E]/20 text-[#00D97E] border-transparent" },
       // Danger
       { colorStyle: "danger", theme: "default", className: "bg-[#E63757] text-white border-transparent" },
-      { colorStyle: "danger", theme: "subtle", className: "bg-[#E63757]/10 text-[#E63757] border-transparent" },
+      { colorStyle: "danger", theme: "subtle", className: "bg-[#FAD7DD] text-[#E63757] border-transparent" },
       { colorStyle: "danger", theme: "soft", className: "bg-[#E63757]/20 text-[#E63757] border-transparent" },
       // Warning
       { colorStyle: "warning", theme: "default", className: "bg-[#F6C343] text-[#12263F] border-transparent" },
