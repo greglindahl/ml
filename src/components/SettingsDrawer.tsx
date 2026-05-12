@@ -88,7 +88,7 @@ export function SettingsDrawer({
   displayLabel,
   onDisplayLabelChange,
   children,
-  title = "Library Settings",
+  title = "View Settings",
   showGridViewPreferences = true,
 }: SettingsDrawerProps) {
   return (
