@@ -900,19 +900,14 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 </div>
 
                 {/* Settings button */}
-                <Tooltip delayDuration={700}>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
-                      onClick={() => setSettingsDrawerOpen(true)}
-                    >
-                      <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Preferences</TooltipContent>
-                </Tooltip>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
+                  onClick={() => setSettingsDrawerOpen(true)}
+                >
+                  <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
+                </Button>
               </div>
             </div>
 
