@@ -99,10 +99,10 @@ export function SettingsDrawer({
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
-          {/* Grid View Preferences Section */}
+          {/* Grid View Settings Section */}
           {showGridViewPreferences && displayLabel && onDisplayLabelChange && (
             <div className="space-y-6">
-              <SectionHeader icon="bi-grid">Grid View Preferences</SectionHeader>
+              <SectionHeader icon="bi-grid">Grid View Settings</SectionHeader>
               <div className="space-y-3">
                 <p className="text-[13px] text-muted-foreground tracking-[-0.13px]">
                   Display by:
@@ -135,12 +135,12 @@ export function SettingsDrawer({
             </div>
           )}
 
-          {/* Table View Preferences Section */}
+          {/* Table View Settings Section */}
           {children && (
             <>
               {showGridViewPreferences && displayLabel && <Separator />}
               <div className="space-y-6">
-                <SectionHeader icon="bi-table">Table View Preferences</SectionHeader>
+                <SectionHeader icon="bi-table">Table View Settings</SectionHeader>
                 {children}
               </div>
             </>
