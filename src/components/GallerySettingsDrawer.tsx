@@ -7,7 +7,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -19,103 +18,73 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-export type DisplayLabelOption = "title" | "creator" | "none";
-export type SettingsTab = "grid" | "table" | "filters";
+export type GallerySettingsTab = "table" | "filters";
 
 // Column definitions for Table View - matches Figma design
-export const ASSET_TABLE_COLUMNS = [
-  { key: "thumbnail", label: "Asset Thumbnail" },
+export const GALLERY_TABLE_COLUMNS = [
+  { key: "thumbnail", label: "Gallery Thumbnail" },
+  { key: "name", label: "Gallery Name" },
+  { key: "description", label: "Description" },
+  { key: "options", label: "Options" },
   { key: "creator", label: "Creator" },
-  { key: "added", label: "Added Date" },
-  { key: "captured", label: "Capture Date" },
-  { key: "details", label: "Details" },
-  { key: "metadata", label: "Metadata" },
+  { key: "created", label: "Created" },
+  { key: "lastAdded", label: "Last Added" },
+  { key: "sharing", label: "Sharing" },
   { key: "downloads", label: "Downloads" },
-  { key: "shares", label: "Shares" },
-  { key: "galleries", label: "Galleries" },
-  { key: "tags", label: "Tags" },
-  { key: "viewers", label: "Viewers" },
-  { key: "publicViews", label: "Public Views" },
-  { key: "publicDownloads", label: "Public Downloads" },
+  { key: "totalAssets", label: "Total Assets" },
+  { key: "images", label: "Images" },
+  { key: "videos", label: "Videos" },
   { key: "favorites", label: "Favorites" },
-  { key: "lastDownloadDate", label: "Last Download Date" },
 ] as const;
 
-export type AssetTableColumnKey = typeof ASSET_TABLE_COLUMNS[number]["key"];
-export type AssetTableColumnVisibility = Record<AssetTableColumnKey, boolean>;
+export type GalleryTableColumnKey = typeof GALLERY_TABLE_COLUMNS[number]["key"];
+export type GalleryTableColumnVisibility = Record<GalleryTableColumnKey, boolean>;
 
-export const DEFAULT_ASSET_TABLE_COLUMN_VISIBILITY: AssetTableColumnVisibility = {
+export const DEFAULT_GALLERY_TABLE_COLUMN_VISIBILITY: GalleryTableColumnVisibility = {
   thumbnail: true,
+  name: true,
+  description: false,
+  options: false,
   creator: true,
-  added: true,
-  captured: true,
-  details: false,
-  metadata: false,
+  created: true,
+  lastAdded: true,
+  sharing: true,
   downloads: true,
-  shares: true,
-  galleries: true,
-  tags: true,
-  viewers: true,
-  publicViews: true,
-  publicDownloads: true,
-  favorites: true,
-  lastDownloadDate: true,
+  totalAssets: true,
+  images: false,
+  videos: false,
+  favorites: false,
 };
 
 // Filter definitions for Filters tab - matches Figma design
-export const ASSET_FILTERS = [
-  { key: "aiTags", label: "AI Tags" },
-  { key: "tags", label: "Tags" },
-  { key: "date", label: "Date" },
+export const GALLERY_FILTERS = [
+  { key: "galleryOptions", label: "Gallery Options" },
   { key: "creator", label: "Creator" },
-  { key: "type", label: "Type" },
-  { key: "ratio", label: "Ratio" },
-  { key: "folders", label: "Folders" },
-  { key: "source", label: "Source" },
-  { key: "unsorted", label: "Unsorted" },
-  { key: "unviewedOnly", label: "Unviewed Only" },
-  { key: "branded", label: "Branded" },
+  { key: "groups", label: "Groups" },
+  { key: "createdDate", label: "Created Date" },
+  { key: "assetsLastAddedDate", label: "Assets Last Added Date" },
+  { key: "archived", label: "Archived" },
 ] as const;
 
-export type AssetFilterKey = typeof ASSET_FILTERS[number]["key"];
-export type AssetFilterVisibility = Record<AssetFilterKey, boolean>;
+export type GalleryFilterKey = typeof GALLERY_FILTERS[number]["key"];
+export type GalleryFilterVisibility = Record<GalleryFilterKey, boolean>;
 
-export const DEFAULT_ASSET_FILTER_VISIBILITY: AssetFilterVisibility = {
-  aiTags: true,
-  tags: true,
-  date: true,
+export const DEFAULT_GALLERY_FILTER_VISIBILITY: GalleryFilterVisibility = {
+  galleryOptions: true,
   creator: true,
-  type: false,
-  ratio: false,
-  folders: true,
-  source: true,
-  unsorted: true,
-  unviewedOnly: true,
-  branded: true,
+  groups: true,
+  createdDate: true,
+  assetsLastAddedDate: false,
+  archived: false,
 };
 
 // Storage keys
-const DISPLAY_LABEL_KEY = "library-display-label";
-const PER_PAGE_KEY = "tablePerPage.assets";
-const COLUMN_VISIBILITY_KEY = "tableColumns.assets";
-const FILTER_VISIBILITY_KEY = "filterVisibility.assets";
+const PER_PAGE_KEY = "tablePerPage.galleries";
+const COLUMN_VISIBILITY_KEY = "tableColumns.galleries.v2";
+const FILTER_VISIBILITY_KEY = "filterVisibility.galleries";
 
 // Hooks
-export function useAssetDisplayLabel() {
-  const [displayLabel, setDisplayLabel] = useState<DisplayLabelOption>(() => {
-    if (typeof window === "undefined") return "title";
-    const stored = localStorage.getItem(DISPLAY_LABEL_KEY);
-    return (stored as DisplayLabelOption) || "title";
-  });
-
-  useEffect(() => {
-    localStorage.setItem(DISPLAY_LABEL_KEY, displayLabel);
-  }, [displayLabel]);
-
-  return [displayLabel, setDisplayLabel] as const;
-}
-
-export function useAssetPerPage(defaultValue = 40) {
+export function useGalleryPerPage(defaultValue = 40) {
   const [perPage, setPerPage] = useState<number>(() => {
     if (typeof window === "undefined") return defaultValue;
     const stored = localStorage.getItem(PER_PAGE_KEY);
@@ -129,18 +98,18 @@ export function useAssetPerPage(defaultValue = 40) {
   return [perPage, setPerPage] as const;
 }
 
-export function useAssetColumnVisibility() {
-  const [columnVisibility, setColumnVisibility] = useState<AssetTableColumnVisibility>(() => {
-    if (typeof window === "undefined") return DEFAULT_ASSET_TABLE_COLUMN_VISIBILITY;
+export function useGalleryColumnVisibility() {
+  const [columnVisibility, setColumnVisibility] = useState<GalleryTableColumnVisibility>(() => {
+    if (typeof window === "undefined") return DEFAULT_GALLERY_TABLE_COLUMN_VISIBILITY;
     const stored = localStorage.getItem(COLUMN_VISIBILITY_KEY);
     if (stored) {
       try {
-        return { ...DEFAULT_ASSET_TABLE_COLUMN_VISIBILITY, ...JSON.parse(stored) };
+        return { ...DEFAULT_GALLERY_TABLE_COLUMN_VISIBILITY, ...JSON.parse(stored) };
       } catch {
-        return DEFAULT_ASSET_TABLE_COLUMN_VISIBILITY;
+        return DEFAULT_GALLERY_TABLE_COLUMN_VISIBILITY;
       }
     }
-    return DEFAULT_ASSET_TABLE_COLUMN_VISIBILITY;
+    return DEFAULT_GALLERY_TABLE_COLUMN_VISIBILITY;
   });
 
   useEffect(() => {
@@ -150,18 +119,18 @@ export function useAssetColumnVisibility() {
   return [columnVisibility, setColumnVisibility] as const;
 }
 
-export function useAssetFilterVisibility() {
-  const [filterVisibility, setFilterVisibility] = useState<AssetFilterVisibility>(() => {
-    if (typeof window === "undefined") return DEFAULT_ASSET_FILTER_VISIBILITY;
+export function useGalleryFilterVisibility() {
+  const [filterVisibility, setFilterVisibility] = useState<GalleryFilterVisibility>(() => {
+    if (typeof window === "undefined") return DEFAULT_GALLERY_FILTER_VISIBILITY;
     const stored = localStorage.getItem(FILTER_VISIBILITY_KEY);
     if (stored) {
       try {
-        return { ...DEFAULT_ASSET_FILTER_VISIBILITY, ...JSON.parse(stored) };
+        return { ...DEFAULT_GALLERY_FILTER_VISIBILITY, ...JSON.parse(stored) };
       } catch {
-        return DEFAULT_ASSET_FILTER_VISIBILITY;
+        return DEFAULT_GALLERY_FILTER_VISIBILITY;
       }
     }
-    return DEFAULT_ASSET_FILTER_VISIBILITY;
+    return DEFAULT_GALLERY_FILTER_VISIBILITY;
   });
 
   useEffect(() => {
@@ -171,34 +140,30 @@ export function useAssetFilterVisibility() {
   return [filterVisibility, setFilterVisibility] as const;
 }
 
-interface AssetSettingsDrawerProps {
+interface GallerySettingsDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  displayLabel: DisplayLabelOption;
-  onDisplayLabelChange: (value: DisplayLabelOption) => void;
   perPage: number;
   onPerPageChange: (value: number) => void;
-  columnVisibility: AssetTableColumnVisibility;
-  onColumnVisibilityChange: (value: AssetTableColumnVisibility) => void;
-  filterVisibility: AssetFilterVisibility;
-  onFilterVisibilityChange: (value: AssetFilterVisibility) => void;
-  defaultTab?: SettingsTab;
+  columnVisibility: GalleryTableColumnVisibility;
+  onColumnVisibilityChange: (value: GalleryTableColumnVisibility) => void;
+  filterVisibility: GalleryFilterVisibility;
+  onFilterVisibilityChange: (value: GalleryFilterVisibility) => void;
+  defaultTab?: GallerySettingsTab;
 }
 
-export function AssetSettingsDrawer({
+export function GallerySettingsDrawer({
   open,
   onOpenChange,
-  displayLabel,
-  onDisplayLabelChange,
   perPage,
   onPerPageChange,
   columnVisibility,
   onColumnVisibilityChange,
   filterVisibility,
   onFilterVisibilityChange,
-  defaultTab = "grid",
-}: AssetSettingsDrawerProps) {
-  const [activeTab, setActiveTab] = useState<SettingsTab>(defaultTab);
+  defaultTab = "table",
+}: GallerySettingsDrawerProps) {
+  const [activeTab, setActiveTab] = useState<GallerySettingsTab>(defaultTab);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -208,20 +173,8 @@ export function AssetSettingsDrawer({
         </SheetHeader>
 
         <div className="mt-6">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as SettingsTab)}>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as GallerySettingsTab)}>
             <TabsList className="w-full border-b border-gray-200 pb-0 gap-0">
-              <TabsTrigger
-                value="grid"
-                className={cn(
-                  "flex items-center gap-2 px-3 py-2 text-[13px] border-b-2 rounded-none",
-                  activeTab === "grid"
-                    ? "border-primary text-foreground"
-                    : "border-transparent text-muted-foreground"
-                )}
-              >
-                <i className={`bi ${activeTab === "grid" ? "bi-grid-fill" : "bi-grid"} text-[15px]`} />
-                Grid View
-              </TabsTrigger>
               <TabsTrigger
                 value="table"
                 className={cn(
@@ -247,37 +200,6 @@ export function AssetSettingsDrawer({
                 Filters
               </TabsTrigger>
             </TabsList>
-
-            {/* Grid View Tab */}
-            <TabsContent value="grid" className="mt-6 space-y-4">
-              <p className="text-[13px] text-muted-foreground tracking-[-0.13px]">
-                Display by:
-              </p>
-              <RadioGroup
-                value={displayLabel}
-                onValueChange={(value) => onDisplayLabelChange(value as DisplayLabelOption)}
-                className="flex flex-col gap-3"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="title" id="display-title" />
-                  <Label htmlFor="display-title" className="font-normal cursor-pointer">
-                    Title
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="creator" id="display-creator" />
-                  <Label htmlFor="display-creator" className="font-normal cursor-pointer">
-                    Creator
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="none" id="display-none" />
-                  <Label htmlFor="display-none" className="font-normal cursor-pointer">
-                    None
-                  </Label>
-                </div>
-              </RadioGroup>
-            </TabsContent>
 
             {/* Table View Tab */}
             <TabsContent value="table" className="mt-6 space-y-6">
@@ -308,13 +230,13 @@ export function AssetSettingsDrawer({
                   <button
                     type="button"
                     className="text-[13px] text-primary hover:underline"
-                    onClick={() => onColumnVisibilityChange(DEFAULT_ASSET_TABLE_COLUMN_VISIBILITY)}
+                    onClick={() => onColumnVisibilityChange(DEFAULT_GALLERY_TABLE_COLUMN_VISIBILITY)}
                   >
                     Restore Default
                   </button>
                 </div>
                 <div className="space-y-2">
-                  {ASSET_TABLE_COLUMNS.map((col) => (
+                  {GALLERY_TABLE_COLUMNS.map((col) => (
                     <label key={col.key} className="flex items-center gap-2 cursor-pointer">
                       <Checkbox
                         checked={columnVisibility[col.key]}
@@ -335,17 +257,17 @@ export function AssetSettingsDrawer({
             {/* Filters Tab */}
             <TabsContent value="filters" className="mt-6 space-y-3">
               <div className="flex items-center justify-between">
-                <Label className="text-[13px] text-muted-foreground">Available Filters</Label>
+                <Label className="text-[13px] text-muted-foreground">Manage Filters</Label>
                 <button
                   type="button"
                   className="text-[13px] text-primary hover:underline"
-                  onClick={() => onFilterVisibilityChange(DEFAULT_ASSET_FILTER_VISIBILITY)}
+                  onClick={() => onFilterVisibilityChange(DEFAULT_GALLERY_FILTER_VISIBILITY)}
                 >
                   Restore Default
                 </button>
               </div>
               <div className="space-y-2">
-                {ASSET_FILTERS.map((filter) => (
+                {GALLERY_FILTERS.map((filter) => (
                   <label key={filter.key} className="flex items-center gap-2 cursor-pointer">
                     <Checkbox
                       checked={filterVisibility[filter.key]}

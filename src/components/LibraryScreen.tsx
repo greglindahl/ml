@@ -50,6 +50,14 @@ import {
   type AssetTableColumnVisibility,
   type AssetFilterVisibility,
 } from "@/components/AssetSettingsDrawer";
+import {
+  GallerySettingsDrawer,
+  useGalleryPerPage,
+  useGalleryColumnVisibility,
+  useGalleryFilterVisibility,
+  type GalleryTableColumnVisibility,
+  type GalleryFilterVisibility,
+} from "@/components/GallerySettingsDrawer";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { UploadModal } from "@/components/UploadModal";
 import { AssetDetailModal } from "@/components/AssetDetailModal";
@@ -114,14 +122,18 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   // Settings drawer state
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
   const [assetSettingsDrawerOpen, setAssetSettingsDrawerOpen] = useState(false);
+  const [gallerySettingsDrawerOpen, setGallerySettingsDrawerOpen] = useState(false);
 
   // Asset settings - using new tabbed drawer hooks
   const [displayLabel, setDisplayLabel] = useAssetDisplayLabel();
   const [assetPerPage, setAssetPerPage] = useAssetPerPage(40);
   const [assetColumnVisibility, setAssetColumnVisibility] = useAssetColumnVisibility();
   const [assetFilterVisibility, setAssetFilterVisibility] = useAssetFilterVisibility();
-  const [galleryPerPage, setGalleryPerPage] = usePerPagePreference("galleries", 40);
-  const [galleryColumnVisibility, setGalleryColumnVisibility] = useColumnVisibility<GalleryColumnVisibility>("galleries", DEFAULT_GALLERY_COLUMN_VISIBILITY);
+
+  // Gallery settings - using new tabbed drawer hooks
+  const [galleryPerPage, setGalleryPerPage] = useGalleryPerPage(40);
+  const [galleryColumnVisibility, setGalleryColumnVisibility] = useGalleryColumnVisibility();
+  const [galleryFilterVisibility, setGalleryFilterVisibility] = useGalleryFilterVisibility();
   const [folderPerPage, setFolderPerPage] = usePerPagePreference("folders", 40);
   const [folderColumnVisibility, setFolderColumnVisibility] = useColumnVisibility<FolderColumnVisibility>("folders", DEFAULT_FOLDER_COLUMN_VISIBILITY);
 
@@ -1216,7 +1228,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   variant="outline"
                   size="icon"
                   className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
-                  onClick={() => setSettingsDrawerOpen(true)}
+                  onClick={() => setGallerySettingsDrawerOpen(true)}
                 >
                   <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
@@ -1489,65 +1501,25 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         onFilterVisibilityChange={setAssetFilterVisibility}
       />
 
-      {/* Gallery/Folder Settings Drawer - original non-tabbed interface */}
+      {/* Gallery Settings Drawer - tabbed interface */}
+      <GallerySettingsDrawer
+        open={gallerySettingsDrawerOpen}
+        onOpenChange={setGallerySettingsDrawerOpen}
+        perPage={galleryPerPage}
+        onPerPageChange={setGalleryPerPage}
+        columnVisibility={galleryColumnVisibility}
+        onColumnVisibilityChange={setGalleryColumnVisibility}
+        filterVisibility={galleryFilterVisibility}
+        onFilterVisibilityChange={setGalleryFilterVisibility}
+      />
+
+      {/* Folder Settings Drawer - original non-tabbed interface */}
       <SettingsDrawer
         open={settingsDrawerOpen}
         onOpenChange={setSettingsDrawerOpen}
         title="View Settings"
         showGridViewPreferences={false}
       >
-        {activeTab === "galleries" && (() => {
-          const isTableView = galleriesViewMode === "list";
-          return (
-            <div className="space-y-4">
-              {/* Per page dropdown */}
-              <div className={cn("space-y-2", !isTableView && "opacity-50")}>
-                <Label className="text-sm font-medium">Results per page</Label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild disabled={!isTableView}>
-                    <Button variant="outline" className="w-full justify-between" disabled={!isTableView}>
-                      {galleryPerPage} per page
-                      <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-full bg-white">
-                    {[10, 20, 40, 80].map(option => (
-                      <DropdownMenuItem key={option} onClick={() => setGalleryPerPage(option)}>
-                        {option} per page
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              {/* Column visibility */}
-              <div className={cn("space-y-2", !isTableView && "opacity-50")}>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Manage Columns</Label>
-                  <button
-                    type="button"
-                    className="text-sm text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={!isTableView}
-                    onClick={() => setGalleryColumnVisibility(DEFAULT_GALLERY_COLUMN_VISIBILITY)}
-                  >
-                    Default
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {GALLERY_COLUMNS.map(col => (
-                    <label key={col.key} className={cn("flex items-center gap-2", isTableView ? "cursor-pointer" : "cursor-not-allowed")}>
-                      <Checkbox
-                        checked={galleryColumnVisibility[col.key]}
-                        onCheckedChange={() => isTableView && setGalleryColumnVisibility(prev => ({ ...prev, [col.key]: !prev[col.key] }))}
-                        disabled={!isTableView}
-                      />
-                      <span className="text-sm">{col.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-          );
-        })()}
         {activeTab === "folders" && (() => {
           const isTableView = folderViewMode === "table";
           return (
