@@ -372,14 +372,13 @@ export function FilterBar({
   const brandSelected = activeFilters["brand"] || [];
   const aiTagsCount = peopleSelected.length + sceneSelected.length + brandSelected.length;
 
-  // More dropdown selections
+  // Source dropdown selections
   const sourceSelected = activeFilters["source"] || [];
-  const statusSelected = activeFilters["status"] || [];
-  const moreCount = sourceSelected.length + statusSelected.length;
+  const sourceCount = sourceSelected.length;
 
   // Calculate total active filter count for collapsed button
   const standardFiltersCount = Object.values(activeFilters).reduce((sum, arr) => sum + arr.length, 0);
-  const totalActiveCount = standardFiltersCount + aiTagsCount + moreCount;
+  const totalActiveCount = standardFiltersCount + aiTagsCount + sourceCount;
 
   return (
     <div className="filter-bar-container cq-filterbar-hide-label flex flex-wrap items-center gap-1.5">
@@ -861,7 +860,7 @@ export function FilterBar({
         return dropdownMenu;
       })}
 
-      {/* More Dropdown with Source & Approval Status flyouts */}
+      {/* Source Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -869,91 +868,66 @@ export function FilterBar({
             size="sm"
             className={cn(
               "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
-              moreCount > 0 && "bg-primary/10 border-primary text-primary"
+              sourceCount > 0 && "bg-primary/10 border-primary text-primary"
             )}
           >
-            <i className="bi bi-three-dots w-4 h-4 inline-flex items-center justify-center leading-none" />
-            <span className="filter-label">More</span>
-            {moreCount > 0 && (
+            <i className="bi bi-cloud-arrow-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+            <span className="filter-label">Source</span>
+            {sourceCount > 0 && (
               <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
-                {moreCount}
+                {sourceCount}
               </span>
             )}
             <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="bg-white z-50 min-w-[180px]">
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Source</DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
-              <div className="px-2 py-2 border-b">
-                <div className="relative">
-                  <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
-                  <input
-                    type="text"
-                    placeholder="Search source..."
-                    value={subSearchQueries["source"] ?? ""}
-                    onChange={e => setSubSearchQueries(prev => ({ ...prev, source: e.target.value }))}
-                    onClick={e => e.stopPropagation()}
-                    onKeyDown={e => e.stopPropagation()}
-                    className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                </div>
-              </div>
-              <div className="max-h-[280px] overflow-y-auto">
-                {[
-                  { label: "Posted Content", value: "posted-content", count: 12 },
-                  { label: "Imported Content", value: "imported-content", count: 8 },
-                  { label: "Published Content", value: "published-content", count: 15 },
-                  { label: "Uploaded Content", value: "uploaded-content", count: 22 },
-                  { label: "Engage Content", value: "engage-content", count: 5 },
-                  { label: "Requested Content", value: "requested-content", count: 3 },
-                ]
-                  .filter(opt => opt.label.toLowerCase().includes((subSearchQueries["source"] ?? "").toLowerCase()))
-                  .map(opt => (
-                    <DropdownMenuCheckboxItem
-                      key={opt.value}
-                      checked={sourceSelected.some(s => s.value === opt.value)}
-                      onCheckedChange={(checked) => handleMultiSelect("source", opt.value, opt.label, !!checked)}
-                      onSelect={e => e.preventDefault()}
-                    >
-                      <span className="flex-1">{opt.label}</span>
-                      <span className="text-[13px] text-muted-foreground ml-auto">{opt.count}</span>
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                {[
-                  { label: "Posted Content", value: "posted-content" },
-                  { label: "Imported Content", value: "imported-content" },
-                  { label: "Published Content", value: "published-content" },
-                  { label: "Uploaded Content", value: "uploaded-content" },
-                  { label: "Engage Content", value: "engage-content" },
-                  { label: "Requested Content", value: "requested-content" },
-                ].filter(opt => opt.label.toLowerCase().includes((subSearchQueries["source"] ?? "").toLowerCase())).length === 0 && (
-                  <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
-                )}
-              </div>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Approval Status</DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="bg-white z-50 min-w-[180px]">
-              {[
-                { label: "Pending", value: "pending", count: 14 },
-                { label: "Approved", value: "approved", count: 38 },
-                { label: "Rejected", value: "rejected", count: 7 },
-              ].map(opt => (
+        <DropdownMenuContent align="start" className="bg-white z-50 min-w-[200px]" onCloseAutoFocus={e => e.preventDefault()}>
+          <div className="px-2 py-2 border-b">
+            <div className="relative">
+              <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+              <input
+                type="text"
+                placeholder="Search source..."
+                value={searchQueries["source"] ?? ""}
+                onChange={e => setSearchQueries(prev => ({ ...prev, source: e.target.value }))}
+                onClick={e => e.stopPropagation()}
+                onKeyDown={e => e.stopPropagation()}
+                className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+          </div>
+          <div className="max-h-[280px] overflow-y-auto">
+            {[
+              { label: "Posted Content", value: "posted-content", count: 12 },
+              { label: "Imported Content", value: "imported-content", count: 8 },
+              { label: "Published Content", value: "published-content", count: 15 },
+              { label: "Uploaded Content", value: "uploaded-content", count: 22 },
+              { label: "Engage Content", value: "engage-content", count: 5 },
+              { label: "Requested Content", value: "requested-content", count: 3 },
+            ]
+              .filter(opt => opt.label.toLowerCase().includes((searchQueries["source"] ?? "").toLowerCase()))
+              .map(opt => (
                 <DropdownMenuCheckboxItem
                   key={opt.value}
-                  checked={statusSelected.some(s => s.value === opt.value)}
-                  onCheckedChange={(checked) => handleMultiSelect("status", opt.value, opt.label, !!checked)}
+                  checked={sourceSelected.some(s => s.value === opt.value)}
+                  onCheckedChange={(checked) => handleMultiSelect("source", opt.value, opt.label, !!checked)}
                   onSelect={e => e.preventDefault()}
                 >
                   <span className="flex-1">{opt.label}</span>
                   <span className="text-[13px] text-muted-foreground ml-auto">{opt.count}</span>
                 </DropdownMenuCheckboxItem>
               ))}
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
+            {[
+              { label: "Posted Content", value: "posted-content" },
+              { label: "Imported Content", value: "imported-content" },
+              { label: "Published Content", value: "published-content" },
+              { label: "Uploaded Content", value: "uploaded-content" },
+              { label: "Engage Content", value: "engage-content" },
+              { label: "Requested Content", value: "requested-content" },
+            ].filter(opt => opt.label.toLowerCase().includes((searchQueries["source"] ?? "").toLowerCase())).length === 0 && (
+              <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>
+            )}
+          </div>
         </DropdownMenuContent>
       </DropdownMenu>
       </div>{/* End filters-expanded */}
@@ -961,7 +935,7 @@ export function FilterBar({
       {/* Toggle Pills (always visible) */}
       <TogglePill
         label="Unsorted"
-        iconClass="bi-images icon-gallery-slash"
+        iconClass="bi-inbox"
         tooltip="Show only assets not in any gallery"
         isActive={isUnsortedActive}
         onClick={() => onUnsortedToggle?.(!isUnsortedActive)}

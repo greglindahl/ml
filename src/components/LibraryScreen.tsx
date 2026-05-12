@@ -440,14 +440,13 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
   const [isBrandedActive, setIsBrandedActive] = useState(false);
   const [sourceFilter, setSourceFilter] = useState<string[]>([]);
-  const [approvalStatusFilter, setApprovalStatusFilter] = useState<string[]>([]);
   const [orgStatusFilter, setOrgStatusFilter] = useState<string[]>([]);
   const [searchSelectedFacets, setSearchSelectedFacets] = useState<SelectedFacet[]>([]);
   const searchHandleRef = useRef<FacetedSearchWithTypeaheadHandle | null>(null);
   const filterBarHandleRef = useRef<FilterBarHandle | null>(null);
 
   // Sort state
-  type SortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "status" | "favorites" | "lastDownloadDate" | null;
+  type SortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "favorites" | "lastDownloadDate" | null;
   type SortDir = "asc" | "desc";
   const [sortField, setSortField] = useState<SortField>("dateCreated");
   const [sortDirection, setSortDirection] = useState<SortDir>("desc");
@@ -461,8 +460,6 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
     { value: "galleries", label: "Galleries" },
     { value: "tags", label: "Tags" },
     { value: "viewers", label: "Viewers" },
-    
-    { value: "status", label: "Approval Status" },
     { value: "favorites", label: "Favorites" },
     { value: "lastDownloadDate", label: "Last Download Date" },
   ];
@@ -994,8 +991,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   chips.push({ label: dateLabels[dateRangeFilter] || dateRangeFilter, value: dateRangeFilter, sourceId: "date-range", icon: <i className="bi bi-tag text-sm" /> });
                 }
                 folderFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "folders", icon: <i className="bi bi-folder text-sm" /> }));
-                sourceFilter.forEach(v => chips.push({ label: v.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), value: v, sourceId: "source", icon: <i className="bi bi-upload text-sm" /> }));
-                approvalStatusFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "status", icon: <i className="bi bi-check-square text-sm" /> }));
+                sourceFilter.forEach(v => chips.push({ label: v.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), value: v, sourceId: "source", icon: <i className="bi bi-cloud-arrow-down text-sm" /> }));
                 orgStatusFilter.forEach(v => chips.push({ label: v === "organized" ? "Sorted" : v === "unorganized" ? "Unsorted" : v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "organization-status", icon: <i className="bi bi-gear text-sm" /> }));
 
                 if (chips.length === 0) return null;
