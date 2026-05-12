@@ -648,14 +648,9 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           const isTableView = assetsViewMode === "list";
           return (
             <div className="space-y-4">
-              {!isTableView && (
-                <p className="text-[13px] text-muted-foreground">
-                  Switch to table view to manage these settings.
-                </p>
-              )}
               {/* Per page dropdown */}
               <div className={cn("space-y-2", !isTableView && "opacity-50")}>
-                <Label className="text-sm font-medium">Rows per page</Label>
+                <Label className="text-sm font-medium">Results per page</Label>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild disabled={!isTableView}>
                     <Button variant="outline" className="w-full justify-between" disabled={!isTableView}>
@@ -674,7 +669,17 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
               </div>
               {/* Column visibility */}
               <div className={cn("space-y-2", !isTableView && "opacity-50")}>
-                <Label className="text-sm font-medium">Visible columns</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Manage Columns</Label>
+                  <button
+                    type="button"
+                    className="text-sm text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!isTableView}
+                    onClick={() => setAssetColumnVisibility(DEFAULT_ASSET_COLUMN_VISIBILITY)}
+                  >
+                    Default
+                  </button>
+                </div>
                 <div className="space-y-2">
                   {ASSET_COLUMNS.map(col => (
                     <label key={col.key} className={cn("flex items-center gap-2", isTableView ? "cursor-pointer" : "cursor-not-allowed")}>
