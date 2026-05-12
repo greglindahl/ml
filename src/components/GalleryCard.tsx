@@ -108,7 +108,7 @@ export function GalleryCard({
             {isNew && (
               <Badge
                 colorStyle="success"
-                theme="solid"
+                theme="subtle"
                 shape="rounded"
                 className="text-[10px] font-medium px-1.5 py-1"
               >
@@ -120,7 +120,7 @@ export function GalleryCard({
             {!isEmpty && displayNewAssetCount > 0 && (
               <Badge
                 colorStyle="danger"
-                theme="solid"
+                theme="subtle"
                 shape="rounded"
                 className="text-[10px] font-medium px-1.5 py-0.5 min-w-[24px] justify-center"
               >
