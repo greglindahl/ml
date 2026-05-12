@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 export type GalleryCardState = "default" | "hover" | "bulk-select" | "selected" | "empty";
 
@@ -92,16 +93,26 @@ export function GalleryCard({
           <div className="flex items-center gap-2">
             {/* New Badge */}
             {isNew && (
-              <span className="bg-green-100 text-green-800 text-[10px] font-medium px-1.5 py-1 rounded-full">
+              <Badge
+                colorStyle="success"
+                theme="subtle"
+                shape="rounded"
+                className="text-[10px] font-medium px-1.5 py-1"
+              >
                 New
-              </span>
+              </Badge>
             )}
 
             {/* Asset Count Badge */}
             {!isEmpty && assetCount > 0 && (
-              <span className="bg-red-500 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full min-w-[24px] text-center">
+              <Badge
+                colorStyle="danger"
+                theme="subtle"
+                shape="rounded"
+                className="text-[10px] font-medium px-1.5 py-0.5 min-w-[24px] justify-center"
+              >
                 {assetCount > 99 ? "99+" : assetCount}
-              </span>
+              </Badge>
             )}
 
             {/* Favorite Button */}
