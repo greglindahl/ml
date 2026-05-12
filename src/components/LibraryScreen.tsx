@@ -42,6 +42,7 @@ import { AssetCard, AssetCardState } from "@/components/AssetCard";
 import { FolderCard, FolderCardState } from "@/components/FolderCard";
 import { SettingsDrawer, useDisplayLabel, usePerPagePreference, useColumnVisibility } from "@/components/SettingsDrawer";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { UploadModal } from "@/components/UploadModal";
 
 const GALLERY_MOVE_LIMIT = 5;
 const MOVE_LIMIT_MESSAGE = "Too many galleries selected. You may only move up to 5 at a time.";
@@ -89,6 +90,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
   const [addGalleryDialogOpen, setAddGalleryDialogOpen] = useState(false);
   const [newGalleryDialogOpen, setNewGalleryDialogOpen] = useState(false);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [galleryList, setGalleryList] = useState(mockGalleries);
   const [selectedGalleries, setSelectedGalleries] = useState<Set<string>>(new Set());
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
@@ -813,7 +815,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button className="h-10 px-3 py-2 gap-2">
+            <Button className="h-10 px-3 py-2 gap-2" onClick={() => setUploadModalOpen(true)}>
               <i className="bi bi-upload w-4 h-4 inline-flex items-center justify-center leading-none" />
               Upload
             </Button>
@@ -1636,6 +1638,12 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           <div className="text-sm text-muted-foreground">Created date filters will go here</div>
         </FilterSection>
       </FiltersSheet>
+
+      {/* Upload Modal */}
+      <UploadModal
+        open={uploadModalOpen}
+        onOpenChange={setUploadModalOpen}
+      />
     </div>
   );
 }
