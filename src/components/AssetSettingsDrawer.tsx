@@ -219,7 +219,7 @@ export function AssetSettingsDrawer({
                     : "border-transparent text-muted-foreground"
                 )}
               >
-                <i className="bi bi-grid-3x3-gap text-[15px]" />
+                <i className={`bi ${activeTab === "grid" ? "bi-grid-fill" : "bi-grid"} text-[15px]`} />
                 Grid View
               </TabsTrigger>
               <TabsTrigger
@@ -231,7 +231,7 @@ export function AssetSettingsDrawer({
                     : "border-transparent text-muted-foreground"
                 )}
               >
-                <i className="bi bi-table text-[15px]" />
+                <i className={`bi ${activeTab === "table" ? "bi-table" : "bi-table"} text-[15px]`} />
                 Table View
               </TabsTrigger>
               <TabsTrigger
@@ -243,7 +243,7 @@ export function AssetSettingsDrawer({
                     : "border-transparent text-muted-foreground"
                 )}
               >
-                <i className="bi bi-sliders text-[15px]" />
+                <i className={`bi ${activeTab === "filters" ? "bi-funnel-fill" : "bi-funnel"} text-[15px]`} />
                 Filters
               </TabsTrigger>
             </TabsList>
