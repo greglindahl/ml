@@ -300,11 +300,11 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-2">
             <Button className="gap-2">
-              <i className="bi bi-upload w-4 h-4" />
+              <i className="bi bi-upload w-4 h-4 inline-flex items-center justify-center leading-none" />
               Upload
             </Button>
             <Button variant="outline" className="gap-2 border-primary text-primary hover:bg-primary/5">
-              <i className="bi bi-share w-4 h-4" />
+              <i className="bi bi-share w-4 h-4 inline-flex items-center justify-center leading-none" />
               Share
             </Button>
             <DropdownMenu>
@@ -315,10 +315,10 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setMoveGalleriesOpen(true)}>
-                  <i className="bi bi-arrows-move w-4 h-4 mr-2" /> Move
+                  <i className="bi bi-arrows-move w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Move
                 </DropdownMenuItem>
                 <DropdownMenuItem className="text-destructive focus:text-destructive">
-                  <i className="bi bi-trash w-4 h-4 mr-2" /> Delete
+                  <i className="bi bi-trash w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -655,7 +655,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   <DropdownMenuTrigger asChild disabled={!isTableView}>
                     <Button variant="outline" className="w-full justify-between" disabled={!isTableView}>
                       {assetPerPage} per page
-                      <i className="bi bi-chevron-down w-4 h-4" />
+                      <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-full bg-white">

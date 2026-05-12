@@ -147,7 +147,7 @@ export function NewFolderDialog({
                     className="w-full justify-between font-normal"
                   >
                     {selectedLocationLabel}
-                    <i className="bi bi-chevron-expand ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    <i className="bi bi-chevron-expand ml-2 h-4 w-4 shrink-0 opacity-50 inline-flex items-center justify-center leading-none" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start" container={contentRef.current}>
@@ -196,7 +196,7 @@ export function NewFolderDialog({
                 onClick={() => setAddGalleryOpen(true)}
               >
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <i className="bi bi-images w-4 h-4" />
+                  <i className="bi bi-images w-4 h-4 inline-flex items-center justify-center leading-none" />
                   <span>Select Gallery</span>
                 </div>
                 <Button
@@ -209,7 +209,7 @@ export function NewFolderDialog({
                     setAddGalleryOpen(true);
                   }}
                 >
-                  <i className="bi bi-plus w-4 h-4" />
+                  <i className="bi bi-plus w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
               </div>
 
@@ -221,7 +221,7 @@ export function NewFolderDialog({
                       className="flex items-center justify-between rounded-md border px-3 py-1.5 text-sm"
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <i className="bi bi-images w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <i className="bi bi-images w-4 h-4 text-muted-foreground flex-shrink-0 inline-flex items-center justify-center leading-none" />
                         <span className="truncate">{g.name}</span>
                       </div>
                       <Button

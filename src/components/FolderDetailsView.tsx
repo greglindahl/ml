@@ -332,54 +332,54 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-2">
                 New
-                <i className="bi bi-chevron-down w-4 h-4" />
+                <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {canCreateSubfolder && (
                 <DropdownMenuItem onClick={() => setNewFolderDialogOpen(true)}>
-                  <i className="bi bi-folder w-4 h-4 mr-2" />
+                  <i className="bi bi-folder w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
                   New Folder
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem onClick={() => setNewGalleryDialogOpen(true)}>
-                <i className="bi bi-plus w-4 h-4 mr-2" />
+                <i className="bi bi-plus w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
                 New Gallery
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setAddGalleryDialogOpen(true)}>
-                <i className="bi bi-images w-4 h-4 mr-2" />
+                <i className="bi bi-images w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
                 Add Existing Gallery
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button className="gap-2">
-            <i className="bi bi-upload w-4 h-4" />
+            <i className="bi bi-upload w-4 h-4 inline-flex items-center justify-center leading-none" />
             Upload
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
-                <i className="bi bi-three-dots-vertical w-4 h-4" />
+                <i className="bi bi-three-dots-vertical w-4 h-4 inline-flex items-center justify-center leading-none" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                <i className="bi bi-pencil w-4 h-4 mr-2" /> Edit
+                <i className="bi bi-pencil w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Edit
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setMoveOpen(true)}>
-                <i className="bi bi-arrows-move w-4 h-4 mr-2" /> Move
+                <i className="bi bi-arrows-move w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Move
               </DropdownMenuItem>
               {folder.archived ? (
                 <DropdownMenuItem onClick={() => setUnarchiveOpen(true)}>
-                  <i className="bi bi-archive w-4 h-4 mr-2" /> Unarchive
+                  <i className="bi bi-archive w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Unarchive
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem onClick={() => setArchiveOpen(true)}>
-                  <i className="bi bi-archive w-4 h-4 mr-2" /> Archive
+                  <i className="bi bi-archive w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Archive
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem onClick={() => setDeleteOpen(true)} className="text-destructive focus:text-destructive">
-                <i className="bi bi-trash w-4 h-4 mr-2" /> Delete
+                <i className="bi bi-trash w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -412,7 +412,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                     Sort: Added Date
-                    <i className="bi bi-chevron-down w-4 h-4" />
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -430,7 +430,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${assetsViewMode === "grid" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("grid")}
                 >
-                  <i className="bi bi-grid-3x3 w-4 h-4" />
+                  <i className="bi bi-grid-3x3 w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -438,7 +438,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${assetsViewMode === "list" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("list")}
                 >
-                  <i className="bi bi-list w-4 h-4" />
+                  <i className="bi bi-list w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -452,7 +452,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                     }
                   }}
                 >
-                  <i className="bi bi-check-square w-4 h-4" />
+                  <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
               </div>
             </div>
@@ -523,7 +523,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                     40 per page
-                    <i className="bi bi-chevron-down w-4 h-4" />
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-white">
@@ -539,7 +539,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                     <i className="bi bi-table text-base" />
                     Manage Columns
-                    <i className="bi bi-chevron-down w-4 h-4" />
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-white">
@@ -639,7 +639,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300">
                     Creator
-                    <i className="bi bi-chevron-down w-4 h-4 text-muted-foreground" />
+                    <i className="bi bi-chevron-down w-4 h-4 text-muted-foreground inline-flex items-center justify-center leading-none" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -653,7 +653,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300">
                     Groups
-                    <i className="bi bi-chevron-down w-4 h-4 text-muted-foreground" />
+                    <i className="bi bi-chevron-down w-4 h-4 text-muted-foreground inline-flex items-center justify-center leading-none" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -665,7 +665,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300">
                     Date Range
-                    <i className="bi bi-chevron-down w-4 h-4 text-muted-foreground" />
+                    <i className="bi bi-chevron-down w-4 h-4 text-muted-foreground inline-flex items-center justify-center leading-none" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -679,7 +679,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300">
                     Last Added Date
-                    <i className="bi bi-chevron-down w-4 h-4 text-muted-foreground" />
+                    <i className="bi bi-chevron-down w-4 h-4 text-muted-foreground inline-flex items-center justify-center leading-none" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -701,7 +701,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                     Sort: Added Date
-                    <i className="bi bi-chevron-down w-4 h-4" />
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -719,7 +719,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${galleriesViewMode === "grid" ? "bg-gray-100" : ""}`}
                   onClick={() => setGalleriesViewMode("grid")}
                 >
-                  <i className="bi bi-grid-3x3 w-4 h-4" />
+                  <i className="bi bi-grid-3x3 w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -727,7 +727,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   className={`h-10 w-10 rounded-none border-l border-gray-300 text-[#6e84a3] ${galleriesViewMode === "list" ? "bg-gray-100" : ""}`}
                   onClick={() => setGalleriesViewMode("list")}
                 >
-                  <i className="bi bi-list w-4 h-4" />
+                  <i className="bi bi-list w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -735,7 +735,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   className={`h-10 w-10 rounded-l-none border-l border-gray-300 text-[#6e84a3] ${isAnyGallerySelected ? "bg-gray-100" : ""}`}
                   onClick={() => toggleSelectAllGalleries()}
                 >
-                  <i className="bi bi-check-square w-4 h-4" />
+                  <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
               </div>
             </div>
@@ -758,15 +758,15 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               </div>
               <div className="flex items-center gap-1">
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({ title: "Favorited", description: `${selectedGalleries.size} ${selectedGalleries.size === 1 ? "gallery" : "galleries"} favorited.` })}>
-                  <i className="bi bi-heart w-4 h-4" />
+                  <i className="bi bi-heart w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({ title: "Archived", description: `${selectedGalleries.size} ${selectedGalleries.size === 1 ? "gallery" : "galleries"} archived.` })}>
-                  <i className="bi bi-archive w-4 h-4" />
+                  <i className="bi bi-archive w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <i className="bi bi-three-dots w-4 h-4" />
+                      <i className="bi bi-three-dots w-4 h-4 inline-flex items-center justify-center leading-none" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -778,7 +778,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                               disabled={selectedGalleries.size > GALLERY_MOVE_LIMIT}
                               onClick={handleBulkMoveGalleries}
                             >
-                              <i className="bi bi-arrows-move w-4 h-4 mr-2" /> Move
+                              <i className="bi bi-arrows-move w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Move
                             </DropdownMenuItem>
                           </div>
                         </TooltipTrigger>
@@ -790,7 +790,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                       </Tooltip>
                     </TooltipProvider>
                     <DropdownMenuItem className="text-destructive focus:text-destructive">
-                      <i className="bi bi-trash w-4 h-4 mr-2" /> Delete
+                      <i className="bi bi-trash w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -805,7 +805,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                     40 per page
-                    <i className="bi bi-chevron-down w-4 h-4" />
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-white">
@@ -821,7 +821,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   <Button variant="outline" size="sm" className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                     <i className="bi bi-table text-base" />
                     Manage Columns
-                    <i className="bi bi-chevron-down w-4 h-4" />
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-white">
@@ -929,10 +929,10 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             )}
             <div className="flex items-center border border-gray-300 rounded-md bg-white">
               <Button variant="ghost" size="icon" className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${folderViewMode === "grid" ? "bg-gray-100" : ""}`} onClick={() => setFolderViewMode("grid")}>
-                <i className="bi bi-grid-3x3 w-4 h-4" />
+                <i className="bi bi-grid-3x3 w-4 h-4 inline-flex items-center justify-center leading-none" />
               </Button>
               <Button variant="ghost" size="icon" className={`h-10 w-10 rounded-l-none border-l border-gray-300 text-[#6e84a3] ${folderViewMode === "table" ? "bg-gray-100" : ""}`} onClick={() => setFolderViewMode("table")}>
-                <i className="bi bi-list w-4 h-4" />
+                <i className="bi bi-list w-4 h-4 inline-flex items-center justify-center leading-none" />
               </Button>
             </div>
           </div>

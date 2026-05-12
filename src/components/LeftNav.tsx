@@ -79,7 +79,7 @@ export function LeftNav({
             className="p-2 hover:bg-sidebar-accent rounded-md transition-colors text-nav-text hover:text-nav-text-hover"
             aria-label="Close navigation"
           >
-            <i className="bi bi-x-lg w-5 h-5" />
+            <i className="bi bi-x-lg w-5 h-5 inline-flex items-center justify-center leading-none" />
           </button>
         </div>
 
@@ -107,7 +107,7 @@ export function LeftNav({
       <div className="py-3 pb-4 flex items-center justify-between px-4">
         <Avatar className="h-10 w-10 cursor-pointer">
           <AvatarFallback className="bg-sidebar-accent text-nav-text">
-            <i className="bi bi-person h-5 w-5" />
+            <i className="bi bi-person h-5 w-5 inline-flex items-center justify-center leading-none" />
           </AvatarFallback>
         </Avatar>
         <div className="flex items-center gap-4">
@@ -193,7 +193,7 @@ export function LeftNav({
         <div className="py-3 pb-4 flex items-center justify-between px-4">
           <Avatar className="h-10 w-10 cursor-pointer">
             <AvatarFallback className="bg-sidebar-accent text-nav-text">
-              <i className="bi bi-person h-5 w-5" />
+              <i className="bi bi-person h-5 w-5 inline-flex items-center justify-center leading-none" />
             </AvatarFallback>
           </Avatar>
           <div className="flex items-center gap-4">
@@ -227,7 +227,7 @@ export function LeftNav({
           </button>
           <Avatar className="h-10 w-10 cursor-pointer">
             <AvatarFallback className="bg-sidebar-accent text-nav-text">
-              <i className="bi bi-person h-5 w-5" />
+              <i className="bi bi-person h-5 w-5 inline-flex items-center justify-center leading-none" />
             </AvatarFallback>
           </Avatar>
         </div>

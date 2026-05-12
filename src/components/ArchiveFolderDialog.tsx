@@ -62,7 +62,7 @@ export function ArchiveFolderDialog({ open, onOpenChange, onArchive, folder, bre
                     <TableRow key={i}>
                       <TableCell className="py-2">
                         <div className="flex items-center gap-2">
-                          <i className="bi bi-folder w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <i className="bi bi-folder w-4 h-4 text-muted-foreground flex-shrink-0 inline-flex items-center justify-center leading-none" />
                           <span className="text-sm font-medium">{row.name}</span>
                         </div>
                       </TableCell>
@@ -76,7 +76,7 @@ export function ArchiveFolderDialog({ open, onOpenChange, onArchive, folder, bre
 
           {/* Info banner */}
           <div className="flex items-start gap-2 p-3 rounded-lg border bg-muted/50 text-sm text-muted-foreground">
-            <i className="bi bi-info-circle w-4 h-4 flex-shrink-0 mt-0.5" />
+            <i className="bi bi-info-circle w-4 h-4 flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
             <p>Galleries and assets are not deleted.</p>
           </div>
         </div>

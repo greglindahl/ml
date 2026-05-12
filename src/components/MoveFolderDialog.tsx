@@ -120,7 +120,7 @@ export function MoveFolderDialog({
                     <TableRow key={i}>
                       <TableCell className="py-2">
                         <div className="flex items-center gap-2">
-                          <i className="bi bi-folder w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          <i className="bi bi-folder w-4 h-4 text-muted-foreground flex-shrink-0 inline-flex items-center justify-center leading-none" />
                           <span className="text-sm font-medium">{row.name}</span>
                         </div>
                       </TableCell>
@@ -156,14 +156,14 @@ export function MoveFolderDialog({
           {/* Depth limit error */}
           {exceedsDepthLimit && (
             <div className="flex items-start gap-2 p-3 rounded-lg border border-destructive/50 bg-destructive/10 text-destructive text-sm">
-              <i className="bi bi-exclamation-triangle w-4 h-4 flex-shrink-0 mt-0.5" />
+              <i className="bi bi-exclamation-triangle w-4 h-4 flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
               <p>This move would exceed the 4-level folder limit. Choose a different location.</p>
             </div>
           )}
 
           {/* Info banner */}
           <div className="flex items-start gap-2 p-3 rounded-lg border bg-muted/50 text-sm text-muted-foreground">
-            <i className="bi bi-info-circle w-4 h-4 flex-shrink-0 mt-0.5" />
+            <i className="bi bi-info-circle w-4 h-4 flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
             <p>
               This move will affect <strong className="text-foreground">{totalAssets} media items</strong> and may take some time to complete. The move will continue in the background.{" "}
               <strong className="text-foreground">Content will not be searchable until the move is finished.</strong>

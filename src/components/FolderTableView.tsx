@@ -104,10 +104,10 @@ export function FolderTableView({
   };
 
   const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return <i className="bi bi-arrow-down-up w-3 h-3 ml-1 opacity-50" />;
+    if (sortField !== field) return <i className="bi bi-arrow-down-up w-3 h-3 ml-1 opacity-50 inline-flex items-center justify-center leading-none" />;
     return sortDirection === "asc"
-      ? <i className="bi bi-arrow-up w-3 h-3 ml-1" />
-      : <i className="bi bi-arrow-down w-3 h-3 ml-1" />;
+      ? <i className="bi bi-arrow-up w-3 h-3 ml-1 inline-flex items-center justify-center leading-none" />
+      : <i className="bi bi-arrow-down w-3 h-3 ml-1 inline-flex items-center justify-center leading-none" />;
   };
 
 
@@ -185,17 +185,17 @@ export function FolderTableView({
           <DropdownMenuContent align="end" className="bg-popover">
             {archivedFoldersOnly ? (
               <DropdownMenuItem onClick={() => onUnarchiveFolder?.(folder.id)}>
-                <i className="bi bi-arrow-counterclockwise w-4 h-4 mr-2" />Unarchive
+                <i className="bi bi-arrow-counterclockwise w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />Unarchive
               </DropdownMenuItem>
             ) : (
               <>
                 <DropdownMenuItem onClick={() => onNavigate(folder.id)}>
-                  <i className="bi bi-eye w-4 h-4 mr-2" />View
+                  <i className="bi bi-eye w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />View
                 </DropdownMenuItem>
-                <DropdownMenuItem><i className="bi bi-pencil w-4 h-4 mr-2" />Edit</DropdownMenuItem>
-                <DropdownMenuItem><i className="bi bi-arrows-move w-4 h-4 mr-2" />Move</DropdownMenuItem>
-                <DropdownMenuItem><i className="bi bi-archive w-4 h-4 mr-2" />Archive</DropdownMenuItem>
-                <DropdownMenuItem className="text-destructive"><i className="bi bi-trash w-4 h-4 mr-2" />Delete</DropdownMenuItem>
+                <DropdownMenuItem><i className="bi bi-pencil w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />Edit</DropdownMenuItem>
+                <DropdownMenuItem><i className="bi bi-arrows-move w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />Move</DropdownMenuItem>
+                <DropdownMenuItem><i className="bi bi-archive w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />Archive</DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive"><i className="bi bi-trash w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />Delete</DropdownMenuItem>
               </>
             )}
           </DropdownMenuContent>

@@ -77,7 +77,7 @@ export function ContentScreen({ screen, history, onBack, isMobile = false }: Con
           onClick={onBack}
           className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
-          <i className="bi bi-arrow-left w-4 h-4" />
+          <i className="bi bi-arrow-left w-4 h-4 inline-flex items-center justify-center leading-none" />
           <span className="text-sm">Back</span>
         </button>
       )}

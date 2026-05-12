@@ -159,11 +159,11 @@ export function GalleryTableView({
 
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) {
-      return <i className="bi bi-arrow-down-up w-3 h-3 ml-1 opacity-50" />;
+      return <i className="bi bi-arrow-down-up w-3 h-3 ml-1 opacity-50 inline-flex items-center justify-center leading-none" />;
     }
     return sortDirection === "asc"
-      ? <i className="bi bi-arrow-up w-3 h-3 ml-1" />
-      : <i className="bi bi-arrow-down w-3 h-3 ml-1" />;
+      ? <i className="bi bi-arrow-up w-3 h-3 ml-1 inline-flex items-center justify-center leading-none" />
+      : <i className="bi bi-arrow-down w-3 h-3 ml-1 inline-flex items-center justify-center leading-none" />;
   };
 
   // Sort galleries
@@ -284,7 +284,7 @@ export function GalleryTableView({
                     disabled={selectedGalleries.size > GALLERY_MOVE_LIMIT}
                     onClick={() => onMoveGalleries(Array.from(selectedGalleries))}
                   >
-                    <i className="bi bi-arrows-move w-3 h-3" />
+                    <i className="bi bi-arrows-move w-3 h-3 inline-flex items-center justify-center leading-none" />
                     Move
                   </Button>
                 </div>

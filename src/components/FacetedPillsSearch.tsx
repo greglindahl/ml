@@ -274,7 +274,7 @@ export function FacetedPillsSearch({ onSearch, assets = [] }: FacetedPillsSearch
         className="flex flex-wrap items-center gap-2 min-h-[44px] px-3 py-2 border rounded-lg bg-background focus-within:ring-2 focus-within:ring-ring focus-within:border-transparent cursor-text"
         onClick={() => inputRef.current?.focus()}
       >
-        <i className="bi bi-search w-4 h-4 text-muted-foreground flex-shrink-0" />
+        <i className="bi bi-search w-4 h-4 text-muted-foreground flex-shrink-0 inline-flex items-center justify-center leading-none" />
         
         {/* Selected Facet Pills */}
         {selectedFacets.map((facet, index) => (
@@ -390,7 +390,7 @@ export function FacetedPillsSearch({ onSearch, assets = [] }: FacetedPillsSearch
                     }`}
                   >
                     <span>{opt.fieldLabel}</span>
-                    <i className="bi bi-chevron-down w-4 h-4 -rotate-90 text-muted-foreground" />
+                    <i className="bi bi-chevron-down w-4 h-4 -rotate-90 text-muted-foreground inline-flex items-center justify-center leading-none" />
                   </button>
                 ))
               ) : (

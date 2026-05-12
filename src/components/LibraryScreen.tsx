@@ -797,18 +797,18 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   variant="outline"
                   className="h-10 px-3 py-2 gap-2 text-primary border-primary hover:bg-primary/5"
                 >
-                  <i className="bi bi-plus-circle w-4 h-4" />
+                  <i className="bi bi-plus-circle w-4 h-4 inline-flex items-center justify-center leading-none" />
                   New
                   <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setNewFolderDialogOpen(true)}>
-                  <i className="bi bi-folder w-4 h-4 mr-2" />
+                  <i className="bi bi-folder w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
                   New Folder
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setNewGalleryDialogOpen(true)}>
-                  <i className="bi bi-plus w-4 h-4 mr-2" />
+                  <i className="bi bi-plus w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
                   New Gallery
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -1225,7 +1225,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                               disabled={selectedGalleries.size > GALLERY_MOVE_LIMIT}
                               onClick={() => handleMoveGalleries(Array.from(selectedGalleries))}
                             >
-                              <i className="bi bi-folder-symlink w-4 h-4 mr-2" /> Move
+                              <i className="bi bi-folder-symlink w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Move
                             </DropdownMenuItem>
                           </div>
                         </TooltipTrigger>
@@ -1237,7 +1237,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                       </Tooltip>
                     </TooltipProvider>
                     <DropdownMenuItem className="text-destructive focus:text-destructive">
-                      <i className="bi bi-trash w-4 h-4 mr-2" /> Delete
+                      <i className="bi bi-trash w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -1435,7 +1435,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <DropdownMenuTrigger asChild disabled={!isTableView}>
                     <Button variant="outline" className="w-full justify-between" disabled={!isTableView}>
                       {assetPerPage} per page
-                      <i className="bi bi-chevron-down w-4 h-4" />
+                      <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-full bg-white">
@@ -1487,7 +1487,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <DropdownMenuTrigger asChild disabled={!isTableView}>
                     <Button variant="outline" className="w-full justify-between" disabled={!isTableView}>
                       {galleryPerPage} per page
-                      <i className="bi bi-chevron-down w-4 h-4" />
+                      <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-full bg-white">
@@ -1539,7 +1539,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   <DropdownMenuTrigger asChild disabled={!isTableView}>
                     <Button variant="outline" className="w-full justify-between" disabled={!isTableView}>
                       {folderPerPage} per page
-                      <i className="bi bi-chevron-down w-4 h-4" />
+                      <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-full bg-white">
