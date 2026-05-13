@@ -173,7 +173,7 @@ export function CampaignsSettingsDrawer({
                 )}
               >
                 <i className={`bi ${activeTab === "table" ? "bi-table" : "bi-table"} text-[15px]`} />
-                Table View
+                Table Preferences
               </TabsTrigger>
               <TabsTrigger
                 value="filters"

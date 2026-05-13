@@ -288,8 +288,8 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
                   {campaignSelected.length > 0
-                    ? renderActiveChip("campaign", campaignSelected, "Campaign", "bi-megaphone")
-                    : renderInactiveChip("Campaign", "bi-megaphone")}
+                    ? renderActiveChip("campaign", campaignSelected, "Campaign", "bi-layers")
+                    : renderInactiveChip("Campaign", "bi-layers")}
                 </DropdownMenuTrigger>
               </TooltipTrigger>
               <TooltipContent side="bottom">Campaign</TooltipContent>
@@ -340,8 +340,8 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
                   {requestTypeSelected.length > 0
-                    ? renderActiveChip("requestType", requestTypeSelected, "Request Type", "bi-tag")
-                    : renderInactiveChip("Request Type", "bi-tag")}
+                    ? renderActiveChip("requestType", requestTypeSelected, "Request Type", "bi-card-checklist")
+                    : renderInactiveChip("Request Type", "bi-card-checklist")}
                 </DropdownMenuTrigger>
               </TooltipTrigger>
               <TooltipContent side="bottom">Request Type</TooltipContent>
@@ -373,8 +373,8 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
                   {statusSelected.length > 0
-                    ? renderActiveChip("status", statusSelected, "Status", "bi-list-check")
-                    : renderInactiveChip("Status", "bi-list-check")}
+                    ? renderActiveChip("status", statusSelected, "Status", "bi-hourglass-split")
+                    : renderInactiveChip("Status", "bi-hourglass-split")}
                 </DropdownMenuTrigger>
               </TooltipTrigger>
               <TooltipContent side="bottom">Status</TooltipContent>

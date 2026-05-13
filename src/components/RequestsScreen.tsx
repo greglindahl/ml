@@ -5,12 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -43,33 +37,10 @@ interface RequestsScreenProps {
   isMobile?: boolean;
 }
 
-// Sort options for Campaigns
-const CAMPAIGNS_SORT_OPTIONS = [
-  { value: "createdDate", label: "Created Date" },
-  { value: "name", label: "Name" },
-  { value: "status", label: "Status" },
-  { value: "views", label: "Views" },
-  { value: "shares", label: "Shares" },
-];
-
-// Sort options for Requests
-const REQUESTS_SORT_OPTIONS = [
-  { value: "createdDate", label: "Created Date" },
-  { value: "name", label: "Name" },
-  { value: "status", label: "Status" },
-  { value: "campaign", label: "Campaign" },
-  { value: "views", label: "Views" },
-  { value: "shares", label: "Shares" },
-];
-
 export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
   // Search state
   const [campaignsSearchQuery, setCampaignsSearchQuery] = useState("");
   const [requestsSearchQuery, setRequestsSearchQuery] = useState("");
-
-  // Sort state
-  const [campaignsSortField, setCampaignsSortField] = useState("createdDate");
-  const [requestsSortField, setRequestsSortField] = useState("createdDate");
 
   // Settings drawer state
   const [campaignsSettingsOpen, setCampaignsSettingsOpen] = useState(false);
@@ -118,13 +89,13 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
   Object.entries(requestsActiveFilters).forEach(([filterId, values]) => {
     values.forEach((v) => {
       let icon = <i className="bi bi-tag text-sm" />;
-      if (filterId === "campaign") icon = <i className="bi bi-megaphone text-sm" />;
-      if (filterId === "requestType") icon = <i className="bi bi-file-text text-sm" />;
-      if (filterId === "status") icon = <i className="bi bi-check-circle text-sm" />;
+      if (filterId === "campaign") icon = <i className="bi bi-layers text-sm" />;
+      if (filterId === "requestType") icon = <i className="bi bi-card-checklist text-sm" />;
+      if (filterId === "status") icon = <i className="bi bi-hourglass-split text-sm" />;
       if (filterId === "creator") icon = <i className="bi bi-person text-sm" />;
       if (filterId === "date") icon = <i className="bi bi-calendar text-sm" />;
       if (filterId === "assignee") icon = <i className="bi bi-person-check text-sm" />;
-      if (filterId === "recipient") icon = <i className="bi bi-person text-sm" />;
+      if (filterId === "recipient") icon = <i className="bi bi-send text-sm" />;
       requestsChips.push({ label: v.label, value: v.value, filterId, icon });
     });
   });
@@ -146,7 +117,7 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
   };
 
   return (
-    <div className={`flex-1 flex flex-col pb-12 ${isMobile ? "pt-[58px]" : "pt-20"}`}>
+    <div className={`flex-1 flex flex-col pb-12 content-container ${isMobile ? "pt-[58px]" : "pt-20"}`}>
       {/* Header */}
       <div className="px-4 md:px-8 xl:px-16 py-4">
         <h1 className="text-[26px] font-semibold text-foreground">Requests</h1>
@@ -166,7 +137,7 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
           {/* Search Row */}
           <div className="flex flex-wrap items-center gap-3">
             {/* Search Input */}
-            <div className="relative flex-1 min-w-[200px] max-w-[400px]">
+            <div className="relative flex-1 min-w-[200px]">
               <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
@@ -179,47 +150,20 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
 
             {/* Utility cluster - pushed right */}
             <div className="flex items-center gap-2 ml-auto">
-              {/* Sort Dropdown */}
-              <Tooltip delayDuration={700}>
-                <DropdownMenu>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-10 gap-2 px-3 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                        <i className="bi bi-arrow-down-up w-4 h-4 inline-flex items-center justify-center leading-none" />
-                        <span className="sort-label">
-                          {CAMPAIGNS_SORT_OPTIONS.find(o => o.value === campaignsSortField)?.label || "Sort"}
-                        </span>
-                        <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <DropdownMenuContent className="bg-white w-48">
-                    {CAMPAIGNS_SORT_OPTIONS.map((opt) => (
-                      <DropdownMenuItem
-                        key={opt.value}
-                        onClick={() => setCampaignsSortField(opt.value)}
-                        className="flex items-center justify-between"
-                      >
-                        {opt.label}
-                        {campaignsSortField === opt.value && (
-                          <i className="bi bi-check text-primary" />
-                        )}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <TooltipContent side="bottom">Sort by...</TooltipContent>
-              </Tooltip>
-
               {/* Settings Button */}
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
-                onClick={() => setCampaignsSettingsOpen(true)}
-              >
-                <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
-              </Button>
+              <Tooltip delayDuration={700}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
+                    onClick={() => setCampaignsSettingsOpen(true)}
+                  >
+                    <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Settings</TooltipContent>
+              </Tooltip>
             </div>
           </div>
 
@@ -263,11 +207,13 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
           </div>
 
           {/* Table */}
-          <CampaignsTable
-            campaigns={mockCampaigns}
-            searchQuery={campaignsSearchQuery}
-            perPage={campaignsPerPage}
-          />
+          <div className="flex-1 min-h-0">
+            <CampaignsTable
+              campaigns={mockCampaigns}
+              searchQuery={campaignsSearchQuery}
+              perPage={campaignsPerPage}
+            />
+          </div>
         </TabsContent>
 
         {/* Requests Tab */}
@@ -275,7 +221,7 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
           {/* Search Row */}
           <div className="flex flex-wrap items-center gap-3">
             {/* Search Input */}
-            <div className="relative flex-1 min-w-[200px] max-w-[400px]">
+            <div className="relative flex-1 min-w-[200px]">
               <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
@@ -288,47 +234,20 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
 
             {/* Utility cluster - pushed right */}
             <div className="flex items-center gap-2 ml-auto">
-              {/* Sort Dropdown */}
-              <Tooltip delayDuration={700}>
-                <DropdownMenu>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-10 gap-2 px-3 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                        <i className="bi bi-arrow-down-up w-4 h-4 inline-flex items-center justify-center leading-none" />
-                        <span className="sort-label">
-                          {REQUESTS_SORT_OPTIONS.find(o => o.value === requestsSortField)?.label || "Sort"}
-                        </span>
-                        <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <DropdownMenuContent className="bg-white w-48">
-                    {REQUESTS_SORT_OPTIONS.map((opt) => (
-                      <DropdownMenuItem
-                        key={opt.value}
-                        onClick={() => setRequestsSortField(opt.value)}
-                        className="flex items-center justify-between"
-                      >
-                        {opt.label}
-                        {requestsSortField === opt.value && (
-                          <i className="bi bi-check text-primary" />
-                        )}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <TooltipContent side="bottom">Sort by...</TooltipContent>
-              </Tooltip>
-
               {/* Settings Button */}
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
-                onClick={() => setRequestsSettingsOpen(true)}
-              >
-                <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
-              </Button>
+              <Tooltip delayDuration={700}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
+                    onClick={() => setRequestsSettingsOpen(true)}
+                  >
+                    <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Settings</TooltipContent>
+              </Tooltip>
             </div>
           </div>
 
@@ -374,11 +293,13 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
           </div>
 
           {/* Table */}
-          <RequestsTable
-            requests={mockRequests}
-            searchQuery={requestsSearchQuery}
-            perPage={requestsPerPage}
-          />
+          <div className="flex-1 min-h-0">
+            <RequestsTable
+              requests={mockRequests}
+              searchQuery={requestsSearchQuery}
+              perPage={requestsPerPage}
+            />
+          </div>
         </TabsContent>
       </Tabs>
 
