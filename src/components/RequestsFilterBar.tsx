@@ -1,25 +1,39 @@
-import { useState } from "react";
+import { useState, useImperativeHandle, forwardRef } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { getUniqueRequestCreators } from "@/lib/mockCampaignData";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { TogglePill } from "./TogglePill";
+import { mockCampaigns, getUniqueRequestCreators } from "@/lib/mockCampaignData";
 
 interface FilterValue {
   value: string;
   label: string;
 }
 
+export interface RequestsFilterBarHandle {
+  removeValue: (filterId: string, value: string) => void;
+  clearAll: () => void;
+}
+
 interface RequestsFilterBarProps {
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  onFilterChange?: (filterId: string, values: string[]) => void;
+  isFlaggedActive?: boolean;
+  onFlaggedToggle?: (active: boolean) => void;
+  isArchivedActive?: boolean;
+  onArchivedToggle?: (active: boolean) => void;
+  onOpenFiltersSheet?: () => void;
+  onActiveFiltersChange?: (filters: Record<string, FilterValue[]>) => void;
 }
 
 const dateOptions = [
@@ -31,240 +45,613 @@ const dateOptions = [
   { label: "Custom", value: "custom" },
 ];
 
-export function RequestsFilterBar({
-  searchQuery,
-  onSearchChange,
-  onFilterChange,
-}: RequestsFilterBarProps) {
-  const [activeFilters, setActiveFilters] = useState<Record<string, FilterValue[]>>({});
-  const [creatorSearchQuery, setCreatorSearchQuery] = useState("");
+const statusOptions = [
+  { label: "Draft", value: "draft" },
+  { label: "Scheduled", value: "scheduled" },
+  { label: "Delivered", value: "delivered" },
+  { label: "Completed", value: "completed" },
+  { label: "Expired", value: "expired" },
+];
 
-  const creators = getUniqueRequestCreators();
+const requestTypeOptions = [
+  { label: "Create and Post to Social", value: "create-post-social" },
+  { label: "Product Launch", value: "product-launch" },
+  { label: "Influencer Collaboration", value: "influencer-collaboration" },
+  { label: "Seasonal Campaign", value: "seasonal-campaign" },
+  { label: "Limited Edition", value: "limited-edition" },
+  { label: "Brand Awareness", value: "brand-awareness" },
+  { label: "Video Production", value: "video-production" },
+  { label: "Event Coverage", value: "event-coverage" },
+];
 
-  const handleMultiSelect = (
-    filterId: string,
-    value: string,
-    label: string,
-    checked: boolean
-  ) => {
-    setActiveFilters((prev) => {
-      const current = prev[filterId] || [];
-      let updated: FilterValue[];
-      if (checked) {
-        updated = [...current, { value, label }];
-      } else {
-        updated = current.filter((item) => item.value !== value);
-      }
-      const newFilters = { ...prev };
-      if (updated.length === 0) {
+// Mock groups for Assignee/Recipient filters
+const mockGroups = [
+  { id: "marketing", name: "Marketing Team" },
+  { id: "social", name: "Social Media Team" },
+  { id: "creative", name: "Creative Team" },
+  { id: "operations", name: "Operations Team" },
+];
+
+export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFilterBarProps>(
+  function RequestsFilterBar(
+    {
+      isFlaggedActive = false,
+      onFlaggedToggle,
+      isArchivedActive = false,
+      onArchivedToggle,
+      onOpenFiltersSheet,
+      onActiveFiltersChange,
+    },
+    ref
+  ) {
+    const [activeFilters, setActiveFilters] = useState<Record<string, FilterValue[]>>({});
+    const [campaignSearchQuery, setCampaignSearchQuery] = useState("");
+    const [creatorSearchQuery, setCreatorSearchQuery] = useState("");
+    const [assigneeSearchQuery, setAssigneeSearchQuery] = useState("");
+    const [recipientSearchQuery, setRecipientSearchQuery] = useState("");
+
+    const creators = getUniqueRequestCreators();
+    const campaigns = mockCampaigns;
+
+    // Expose imperative handle
+    useImperativeHandle(ref, () => ({
+      removeValue: (filterId: string, value: string) => {
+        handleRemoveValue(filterId, value);
+      },
+      clearAll: () => {
+        setActiveFilters({});
+        onActiveFiltersChange?.({});
+      },
+    }));
+
+    const handleMultiSelect = (
+      filterId: string,
+      value: string,
+      label: string,
+      checked: boolean
+    ) => {
+      setActiveFilters((prev) => {
+        const current = prev[filterId] || [];
+        let updated: FilterValue[];
+        if (checked) {
+          updated = [...current, { value, label }];
+        } else {
+          updated = current.filter((item) => item.value !== value);
+        }
+        const newFilters = { ...prev };
+        if (updated.length === 0) {
+          delete newFilters[filterId];
+        } else {
+          newFilters[filterId] = updated;
+        }
+        onActiveFiltersChange?.(newFilters);
+        return newFilters;
+      });
+    };
+
+    const handleSingleSelect = (filterId: string, value: string, label: string) => {
+      setActiveFilters((prev) => {
+        const newFilters = { ...prev };
+        newFilters[filterId] = [{ value, label }];
+        onActiveFiltersChange?.(newFilters);
+        return newFilters;
+      });
+    };
+
+    const handleRemoveValue = (filterId: string, value: string) => {
+      setActiveFilters((prev) => {
+        const current = prev[filterId] || [];
+        const updated = current.filter((item) => item.value !== value);
+        const newFilters = { ...prev };
+        if (updated.length === 0) {
+          delete newFilters[filterId];
+        } else {
+          newFilters[filterId] = updated;
+        }
+        onActiveFiltersChange?.(newFilters);
+        return newFilters;
+      });
+    };
+
+    const clearFilter = (filterId: string) => {
+      setActiveFilters((prev) => {
+        const newFilters = { ...prev };
         delete newFilters[filterId];
-      } else {
-        newFilters[filterId] = updated;
-      }
-      onFilterChange?.(filterId, updated.map((i) => i.value));
-      return newFilters;
-    });
-  };
+        onActiveFiltersChange?.(newFilters);
+        return newFilters;
+      });
+    };
 
-  const handleSingleSelect = (filterId: string, value: string, label: string) => {
-    setActiveFilters((prev) => {
-      const newFilters = { ...prev };
-      newFilters[filterId] = [{ value, label }];
-      onFilterChange?.(filterId, [value]);
-      return newFilters;
-    });
-  };
+    const campaignSelected = activeFilters["campaign"] || [];
+    const requestTypeSelected = activeFilters["requestType"] || [];
+    const statusSelected = activeFilters["status"] || [];
+    const creatorSelected = activeFilters["creator"] || [];
+    const dateSelected = activeFilters["date"] || [];
+    const assigneeSelected = activeFilters["assignee"] || [];
+    const recipientSelected = activeFilters["recipient"] || [];
 
-  const handleRemoveFilter = (filterId: string, value: string) => {
-    setActiveFilters((prev) => {
-      const current = prev[filterId] || [];
-      const updated = current.filter((item) => item.value !== value);
-      const newFilters = { ...prev };
-      if (updated.length === 0) {
-        delete newFilters[filterId];
-      } else {
-        newFilters[filterId] = updated;
-      }
-      onFilterChange?.(filterId, updated.map((i) => i.value));
-      return newFilters;
-    });
-  };
+    // Calculate total active filter count for collapsed button
+    const totalActiveCount = Object.values(activeFilters).reduce((sum, arr) => sum + arr.length, 0);
 
-  const clearAllFilters = () => {
-    setActiveFilters({});
-    onSearchChange("");
-  };
+    const filteredCampaigns = campaigns.filter((c) =>
+      c.name.toLowerCase().includes(campaignSearchQuery.toLowerCase())
+    );
 
-  const creatorSelected = activeFilters["creator"] || [];
-  const dateSelected = activeFilters["date"] || [];
+    const filteredCreators = creators.filter((c) =>
+      c.name.toLowerCase().includes(creatorSearchQuery.toLowerCase())
+    );
 
-  // Collect all active filter badges
-  const allActiveBadges: { filterId: string; value: string; label: string }[] = [];
+    const filteredAssigneeUsers = creators.filter((c) =>
+      c.name.toLowerCase().includes(assigneeSearchQuery.toLowerCase())
+    );
 
-  if (searchQuery) {
-    allActiveBadges.push({ filterId: "search", value: searchQuery, label: searchQuery });
-  }
+    const filteredAssigneeGroups = mockGroups.filter((g) =>
+      g.name.toLowerCase().includes(assigneeSearchQuery.toLowerCase())
+    );
 
-  Object.entries(activeFilters).forEach(([filterId, values]) => {
-    values.forEach((v) => {
-      allActiveBadges.push({ filterId, value: v.value, label: v.label });
-    });
-  });
+    const filteredRecipientUsers = creators.filter((c) =>
+      c.name.toLowerCase().includes(recipientSearchQuery.toLowerCase())
+    );
 
-  const filteredCreators = creators.filter((c) =>
-    c.name.toLowerCase().includes(creatorSearchQuery.toLowerCase())
-  );
+    const filteredRecipientGroups = mockGroups.filter((g) =>
+      g.name.toLowerCase().includes(recipientSearchQuery.toLowerCase())
+    );
 
-  return (
-    <div className="flex flex-col gap-3">
-      {/* Search Input */}
-      <div className="relative">
-        <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="text"
-          placeholder="Search"
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10 h-10 rounded-full"
-        />
-      </div>
-
-      {/* Filter Dropdowns Row */}
-      <div className="flex items-center gap-1">
-        {/* Creator Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
-            >
-              <span>Creator</span>
-              {creatorSelected.length > 0 && (
-                <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
-                  {creatorSelected.length}
-                </span>
-              )}
-              <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="start"
-            className="bg-popover z-50 min-w-[200px]"
-            onCloseAutoFocus={(e) => e.preventDefault()}
-          >
-            <div className="px-2 py-2 border-b">
-              <div className="relative">
-                <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
-                <input
-                  type="text"
-                  placeholder="Search creators..."
-                  value={creatorSearchQuery}
-                  onChange={(e) => setCreatorSearchQuery(e.target.value)}
-                  onClick={(e) => e.stopPropagation()}
-                  onKeyDown={(e) => e.stopPropagation()}
-                  className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-              </div>
-            </div>
-            <div className="max-h-[280px] overflow-y-auto">
-              {filteredCreators.map((creator) => (
-                <DropdownMenuCheckboxItem
-                  key={creator.id}
-                  checked={creatorSelected.some((s) => s.value === creator.id)}
-                  onCheckedChange={(checked) =>
-                    handleMultiSelect("creator", creator.id, creator.name, checked as boolean)
-                  }
+    // Helper to render active filter chip display
+    const renderActiveChip = (
+      filterId: string,
+      selected: FilterValue[],
+      label: string,
+      icon: string
+    ) => {
+      if (selected.length === 0) return null;
+      return (
+        <div className="inline-flex items-center gap-1 h-8 px-1.5 border border-input rounded-md bg-card min-w-[120px] max-w-[280px]">
+          <div className="flex flex-wrap gap-1 flex-1">
+            {selected.map((item) => (
+              <span
+                key={item.value}
+                className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted rounded text-xs"
+              >
+                <button
+                  type="button"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveValue(filterId, item.value);
+                  }}
+                  className="text-muted-foreground hover:text-foreground"
+                  aria-label={`Remove ${label} filter: ${item.label}`}
                 >
-                  {creator.name}
-                </DropdownMenuCheckboxItem>
-              ))}
-              {filteredCreators.length === 0 && (
-                <div className="px-2 py-3 text-xs text-muted-foreground text-center">
-                  No results found
-                </div>
-              )}
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* Created Date Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
+                  <i className="bi bi-x text-xs" />
+                </button>
+                {item.label}
+              </span>
+            ))}
+          </div>
+          <div className="flex items-center gap-1 ml-auto pl-1">
+            <button
+              type="button"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                clearFilter(filterId);
+              }}
+              className="text-muted-foreground hover:text-foreground"
+              aria-label={`Clear ${label} filter`}
             >
-              <span>Created Date</span>
-              {dateSelected.length > 0 && (
-                <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
-                  {dateSelected.length}
-                </span>
-              )}
-              <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="start"
-            className="bg-popover z-50 min-w-[200px]"
-            onCloseAutoFocus={(e) => e.preventDefault()}
-          >
-            <div className="max-h-[280px] overflow-y-auto">
-              {dateOptions.map((option) => (
-                <DropdownMenuCheckboxItem
-                  key={option.value}
-                  checked={dateSelected.some((s) => s.value === option.value)}
-                  onCheckedChange={() =>
-                    handleSingleSelect("date", option.value, option.label)
-                  }
-                >
-                  {option.label}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <i className="bi bi-x text-sm" />
+            </button>
+            <i className="bi bi-chevron-down w-3.5 h-3.5 inline-flex items-center justify-center leading-none text-muted-foreground" />
+          </div>
+        </div>
+      );
+    };
 
-        {/* Settings/More Button */}
+    // Helper to render inactive filter button
+    const renderInactiveChip = (label: string, icon: string) => (
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
+      >
+        <i className={`bi ${icon} w-4 h-4 inline-flex items-center justify-center leading-none`} />
+        <span className="filter-label">{label}</span>
+        <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+      </Button>
+    );
+
+    return (
+      <div className="filter-bar-container cq-filterbar-hide-label flex flex-wrap items-center gap-1.5">
+        {/* Collapsed Filters Button (visible at narrow widths) */}
         <Button
           variant="outline"
           size="sm"
-          className="h-10 w-10 p-0 rounded-md bg-white border-gray-300 text-[#6e84a3]"
+          className="filters-collapsed-button h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
+          onClick={onOpenFiltersSheet}
         >
-          <i className="bi bi-sliders2 text-lg" />
+          <i className="bi bi-filter w-4 h-4 inline-flex items-center justify-center leading-none" />
+          <span>Filters</span>
+          {totalActiveCount > 0 && (
+            <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+              {totalActiveCount}
+            </span>
+          )}
+          <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
         </Button>
-      </div>
 
-      {/* Active Filter Badges */}
-      {allActiveBadges.length > 0 && (
-        <div className="flex items-center gap-3 flex-wrap">
-          {allActiveBadges.map((badge) => (
-            <Badge
-              key={`${badge.filterId}-${badge.value}`}
-              colorStyle="secondary"
-              theme="subtle"
-              shape="rounded"
-              onRemove={() => {
-                if (badge.filterId === "search") {
-                  onSearchChange("");
-                } else {
-                  handleRemoveFilter(badge.filterId, badge.value);
-                }
-              }}
+        {/* Expanded Filters (visible at wide widths) */}
+        <div className="filters-expanded contents">
+          {/* Campaigns Dropdown */}
+          <DropdownMenu>
+            <Tooltip delayDuration={700}>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  {campaignSelected.length > 0
+                    ? renderActiveChip("campaign", campaignSelected, "Campaign", "bi-megaphone")
+                    : renderInactiveChip("Campaign", "bi-megaphone")}
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Campaign</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent
+              align="start"
+              className="bg-popover z-50 min-w-[200px]"
+              onCloseAutoFocus={(e) => e.preventDefault()}
             >
-              {badge.label}
-            </Badge>
-          ))}
-          <button
-            type="button"
-            onClick={clearAllFilters}
-            className="text-sm text-primary hover:underline"
-          >
-            Clear all
-          </button>
+              <div className="px-2 py-2 border-b">
+                <div className="relative">
+                  <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+                  <input
+                    type="text"
+                    placeholder="Search campaigns..."
+                    value={campaignSearchQuery}
+                    onChange={(e) => setCampaignSearchQuery(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+              <div className="max-h-[280px] overflow-y-auto">
+                {filteredCampaigns.map((campaign) => (
+                  <DropdownMenuCheckboxItem
+                    key={campaign.id}
+                    checked={campaignSelected.some((s) => s.value === campaign.id)}
+                    onCheckedChange={(checked) =>
+                      handleMultiSelect("campaign", campaign.id, campaign.name, checked as boolean)
+                    }
+                  >
+                    {campaign.name}
+                  </DropdownMenuCheckboxItem>
+                ))}
+                {filteredCampaigns.length === 0 && (
+                  <div className="px-2 py-3 text-xs text-muted-foreground text-center">
+                    No results found
+                  </div>
+                )}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Request Type Dropdown (single select) */}
+          <DropdownMenu>
+            <Tooltip delayDuration={700}>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  {requestTypeSelected.length > 0
+                    ? renderActiveChip("requestType", requestTypeSelected, "Request Type", "bi-tag")
+                    : renderInactiveChip("Request Type", "bi-tag")}
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Request Type</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent
+              align="start"
+              className="bg-popover z-50 min-w-[200px]"
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="max-h-[280px] overflow-y-auto">
+                {requestTypeOptions.map((option) => (
+                  <DropdownMenuCheckboxItem
+                    key={option.value}
+                    checked={requestTypeSelected.some((s) => s.value === option.value)}
+                    onCheckedChange={() =>
+                      handleSingleSelect("requestType", option.value, option.label)
+                    }
+                  >
+                    {option.label}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Status Dropdown (multi select) */}
+          <DropdownMenu>
+            <Tooltip delayDuration={700}>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  {statusSelected.length > 0
+                    ? renderActiveChip("status", statusSelected, "Status", "bi-list-check")
+                    : renderInactiveChip("Status", "bi-list-check")}
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Status</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent
+              align="start"
+              className="bg-popover z-50 min-w-[200px]"
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="max-h-[280px] overflow-y-auto">
+                {statusOptions.map((option) => (
+                  <DropdownMenuCheckboxItem
+                    key={option.value}
+                    checked={statusSelected.some((s) => s.value === option.value)}
+                    onCheckedChange={(checked) =>
+                      handleMultiSelect("status", option.value, option.label, checked as boolean)
+                    }
+                  >
+                    {option.label}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Creator Dropdown */}
+          <DropdownMenu>
+            <Tooltip delayDuration={700}>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  {creatorSelected.length > 0
+                    ? renderActiveChip("creator", creatorSelected, "Creator", "bi-person")
+                    : renderInactiveChip("Creator", "bi-person")}
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Creator</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent
+              align="start"
+              className="bg-popover z-50 min-w-[200px]"
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="px-2 py-2 border-b">
+                <div className="relative">
+                  <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+                  <input
+                    type="text"
+                    placeholder="Search creators..."
+                    value={creatorSearchQuery}
+                    onChange={(e) => setCreatorSearchQuery(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+              <div className="max-h-[280px] overflow-y-auto">
+                {filteredCreators.map((creator) => (
+                  <DropdownMenuCheckboxItem
+                    key={creator.id}
+                    checked={creatorSelected.some((s) => s.value === creator.id)}
+                    onCheckedChange={(checked) =>
+                      handleMultiSelect("creator", creator.id, creator.name, checked as boolean)
+                    }
+                  >
+                    {creator.name}
+                  </DropdownMenuCheckboxItem>
+                ))}
+                {filteredCreators.length === 0 && (
+                  <div className="px-2 py-3 text-xs text-muted-foreground text-center">
+                    No results found
+                  </div>
+                )}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Created Date Dropdown */}
+          <DropdownMenu>
+            <Tooltip delayDuration={700}>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  {dateSelected.length > 0
+                    ? renderActiveChip("date", dateSelected, "Created Date", "bi-calendar")
+                    : renderInactiveChip("Created Date", "bi-calendar")}
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Created Date</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent
+              align="start"
+              className="bg-popover z-50 min-w-[200px]"
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="max-h-[280px] overflow-y-auto">
+                {dateOptions.map((option) => (
+                  <DropdownMenuCheckboxItem
+                    key={option.value}
+                    checked={dateSelected.some((s) => s.value === option.value)}
+                    onCheckedChange={() =>
+                      handleSingleSelect("date", option.value, option.label)
+                    }
+                  >
+                    {option.label}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Assignee Dropdown (Users + Groups dual-section) */}
+          <DropdownMenu>
+            <Tooltip delayDuration={700}>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  {assigneeSelected.length > 0
+                    ? renderActiveChip("assignee", assigneeSelected, "Assignee", "bi-person-check")
+                    : renderInactiveChip("Assignee", "bi-person-check")}
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Assignee</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent
+              align="start"
+              className="bg-popover z-50 min-w-[200px]"
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="px-2 py-2 border-b">
+                <div className="relative">
+                  <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+                  <input
+                    type="text"
+                    placeholder="Search assignees..."
+                    value={assigneeSearchQuery}
+                    onChange={(e) => setAssigneeSearchQuery(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+              <div className="max-h-[280px] overflow-y-auto">
+                {filteredAssigneeUsers.length > 0 && (
+                  <>
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">Users</DropdownMenuLabel>
+                    {filteredAssigneeUsers.map((user) => (
+                      <DropdownMenuCheckboxItem
+                        key={`user-${user.id}`}
+                        checked={assigneeSelected.some((s) => s.value === `user-${user.id}`)}
+                        onCheckedChange={(checked) =>
+                          handleMultiSelect("assignee", `user-${user.id}`, user.name, checked as boolean)
+                        }
+                      >
+                        {user.name}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </>
+                )}
+                {filteredAssigneeGroups.length > 0 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">Groups</DropdownMenuLabel>
+                    {filteredAssigneeGroups.map((group) => (
+                      <DropdownMenuCheckboxItem
+                        key={`group-${group.id}`}
+                        checked={assigneeSelected.some((s) => s.value === `group-${group.id}`)}
+                        onCheckedChange={(checked) =>
+                          handleMultiSelect("assignee", `group-${group.id}`, group.name, checked as boolean)
+                        }
+                      >
+                        {group.name}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </>
+                )}
+                {filteredAssigneeUsers.length === 0 && filteredAssigneeGroups.length === 0 && (
+                  <div className="px-2 py-3 text-xs text-muted-foreground text-center">
+                    No results found
+                  </div>
+                )}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Recipient Dropdown (Users + Groups dual-section) */}
+          <DropdownMenu>
+            <Tooltip delayDuration={700}>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  {recipientSelected.length > 0
+                    ? renderActiveChip("recipient", recipientSelected, "Recipient", "bi-send")
+                    : renderInactiveChip("Recipient", "bi-send")}
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Recipient</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent
+              align="start"
+              className="bg-popover z-50 min-w-[200px]"
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="px-2 py-2 border-b">
+                <div className="relative">
+                  <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+                  <input
+                    type="text"
+                    placeholder="Search recipients..."
+                    value={recipientSearchQuery}
+                    onChange={(e) => setRecipientSearchQuery(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+              <div className="max-h-[280px] overflow-y-auto">
+                {filteredRecipientUsers.length > 0 && (
+                  <>
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">Users</DropdownMenuLabel>
+                    {filteredRecipientUsers.map((user) => (
+                      <DropdownMenuCheckboxItem
+                        key={`user-${user.id}`}
+                        checked={recipientSelected.some((s) => s.value === `user-${user.id}`)}
+                        onCheckedChange={(checked) =>
+                          handleMultiSelect("recipient", `user-${user.id}`, user.name, checked as boolean)
+                        }
+                      >
+                        {user.name}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </>
+                )}
+                {filteredRecipientGroups.length > 0 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">Groups</DropdownMenuLabel>
+                    {filteredRecipientGroups.map((group) => (
+                      <DropdownMenuCheckboxItem
+                        key={`group-${group.id}`}
+                        checked={recipientSelected.some((s) => s.value === `group-${group.id}`)}
+                        onCheckedChange={(checked) =>
+                          handleMultiSelect("recipient", `group-${group.id}`, group.name, checked as boolean)
+                        }
+                      >
+                        {group.name}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </>
+                )}
+                {filteredRecipientUsers.length === 0 && filteredRecipientGroups.length === 0 && (
+                  <div className="px-2 py-3 text-xs text-muted-foreground text-center">
+                    No results found
+                  </div>
+                )}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Flagged pill */}
+          <TogglePill
+            label="Flagged"
+            iconClass="bi-flag-fill"
+            tooltip="Show only flagged requests"
+            isActive={isFlaggedActive}
+            onClick={() => onFlaggedToggle?.(!isFlaggedActive)}
+          />
+
+          {/* Archived pill */}
+          <TogglePill
+            label="Archived"
+            iconClass="bi-archive"
+            tooltip="Show only archived requests"
+            isActive={isArchivedActive}
+            onClick={() => onArchivedToggle?.(!isArchivedActive)}
+          />
         </div>
-      )}
-    </div>
-  );
-}
+      </div>
+    );
+  }
+);

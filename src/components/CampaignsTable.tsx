@@ -1,14 +1,6 @@
 import { useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -27,17 +19,17 @@ import {
 interface CampaignsTableProps {
   campaigns: Campaign[];
   searchQuery?: string;
+  perPage?: number;
 }
 
 type SortField = "name" | "status" | "requestType" | "creator" | "createdDate" | "views" | "shares";
 type SortDirection = "asc" | "desc";
 
-export function CampaignsTable({ campaigns, searchQuery }: CampaignsTableProps) {
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+export function CampaignsTable({ campaigns, searchQuery, perPage = 40 }: CampaignsTableProps) {
   const [sortField, setSortField] = useState<SortField>("createdDate");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(40);
+  const itemsPerPage = perPage;
 
   // Filter by search query
   const filteredCampaigns = campaigns.filter((campaign) => {
@@ -94,28 +86,6 @@ export function CampaignsTable({ campaigns, searchQuery }: CampaignsTableProps) 
     }
   };
 
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedIds(new Set(paginatedCampaigns.map((c) => c.id)));
-    } else {
-      setSelectedIds(new Set());
-    }
-  };
-
-  const handleSelectOne = (id: string, checked: boolean) => {
-    const newSet = new Set(selectedIds);
-    if (checked) {
-      newSet.add(id);
-    } else {
-      newSet.delete(id);
-    }
-    setSelectedIds(newSet);
-  };
-
-  const isAllSelected =
-    paginatedCampaigns.length > 0 &&
-    paginatedCampaigns.every((c) => selectedIds.has(c.id));
-
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
       return <i className="bi bi-chevron-expand text-[10px] opacity-50" />;
@@ -129,59 +99,11 @@ export function CampaignsTable({ campaigns, searchQuery }: CampaignsTableProps) 
 
   return (
     <div className="flex flex-col border rounded-lg bg-white overflow-hidden">
-      {/* Table Header Controls */}
-      <div className="flex items-center justify-end gap-6 px-6 py-4 border-b">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 text-[13px] text-foreground">
-              <span>{itemsPerPage} per page</span>
-              <i className="bi bi-chevron-down text-[10px]" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {[10, 20, 40, 100].map((num) => (
-              <DropdownMenuItem
-                key={num}
-                onClick={() => {
-                  setItemsPerPage(num);
-                  setCurrentPage(1);
-                }}
-              >
-                {num} per page
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 px-2.5 py-1 text-[13px] text-foreground border rounded">
-              <i className="bi bi-table text-[13px]" />
-              <span>Manage Columns</span>
-              <i className="bi bi-chevron-down text-[10px]" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>Request Name</DropdownMenuItem>
-            <DropdownMenuItem>Status</DropdownMenuItem>
-            <DropdownMenuItem>Request Type</DropdownMenuItem>
-            <DropdownMenuItem>Creator</DropdownMenuItem>
-            <DropdownMenuItem>Created</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
       {/* Table */}
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="bg-[#f9fbfd]">
-              <TableHead className="w-[50px]">
-                <Checkbox
-                  checked={isAllSelected}
-                  onCheckedChange={handleSelectAll}
-                />
-              </TableHead>
               <TableHead className="w-[80px]" />
               <TableHead
                 className="cursor-pointer select-none"
@@ -260,21 +182,7 @@ export function CampaignsTable({ campaigns, searchQuery }: CampaignsTableProps) 
           </TableHeader>
           <TableBody>
             {paginatedCampaigns.map((campaign) => (
-              <TableRow
-                key={campaign.id}
-                className={cn(
-                  "group",
-                  selectedIds.has(campaign.id) && "bg-primary/5"
-                )}
-              >
-                <TableCell>
-                  <Checkbox
-                    checked={selectedIds.has(campaign.id)}
-                    onCheckedChange={(checked) =>
-                      handleSelectOne(campaign.id, checked as boolean)
-                    }
-                  />
-                </TableCell>
+              <TableRow key={campaign.id} className="group">
                 <TableCell>
                   <div className="w-16 h-16 rounded overflow-hidden bg-[#d2ddec] flex items-center justify-center">
                     {campaign.thumbnailUrl ? (
