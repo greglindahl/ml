@@ -1,10 +1,16 @@
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CampaignsFilterBar } from "./CampaignsFilterBar";
+import { CampaignsTable } from "./CampaignsTable";
+import { mockCampaigns } from "@/lib/mockCampaignData";
 
 interface RequestsScreenProps {
   isMobile?: boolean;
 }
 
 export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+
   return (
     <div className={`flex-1 flex flex-col pb-12 ${isMobile ? "pt-[58px]" : "pt-20"}`}>
       {/* Header */}
@@ -21,10 +27,15 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
           </TabsList>
         </div>
 
-        <TabsContent value="campaigns" className="flex-1 py-6 mt-0">
-          <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
-            <p>Campaigns content placeholder</p>
-          </div>
+        <TabsContent value="campaigns" className="flex-1 py-6 mt-0 flex flex-col gap-6">
+          <CampaignsFilterBar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
+          <CampaignsTable
+            campaigns={mockCampaigns}
+            searchQuery={searchQuery}
+          />
         </TabsContent>
 
         <TabsContent value="requests" className="flex-1 py-6 mt-0">
