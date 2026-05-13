@@ -202,3 +202,230 @@ export function formatCampaignDate(date: Date): string {
     hour12: true,
   });
 }
+
+// Request types
+export type RequestStatus = "draft" | "scheduled" | "delivered" | "completed" | "expired";
+
+export interface Request {
+  id: string;
+  name: string;
+  thumbnailUrl?: string;
+  status: RequestStatus;
+  statusDate: Date;
+  requestType: string;
+  campaignId?: string;
+  campaignName?: string;
+  creator: CampaignUser;
+  createdDate: Date;
+  assignees: CampaignUser[];
+  recipients: CampaignUser[];
+  lastModifiedBy?: CampaignUser;
+  lastModifiedDate?: Date;
+  lastNote?: string;
+  views: number;
+  shares: number;
+}
+
+// Mock requests data
+export const mockRequests: Request[] = [
+  {
+    id: "r1",
+    name: "Summer Collection Photoshoot",
+    thumbnailUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=128&h=128&fit=crop",
+    status: "draft",
+    statusDate: new Date("2025-01-15T12:00:00"),
+    requestType: "Create and Post to Social",
+    campaignId: "1",
+    campaignName: "SL 72",
+    creator: users[0],
+    createdDate: new Date("2025-01-15T12:00:00"),
+    assignees: [users[1]],
+    recipients: [users[2], users[3]],
+    lastModifiedBy: users[4],
+    lastModifiedDate: new Date("2025-01-15T14:30:00"),
+    lastNote: "Awaiting approval from marketing team",
+    views: 12,
+    shares: 0,
+  },
+  {
+    id: "r2",
+    name: "Product Launch Video",
+    status: "scheduled",
+    statusDate: new Date("2025-01-31T12:00:00"),
+    requestType: "Video Production",
+    campaignId: "2",
+    campaignName: "Messi Bad Bunny Gazelle",
+    creator: users[0],
+    createdDate: new Date("2025-01-15T12:00:00"),
+    assignees: [users[1]],
+    recipients: [users[2], users[3]],
+    lastModifiedBy: users[4],
+    lastModifiedDate: new Date("2025-01-16T09:00:00"),
+    lastNote: "Ready for launch",
+    views: 45,
+    shares: 3,
+  },
+  {
+    id: "r3",
+    name: "Influencer Collaboration Brief",
+    status: "delivered",
+    statusDate: new Date("2025-01-14T12:00:00"),
+    requestType: "Influencer Collaboration",
+    campaignId: "3",
+    campaignName: "WB Superstar",
+    creator: users[1],
+    createdDate: new Date("2025-01-12T12:00:00"),
+    assignees: [users[2], users[3]],
+    recipients: [users[0], users[4]],
+    lastModifiedBy: users[5],
+    lastModifiedDate: new Date("2025-01-14T16:00:00"),
+    lastNote: "Content delivered successfully",
+    views: 89,
+    shares: 12,
+  },
+  {
+    id: "r4",
+    name: "Holiday Campaign Assets",
+    thumbnailUrl: "https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?w=128&h=128&fit=crop",
+    status: "completed",
+    statusDate: new Date("2024-12-21T12:00:00"),
+    requestType: "Seasonal Campaign",
+    campaignId: "4",
+    campaignName: "Y-3 Leather",
+    creator: users[0],
+    createdDate: new Date("2024-12-15T12:00:00"),
+    assignees: [users[1], users[2]],
+    recipients: [users[3], users[4]],
+    lastModifiedBy: users[5],
+    lastModifiedDate: new Date("2024-12-21T18:00:00"),
+    lastNote: "Campaign concluded",
+    views: 234,
+    shares: 28,
+  },
+  {
+    id: "r5",
+    name: "Limited Edition Announcement",
+    status: "expired",
+    statusDate: new Date("2024-12-16T12:00:00"),
+    requestType: "Limited Edition",
+    campaignId: "5",
+    campaignName: "Clot Superstar",
+    creator: users[0],
+    createdDate: new Date("2024-12-10T12:00:00"),
+    assignees: [users[1], users[2]],
+    recipients: [users[3], users[4]],
+    lastModifiedBy: users[5],
+    lastModifiedDate: new Date("2024-12-16T10:00:00"),
+    lastNote: "Campaign expired",
+    views: 156,
+    shares: 8,
+  },
+  {
+    id: "r6",
+    name: "Social Media Content Pack",
+    thumbnailUrl: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=128&h=128&fit=crop",
+    status: "draft",
+    statusDate: new Date("2025-01-16T09:00:00"),
+    requestType: "Create and Post to Social",
+    creator: users[1],
+    createdDate: new Date("2025-01-16T09:00:00"),
+    assignees: [users[0]],
+    recipients: [users[2]],
+    lastModifiedBy: users[1],
+    lastModifiedDate: new Date("2025-01-16T09:30:00"),
+    lastNote: "Initial draft created",
+    views: 5,
+    shares: 0,
+  },
+  {
+    id: "r7",
+    name: "Athlete Partnership Brief",
+    status: "scheduled",
+    statusDate: new Date("2025-02-01T10:00:00"),
+    requestType: "Influencer Collaboration",
+    campaignId: "7",
+    campaignName: "Retro Runner Collection",
+    creator: users[2],
+    createdDate: new Date("2025-01-10T14:00:00"),
+    assignees: [users[0], users[1]],
+    recipients: [users[3], users[4], users[5]],
+    lastModifiedBy: users[0],
+    lastModifiedDate: new Date("2025-01-14T16:00:00"),
+    lastNote: "Final review pending",
+    views: 67,
+    shares: 5,
+  },
+  {
+    id: "r8",
+    name: "Sustainability Campaign Video",
+    status: "delivered",
+    statusDate: new Date("2025-01-12T11:00:00"),
+    requestType: "Video Production",
+    campaignId: "8",
+    campaignName: "Stan Smith Sustainability",
+    creator: users[3],
+    createdDate: new Date("2025-01-05T08:00:00"),
+    assignees: [users[4]],
+    recipients: [users[0], users[1]],
+    lastModifiedBy: users[4],
+    lastModifiedDate: new Date("2025-01-12T11:30:00"),
+    lastNote: "Video approved and published",
+    views: 312,
+    shares: 45,
+  },
+  {
+    id: "r9",
+    name: "Brand Guidelines Update",
+    status: "draft",
+    statusDate: new Date("2025-01-17T08:00:00"),
+    requestType: "Brand Awareness",
+    creator: users[4],
+    createdDate: new Date("2025-01-17T08:00:00"),
+    assignees: [users[0], users[1], users[2]],
+    recipients: [users[3], users[5]],
+    lastModifiedBy: users[4],
+    lastModifiedDate: new Date("2025-01-17T08:00:00"),
+    lastNote: "New brand guidelines for Q1",
+    views: 3,
+    shares: 0,
+  },
+  {
+    id: "r10",
+    name: "Event Coverage Request",
+    status: "scheduled",
+    statusDate: new Date("2025-02-15T09:00:00"),
+    requestType: "Event Coverage",
+    campaignId: "7",
+    campaignName: "Retro Runner Collection",
+    creator: users[5],
+    createdDate: new Date("2025-01-08T11:00:00"),
+    assignees: [users[1]],
+    recipients: [users[0], users[2], users[3]],
+    lastModifiedBy: users[5],
+    lastModifiedDate: new Date("2025-01-15T14:00:00"),
+    lastNote: "Venue confirmed, equipment ordered",
+    views: 28,
+    shares: 2,
+  },
+];
+
+// Helper to get unique request creators for filter dropdown
+export function getUniqueRequestCreators(): CampaignUser[] {
+  const creatorMap = new Map<string, CampaignUser>();
+  mockRequests.forEach(request => {
+    creatorMap.set(request.creator.id, request.creator);
+  });
+  return Array.from(creatorMap.values());
+}
+
+// Helper to format request status display
+export function formatRequestStatus(status: RequestStatus): string {
+  const statusMap: Record<RequestStatus, string> = {
+    draft: "Draft",
+    scheduled: "Scheduled",
+    delivered: "Delivered",
+    completed: "Completed",
+    expired: "Expired",
+  };
+  return statusMap[status];
+}
