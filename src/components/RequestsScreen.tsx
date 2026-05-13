@@ -124,7 +124,7 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
       </div>
 
       {/* Primary Tabs */}
-      <Tabs defaultValue="campaigns" className="flex-1 flex flex-col px-4 md:px-8 xl:px-16">
+      <Tabs defaultValue="campaigns" className="flex flex-col px-4 md:px-8 xl:px-16">
         <div className="border-b">
           <TabsList>
             <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
@@ -133,7 +133,7 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
         </div>
 
         {/* Campaigns Tab */}
-        <TabsContent value="campaigns" className="flex-1 py-6 mt-0 flex flex-col gap-4">
+        <TabsContent value="campaigns" className="py-6 mt-0 flex flex-col gap-4">
           {/* Search Row */}
           <div className="flex flex-wrap items-center gap-3">
             {/* Search Input */}
@@ -141,11 +141,20 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
               <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search campaigns..."
+                placeholder="Search"
                 value={campaignsSearchQuery}
                 onChange={(e) => setCampaignsSearchQuery(e.target.value)}
-                className="w-full h-10 pl-9 pr-3 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full h-10 pl-9 pr-8 text-[15px] border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
               />
+              {campaignsSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setCampaignsSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <i className="bi bi-x-lg text-sm" />
+                </button>
+              )}
             </div>
 
             {/* Utility cluster - pushed right */}
@@ -207,7 +216,7 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
           </div>
 
           {/* Table */}
-          <div className="flex-1 min-h-0">
+          <div className="min-h-[400px]">
             <CampaignsTable
               campaigns={mockCampaigns}
               searchQuery={campaignsSearchQuery}
@@ -217,7 +226,7 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
         </TabsContent>
 
         {/* Requests Tab */}
-        <TabsContent value="requests" className="flex-1 py-6 mt-0 flex flex-col gap-4">
+        <TabsContent value="requests" className="py-6 mt-0 flex flex-col gap-4">
           {/* Search Row */}
           <div className="flex flex-wrap items-center gap-3">
             {/* Search Input */}
@@ -225,11 +234,20 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
               <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search requests..."
+                placeholder="Search"
                 value={requestsSearchQuery}
                 onChange={(e) => setRequestsSearchQuery(e.target.value)}
-                className="w-full h-10 pl-9 pr-3 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full h-10 pl-9 pr-8 text-[15px] border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
               />
+              {requestsSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setRequestsSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <i className="bi bi-x-lg text-sm" />
+                </button>
+              )}
             </div>
 
             {/* Utility cluster - pushed right */}
@@ -293,7 +311,7 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
           </div>
 
           {/* Table */}
-          <div className="flex-1 min-h-0">
+          <div className="min-h-[400px]">
             <RequestsTable
               requests={mockRequests}
               searchQuery={requestsSearchQuery}

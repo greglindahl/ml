@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/tooltip";
 import { TogglePill } from "./TogglePill";
 import { mockCampaigns, getUniqueRequestCreators } from "@/lib/mockCampaignData";
+import { cn } from "@/lib/utils";
 
 interface FilterValue {
   value: string;
@@ -197,70 +198,6 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
       g.name.toLowerCase().includes(recipientSearchQuery.toLowerCase())
     );
 
-    // Helper to render active filter chip display
-    const renderActiveChip = (
-      filterId: string,
-      selected: FilterValue[],
-      label: string,
-      icon: string
-    ) => {
-      if (selected.length === 0) return null;
-      return (
-        <div className="inline-flex items-center gap-1 h-8 px-1.5 border border-input rounded-md bg-card min-w-[120px] max-w-[280px]">
-          <div className="flex flex-wrap gap-1 flex-1">
-            {selected.map((item) => (
-              <span
-                key={item.value}
-                className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted rounded text-xs"
-              >
-                <button
-                  type="button"
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRemoveValue(filterId, item.value);
-                  }}
-                  className="text-muted-foreground hover:text-foreground"
-                  aria-label={`Remove ${label} filter: ${item.label}`}
-                >
-                  <i className="bi bi-x text-xs" />
-                </button>
-                {item.label}
-              </span>
-            ))}
-          </div>
-          <div className="flex items-center gap-1 ml-auto pl-1">
-            <button
-              type="button"
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation();
-                clearFilter(filterId);
-              }}
-              className="text-muted-foreground hover:text-foreground"
-              aria-label={`Clear ${label} filter`}
-            >
-              <i className="bi bi-x text-sm" />
-            </button>
-            <i className="bi bi-chevron-down w-3.5 h-3.5 inline-flex items-center justify-center leading-none text-muted-foreground" />
-          </div>
-        </div>
-      );
-    };
-
-    // Helper to render inactive filter button
-    const renderInactiveChip = (label: string, icon: string) => (
-      <Button
-        variant="outline"
-        size="sm"
-        className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
-      >
-        <i className={`bi ${icon} w-4 h-4 inline-flex items-center justify-center leading-none`} />
-        <span className="filter-label">{label}</span>
-        <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-      </Button>
-    );
-
     return (
       <div className="filter-bar-container cq-filterbar-hide-label flex flex-wrap items-center gap-1.5">
         {/* Collapsed Filters Button (visible at narrow widths) */}
@@ -287,9 +224,23 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
-                  {campaignSelected.length > 0
-                    ? renderActiveChip("campaign", campaignSelected, "Campaign", "bi-layers")
-                    : renderInactiveChip("Campaign", "bi-layers")}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
+                      campaignSelected.length > 0 && "bg-primary/10 border-primary text-primary"
+                    )}
+                  >
+                    <i className="bi bi-layers w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    <span className="filter-label">Campaign</span>
+                    {campaignSelected.length > 0 && (
+                      <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                        {campaignSelected.length}
+                      </span>
+                    )}
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
               <TooltipContent side="bottom">Campaign</TooltipContent>
@@ -339,9 +290,23 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
-                  {requestTypeSelected.length > 0
-                    ? renderActiveChip("requestType", requestTypeSelected, "Request Type", "bi-card-checklist")
-                    : renderInactiveChip("Request Type", "bi-card-checklist")}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
+                      requestTypeSelected.length > 0 && "bg-primary/10 border-primary text-primary"
+                    )}
+                  >
+                    <i className="bi bi-card-checklist w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    <span className="filter-label">Request Type</span>
+                    {requestTypeSelected.length > 0 && (
+                      <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                        {requestTypeSelected.length}
+                      </span>
+                    )}
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
               <TooltipContent side="bottom">Request Type</TooltipContent>
@@ -372,9 +337,23 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
-                  {statusSelected.length > 0
-                    ? renderActiveChip("status", statusSelected, "Status", "bi-hourglass-split")
-                    : renderInactiveChip("Status", "bi-hourglass-split")}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
+                      statusSelected.length > 0 && "bg-primary/10 border-primary text-primary"
+                    )}
+                  >
+                    <i className="bi bi-hourglass-split w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    <span className="filter-label">Status</span>
+                    {statusSelected.length > 0 && (
+                      <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                        {statusSelected.length}
+                      </span>
+                    )}
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
               <TooltipContent side="bottom">Status</TooltipContent>
@@ -405,9 +384,23 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
-                  {creatorSelected.length > 0
-                    ? renderActiveChip("creator", creatorSelected, "Creator", "bi-person")
-                    : renderInactiveChip("Creator", "bi-person")}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
+                      creatorSelected.length > 0 && "bg-primary/10 border-primary text-primary"
+                    )}
+                  >
+                    <i className="bi bi-person w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    <span className="filter-label">Creator</span>
+                    {creatorSelected.length > 0 && (
+                      <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                        {creatorSelected.length}
+                      </span>
+                    )}
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
               <TooltipContent side="bottom">Creator</TooltipContent>
@@ -457,9 +450,23 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
-                  {dateSelected.length > 0
-                    ? renderActiveChip("date", dateSelected, "Created Date", "bi-calendar")
-                    : renderInactiveChip("Created Date", "bi-calendar")}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
+                      dateSelected.length > 0 && "bg-primary/10 border-primary text-primary"
+                    )}
+                  >
+                    <i className="bi bi-calendar w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    <span className="filter-label">Created Date</span>
+                    {dateSelected.length > 0 && (
+                      <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                        {dateSelected.length}
+                      </span>
+                    )}
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
               <TooltipContent side="bottom">Created Date</TooltipContent>
@@ -490,9 +497,23 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
-                  {assigneeSelected.length > 0
-                    ? renderActiveChip("assignee", assigneeSelected, "Assignee", "bi-person-check")
-                    : renderInactiveChip("Assignee", "bi-person-check")}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
+                      assigneeSelected.length > 0 && "bg-primary/10 border-primary text-primary"
+                    )}
+                  >
+                    <i className="bi bi-person-check w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    <span className="filter-label">Assignee</span>
+                    {assigneeSelected.length > 0 && (
+                      <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                        {assigneeSelected.length}
+                      </span>
+                    )}
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
               <TooltipContent side="bottom">Assignee</TooltipContent>
@@ -564,9 +585,23 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
-                  {recipientSelected.length > 0
-                    ? renderActiveChip("recipient", recipientSelected, "Recipient", "bi-send")
-                    : renderInactiveChip("Recipient", "bi-send")}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
+                      recipientSelected.length > 0 && "bg-primary/10 border-primary text-primary"
+                    )}
+                  >
+                    <i className="bi bi-send w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    <span className="filter-label">Recipient</span>
+                    {recipientSelected.length > 0 && (
+                      <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                        {recipientSelected.length}
+                      </span>
+                    )}
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
               <TooltipContent side="bottom">Recipient</TooltipContent>

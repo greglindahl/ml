@@ -98,9 +98,9 @@ export function CampaignsTable({ campaigns, searchQuery, perPage = 40 }: Campaig
   };
 
   return (
-    <div className="flex flex-col h-full border rounded-lg bg-white overflow-hidden">
+    <div className="flex flex-col border rounded-lg bg-white overflow-hidden">
       {/* Table */}
-      <div className="flex-1 overflow-auto min-h-0">
+      <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="bg-[#f9fbfd]">

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/tooltip";
 import { TogglePill } from "./TogglePill";
 import { getUniqueCampaignCreators } from "@/lib/mockCampaignData";
+import { cn } from "@/lib/utils";
 
 interface FilterValue {
   value: string;
@@ -161,57 +162,23 @@ export const CampaignsFilterBar = forwardRef<CampaignsFilterBarHandle, Campaigns
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
-                  {creatorSelected.length > 0 ? (
-                    <div className="inline-flex items-center gap-1 h-8 px-1.5 border border-input rounded-md bg-card min-w-[120px] max-w-[280px]">
-                      <div className="flex flex-wrap gap-1 flex-1">
-                        {creatorSelected.map((item) => (
-                          <span
-                            key={item.value}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted rounded text-xs"
-                          >
-                            <button
-                              type="button"
-                              onPointerDown={(e) => e.stopPropagation()}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveValue("creator", item.value);
-                              }}
-                              className="text-muted-foreground hover:text-foreground"
-                              aria-label={`Remove Creator filter: ${item.label}`}
-                            >
-                              <i className="bi bi-x text-xs" />
-                            </button>
-                            {item.label}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-1 ml-auto pl-1">
-                        <button
-                          type="button"
-                          onPointerDown={(e) => e.stopPropagation()}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            clearFilter("creator");
-                          }}
-                          className="text-muted-foreground hover:text-foreground"
-                          aria-label="Clear Creator filter"
-                        >
-                          <i className="bi bi-x text-sm" />
-                        </button>
-                        <i className="bi bi-chevron-down w-3.5 h-3.5 inline-flex items-center justify-center leading-none text-muted-foreground" />
-                      </div>
-                    </div>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
-                    >
-                      <i className="bi bi-person w-4 h-4 inline-flex items-center justify-center leading-none" />
-                      <span className="filter-label">Creator</span>
-                      <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                    </Button>
-                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
+                      creatorSelected.length > 0 && "bg-primary/10 border-primary text-primary"
+                    )}
+                  >
+                    <i className="bi bi-person w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    <span className="filter-label">Creator</span>
+                    {creatorSelected.length > 0 && (
+                      <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                        {creatorSelected.length}
+                      </span>
+                    )}
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
               <TooltipContent side="bottom">Creator</TooltipContent>
@@ -261,57 +228,23 @@ export const CampaignsFilterBar = forwardRef<CampaignsFilterBarHandle, Campaigns
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
-                  {dateSelected.length > 0 ? (
-                    <div className="inline-flex items-center gap-1 h-8 px-1.5 border border-input rounded-md bg-card min-w-[120px] max-w-[280px]">
-                      <div className="flex flex-wrap gap-1 flex-1">
-                        {dateSelected.map((item) => (
-                          <span
-                            key={item.value}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted rounded text-xs"
-                          >
-                            <button
-                              type="button"
-                              onPointerDown={(e) => e.stopPropagation()}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveValue("date", item.value);
-                              }}
-                              className="text-muted-foreground hover:text-foreground"
-                              aria-label={`Remove Created Date filter: ${item.label}`}
-                            >
-                              <i className="bi bi-x text-xs" />
-                            </button>
-                            {item.label}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-1 ml-auto pl-1">
-                        <button
-                          type="button"
-                          onPointerDown={(e) => e.stopPropagation()}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            clearFilter("date");
-                          }}
-                          className="text-muted-foreground hover:text-foreground"
-                          aria-label="Clear Created Date filter"
-                        >
-                          <i className="bi bi-x text-sm" />
-                        </button>
-                        <i className="bi bi-chevron-down w-3.5 h-3.5 inline-flex items-center justify-center leading-none text-muted-foreground" />
-                      </div>
-                    </div>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
-                    >
-                      <i className="bi bi-calendar w-4 h-4 inline-flex items-center justify-center leading-none" />
-                      <span className="filter-label">Created Date</span>
-                      <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                    </Button>
-                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
+                      dateSelected.length > 0 && "bg-primary/10 border-primary text-primary"
+                    )}
+                  >
+                    <i className="bi bi-calendar w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    <span className="filter-label">Created Date</span>
+                    {dateSelected.length > 0 && (
+                      <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                        {dateSelected.length}
+                      </span>
+                    )}
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
               <TooltipContent side="bottom">Created Date</TooltipContent>
