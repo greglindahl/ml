@@ -133,7 +133,7 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
         </div>
 
         {/* Campaigns Tab */}
-        <TabsContent value="campaigns" className="py-6 mt-0 flex flex-col gap-4">
+        <TabsContent value="campaigns" className="py-6 flex flex-col gap-4 data-[state=inactive]:hidden">
           {/* Search Row */}
           <div className="flex flex-wrap items-center gap-3">
             {/* Search Input */}
@@ -221,12 +221,13 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
               campaigns={mockCampaigns}
               searchQuery={campaignsSearchQuery}
               perPage={campaignsPerPage}
+              columnVisibility={campaignsColumnVisibility}
             />
           </div>
         </TabsContent>
 
         {/* Requests Tab */}
-        <TabsContent value="requests" className="py-6 mt-0 flex flex-col gap-4">
+        <TabsContent value="requests" className="py-6 flex flex-col gap-4 data-[state=inactive]:hidden">
           {/* Search Row */}
           <div className="flex flex-wrap items-center gap-3">
             {/* Search Input */}
@@ -316,6 +317,7 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
               requests={mockRequests}
               searchQuery={requestsSearchQuery}
               perPage={requestsPerPage}
+              columnVisibility={requestsColumnVisibility}
             />
           </div>
         </TabsContent>

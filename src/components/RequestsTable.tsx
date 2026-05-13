@@ -15,17 +15,24 @@ import {
   formatRequestStatus,
   formatCampaignDate,
 } from "@/lib/mockCampaignData";
+import type {
+  RequestsTableColumnKey,
+  RequestsTableColumnVisibility,
+} from "./RequestsSettingsDrawer";
 
 interface RequestsTableProps {
   requests: Request[];
   searchQuery?: string;
   perPage?: number;
+  columnVisibility?: RequestsTableColumnVisibility;
 }
 
 type SortField = "name" | "status" | "requestType" | "campaign" | "creator" | "createdDate" | "views" | "shares";
 type SortDirection = "asc" | "desc";
 
-export function RequestsTable({ requests, searchQuery, perPage = 40 }: RequestsTableProps) {
+export function RequestsTable({ requests, searchQuery, perPage = 40, columnVisibility }: RequestsTableProps) {
+  const isVisible = (key: RequestsTableColumnKey) =>
+    columnVisibility?.[key] !== false;
   const [sortField, setSortField] = useState<SortField>("createdDate");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [currentPage, setCurrentPage] = useState(1);
@@ -108,202 +115,244 @@ export function RequestsTable({ requests, searchQuery, perPage = 40 }: RequestsT
         <Table>
           <TableHeader>
             <TableRow className="bg-[#f9fbfd]">
-              <TableHead className="w-[80px]" />
-              <TableHead
-                className="cursor-pointer select-none"
-                onClick={() => handleSort("name")}
-              >
-                <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                  Request Name
-                  <SortIcon field="name" />
-                </div>
-              </TableHead>
-              <TableHead
-                className="cursor-pointer select-none"
-                onClick={() => handleSort("status")}
-              >
-                <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                  Status
-                  <SortIcon field="status" />
-                </div>
-              </TableHead>
-              <TableHead
-                className="cursor-pointer select-none"
-                onClick={() => handleSort("requestType")}
-              >
-                <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                  Request Type
-                  <SortIcon field="requestType" />
-                </div>
-              </TableHead>
-              <TableHead
-                className="cursor-pointer select-none"
-                onClick={() => handleSort("campaign")}
-              >
-                <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                  Campaign
-                  <SortIcon field="campaign" />
-                </div>
-              </TableHead>
-              <TableHead
-                className="cursor-pointer select-none"
-                onClick={() => handleSort("creator")}
-              >
-                <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                  Creator
-                  <SortIcon field="creator" />
-                </div>
-              </TableHead>
-              <TableHead
-                className="cursor-pointer select-none"
-                onClick={() => handleSort("createdDate")}
-              >
-                <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                  Created
-                  <SortIcon field="createdDate" />
-                </div>
-              </TableHead>
-              <TableHead>
-                <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                  Assignee
-                </div>
-              </TableHead>
-              <TableHead>
-                <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                  Recipient
-                </div>
-              </TableHead>
-              <TableHead
-                className="cursor-pointer select-none"
-                onClick={() => handleSort("views")}
-              >
-                <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                  Views
-                  <SortIcon field="views" />
-                </div>
-              </TableHead>
-              <TableHead
-                className="cursor-pointer select-none"
-                onClick={() => handleSort("shares")}
-              >
-                <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                  Shares
-                  <SortIcon field="shares" />
-                </div>
-              </TableHead>
+              {isVisible("thumbnail") && <TableHead className="w-[80px]" />}
+              {isVisible("name") && (
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => handleSort("name")}
+                >
+                  <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                    Request Name
+                    <SortIcon field="name" />
+                  </div>
+                </TableHead>
+              )}
+              {isVisible("status") && (
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => handleSort("status")}
+                >
+                  <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                    Status
+                    <SortIcon field="status" />
+                  </div>
+                </TableHead>
+              )}
+              {isVisible("requestType") && (
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => handleSort("requestType")}
+                >
+                  <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                    Request Type
+                    <SortIcon field="requestType" />
+                  </div>
+                </TableHead>
+              )}
+              {isVisible("campaign") && (
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => handleSort("campaign")}
+                >
+                  <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                    Campaign
+                    <SortIcon field="campaign" />
+                  </div>
+                </TableHead>
+              )}
+              {isVisible("creator") && (
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => handleSort("creator")}
+                >
+                  <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                    Creator
+                    <SortIcon field="creator" />
+                  </div>
+                </TableHead>
+              )}
+              {isVisible("created") && (
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => handleSort("createdDate")}
+                >
+                  <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                    Created
+                    <SortIcon field="createdDate" />
+                  </div>
+                </TableHead>
+              )}
+              {isVisible("assignee") && (
+                <TableHead>
+                  <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                    Assignee
+                  </div>
+                </TableHead>
+              )}
+              {isVisible("recipient") && (
+                <TableHead>
+                  <div className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                    Recipient
+                  </div>
+                </TableHead>
+              )}
+              {isVisible("views") && (
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => handleSort("views")}
+                >
+                  <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                    Views
+                    <SortIcon field="views" />
+                  </div>
+                </TableHead>
+              )}
+              {isVisible("shares") && (
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => handleSort("shares")}
+                >
+                  <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                    Shares
+                    <SortIcon field="shares" />
+                  </div>
+                </TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedRequests.map((request) => (
               <TableRow key={request.id} className="group">
-                <TableCell>
-                  <div className="w-16 h-16 rounded overflow-hidden bg-[#d2ddec] flex items-center justify-center">
-                    {request.thumbnailUrl ? (
-                      <img
-                        src={request.thumbnailUrl}
-                        alt={request.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <i className="bi bi-image text-2xl text-muted-foreground/50" />
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <button className="text-[13px] text-primary hover:underline text-left">
-                    {request.name}
-                  </button>
-                </TableCell>
-                <TableCell>
-                  <span className="text-[13px]">
-                    {formatRequestStatus(request.status)} |{" "}
-                    {formatCampaignDate(request.statusDate)}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <span className="text-[13px]">{request.requestType}</span>
-                </TableCell>
-                <TableCell>
-                  {request.campaignName ? (
+                {isVisible("thumbnail") && (
+                  <TableCell>
+                    <div className="w-16 h-16 rounded overflow-hidden bg-[#d2ddec] flex items-center justify-center">
+                      {request.thumbnailUrl ? (
+                        <img
+                          src={request.thumbnailUrl}
+                          alt={request.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <i className="bi bi-image text-2xl text-muted-foreground/50" />
+                      )}
+                    </div>
+                  </TableCell>
+                )}
+                {isVisible("name") && (
+                  <TableCell>
                     <button className="text-[13px] text-primary hover:underline text-left">
-                      {request.campaignName}
+                      {request.name}
                     </button>
-                  ) : (
-                    <span className="text-[13px] text-muted-foreground">--</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-6 w-6 text-[10px]">
-                      <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
-                        {request.creator.initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-[13px] text-primary">
-                      {request.creator.name}
+                  </TableCell>
+                )}
+                {isVisible("status") && (
+                  <TableCell>
+                    <span className="text-[13px]">
+                      {formatRequestStatus(request.status)} |{" "}
+                      {formatCampaignDate(request.statusDate)}
                     </span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <span className="text-[13px]">
-                    {formatCampaignDate(request.createdDate)}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <div className="flex -space-x-1">
-                    {request.assignees.slice(0, 2).map((assignee) => (
-                      <Avatar
-                        key={assignee.id}
-                        className="h-6 w-6 border-2 border-white text-[10px]"
-                      >
-                        <AvatarFallback className="bg-muted text-muted-foreground text-[10px]">
-                          {assignee.initials}
-                        </AvatarFallback>
-                      </Avatar>
-                    ))}
-                    {request.assignees.length > 2 && (
-                      <Avatar className="h-6 w-6 border-2 border-white text-[10px]">
-                        <AvatarFallback className="bg-muted text-muted-foreground text-[10px]">
-                          +{request.assignees.length - 2}
-                        </AvatarFallback>
-                      </Avatar>
+                  </TableCell>
+                )}
+                {isVisible("requestType") && (
+                  <TableCell>
+                    <span className="text-[13px]">{request.requestType}</span>
+                  </TableCell>
+                )}
+                {isVisible("campaign") && (
+                  <TableCell>
+                    {request.campaignName ? (
+                      <button className="text-[13px] text-primary hover:underline text-left">
+                        {request.campaignName}
+                      </button>
+                    ) : (
+                      <span className="text-[13px] text-muted-foreground">--</span>
                     )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex -space-x-1">
-                    {request.recipients.slice(0, 2).map((recipient) => (
-                      <Avatar
-                        key={recipient.id}
-                        className="h-6 w-6 border-2 border-white text-[10px]"
-                      >
-                        <AvatarFallback className="bg-muted text-muted-foreground text-[10px]">
-                          {recipient.initials}
+                  </TableCell>
+                )}
+                {isVisible("creator") && (
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-6 w-6 text-[10px]">
+                        <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
+                          {request.creator.initials}
                         </AvatarFallback>
                       </Avatar>
-                    ))}
-                    {request.recipients.length > 2 && (
-                      <Avatar className="h-6 w-6 border-2 border-white text-[10px]">
-                        <AvatarFallback className="bg-muted text-muted-foreground text-[10px]">
-                          +{request.recipients.length - 2}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <span className="text-[13px]">{request.views}</span>
-                </TableCell>
-                <TableCell>
-                  <span
-                    className={cn(
-                      "text-[13px]",
-                      request.shares > 0 && "text-primary"
-                    )}
-                  >
-                    {request.shares}
-                  </span>
-                </TableCell>
+                      <span className="text-[13px] text-primary">
+                        {request.creator.name}
+                      </span>
+                    </div>
+                  </TableCell>
+                )}
+                {isVisible("created") && (
+                  <TableCell>
+                    <span className="text-[13px]">
+                      {formatCampaignDate(request.createdDate)}
+                    </span>
+                  </TableCell>
+                )}
+                {isVisible("assignee") && (
+                  <TableCell>
+                    <div className="flex -space-x-1">
+                      {request.assignees.slice(0, 2).map((assignee) => (
+                        <Avatar
+                          key={assignee.id}
+                          className="h-6 w-6 border-2 border-white text-[10px]"
+                        >
+                          <AvatarFallback className="bg-muted text-muted-foreground text-[10px]">
+                            {assignee.initials}
+                          </AvatarFallback>
+                        </Avatar>
+                      ))}
+                      {request.assignees.length > 2 && (
+                        <Avatar className="h-6 w-6 border-2 border-white text-[10px]">
+                          <AvatarFallback className="bg-muted text-muted-foreground text-[10px]">
+                            +{request.assignees.length - 2}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                    </div>
+                  </TableCell>
+                )}
+                {isVisible("recipient") && (
+                  <TableCell>
+                    <div className="flex -space-x-1">
+                      {request.recipients.slice(0, 2).map((recipient) => (
+                        <Avatar
+                          key={recipient.id}
+                          className="h-6 w-6 border-2 border-white text-[10px]"
+                        >
+                          <AvatarFallback className="bg-muted text-muted-foreground text-[10px]">
+                            {recipient.initials}
+                          </AvatarFallback>
+                        </Avatar>
+                      ))}
+                      {request.recipients.length > 2 && (
+                        <Avatar className="h-6 w-6 border-2 border-white text-[10px]">
+                          <AvatarFallback className="bg-muted text-muted-foreground text-[10px]">
+                            +{request.recipients.length - 2}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                    </div>
+                  </TableCell>
+                )}
+                {isVisible("views") && (
+                  <TableCell>
+                    <span className="text-[13px]">{request.views}</span>
+                  </TableCell>
+                )}
+                {isVisible("shares") && (
+                  <TableCell>
+                    <span
+                      className={cn(
+                        "text-[13px]",
+                        request.shares > 0 && "text-primary"
+                      )}
+                    >
+                      {request.shares}
+                    </span>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>
