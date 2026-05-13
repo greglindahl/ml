@@ -68,7 +68,7 @@ export function FiltersSheet<T extends FilterSnapshot>({
       >
         <SheetHeader className="px-4 py-3 border-b flex-shrink-0">
           <div className="flex items-center gap-2">
-            <i className="bi bi-sliders text-lg" />
+            <i className="bi bi-filter text-lg" />
             <SheetTitle className="text-base font-semibold">{title}</SheetTitle>
           </div>
         </SheetHeader>

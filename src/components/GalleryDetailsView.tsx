@@ -631,8 +631,8 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
         <FilterSection label="Capture Date" icon="bi-calendar">
           <div className="text-sm text-muted-foreground">Date range filters will go here</div>
         </FilterSection>
-        <FilterSection label="More Filters" icon="bi-sliders">
-          <div className="text-sm text-muted-foreground">Source and Approval Status filters will go here</div>
+        <FilterSection label="Source" icon="bi-cloud-arrow-down">
+          <div className="text-sm text-muted-foreground">Source filters will go here</div>
         </FilterSection>
       </FiltersSheet>
 

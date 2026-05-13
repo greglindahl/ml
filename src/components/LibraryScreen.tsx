@@ -40,8 +40,27 @@ import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
 import { GalleryCard, GalleryCardState } from "@/components/GalleryCard";
 import { AssetCard, AssetCardState } from "@/components/AssetCard";
 import { FolderCard, FolderCardState } from "@/components/FolderCard";
-import { SettingsDrawer, useDisplayLabel, usePerPagePreference, useColumnVisibility } from "@/components/SettingsDrawer";
+import { SettingsDrawer, usePerPagePreference, useColumnVisibility } from "@/components/SettingsDrawer";
+import {
+  AssetSettingsDrawer,
+  useAssetDisplayLabel,
+  useAssetPerPage,
+  useAssetColumnVisibility,
+  useAssetFilterVisibility,
+  type AssetTableColumnVisibility,
+  type AssetFilterVisibility,
+} from "@/components/AssetSettingsDrawer";
+import {
+  GallerySettingsDrawer,
+  useGalleryPerPage,
+  useGalleryColumnVisibility,
+  useGalleryFilterVisibility,
+  type GalleryTableColumnVisibility,
+  type GalleryFilterVisibility,
+} from "@/components/GallerySettingsDrawer";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { UploadModal } from "@/components/UploadModal";
+import { AssetDetailModal } from "@/components/AssetDetailModal";
 
 const GALLERY_MOVE_LIMIT = 5;
 const MOVE_LIMIT_MESSAGE = "Too many galleries selected. You may only move up to 5 at a time.";
@@ -89,6 +108,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
   const [addGalleryDialogOpen, setAddGalleryDialogOpen] = useState(false);
   const [newGalleryDialogOpen, setNewGalleryDialogOpen] = useState(false);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [galleryList, setGalleryList] = useState(mockGalleries);
   const [selectedGalleries, setSelectedGalleries] = useState<Set<string>>(new Set());
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
@@ -97,16 +117,23 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const [folderViewMode, setFolderViewMode] = useState<"grid" | "table">("grid");
   const [archivedGalleriesOnly, setArchivedGalleriesOnly] = useState(false);
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
+  const [viewingAssetId, setViewingAssetId] = useState<string | null>(null);
 
   // Settings drawer state
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
-  const [displayLabel, setDisplayLabel] = useDisplayLabel();
+  const [assetSettingsDrawerOpen, setAssetSettingsDrawerOpen] = useState(false);
+  const [gallerySettingsDrawerOpen, setGallerySettingsDrawerOpen] = useState(false);
 
-  // Table preferences - persistent across sessions
-  const [assetPerPage, setAssetPerPage] = usePerPagePreference("assets", 40);
-  const [assetColumnVisibility, setAssetColumnVisibility] = useColumnVisibility<AssetColumnVisibility>("assets", DEFAULT_ASSET_COLUMN_VISIBILITY);
-  const [galleryPerPage, setGalleryPerPage] = usePerPagePreference("galleries", 40);
-  const [galleryColumnVisibility, setGalleryColumnVisibility] = useColumnVisibility<GalleryColumnVisibility>("galleries", DEFAULT_GALLERY_COLUMN_VISIBILITY);
+  // Asset settings - using new tabbed drawer hooks
+  const [displayLabel, setDisplayLabel] = useAssetDisplayLabel();
+  const [assetPerPage, setAssetPerPage] = useAssetPerPage(40);
+  const [assetColumnVisibility, setAssetColumnVisibility] = useAssetColumnVisibility();
+  const [assetFilterVisibility, setAssetFilterVisibility] = useAssetFilterVisibility();
+
+  // Gallery settings - using new tabbed drawer hooks
+  const [galleryPerPage, setGalleryPerPage] = useGalleryPerPage(40);
+  const [galleryColumnVisibility, setGalleryColumnVisibility] = useGalleryColumnVisibility();
+  const [galleryFilterVisibility, setGalleryFilterVisibility] = useGalleryFilterVisibility();
   const [folderPerPage, setFolderPerPage] = usePerPagePreference("folders", 40);
   const [folderColumnVisibility, setFolderColumnVisibility] = useColumnVisibility<FolderColumnVisibility>("folders", DEFAULT_FOLDER_COLUMN_VISIBILITY);
 
@@ -436,14 +463,13 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
   const [isBrandedActive, setIsBrandedActive] = useState(false);
   const [sourceFilter, setSourceFilter] = useState<string[]>([]);
-  const [approvalStatusFilter, setApprovalStatusFilter] = useState<string[]>([]);
   const [orgStatusFilter, setOrgStatusFilter] = useState<string[]>([]);
   const [searchSelectedFacets, setSearchSelectedFacets] = useState<SelectedFacet[]>([]);
   const searchHandleRef = useRef<FacetedSearchWithTypeaheadHandle | null>(null);
   const filterBarHandleRef = useRef<FilterBarHandle | null>(null);
 
   // Sort state
-  type SortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "status" | "favorites" | "lastDownloadDate" | null;
+  type SortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "favorites" | "lastDownloadDate" | null;
   type SortDir = "asc" | "desc";
   const [sortField, setSortField] = useState<SortField>("dateCreated");
   const [sortDirection, setSortDirection] = useState<SortDir>("desc");
@@ -457,8 +483,6 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
     { value: "galleries", label: "Galleries" },
     { value: "tags", label: "Tags" },
     { value: "viewers", label: "Viewers" },
-    
-    { value: "status", label: "Approval Status" },
     { value: "favorites", label: "Favorites" },
     { value: "lastDownloadDate", label: "Last Download Date" },
   ];
@@ -645,6 +669,33 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   // Compute dynamic filter counts based on current results
   const filterCounts = useMemo(() => computeFilterCounts(filteredResults), [filteredResults]);
 
+  // Asset detail modal helpers
+  const viewingAsset = useMemo(() => {
+    if (!viewingAssetId) return null;
+    return sortedResults.find((a) => a.id === viewingAssetId) || null;
+  }, [viewingAssetId, sortedResults]);
+
+  const viewingAssetIndex = useMemo(() => {
+    if (!viewingAssetId) return -1;
+    return sortedResults.findIndex((a) => a.id === viewingAssetId);
+  }, [viewingAssetId, sortedResults]);
+
+  const handleViewAsset = useCallback((assetId: string) => {
+    setViewingAssetId(assetId);
+  }, []);
+
+  const handlePreviousAsset = useCallback(() => {
+    if (viewingAssetIndex > 0) {
+      setViewingAssetId(sortedResults[viewingAssetIndex - 1].id);
+    }
+  }, [viewingAssetIndex, sortedResults]);
+
+  const handleNextAsset = useCallback(() => {
+    if (viewingAssetIndex < sortedResults.length - 1) {
+      setViewingAssetId(sortedResults[viewingAssetIndex + 1].id);
+    }
+  }, [viewingAssetIndex, sortedResults]);
+
   // Handle search from FacetedSearch component
   const handleSearch = useCallback(
     (query: string, selectedFacets: string[]) => {
@@ -813,7 +864,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button className="h-10 px-3 py-2 gap-2">
+            <Button className="h-10 px-3 py-2 gap-2" onClick={() => setUploadModalOpen(true)}>
               <i className="bi bi-upload w-4 h-4 inline-flex items-center justify-center leading-none" />
               Upload
             </Button>
@@ -904,7 +955,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   variant="outline"
                   size="icon"
                   className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
-                  onClick={() => setSettingsDrawerOpen(true)}
+                  onClick={() => setAssetSettingsDrawerOpen(true)}
                 >
                   <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
@@ -963,8 +1014,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   chips.push({ label: dateLabels[dateRangeFilter] || dateRangeFilter, value: dateRangeFilter, sourceId: "date-range", icon: <i className="bi bi-tag text-sm" /> });
                 }
                 folderFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "folders", icon: <i className="bi bi-folder text-sm" /> }));
-                sourceFilter.forEach(v => chips.push({ label: v.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), value: v, sourceId: "source", icon: <i className="bi bi-upload text-sm" /> }));
-                approvalStatusFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "status", icon: <i className="bi bi-check-square text-sm" /> }));
+                sourceFilter.forEach(v => chips.push({ label: v.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), value: v, sourceId: "source", icon: <i className="bi bi-cloud-arrow-down text-sm" /> }));
                 orgStatusFilter.forEach(v => chips.push({ label: v === "organized" ? "Sorted" : v === "unorganized" ? "Unsorted" : v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "organization-status", icon: <i className="bi bi-gear text-sm" /> }));
 
                 if (chips.length === 0) return null;
@@ -1071,29 +1121,46 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   }
 
                   return (
-                    <AssetCard
+                    <div
                       key={asset.id}
-                      creatorName={asset.creator}
-                      title={asset.name}
-                      displayLabel={displayLabel}
-                      duration={asset.duration}
-                      timestamp={getRelativeTime(asset.dateCreated)}
-                      thumbnailUrl={asset.thumbnailUrl}
-                      isBranded={isBrandedActive && asset.isBranded}
-                      state={cardState}
-                      onSelect={() => {
-                        const next = new Set(selectedAssets);
-                        if (next.has(asset.id)) {
-                          next.delete(asset.id);
+                      onClick={() => {
+                        // If in bulk select mode, toggle selection instead of opening detail
+                        if (selectedAssets.size > 0) {
+                          const next = new Set(selectedAssets);
+                          if (next.has(asset.id)) {
+                            next.delete(asset.id);
+                          } else {
+                            next.add(asset.id);
+                          }
+                          setSelectedAssets(next);
                         } else {
-                          next.add(asset.id);
+                          handleViewAsset(asset.id);
                         }
-                        setSelectedAssets(next);
                       }}
-                      onFavorite={() => {
-                        // TODO: Implement favorite functionality
-                      }}
-                    />
+                    >
+                      <AssetCard
+                        creatorName={asset.creator}
+                        title={asset.name}
+                        displayLabel={displayLabel}
+                        duration={asset.duration}
+                        timestamp={getRelativeTime(asset.dateCreated)}
+                        thumbnailUrl={asset.thumbnailUrl}
+                        isBranded={isBrandedActive && asset.isBranded}
+                        state={cardState}
+                        onSelect={() => {
+                          const next = new Set(selectedAssets);
+                          if (next.has(asset.id)) {
+                            next.delete(asset.id);
+                          } else {
+                            next.add(asset.id);
+                          }
+                          setSelectedAssets(next);
+                        }}
+                        onFavorite={() => {
+                          // TODO: Implement favorite functionality
+                        }}
+                      />
+                    </div>
                   );
                 })}
               </div>
@@ -1161,7 +1228,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   variant="outline"
                   size="icon"
                   className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
-                  onClick={() => setSettingsDrawerOpen(true)}
+                  onClick={() => setGallerySettingsDrawerOpen(true)}
                 >
                   <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
@@ -1285,6 +1352,10 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                         thumbnailUrl={gallery.thumbnailUrl}
                         state={cardState}
                         onSelect={() => {
+                          if (archivedGalleriesOnly) return;
+                          toggleGallerySelection(gallery.id);
+                        }}
+                        onOpen={() => {
                           if (archivedGalleriesOnly) return;
                           if (isAnyGallerySelected) {
                             toggleGallerySelection(gallery.id);
@@ -1420,119 +1491,39 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         onCreateGallery={handleCreateGallery}
         flattenedFolders={flatFolders}
       />
+      {/* Asset Settings Drawer - tabbed interface */}
+      <AssetSettingsDrawer
+        open={assetSettingsDrawerOpen}
+        onOpenChange={setAssetSettingsDrawerOpen}
+        displayLabel={displayLabel}
+        onDisplayLabelChange={setDisplayLabel}
+        perPage={assetPerPage}
+        onPerPageChange={setAssetPerPage}
+        columnVisibility={assetColumnVisibility}
+        onColumnVisibilityChange={setAssetColumnVisibility}
+        filterVisibility={assetFilterVisibility}
+        onFilterVisibilityChange={setAssetFilterVisibility}
+      />
+
+      {/* Gallery Settings Drawer - tabbed interface */}
+      <GallerySettingsDrawer
+        open={gallerySettingsDrawerOpen}
+        onOpenChange={setGallerySettingsDrawerOpen}
+        perPage={galleryPerPage}
+        onPerPageChange={setGalleryPerPage}
+        columnVisibility={galleryColumnVisibility}
+        onColumnVisibilityChange={setGalleryColumnVisibility}
+        filterVisibility={galleryFilterVisibility}
+        onFilterVisibilityChange={setGalleryFilterVisibility}
+      />
+
+      {/* Folder Settings Drawer - original non-tabbed interface */}
       <SettingsDrawer
         open={settingsDrawerOpen}
         onOpenChange={setSettingsDrawerOpen}
-        displayLabel={displayLabel}
-        onDisplayLabelChange={setDisplayLabel}
         title="View Settings"
-        showGridViewPreferences={activeTab !== "galleries"}
+        showGridViewPreferences={false}
       >
-        {/* Table preferences - always shown, disabled when not in table view */}
-        {activeTab === "assets" && (() => {
-          const isTableView = assetsViewMode === "list";
-          return (
-            <div className="space-y-4">
-              {/* Per page dropdown */}
-              <div className={cn("space-y-2", !isTableView && "opacity-50")}>
-                <Label className="text-sm font-medium">Results per page</Label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild disabled={!isTableView}>
-                    <Button variant="outline" className="w-full justify-between" disabled={!isTableView}>
-                      {assetPerPage} per page
-                      <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-full bg-white">
-                    {[10, 20, 40, 80].map(option => (
-                      <DropdownMenuItem key={option} onClick={() => setAssetPerPage(option)}>
-                        {option} per page
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              {/* Column visibility */}
-              <div className={cn("space-y-2", !isTableView && "opacity-50")}>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Manage Columns</Label>
-                  <button
-                    type="button"
-                    className="text-sm text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={!isTableView}
-                    onClick={() => setAssetColumnVisibility(DEFAULT_ASSET_COLUMN_VISIBILITY)}
-                  >
-                    Default
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {ASSET_COLUMNS.map(col => (
-                    <label key={col.key} className={cn("flex items-center gap-2", isTableView ? "cursor-pointer" : "cursor-not-allowed")}>
-                      <Checkbox
-                        checked={assetColumnVisibility[col.key]}
-                        onCheckedChange={() => isTableView && setAssetColumnVisibility(prev => ({ ...prev, [col.key]: !prev[col.key] }))}
-                        disabled={!isTableView}
-                      />
-                      <span className="text-sm">{col.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-          );
-        })()}
-        {activeTab === "galleries" && (() => {
-          const isTableView = galleriesViewMode === "list";
-          return (
-            <div className="space-y-4">
-              {/* Per page dropdown */}
-              <div className={cn("space-y-2", !isTableView && "opacity-50")}>
-                <Label className="text-sm font-medium">Results per page</Label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild disabled={!isTableView}>
-                    <Button variant="outline" className="w-full justify-between" disabled={!isTableView}>
-                      {galleryPerPage} per page
-                      <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-full bg-white">
-                    {[10, 20, 40, 80].map(option => (
-                      <DropdownMenuItem key={option} onClick={() => setGalleryPerPage(option)}>
-                        {option} per page
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              {/* Column visibility */}
-              <div className={cn("space-y-2", !isTableView && "opacity-50")}>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Manage Columns</Label>
-                  <button
-                    type="button"
-                    className="text-sm text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={!isTableView}
-                    onClick={() => setGalleryColumnVisibility(DEFAULT_GALLERY_COLUMN_VISIBILITY)}
-                  >
-                    Default
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {GALLERY_COLUMNS.map(col => (
-                    <label key={col.key} className={cn("flex items-center gap-2", isTableView ? "cursor-pointer" : "cursor-not-allowed")}>
-                      <Checkbox
-                        checked={galleryColumnVisibility[col.key]}
-                        onCheckedChange={() => isTableView && setGalleryColumnVisibility(prev => ({ ...prev, [col.key]: !prev[col.key] }))}
-                        disabled={!isTableView}
-                      />
-                      <span className="text-sm">{col.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-          );
-        })()}
         {activeTab === "folders" && (() => {
           const isTableView = folderViewMode === "table";
           return (
@@ -1636,6 +1627,25 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           <div className="text-sm text-muted-foreground">Created date filters will go here</div>
         </FilterSection>
       </FiltersSheet>
+
+      {/* Upload Modal */}
+      <UploadModal
+        open={uploadModalOpen}
+        onOpenChange={setUploadModalOpen}
+      />
+
+      {/* Asset Detail Modal */}
+      <AssetDetailModal
+        open={viewingAssetId !== null}
+        onOpenChange={(open) => {
+          if (!open) setViewingAssetId(null);
+        }}
+        asset={viewingAsset}
+        currentIndex={viewingAssetIndex}
+        totalAssets={sortedResults.length}
+        onPrevious={handlePreviousAsset}
+        onNext={handleNextAsset}
+      />
     </div>
   );
 }
