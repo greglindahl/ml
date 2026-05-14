@@ -120,9 +120,11 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
   };
 
   return (
-    <div className={`flex-1 flex flex-col pb-12 content-container ${isMobile ? "pt-[58px]" : "pt-20"}`}>
+    <div className={`flex-1 flex flex-col pb-12 content-container ${isMobile ? "pt-[58px]" : ""}`}>
+      {/* Spacer for consistent header position - matches LibraryScreen */}
+      {!isMobile && <div className="mb-2 h-[44px] flex-shrink-0" />}
       {/* Header */}
-      <div className="px-4 md:px-8 xl:px-16 py-4 flex items-center justify-between gap-3">
+      <div className="px-4 md:px-8 xl:px-16 pb-4 flex items-center justify-between gap-3">
         <h1 className="text-[26px] font-semibold text-foreground">Requests</h1>
         <Button onClick={() => {}}>
           <i className="bi bi-plus-circle text-base" />

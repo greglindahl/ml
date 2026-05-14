@@ -51,7 +51,7 @@ interface AdminScreenProps {
 
 export function AdminScreen({ isMobile = false }: AdminScreenProps) {
   // Active tab — controlled so the header CTA can swap its label
-  const [activeTab, setActiveTab] = useState<NetworkTab>("manage-users");
+  const [activeTab, setActiveTab] = useState<NetworkTab>("groups");
 
   // Groups tab state
   const [groupsSearchQuery, setGroupsSearchQuery] = useState("");
@@ -103,15 +103,35 @@ export function AdminScreen({ isMobile = false }: AdminScreenProps) {
   };
 
   return (
-    <div className={`flex-1 flex flex-col pb-12 content-container ${isMobile ? "pt-[58px]" : "pt-20"}`}>
+    <div className={`flex-1 flex flex-col pb-12 content-container ${isMobile ? "pt-[58px]" : ""}`}>
+      {/* Spacer for consistent header position - matches LibraryScreen */}
+      {!isMobile && <div className="mb-2 h-[44px] flex-shrink-0" />}
       {/* Header */}
-      <div className="px-4 md:px-8 xl:px-16 py-4 flex items-center justify-between gap-3">
+      <div className="px-4 md:px-8 xl:px-16 pb-4 flex items-center justify-between gap-3">
         <h1 className="text-[26px] font-semibold text-foreground">Network</h1>
-        {activeTab !== "manage-users" && (
+        {activeTab === "groups" && (
           <Button onClick={() => {}}>
             <i className="bi bi-plus-circle text-base" />
-            {activeTab === "groups" ? "New Group" : "New Invite Code"}
+            New Group
           </Button>
+        )}
+        {activeTab === "invite-codes" && (
+          <Button onClick={() => {}}>
+            <i className="bi bi-plus-circle text-base" />
+            New Invite Code
+          </Button>
+        )}
+        {activeTab === "manage-users" && (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => {}}>
+              <i className="bi bi-file-earmark-arrow-down text-base" />
+              Export All Users
+            </Button>
+            <Button onClick={() => {}}>
+              <i className="bi bi-plus-circle text-base" />
+              New User
+            </Button>
+          </div>
         )}
       </div>
 
@@ -164,6 +184,8 @@ export function AdminScreen({ isMobile = false }: AdminScreenProps) {
             </div>
           </div>
 
+          <div className="min-h-[24px]" />
+
           <div className="min-h-[400px]">
             <GroupsTable
               groups={mockGroups}
@@ -212,6 +234,8 @@ export function AdminScreen({ isMobile = false }: AdminScreenProps) {
               </Tooltip>
             </div>
           </div>
+
+          <div className="min-h-[24px]" />
 
           <div className="min-h-[400px]">
             <InviteCodesTable
