@@ -467,6 +467,14 @@
   }
 }
 
+/* Wider threshold for filter bars with many chips (e.g. Manage Users — no folder
+   sidebar consuming width, but more chips, so we need to collapse to icons sooner). */
+@container filterbar (max-width: 1399px) {
+  .cq-filterbar-hide-label-wide .filter-label {
+    display: none;
+  }
+}
+
 /* Responsive filter bar: collapse to "Filters" button at narrow widths */
 @container filterbar (max-width: 767px) {
   .filters-expanded {
