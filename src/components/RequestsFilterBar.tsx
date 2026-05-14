@@ -55,14 +55,10 @@ const statusOptions = [
 ];
 
 const requestTypeOptions = [
-  { label: "Create and Post to Social", value: "create-post-social" },
-  { label: "Product Launch", value: "product-launch" },
-  { label: "Influencer Collaboration", value: "influencer-collaboration" },
-  { label: "Seasonal Campaign", value: "seasonal-campaign" },
-  { label: "Limited Edition", value: "limited-edition" },
-  { label: "Brand Awareness", value: "brand-awareness" },
-  { label: "Video Production", value: "video-production" },
-  { label: "Event Coverage", value: "event-coverage" },
+  { label: "Post to social", value: "post-to-social" },
+  { label: "Create content and post to social", value: "create-and-post-to-social" },
+  { label: "Create content", value: "create-content" },
+  { label: "Review content", value: "review-content" },
 ];
 
 // Mock groups for Assignee/Recipient filters
