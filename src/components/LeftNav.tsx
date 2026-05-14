@@ -6,8 +6,46 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { OrgSwitcher, MobileOrgSwitcher } from "./OrgSwitcher";
+
+function AvatarMenu() {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label="User menu"
+          className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          <Avatar className="h-10 w-10 cursor-pointer">
+            <AvatarFallback className="bg-sidebar-accent text-nav-text">
+              <i className="bi bi-person text-xl" />
+            </AvatarFallback>
+          </Avatar>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        side="top"
+        align="start"
+        className="bg-white z-50 min-w-[200px]"
+      >
+        <DropdownMenuItem onSelect={() => {}}>View Profile</DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => {}}>Manage Notifications</DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => {}}>Settings</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => {}}>Log Out</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export type Screen =
   | "home"
@@ -105,11 +143,7 @@ export function LeftNav({
 
       {/* Utility icons row */}
       <div className="py-3 pb-4 flex items-center justify-between px-4">
-        <Avatar className="h-10 w-10 cursor-pointer">
-          <AvatarFallback className="bg-sidebar-accent text-nav-text">
-            <i className="bi bi-person text-xl" />
-          </AvatarFallback>
-        </Avatar>
+        <AvatarMenu />
         <div className="flex items-center gap-4">
           <button className="p-2 hover:bg-sidebar-accent rounded-md transition-colors">
             <i className="bi bi-question-circle text-nav-text text-xl" />
@@ -191,11 +225,7 @@ export function LeftNav({
       {/* Utility icons row */}
       {isExpanded ? (
         <div className="py-3 pb-4 flex items-center justify-between px-4">
-          <Avatar className="h-10 w-10 cursor-pointer">
-            <AvatarFallback className="bg-sidebar-accent text-nav-text">
-              <i className="bi bi-person text-xl" />
-            </AvatarFallback>
-          </Avatar>
+          <AvatarMenu />
           <div className="flex items-center gap-4">
             <button className="p-2 hover:bg-sidebar-accent rounded-md transition-colors">
               <i className="bi bi-question-circle text-nav-text text-xl" />
@@ -225,11 +255,7 @@ export function LeftNav({
           <button className="p-2 hover:bg-sidebar-accent rounded-md transition-colors">
             <i className="bi bi-question-circle text-nav-text text-xl" />
           </button>
-          <Avatar className="h-10 w-10 cursor-pointer">
-            <AvatarFallback className="bg-sidebar-accent text-nav-text">
-              <i className="bi bi-person text-xl" />
-            </AvatarFallback>
-          </Avatar>
+          <AvatarMenu />
         </div>
       )}
     </nav>

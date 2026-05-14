@@ -202,7 +202,7 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
                       rolesSelected.length > 0 && "bg-primary/10 border-primary text-primary"
                     )}
                   >
-                    <i className="bi bi-shield w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    <i className="bi bi-person-badge w-4 h-4 inline-flex items-center justify-center leading-none" />
                     <span className="filter-label">Roles</span>
                     {rolesSelected.length > 0 && (
                       <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
