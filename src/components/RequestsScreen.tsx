@@ -38,6 +38,9 @@ interface RequestsScreenProps {
 }
 
 export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
+  // Active tab — controlled so the header CTA can swap its label
+  const [activeTab, setActiveTab] = useState<"campaigns" | "requests">("campaigns");
+
   // Search state
   const [campaignsSearchQuery, setCampaignsSearchQuery] = useState("");
   const [requestsSearchQuery, setRequestsSearchQuery] = useState("");
@@ -117,14 +120,20 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
   };
 
   return (
-    <div className={`flex-1 flex flex-col pb-12 content-container ${isMobile ? "pt-[58px]" : "pt-20"}`}>
+    <div className={`flex-1 flex flex-col pb-12 content-container ${isMobile ? "pt-[58px]" : ""}`}>
+      {/* Spacer for consistent header position - matches LibraryScreen */}
+      {!isMobile && <div className="mb-2 h-[44px] flex-shrink-0" />}
       {/* Header */}
-      <div className="px-4 md:px-8 xl:px-16 py-4">
+      <div className="px-4 md:px-8 xl:px-16 pb-4 flex items-center justify-between gap-3">
         <h1 className="text-[26px] font-semibold text-foreground">Requests</h1>
+        <Button onClick={() => {}}>
+          <i className="bi bi-plus-circle text-base" />
+          {activeTab === "campaigns" ? "New Campaign" : "New Request"}
+        </Button>
       </div>
 
       {/* Primary Tabs */}
-      <Tabs defaultValue="campaigns" className="flex flex-col px-4 md:px-8 xl:px-16">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "campaigns" | "requests")} className="flex flex-col px-4 md:px-8 xl:px-16">
         <div className="border-b">
           <TabsList>
             <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
