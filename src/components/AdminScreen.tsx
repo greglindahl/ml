@@ -3,12 +3,18 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { UsersFilterBar, UsersFilterBarHandle } from "./UsersFilterBar";
 import { UsersTable } from "./UsersTable";
 import {
@@ -34,6 +40,9 @@ import {
   mockUsers,
   getUniqueUserRoles,
   getUniqueUserGroups,
+  getUniqueInviteCodes,
+  getUniqueOrganizationRoles,
+  getUniqueOrgDepartments,
 } from "@/lib/mockUserData";
 import { mockGroups } from "@/lib/mockGroupData";
 import { mockInviteCodes } from "@/lib/mockInviteCodeData";
@@ -43,6 +52,139 @@ type NetworkTab = "groups" | "invite-codes" | "manage-users";
 interface FilterValue {
   value: string;
   label: string;
+}
+
+// Option lists for the mobile FiltersSheet — kept in sync with UsersFilterBar
+const SHEET_DATE_OPTIONS: FilterValue[] = [
+  { label: "Last 7 days", value: "last-7-days" },
+  { label: "Last 14 days", value: "last-14-days" },
+  { label: "Last 30 days", value: "last-30-days" },
+  { label: "Month to Date", value: "month-to-date" },
+  { label: "Last 90 days", value: "last-90-days" },
+  { label: "Last 12 months", value: "last-12-months" },
+  { label: "Custom", value: "custom" },
+];
+
+const SHEET_AI_ASSIST_OPTIONS: FilterValue[] = [
+  { label: "Opted-in", value: "Opted-in" },
+  { label: "Opted-out", value: "Opted-out" },
+  { label: "No Action", value: "No Action" },
+];
+
+const SHEET_DURATION_OPTIONS: FilterValue[] = [
+  { label: "1 year", value: "1 year" },
+  { label: "2 years", value: "2 years" },
+  { label: "3 years", value: "3 years" },
+  { label: "4 years", value: "4 years" },
+  { label: "5 years", value: "5 years" },
+  { label: "6 years", value: "6 years" },
+];
+
+// Full-width form-field-style dropdown used inside FilterSection rows in the mobile sheet
+interface MobileFilterDropdownProps {
+  filterId: string;
+  placeholder: string;
+  options: FilterValue[];
+  isMulti?: boolean;
+  hasSearch?: boolean;
+  activeFilters: Record<string, FilterValue[]>;
+  setActiveFilters: React.Dispatch<React.SetStateAction<Record<string, FilterValue[]>>>;
+}
+
+function MobileFilterDropdown({
+  filterId,
+  placeholder,
+  options,
+  isMulti = false,
+  hasSearch = false,
+  activeFilters,
+  setActiveFilters,
+}: MobileFilterDropdownProps) {
+  const [search, setSearch] = useState("");
+  const selected = activeFilters[filterId] || [];
+  const filtered = hasSearch
+    ? options.filter((o) => o.label.toLowerCase().includes(search.toLowerCase()))
+    : options;
+  const display =
+    selected.length === 0
+      ? placeholder
+      : selected.length === 1
+      ? selected[0].label
+      : `${selected.length} selected`;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" className="w-full justify-between font-normal h-10">
+          <span className={cn(selected.length === 0 && "text-muted-foreground")}>{display}</span>
+          <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        className="w-[var(--radix-dropdown-menu-trigger-width)] bg-white"
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
+        {hasSearch && (
+          <div className="px-2 py-2 border-b">
+            <div className="relative">
+              <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+                className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+          </div>
+        )}
+        <div className="max-h-[280px] overflow-y-auto">
+          {filtered.map((opt) => (
+            <DropdownMenuCheckboxItem
+              key={opt.value}
+              checked={selected.some((s) => s.value === opt.value)}
+              onCheckedChange={(checked) => {
+                if (isMulti) {
+                  if (checked) {
+                    setActiveFilters((prev) => ({
+                      ...prev,
+                      [filterId]: [...(prev[filterId] || []), opt],
+                    }));
+                  } else {
+                    setActiveFilters((prev) => {
+                      const remaining = (prev[filterId] || []).filter((f) => f.value !== opt.value);
+                      const next = { ...prev };
+                      if (remaining.length === 0) delete next[filterId];
+                      else next[filterId] = remaining;
+                      return next;
+                    });
+                  }
+                } else {
+                  if (checked) {
+                    setActiveFilters((prev) => ({ ...prev, [filterId]: [opt] }));
+                  } else {
+                    setActiveFilters((prev) => {
+                      const next = { ...prev };
+                      delete next[filterId];
+                      return next;
+                    });
+                  }
+                }
+              }}
+            >
+              {opt.label}
+            </DropdownMenuCheckboxItem>
+          ))}
+          {filtered.length === 0 && (
+            <div className="px-2 py-3 text-xs text-muted-foreground text-center">
+              No results found
+            </div>
+          )}
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }
 
 interface AdminScreenProps {
@@ -370,74 +512,123 @@ export function AdminScreen({ isMobile = false }: AdminScreenProps) {
       <FiltersSheet
         open={usersFiltersSheetOpen}
         onOpenChange={setUsersFiltersSheetOpen}
-        value={{ notifications: usersNotificationsActive }}
-        onApply={(draft) => {
-          setUsersNotificationsActive(draft.notifications as boolean);
-        }}
-        title="User Filters"
+        value={{}}
+        onApply={() => {}}
+        title="Filter"
       >
-        <FilterSection label="Roles" icon="bi-person-badge">
-          <div className="space-y-2">
-            {getUniqueUserRoles().map((role) => (
-              <label key={role} className="flex items-center gap-2 cursor-pointer">
-                <Checkbox
-                  checked={usersActiveFilters.roles?.some((f) => f.value === role)}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setUsersActiveFilters((prev) => ({
-                        ...prev,
-                        roles: [{ value: role, label: role }],
-                      }));
-                    } else {
-                      setUsersActiveFilters((prev) => {
-                        const next = { ...prev };
-                        delete next.roles;
-                        return next;
-                      });
-                    }
-                  }}
-                />
-                <span className="text-sm">{role}</span>
-              </label>
-            ))}
-          </div>
+        <FilterSection label="Groups">
+          <MobileFilterDropdown
+            filterId="groups"
+            placeholder="Search"
+            options={getUniqueUserGroups().map((g) => ({ value: g.id, label: g.name }))}
+            isMulti
+            hasSearch
+            activeFilters={usersActiveFilters}
+            setActiveFilters={setUsersActiveFilters}
+          />
         </FilterSection>
-        <FilterSection label="Groups" icon="bi-people">
-          <div className="space-y-2">
-            {getUniqueUserGroups().map((group) => (
-              <label key={group.id} className="flex items-center gap-2 cursor-pointer">
-                <Checkbox
-                  checked={usersActiveFilters.groups?.some((f) => f.value === group.id)}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setUsersActiveFilters((prev) => ({
-                        ...prev,
-                        groups: [
-                          ...(prev.groups || []),
-                          { value: group.id, label: group.name },
-                        ],
-                      }));
-                    } else {
-                      setUsersActiveFilters((prev) => ({
-                        ...prev,
-                        groups: (prev.groups || []).filter((f) => f.value !== group.id),
-                      }));
-                    }
-                  }}
-                />
-                <span className="text-sm">{group.name}</span>
-              </label>
-            ))}
-          </div>
+        <FilterSection label="Invite Codes">
+          <MobileFilterDropdown
+            filterId="inviteCodes"
+            placeholder="Search"
+            options={getUniqueInviteCodes().map((c) => ({ value: c, label: c }))}
+            isMulti
+            hasSearch
+            activeFilters={usersActiveFilters}
+            setActiveFilters={setUsersActiveFilters}
+          />
         </FilterSection>
-        <FilterSection label="Notifications" icon="bi-bell">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <Checkbox
-              checked={usersNotificationsActive}
-              onCheckedChange={(checked) => setUsersNotificationsActive(checked as boolean)}
-            />
-            <span className="text-sm">Show only users with notifications enabled</span>
-          </label>
+        <FilterSection label="Roles">
+          <MobileFilterDropdown
+            filterId="roles"
+            placeholder="All Roles"
+            options={getUniqueUserRoles().map((r) => ({ value: r, label: r }))}
+            activeFilters={usersActiveFilters}
+            setActiveFilters={setUsersActiveFilters}
+          />
+        </FilterSection>
+        <FilterSection label="AI Assist">
+          <MobileFilterDropdown
+            filterId="aiAssist"
+            placeholder="Select"
+            options={SHEET_AI_ASSIST_OPTIONS}
+            activeFilters={usersActiveFilters}
+            setActiveFilters={setUsersActiveFilters}
+          />
+        </FilterSection>
+        <FilterSection label="Last Login">
+          <MobileFilterDropdown
+            filterId="lastLogin"
+            placeholder="Select"
+            options={SHEET_DATE_OPTIONS}
+            activeFilters={usersActiveFilters}
+            setActiveFilters={setUsersActiveFilters}
+          />
+        </FilterSection>
+        <FilterSection label="Join Date">
+          <MobileFilterDropdown
+            filterId="joinDate"
+            placeholder="Select"
+            options={SHEET_DATE_OPTIONS}
+            activeFilters={usersActiveFilters}
+            setActiveFilters={setUsersActiveFilters}
+          />
+        </FilterSection>
+        <FilterSection label="Duration">
+          <MobileFilterDropdown
+            filterId="duration"
+            placeholder="Select"
+            options={SHEET_DURATION_OPTIONS}
+            activeFilters={usersActiveFilters}
+            setActiveFilters={setUsersActiveFilters}
+          />
+        </FilterSection>
+        <FilterSection label="Organization Role">
+          <MobileFilterDropdown
+            filterId="organizationRole"
+            placeholder="Select"
+            options={getUniqueOrganizationRoles().map((r) => ({ value: r, label: r }))}
+            activeFilters={usersActiveFilters}
+            setActiveFilters={setUsersActiveFilters}
+          />
+        </FilterSection>
+        <FilterSection label="Org Department">
+          <MobileFilterDropdown
+            filterId="orgDepartment"
+            placeholder="Select"
+            options={getUniqueOrgDepartments().map((d) => ({ value: d, label: d }))}
+            activeFilters={usersActiveFilters}
+            setActiveFilters={setUsersActiveFilters}
+          />
+        </FilterSection>
+        <FilterSection label="Notifications">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="w-full justify-between font-normal h-10">
+                <span className={cn(!usersNotificationsActive && "text-muted-foreground")}>
+                  {usersNotificationsActive ? "Enabled" : "All"}
+                </span>
+                <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="w-[var(--radix-dropdown-menu-trigger-width)] bg-white"
+              onCloseAutoFocus={(e) => e.preventDefault()}
+            >
+              <DropdownMenuCheckboxItem
+                checked={!usersNotificationsActive}
+                onCheckedChange={() => setUsersNotificationsActive(false)}
+              >
+                All
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={usersNotificationsActive}
+                onCheckedChange={() => setUsersNotificationsActive(true)}
+              >
+                Enabled
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </FilterSection>
       </FiltersSheet>
     </div>
