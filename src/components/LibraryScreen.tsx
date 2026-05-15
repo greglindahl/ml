@@ -875,7 +875,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
           <div className="border-b flex-shrink-0">
             <TabsList>
-              <TabsTrigger value="assets">Assets</TabsTrigger>
+              <TabsTrigger value="assets">All Assets</TabsTrigger>
               <TabsTrigger value="galleries">Galleries</TabsTrigger>
               <TabsTrigger value="folders">Folders</TabsTrigger>
               <TabsTrigger value="favorites">Favorites</TabsTrigger>

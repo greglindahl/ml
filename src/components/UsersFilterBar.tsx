@@ -6,6 +6,9 @@ import {
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import {
   Tooltip,
@@ -79,6 +82,8 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
     const [activeFilters, setActiveFilters] = useState<Record<string, FilterValue[]>>({});
     const [inviteCodeSearchQuery, setInviteCodeSearchQuery] = useState("");
     const [groupsSearchQuery, setGroupsSearchQuery] = useState("");
+    const [orgRoleSearchQuery, setOrgRoleSearchQuery] = useState("");
+    const [orgDeptSearchQuery, setOrgDeptSearchQuery] = useState("");
 
     const roles = getUniqueUserRoles();
     const groups = getUniqueUserGroups();
@@ -168,6 +173,14 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
       g.name.toLowerCase().includes(groupsSearchQuery.toLowerCase())
     );
 
+    const filteredOrgRoles = organizationRoles.filter((r) =>
+      r.toLowerCase().includes(orgRoleSearchQuery.toLowerCase())
+    );
+
+    const filteredOrgDepts = orgDepartments.filter((d) =>
+      d.toLowerCase().includes(orgDeptSearchQuery.toLowerCase())
+    );
+
     return (
       <div className="filter-bar-container cq-filterbar-hide-label-wide flex flex-wrap items-center gap-1.5">
         {/* Collapsed Filters Button (visible at narrow widths) */}
@@ -189,7 +202,7 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
 
         {/* Expanded Filters (visible at wide widths) */}
         <div className="filters-expanded contents">
-          {/* 1. Roles (single-select) */}
+          {/* 1. Groups (multi + search) */}
           <DropdownMenu>
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
@@ -199,38 +212,59 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
                     size="sm"
                     className={cn(
                       "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
-                      rolesSelected.length > 0 && "bg-primary/10 border-primary text-primary"
+                      groupsSelected.length > 0 && "bg-primary/10 border-primary text-primary"
                     )}
                   >
-                    <i className="bi bi-person-badge w-4 h-4 inline-flex items-center justify-center leading-none" />
-                    <span className="filter-label">Roles</span>
-                    {rolesSelected.length > 0 && (
+                    <i className="bi bi-people w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    <span className="filter-label">Groups</span>
+                    {groupsSelected.length > 0 && (
                       <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
-                        {rolesSelected.length}
+                        {groupsSelected.length}
                       </span>
                     )}
                     <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                   </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
-              <TooltipContent side="bottom">Roles</TooltipContent>
+              <TooltipContent side="bottom">Groups</TooltipContent>
             </Tooltip>
             <DropdownMenuContent align="start" className="bg-popover z-50 min-w-[200px]" onCloseAutoFocus={(e) => e.preventDefault()}>
+              <div className="px-2 py-2 border-b">
+                <div className="relative">
+                  <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+                  <input
+                    type="text"
+                    placeholder="Search groups..."
+                    value={groupsSearchQuery}
+                    onChange={(e) => setGroupsSearchQuery(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
               <div className="max-h-[280px] overflow-y-auto">
-                {roles.map((role) => (
+                {filteredGroups.map((group) => (
                   <DropdownMenuCheckboxItem
-                    key={role}
-                    checked={rolesSelected.some((s) => s.value === role)}
-                    onCheckedChange={() => handleSingleSelect("roles", role, role)}
+                    key={group.id}
+                    checked={groupsSelected.some((s) => s.value === group.id)}
+                    onCheckedChange={(checked) =>
+                      handleMultiSelect("groups", group.id, group.name, checked as boolean)
+                    }
                   >
-                    {role}
+                    {group.name}
                   </DropdownMenuCheckboxItem>
                 ))}
+                {filteredGroups.length === 0 && (
+                  <div className="px-2 py-3 text-xs text-muted-foreground text-center">
+                    No results found
+                  </div>
+                )}
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* 3. Invite Codes (multi + search) */}
+          {/* 2. Invite Codes (multi + search) */}
           <DropdownMenu>
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
@@ -292,7 +326,7 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* 4. Groups (multi + search) */}
+          {/* 3. Roles (single-select) */}
           <DropdownMenu>
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
@@ -302,54 +336,33 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
                     size="sm"
                     className={cn(
                       "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
-                      groupsSelected.length > 0 && "bg-primary/10 border-primary text-primary"
+                      rolesSelected.length > 0 && "bg-primary/10 border-primary text-primary"
                     )}
                   >
-                    <i className="bi bi-people w-4 h-4 inline-flex items-center justify-center leading-none" />
-                    <span className="filter-label">Groups</span>
-                    {groupsSelected.length > 0 && (
+                    <i className="bi bi-person-badge w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    <span className="filter-label">Roles</span>
+                    {rolesSelected.length > 0 && (
                       <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
-                        {groupsSelected.length}
+                        {rolesSelected.length}
                       </span>
                     )}
                     <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                   </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
-              <TooltipContent side="bottom">Groups</TooltipContent>
+              <TooltipContent side="bottom">Roles</TooltipContent>
             </Tooltip>
             <DropdownMenuContent align="start" className="bg-popover z-50 min-w-[200px]" onCloseAutoFocus={(e) => e.preventDefault()}>
-              <div className="px-2 py-2 border-b">
-                <div className="relative">
-                  <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
-                  <input
-                    type="text"
-                    placeholder="Search groups..."
-                    value={groupsSearchQuery}
-                    onChange={(e) => setGroupsSearchQuery(e.target.value)}
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
-                    className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                </div>
-              </div>
               <div className="max-h-[280px] overflow-y-auto">
-                {filteredGroups.map((group) => (
+                {roles.map((role) => (
                   <DropdownMenuCheckboxItem
-                    key={group.id}
-                    checked={groupsSelected.some((s) => s.value === group.id)}
-                    onCheckedChange={(checked) =>
-                      handleMultiSelect("groups", group.id, group.name, checked as boolean)
-                    }
+                    key={role}
+                    checked={rolesSelected.some((s) => s.value === role)}
+                    onCheckedChange={() => handleSingleSelect("roles", role, role)}
                   >
-                    {group.name}
+                    {role}
                   </DropdownMenuCheckboxItem>
                 ))}
-                {filteredGroups.length === 0 && (
-                  <div className="px-2 py-3 text-xs text-muted-foreground text-center">
-                    No results found
-                  </div>
-                )}
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -477,89 +490,7 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* 8. Organization Role (single-select) */}
-          <DropdownMenu>
-            <Tooltip delayDuration={700}>
-              <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
-                      organizationRoleSelected.length > 0 && "bg-primary/10 border-primary text-primary"
-                    )}
-                  >
-                    <i className="bi bi-briefcase w-4 h-4 inline-flex items-center justify-center leading-none" />
-                    <span className="filter-label">Organization Role</span>
-                    {organizationRoleSelected.length > 0 && (
-                      <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
-                        {organizationRoleSelected.length}
-                      </span>
-                    )}
-                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                  </Button>
-                </DropdownMenuTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">Organization Role</TooltipContent>
-            </Tooltip>
-            <DropdownMenuContent align="start" className="bg-popover z-50 min-w-[200px]" onCloseAutoFocus={(e) => e.preventDefault()}>
-              <div className="max-h-[280px] overflow-y-auto">
-                {organizationRoles.map((orgRole) => (
-                  <DropdownMenuCheckboxItem
-                    key={orgRole}
-                    checked={organizationRoleSelected.some((s) => s.value === orgRole)}
-                    onCheckedChange={() => handleSingleSelect("organizationRole", orgRole, orgRole)}
-                  >
-                    {orgRole}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* 9. Org Department (single-select) */}
-          <DropdownMenu>
-            <Tooltip delayDuration={700}>
-              <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
-                      orgDepartmentSelected.length > 0 && "bg-primary/10 border-primary text-primary"
-                    )}
-                  >
-                    <i className="bi bi-building w-4 h-4 inline-flex items-center justify-center leading-none" />
-                    <span className="filter-label">Org Department</span>
-                    {orgDepartmentSelected.length > 0 && (
-                      <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
-                        {orgDepartmentSelected.length}
-                      </span>
-                    )}
-                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                  </Button>
-                </DropdownMenuTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">Org Department</TooltipContent>
-            </Tooltip>
-            <DropdownMenuContent align="start" className="bg-popover z-50 min-w-[200px]" onCloseAutoFocus={(e) => e.preventDefault()}>
-              <div className="max-h-[280px] overflow-y-auto">
-                {orgDepartments.map((dept) => (
-                  <DropdownMenuCheckboxItem
-                    key={dept}
-                    checked={orgDepartmentSelected.some((s) => s.value === dept)}
-                    onCheckedChange={() => handleSingleSelect("orgDepartment", dept, dept)}
-                  >
-                    {dept}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* 9. Duration (single-select) */}
+          {/* 7. Duration (single-select) */}
           <DropdownMenu>
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
@@ -600,7 +531,119 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* 10. Notifications (binary toggle pill) */}
+          {/* 8. More (Org Role + Org Department flyouts) */}
+          <DropdownMenu>
+            <Tooltip delayDuration={700}>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
+                      (organizationRoleSelected.length + orgDepartmentSelected.length) > 0 && "bg-primary/10 border-primary text-primary"
+                    )}
+                  >
+                    <i className="bi bi-three-dots w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    <span className="filter-label">More</span>
+                    {(organizationRoleSelected.length + orgDepartmentSelected.length) > 0 && (
+                      <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                        {organizationRoleSelected.length + orgDepartmentSelected.length}
+                      </span>
+                    )}
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">More filters</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent align="start" className="bg-popover z-50 min-w-[200px]" onCloseAutoFocus={(e) => e.preventDefault()}>
+              {/* Organization Role flyout */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  Organization Role
+                  {organizationRoleSelected.length > 0 && (
+                    <span className="ml-auto text-[13px] text-primary">{organizationRoleSelected.length}</span>
+                  )}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
+                  <div className="px-2 py-2 border-b">
+                    <div className="relative">
+                      <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+                      <input
+                        type="text"
+                        placeholder="Search organization roles..."
+                        value={orgRoleSearchQuery}
+                        onChange={(e) => setOrgRoleSearchQuery(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                        className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                    </div>
+                  </div>
+                  <div className="max-h-[280px] overflow-y-auto">
+                    {filteredOrgRoles.map((r) => (
+                      <DropdownMenuCheckboxItem
+                        key={r}
+                        checked={organizationRoleSelected.some((s) => s.value === r)}
+                        onCheckedChange={() => handleSingleSelect("organizationRole", r, r)}
+                      >
+                        {r}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                    {filteredOrgRoles.length === 0 && (
+                      <div className="px-2 py-3 text-xs text-muted-foreground text-center">
+                        No results found
+                      </div>
+                    )}
+                  </div>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              {/* Org Department flyout */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  Org Department
+                  {orgDepartmentSelected.length > 0 && (
+                    <span className="ml-auto text-[13px] text-primary">{orgDepartmentSelected.length}</span>
+                  )}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
+                  <div className="px-2 py-2 border-b">
+                    <div className="relative">
+                      <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+                      <input
+                        type="text"
+                        placeholder="Search org departments..."
+                        value={orgDeptSearchQuery}
+                        onChange={(e) => setOrgDeptSearchQuery(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                        className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                    </div>
+                  </div>
+                  <div className="max-h-[280px] overflow-y-auto">
+                    {filteredOrgDepts.map((d) => (
+                      <DropdownMenuCheckboxItem
+                        key={d}
+                        checked={orgDepartmentSelected.some((s) => s.value === d)}
+                        onCheckedChange={() => handleSingleSelect("orgDepartment", d, d)}
+                      >
+                        {d}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                    {filteredOrgDepts.length === 0 && (
+                      <div className="px-2 py-3 text-xs text-muted-foreground text-center">
+                        No results found
+                      </div>
+                    )}
+                  </div>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* 9. Notifications (binary toggle pill) */}
           <TogglePill
             label="Notifications"
             iconClass="bi-bell"

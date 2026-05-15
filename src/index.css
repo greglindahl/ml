@@ -468,8 +468,9 @@
 }
 
 /* Wider threshold for filter bars with many chips (e.g. Manage Users — no folder
-   sidebar consuming width, but more chips, so we need to collapse to icons sooner). */
-@container filterbar (max-width: 1399px) {
+   sidebar consuming width, more chips than Library). Tuned to the chip-row's
+   natural width (~1134px) with a ~65px buffer. */
+@container filterbar (max-width: 1199px) {
   .cq-filterbar-hide-label-wide .filter-label {
     display: none;
   }
