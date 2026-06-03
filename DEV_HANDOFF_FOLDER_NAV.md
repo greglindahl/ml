@@ -170,14 +170,14 @@ Portal's `$spacer` is `1.5rem` (24px) — base spacers are `0.125 / 0.25 / 0.5 /
 | Sidebar inner padding (top / bottom / sides) | 12 / 24 / 4 px | `$spacers.3` ✓ / `$spacers.4` ✓ / (no match — closest `$spacers.1` = 3px) |
 | Header padding | 12px (`$spacers.3`) | ✓ |
 | Footer padding | 12px (`$spacers.3`) | ✓ |
-| Tree item vertical padding | 8px | (no match — between 6 and 12; keep literal `0.5rem`) |
-| Tree item base left padding | 8px | (no match — keep literal) |
-| Tree item right padding | 8px | (no match — keep literal) |
+| Tree item vertical padding | 8px | `0.5rem` ✓ — valid Dashkit value (same as `$btn-padding-y`); just not a `$spacers` map entry. |
+| Tree item base left padding | 8px | `0.5rem` ✓ — valid value, not a `$spacers` entry. |
+| Tree item right padding | 8px | `0.5rem` ✓ — valid value, not a `$spacers` entry. |
 | **Depth indent step** | **24px per level** | `$spacers.4` ✓ |
 | "All Media" left padding (override) | 24px | `$spacers.4` ✓ |
 | Tree item border radius | 6px (`rounded-md`) | matches `$spacers.2` value (coincidence; border-radius isn't a spacer token) |
 | Drag handle slot width | 18px | (no match — keep literal) |
-| Inner gaps | 4 / 8 px | `$spacers.1` ≈ 3px (1px off) / (no match for 8) |
+| Inner gaps | 4 / 8 px | `$spacers.1` ≈ 3px (1px off) / 8px = `0.5rem` ✓ (valid value, not a `$spacers` entry) |
 
 ### Transitions
 

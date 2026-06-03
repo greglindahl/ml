@@ -133,7 +133,7 @@ Portal's `$spacer` is `1.5rem` (24px) — base spacers are `0.125 / 0.25 / 0.5 /
 | Nav item padding (expanded) | 12 / 24 px (`py-3 px-6`) | `$spacers.3` ✓ for 12; `$spacers.4` ✓ for 24. The 24px horizontal inset also aligns the icon's left edge (2px border + 24px = 26px) with the collapsed-rail icon center (~27px), so the icon barely moves through the collapse/expand transition. |
 | Nav item layout (collapsed) | `py-3` + `justify-center` | 12px = `$spacers.3` ✓ |
 | Nav item left border (always present) | 2px | (not a spacer) |
-| Footer utility button padding | 8px (`p-2`) | (no match — between 6 and 12; keep literal `0.5rem`) |
+| Footer utility button padding | 8px (`p-2`) | `$btn-padding-y` / `$input-btn-padding-y` = `0.5rem` ✓ — Dashkit's standard button vertical padding (not a `$spacers` entry, but a real token). Applied symmetrically here since these are icon-only buttons. |
 | Footer row padding (expanded) | 12 / 16 / 16 px (`py-3 pb-4 px-4`) | `$spacers.3` ✓ for 12; 16 has no match |
 | Footer row layout (collapsed) | `flex-col items-center gap-3` (12px gap) | `$spacers.3` ✓ |
 | Avatar size | 40px (`h-10 w-10`) | (no match — between 36 and 72; keep literal) |
