@@ -167,7 +167,7 @@ export function LeftNav({
   return (
     <nav
       className="h-screen bg-nav-background border-r border-nav-border flex flex-col nav-transition flex-shrink-0 relative group"
-      style={{ width: isExpanded ? "260px" : "72px" }}
+      style={{ width: isExpanded ? "250px" : "72px" }}
     >
       {/* Floating toggle button - appears on right edge on hover */}
       <Tooltip delayDuration={0}>

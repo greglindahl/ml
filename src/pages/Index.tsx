@@ -5,12 +5,25 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu, User } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
+const LEFT_NAV_EXPANDED_KEY = "leftNavExpanded";
+
 const Index = () => {
   const isMobile = useIsMobile();
-  const [isNavExpanded, setIsNavExpanded] = useState(false);
+  // Hydrate from localStorage on first render so the user's preference
+  // (expanded/collapsed) survives reloads. Defaults to collapsed.
+  const [isNavExpanded, setIsNavExpanded] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(LEFT_NAV_EXPANDED_KEY) === "true";
+  });
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [activeScreen, setActiveScreen] = useState<Screen>("home");
   const [history, setHistory] = useState<Screen[]>(["home"]);
+
+  // Persist the desktop nav expanded/collapsed preference across sessions.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(LEFT_NAV_EXPANDED_KEY, String(isNavExpanded));
+  }, [isNavExpanded]);
 
   // Close mobile nav when switching to desktop
   useEffect(() => {
