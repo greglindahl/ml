@@ -252,14 +252,14 @@ export function FolderSidebar({
         <div className="flex flex-col items-center gap-2">
           <button
             onClick={() => onSetSidebarExpanded(true)}
-            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+            className="p-2 hover:bg-[#F9FBFD] rounded-md transition-colors"
             aria-label="Expand folders"
           >
             <i className="bi bi-folder text-[15px] text-[#6e84a3]" />
           </button>
           <button
             onClick={() => onSetSidebarExpanded(true)}
-            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+            className="p-2 hover:bg-[#F9FBFD] rounded-md transition-colors"
             aria-label="Expand folders"
           >
             <i className="bi bi-chevron-double-right text-[15px] text-[#6e84a3]" />
@@ -276,7 +276,7 @@ export function FolderSidebar({
         <span className="font-medium text-[15px] text-[#12263f] tracking-[-0.3px]">Library</span>
         <button
           onClick={() => onSetSidebarExpanded(false)}
-          className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+          className="p-1 hover:bg-[#F9FBFD] rounded-md transition-colors"
           aria-label="Collapse folders"
         >
           <i className="bi bi-chevron-double-left text-[15px] text-[#6e84a3]" />
