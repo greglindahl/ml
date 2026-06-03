@@ -1599,7 +1599,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
         <FilterSection label="Date Range" icon="bi-calendar">
           <div className="text-sm text-muted-foreground">Date range filters will go here</div>
         </FilterSection>
-        <FilterSection label="More Filters" icon="bi-sliders">
+        <FilterSection label="More Filters" icon="bi-filter">
           <div className="text-sm text-muted-foreground">Source, Status, and other filters will go here</div>
         </FilterSection>
       </FiltersSheet>

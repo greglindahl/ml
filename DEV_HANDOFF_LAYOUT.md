@@ -77,12 +77,13 @@ Mixpanel viewport distribution:
 
 **Filter row (left → right):** AI Tags · Tags · Date · Creator · Type · Ratio · Folders · Source — then pills:
 
-| Pill            | Icon           |
-|-----------------|----------------|
-| Unviewed Only   | `bi-eye-slash` |
-| Favorites       | `bi-heart`     |
+| Pill            | Icon                              |
+|-----------------|-----------------------------------|
+| Unviewed Only   | `bi-eye-slash`                    |
+| Branding        | `bi-palette`                      |
+| Favorites       | `bi-heart` / `bi-heart-fill` (active) |
 
-No Branding pill. Confirm intent before shipping.
+Three pills, in this order. **Branding is intentional here** (asymmetric vs All Assets, which has no Branding pill) — it filters to branded assets only.
 
 ### 3c. Galleries (`GalleryFilterBar.tsx`)
 
@@ -193,13 +194,3 @@ Without `inline-flex items-center justify-center leading-none`, glyph baselines 
 ```
 
 **Production note:** Bootstrap 5.3+ supports `@container`. For older Bootstrap, wrap in `@supports (container-type: inline-size)` and provide a viewport fallback at matching Bootstrap breakpoints (`sm 576 / md 768 / lg 992 / xl 1200 / xxl 1400`).
-
----
-
-## 7. What still needs to happen in the proto
-
-- [ ] `FolderDetailsView.tsx` lines ~407, ~636 still use the **old** filter layout — port to the pattern above.
-- [ ] `GalleryCard` outer div has `cursor-pointer` but no `onClick`. Wire `onOpen` so card click navigates to Gallery Details.
-- [ ] Confirm Gallery Details pill set is intentionally `Unviewed Only + Favorites` only (no Branding).
-- [ ] Sweep any remaining `bi-funnel` / `bi-sliders` → `bi-filter`.
-- [ ] Review the new Campaigns / Requests screens against §2 / §3 — confirm they follow the pattern.
