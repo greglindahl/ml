@@ -314,9 +314,9 @@ export function FolderSidebar({
 
       {/* Pinned footer: View Archived toggle */}
       <div className="px-3 py-3 border-t border-[#e3ebf6] flex items-center justify-between">
-        <Label htmlFor="view-archived" className="text-[13px] text-[#6e84a3] cursor-pointer tracking-[-0.13px] flex items-center gap-2">
+        <Label htmlFor="view-archived" className="text-[13px] font-normal text-[#6e84a3] cursor-pointer tracking-[-0.13px] flex items-center gap-2">
           <i className="bi bi-archive text-[14px]" />
-          View Archived
+          View Archived Folders
         </Label>
         <Switch id="view-archived" checked={showArchived} onCheckedChange={onToggleArchived} />
       </div>

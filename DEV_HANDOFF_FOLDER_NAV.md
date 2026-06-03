@@ -148,7 +148,7 @@ Pulled verbatim from `FolderSidebar.tsx` and `SortableFolderItem.tsx`, then cros
 |---------|--------------|------|--------|----------|
 | Header title ("Library") | `$font-size-base` | `0.9375rem` / 15px | `$font-weight-normal` (400) | `-0.3px` |
 | Tree item name | `$font-size-sm` | `0.8125rem` / 13px | `$font-weight-normal` (400) | `-0.13px` |
-| Footer "View Archived" label | `$font-size-sm` | `0.8125rem` / 13px | `$font-weight-normal` (400) | `-0.13px` |
+| Footer "View Archived Folders" label | `$font-size-sm` | `0.8125rem` / 13px | `$font-weight-normal` (400) | `-0.13px` |
 | Item icon (folder / images / file) | — (`1rem`) | `1rem` / 16px | — | — |
 | Per-folder expand chevron | — (`1rem`) | `1rem` / 16px | — | — |
 | Sidebar toggle chevron + collapsed-state icons | `$font-size-base` | `0.9375rem` / 15px | — | — |
