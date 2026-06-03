@@ -165,7 +165,7 @@ Portal's `$spacer` is `1.5rem` (24px) — base spacers are `0.125 / 0.25 / 0.5 /
 
 | Property | Value | Portal spacer |
 |----------|-------|---------------|
-| Sidebar width (expanded) | **216px** | `$spacers.8` (`$spacer * 9`) ✓ |
+| Sidebar width (expanded) | **264px** | `$spacer * 11` (literal, not in default `$spacers` map; one step beyond `$spacers.8`) |
 | Sidebar width (collapsed) | **48px** | `$spacer * 2` (literal, not in default map) |
 | Sidebar inner padding (top / bottom / sides) | 12 / 24 / 4 px | `$spacers.3` ✓ / `$spacers.4` ✓ / (no match — closest `$spacers.1` = 3px) |
 | Header padding | 12px (`$spacers.3`) | ✓ |
@@ -306,6 +306,7 @@ These are intentional prototype shortcuts that should not silently ship:
 - **No tree-internal search.** The Library filter bar's existing search filters *contents*, not the tree itself. If users will have hundreds of folders, a tree filter input is worth adding.
 - **No persistence of the manual collapse override.** Today the tab-driven auto-rule (§8) is the only thing controlling collapse — manual chevron toggles only last until the next tab switch. If that's not the intended behavior, add per-tab persistence per the note in §8.
 - **Drag-violation feedback is an `alert()`.** Replace with an inline toast / banner in prod.
+- **No tooltip-on-truncate for tree row names.** At max depth (4), available name space is ~82px (~13 characters at 13px); longer names truncate silently with `truncate`. Add a tooltip that fires on hover **only when the name overflows** — show the full name. Suggested approach: detect `scrollWidth > clientWidth` on the name `<span>` and conditionally wrap in a shadcn Tooltip. (Always-on tooltips would be noisy.)
 - **No multi-select drag** (one item at a time).
 - **No undo for destructive operations** (delete, archive). Add at least an undo toast.
 

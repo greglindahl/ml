@@ -270,7 +270,7 @@ export function FolderSidebar({
   }
 
   return (
-    <div className="folder-tree-sidebar border-r border-[#e3ebf6] bg-white flex flex-col w-[216px] h-full transition-all duration-300 ease-in-out overflow-hidden pt-3 pb-6 px-1">
+    <div className="folder-tree-sidebar border-r border-[#e3ebf6] bg-white flex flex-col w-[264px] h-full transition-all duration-300 ease-in-out overflow-hidden pt-3 pb-6 px-1">
       {/* Header */}
       <div className="px-3 py-3 flex items-center justify-between border-b border-[#e3ebf6]">
         <span className="font-normal text-[15px] text-[#12263f] tracking-[-0.3px]">Library</span>
