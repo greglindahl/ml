@@ -107,13 +107,15 @@ export function OrgSwitcher({ orgs, activeOrg, onOrgChange, isExpanded }: OrgSwi
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className={`flex items-center hover:opacity-80 transition-opacity ${isExpanded ? "flex-col gap-2" : ""}`}>
+        <button className="flex flex-col items-center gap-2 hover:opacity-80 transition-opacity">
           <div className="w-14 h-14 bg-[#95aac9]/20 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
             <img src={orgLogoPlaceholder} alt={activeOrg.name} className="w-8 h-8 object-contain" />
           </div>
-          {isExpanded && (
-            <span className="text-[17px] font-normal text-white tracking-tight">{activeOrg.name}</span>
-          )}
+          {/* Name slot is always rendered at a fixed height so the header is the same
+              height collapsed vs expanded — keeps the nav icons from shifting on toggle. */}
+          <span className="h-6 flex items-center text-[17px] font-normal text-white tracking-tight leading-none">
+            {isExpanded ? activeOrg.name : ""}
+          </span>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent 

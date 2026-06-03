@@ -307,8 +307,8 @@ export function AssetTableView({
                     )}
                     <span
                       className={`absolute top-0.5 left-0.5 w-2 h-2 rounded-full ${
-                        asset.status === "approved" ? "bg-green-500" :
-                        asset.status === "pending" ? "bg-yellow-500" : "bg-gray-400"
+                        asset.status === "approved" ? "bg-[#00D97E]" :
+                        asset.status === "pending" ? "bg-[#F6C343]" : "bg-gray-400"
                       }`}
                     />
                   </div>

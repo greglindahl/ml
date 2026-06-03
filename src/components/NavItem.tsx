@@ -27,7 +27,7 @@ export function NavItem({
         transition-colors duration-150
         text-nav-text hover:text-nav-text-hover hover:bg-sidebar-accent
         border-l-2 border-transparent
-        ${isExpanded ? "px-4" : "justify-center"}
+        ${isExpanded ? "px-6" : "justify-center"}
         ${isActive ? "bg-sidebar-accent text-nav-text-active !border-nav-active-border" : ""}
       `}
     >

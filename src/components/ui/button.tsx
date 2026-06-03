@@ -12,7 +12,7 @@ const buttonVariants = cva(
         // Primary - solid blue background
         default: "bg-primary text-white hover:bg-primary/90",
         // Secondary - gray background
-        secondary: "bg-[#E3EBF6] text-foreground hover:bg-[#D2DCE9]",
+        secondary: "bg-[#E3EBF6] text-foreground hover:bg-[#D2DDEC]",
         // Primary Outline - blue border, transparent bg
         "primary-outline": "border border-primary bg-transparent text-primary hover:bg-primary/5",
         // Secondary Outline - gray border, transparent bg
@@ -20,17 +20,17 @@ const buttonVariants = cva(
         // Light - light gray background
         light: "bg-[#EDF2F9] text-foreground hover:bg-[#E3EBF6]",
         // Dark - dark navy background
-        dark: "bg-[#12263F] text-white hover:bg-[#1a3a5c]",
+        dark: "bg-[#12263F] text-white hover:bg-[#0F2036]",
         // Danger - red background
         destructive: "bg-destructive text-white hover:bg-destructive/90",
         // Warning - amber/yellow background
-        warning: "bg-[#F6C343] text-[#12263F] hover:bg-[#E5B43E]",
+        warning: "bg-[#F6C343] text-[#12263F] hover:bg-[#D1A639]",
         // Success - green background
-        success: "bg-[#00D97E] text-white hover:bg-[#00C471]",
+        success: "bg-[#00D97E] text-white hover:bg-[#00B86B]",
         // Info - cyan background
-        info: "bg-[#39AAF5] text-white hover:bg-[#2E9CE5]",
+        info: "bg-[#39AFD1] text-white hover:bg-[#3095B2]",
         // White - white background with border
-        white: "bg-white text-foreground border border-[#D2DDEC] hover:bg-gray-50",
+        white: "bg-white text-foreground border border-[#D2DDEC] hover:bg-gray-100",
         // Link - no background, just text
         link: "text-primary underline-offset-4 hover:underline bg-transparent",
         // Ghost - no background, hover shows bg

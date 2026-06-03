@@ -271,7 +271,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             {/* Feature Badges */}
             <div className="flex items-center gap-1.5">
               {/* Shared/External */}
-              <div className="w-7 h-7 rounded-md bg-[#8B5CF6] flex items-center justify-center">
+              <div className="w-7 h-7 rounded-md bg-[#9747FF] flex items-center justify-center">
                 <i className="bi bi-folder-symlink-fill text-white text-sm" />
               </div>
               {/* View Only */}
@@ -283,11 +283,11 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 <i className="bi bi-upload text-white text-sm" />
               </div>
               {/* Expiration/Date */}
-              <div className="w-7 h-7 rounded-md bg-[#F59E0B] flex items-center justify-center">
-                <i className="bi bi-calendar-date text-white text-sm" />
+              <div className="w-7 h-7 rounded-md bg-[#F6C343] flex items-center justify-center">
+                <i className="bi bi-calendar-date text-[#12263F] text-sm" />
               </div>
               {/* Collection/Inbox */}
-              <div className="w-7 h-7 rounded-md bg-[#06B6D4] flex items-center justify-center">
+              <div className="w-7 h-7 rounded-md bg-[#39AFD1] flex items-center justify-center">
                 <i className="bi bi-archive text-white text-sm" />
               </div>
               {/* Folder */}

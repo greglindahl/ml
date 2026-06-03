@@ -103,7 +103,7 @@ Drag affordances:
 |-------|---------|
 | Inactive | base text color, no background |
 | Hover | `bg-gray-100` |
-| Active (selected) | `bg-primary` (`#d5e5fa`), `text-primary` (`#2c7be5`) |
+| Active (selected) | `$primary-bg-subtle` background (`#d5e5fa`), `$primary` text (`#2c7be5`) — note the fill is the *subtle* token, **not** `$primary` itself |
 | Drop target — valid | `ring-primary bg-primary/10` |
 | Drop target — invalid | `ring-destructive` |
 | Archived (when `showArchived` is on) | `opacity-50`, drag disabled |
@@ -247,9 +247,9 @@ The sidebar itself can collapse to icon-only, separate from per-folder expand/co
 
 | State | Width | Notes |
 |-------|-------|-------|
-| Expanded | **220px** | Full tree visible |
-| Collapsed | **50px** | Folder icons only + expand affordance |
-| Transition | 300ms ease-in-out | (separate from the primary nav's 250ms) |
+| Expanded | **264px** | Full tree visible |
+| Collapsed | **48px** | Folder icons only + expand affordance |
+| Transition | 300ms ease-in-out | (separate from the primary nav's 200ms) |
 
 Toggle: chevron-double-left (expanded→collapsed) / chevron-double-right (collapsed→expanded) at the top-right edge of the sidebar (`FolderSidebar.tsx:249–269`).
 
@@ -259,8 +259,8 @@ The sidebar's expanded state is **tied to the Library tab** in addition to the m
 
 | User action | Sidebar behavior |
 |---|---|
-| Switches to the **Folders** tab | Sidebar **auto-expands** to 220px |
-| Switches to any other Library tab (All Assets, Galleries, Favorites, Branding, Workflows) | Sidebar **auto-collapses** to 50px |
+| Switches to the **Folders** tab | Sidebar **auto-expands** to 264px |
+| Switches to any other Library tab (All Assets, Galleries, Favorites, Branding, Workflows) | Sidebar **auto-collapses** to 48px |
 | Clicks the chevron at any point | Manual toggle wins for that tab session; switching tabs again re-applies the rule above |
 
 The intent: Folders is the one tab where the tree IS the primary UX, so showing it expanded by default matches user expectation. Other tabs treat the tree as a secondary aid that shouldn't dominate the layout.
@@ -269,7 +269,7 @@ This auto-behavior runs **only on the Library screen** — no other screen has a
 
 **Persistence interaction**: because the tab-driven auto-expand overrides user state on every tab switch, persisting the collapsed/expanded flag in `localStorage` is less valuable here than for the primary nav. If we add persistence later, it should be **scoped to the user's last-known state on each tab** (e.g. `libraryFolderSidebarExpanded.assets`, `libraryFolderSidebarExpanded.folders`), or skipped entirely in favor of the auto rule.
 
-**Widths intentionally differ from the primary nav.** The folder sidebar is a sub-surface inside one screen; cramming it to the primary nav's 250/72 widths would crowd the asset area. 220/50 is a deliberate sub-surface scale.
+**Widths intentionally differ from the primary nav.** The folder sidebar is a sub-surface inside one screen; cramming it to the primary nav's 250/72 widths would crowd the asset area. 264/48 is a deliberate sub-surface scale.
 
 ---
 
