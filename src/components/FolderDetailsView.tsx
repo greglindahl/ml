@@ -941,27 +941,21 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
 
         {/* Folders Tab */}
         <TabsContent value="folders" className="flex-1 overflow-y-auto py-6 mt-0">
-          {/* Search row */}
-          <div className="mb-4">
-            <FacetedSearchWithTypeahead onSearch={(query) => setFolderSearchQuery(query)} placeholder="Search" />
-          </div>
-
-          {/* Controls row */}
-          <div className="flex flex-wrap items-center justify-end gap-4 mb-6">
-            {/* Archived Only toggle hidden — functionality preserved, toggle lives in sidebar */}
-            {false && (
-            <div className="flex items-center gap-2">
-              <Label htmlFor="archived-folders-detail" className="text-sm text-muted-foreground">Archived Only</Label>
-              <Switch id="archived-folders-detail" checked={archivedFoldersOnly} onCheckedChange={setArchivedFoldersOnly} />
+          {/* Search Row with Utility Cluster (matches Assets / Galleries tabs in this file) */}
+          <div className="flex items-center gap-4 mb-3 cq-search-row">
+            <div className="flex-1 min-w-0 cq-search-input">
+              <FacetedSearchWithTypeahead onSearch={(query) => setFolderSearchQuery(query)} placeholder="Search" />
             </div>
-            )}
-            <div className="flex items-center border border-gray-300 rounded-md bg-white">
-              <Button variant="ghost" size="icon" className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${folderViewMode === "grid" ? "bg-gray-100" : ""}`} onClick={() => setFolderViewMode("grid")}>
-                <i className="bi bi-grid-3x3 w-4 h-4 inline-flex items-center justify-center leading-none" />
-              </Button>
-              <Button variant="ghost" size="icon" className={`h-10 w-10 rounded-l-none border-l border-gray-300 text-[#6e84a3] ${folderViewMode === "table" ? "bg-gray-100" : ""}`} onClick={() => setFolderViewMode("table")}>
-                <i className="bi bi-list w-4 h-4 inline-flex items-center justify-center leading-none" />
-              </Button>
+
+            <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
+              <div className="flex items-center border border-gray-300 rounded-md bg-white">
+                <Button variant="ghost" size="icon" className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${folderViewMode === "grid" ? "bg-gray-100" : ""}`} onClick={() => setFolderViewMode("grid")}>
+                  <i className="bi bi-grid w-4 h-4 inline-flex items-center justify-center leading-none" />
+                </Button>
+                <Button variant="ghost" size="icon" className={`h-10 w-10 rounded-l-none border-l border-gray-300 text-[#6e84a3] ${folderViewMode === "table" ? "bg-gray-100" : ""}`} onClick={() => setFolderViewMode("table")}>
+                  <i className="bi bi-table w-4 h-4 inline-flex items-center justify-center leading-none" />
+                </Button>
+              </div>
             </div>
           </div>
 

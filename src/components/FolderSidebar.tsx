@@ -248,18 +248,18 @@ export function FolderSidebar({
 
   if (!isFolderSidebarExpanded) {
     return (
-      <div className="folder-tree-sidebar border-r border-[#e3ebf6] bg-white flex flex-col w-[50px] h-full transition-all duration-300 ease-in-out overflow-hidden pt-3 pb-6 px-1">
+      <div className="folder-tree-sidebar border-r border-[#e3ebf6] bg-white flex flex-col w-[48px] h-full transition-all duration-300 ease-in-out overflow-hidden pt-3 pb-6 px-1">
         <div className="flex flex-col items-center gap-2">
           <button
             onClick={() => onSetSidebarExpanded(true)}
-            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+            className="p-2 hover:bg-[#EDF2F9] rounded-md transition-colors"
             aria-label="Expand folders"
           >
             <i className="bi bi-folder text-[15px] text-[#6e84a3]" />
           </button>
           <button
             onClick={() => onSetSidebarExpanded(true)}
-            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+            className="p-2 hover:bg-[#EDF2F9] rounded-md transition-colors"
             aria-label="Expand folders"
           >
             <i className="bi bi-chevron-double-right text-[15px] text-[#6e84a3]" />
@@ -270,13 +270,13 @@ export function FolderSidebar({
   }
 
   return (
-    <div className="folder-tree-sidebar border-r border-[#e3ebf6] bg-white flex flex-col w-[220px] h-full transition-all duration-300 ease-in-out overflow-hidden pt-3 pb-6 px-1">
+    <div className="folder-tree-sidebar border-r border-[#e3ebf6] bg-white flex flex-col w-[264px] h-full transition-all duration-300 ease-in-out overflow-hidden pt-3 pb-6 px-1">
       {/* Header */}
       <div className="px-3 py-3 flex items-center justify-between border-b border-[#e3ebf6]">
-        <span className="font-medium text-[15px] text-[#12263f] tracking-[-0.3px]">Library</span>
+        <span className="font-normal text-[15px] text-[#12263f] tracking-[-0.3px]">Library</span>
         <button
           onClick={() => onSetSidebarExpanded(false)}
-          className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+          className="p-1 hover:bg-[#EDF2F9] rounded-md transition-colors"
           aria-label="Collapse folders"
         >
           <i className="bi bi-chevron-double-left text-[15px] text-[#6e84a3]" />
@@ -314,9 +314,9 @@ export function FolderSidebar({
 
       {/* Pinned footer: View Archived toggle */}
       <div className="px-3 py-3 border-t border-[#e3ebf6] flex items-center justify-between">
-        <Label htmlFor="view-archived" className="text-[13px] text-[#6e84a3] cursor-pointer tracking-[-0.13px] flex items-center gap-2">
+        <Label htmlFor="view-archived" className="text-[13px] font-normal text-[#6e84a3] cursor-pointer tracking-[-0.13px] flex items-center gap-2">
           <i className="bi bi-archive text-[14px]" />
-          View Archived
+          View Archived Folders
         </Label>
         <Switch id="view-archived" checked={showArchived} onCheckedChange={onToggleArchived} />
       </div>

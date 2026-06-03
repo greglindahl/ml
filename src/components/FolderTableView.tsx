@@ -44,10 +44,10 @@ interface FolderTableViewProps {
   isLoading?: boolean;
   archivedFoldersOnly?: boolean;
   onUnarchiveFolder?: (folderId: string) => void;
-  /** Controlled perPage value */
-  perPage: number;
-  /** Controlled column visibility */
-  columnVisibility: FolderColumnVisibility;
+  /** Controlled perPage value (defaults to 40) */
+  perPage?: number;
+  /** Controlled column visibility (defaults to all visible) */
+  columnVisibility?: FolderColumnVisibility;
 }
 
 type SortField = "name" | "subfolders" | "created" | null;
@@ -75,8 +75,8 @@ export function FolderTableView({
   isLoading = false,
   archivedFoldersOnly = false,
   onUnarchiveFolder,
-  perPage,
-  columnVisibility,
+  perPage = 40,
+  columnVisibility = DEFAULT_FOLDER_COLUMN_VISIBILITY,
 }: FolderTableViewProps) {
   const [selectedFolders, setSelectedFolders] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>("name");

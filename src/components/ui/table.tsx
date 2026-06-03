@@ -41,12 +41,17 @@ const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTML
 );
 TableRow.displayName = "TableRow";
 
+// Portal-aligned defaults (Dashkit `.table thead th`):
+//   - bg #F9FBFD (= $gray-100), text #6E84A3 (= $gray-700)
+//   - 13px / $font-weight-bold (600) / UPPERCASE / letter-spacing 0.08em
+// Per-cell overrides in consuming components (e.g. inner div with text-[11px])
+// still win over these defaults.
 const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<HTMLTableCellElement>>(
   ({ className, ...props }, ref) => (
     <th
       ref={ref}
       className={cn(
-        "h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0",
+        "h-12 px-4 text-left align-middle bg-[#F9FBFD] text-[13px] font-bold uppercase tracking-[0.08em] text-[#6E84A3] [&:has([role=checkbox])]:pr-0",
         className,
       )}
       {...props}

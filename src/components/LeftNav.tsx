@@ -150,7 +150,7 @@ export function LeftNav({
           </button>
           <button className="relative p-2 hover:bg-sidebar-accent rounded-md transition-colors">
             <i className="bi bi-envelope text-nav-text text-xl" />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full min-w-[20px] text-center leading-none">
+            <span className="absolute -top-1 -right-1 bg-[#E63757] text-white text-[10px] font-normal px-1.5 py-0.5 rounded-full min-w-[20px] text-center leading-none">
               99+
             </span>
           </button>
@@ -167,7 +167,7 @@ export function LeftNav({
   return (
     <nav
       className="h-screen bg-nav-background border-r border-nav-border flex flex-col nav-transition flex-shrink-0 relative group"
-      style={{ width: isExpanded ? "260px" : "72px" }}
+      style={{ width: isExpanded ? "250px" : "72px" }}
     >
       {/* Floating toggle button - appears on right edge on hover */}
       <Tooltip delayDuration={0}>
@@ -232,7 +232,7 @@ export function LeftNav({
             </button>
             <button className="relative p-2 hover:bg-sidebar-accent rounded-md transition-colors">
               <i className="bi bi-envelope text-nav-text text-xl" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full min-w-[20px] text-center leading-none">
+              <span className="absolute -top-1 -right-1 bg-[#E63757] text-white text-[10px] font-normal px-1.5 py-0.5 rounded-full min-w-[20px] text-center leading-none">
                 99+
               </span>
             </button>
@@ -248,7 +248,7 @@ export function LeftNav({
           </button>
           <button className="relative p-2 hover:bg-sidebar-accent rounded-md transition-colors">
             <i className="bi bi-envelope text-nav-text text-xl" />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full min-w-[20px] text-center leading-none">
+            <span className="absolute -top-1 -right-1 bg-[#E63757] text-white text-[10px] font-normal px-1.5 py-0.5 rounded-full min-w-[20px] text-center leading-none">
               99+
             </span>
           </button>

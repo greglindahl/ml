@@ -82,9 +82,10 @@ export const folders: FolderItem[] = [
             id: "conditioning",
             name: "Conditioning",
             type: "folder",
-            count: 2,
+            count: 3,
             countType: "galleries",
             children: [
+              { id: "hiit-recovery", name: "High-Intensity Interval Training and Recovery Protocol", type: "gallery", count: 22, countType: "assets" },
               { id: "cardio-sets", name: "Cardio Sets", type: "gallery", count: 15, countType: "assets" },
               { id: "agility-drills", name: "Agility Drills", type: "gallery", count: 20, countType: "assets" },
             ],
@@ -227,14 +228,45 @@ export const folders: FolderItem[] = [
           { id: "youth-basketball-clinic", name: "Youth Basketball Clinic", type: "gallery", count: 38, countType: "assets" },
         ],
       },
-      { 
-        id: "big-moments-2023", 
-        name: "Championship Parade", 
+      {
+        id: "big-moments-2023",
+        name: "Championship Parade",
         type: "gallery",
         count: 48,
         countType: "assets",
       },
     ],
+  },
+  {
+    id: "season-2022-archived",
+    name: "Season 22-23",
+    type: "folder",
+    count: 2,
+    countType: "galleries",
+    archived: true,
+    children: [
+      { id: "rookie-spotlight-2022", name: "Rookie Spotlight", type: "gallery", count: 18, countType: "assets", archived: true },
+      { id: "trade-deadline-2022", name: "Trade Deadline Moments", type: "gallery", count: 24, countType: "assets", archived: true },
+    ],
+  },
+  {
+    id: "legacy-branding",
+    name: "Legacy Branding Assets",
+    type: "folder",
+    count: 1,
+    countType: "galleries",
+    archived: true,
+    children: [
+      { id: "old-logo-package", name: "Old Logo Package", type: "gallery", count: 12, countType: "assets", archived: true },
+    ],
+  },
+  {
+    id: "retired-jerseys-archived",
+    name: "Retired Jersey Ceremonies",
+    type: "gallery",
+    count: 30,
+    countType: "assets",
+    archived: true,
   },
 ];
 

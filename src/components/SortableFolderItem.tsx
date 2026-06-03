@@ -1,6 +1,12 @@
+import { useLayoutEffect, useRef, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { FolderItem } from "@/lib/mockFolderData";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 interface SortableFolderItemProps {
@@ -54,9 +60,22 @@ export function SortableFolderItem({
   const isGallery = folder.type === "gallery";
   const isAllFiles = folder.id === "all";
 
+  // Detect whether the name overflows so we can show a tooltip on hover only when truncated.
+  const nameRef = useRef<HTMLSpanElement>(null);
+  const [nameTruncated, setNameTruncated] = useState(false);
+  useLayoutEffect(() => {
+    const el = nameRef.current;
+    if (!el) return;
+    const measure = () => setNameTruncated(el.scrollWidth > el.clientWidth);
+    measure();
+    const obs = new ResizeObserver(measure);
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [folder.name, depth]);
+
   // Base padding + depth-based indentation (20px per level)
   const baseIndent = 8;
-  const depthIndent = 20;
+  const depthIndent = 24;
   const getIndentation = (d: number) => {
     if (isAllFiles) return 24;
     return baseIndent + d * depthIndent;
@@ -68,7 +87,7 @@ export function SortableFolderItem({
         className={`group flex items-center gap-1 ${isAllFiles ? "py-2 mx-2 h-10" : "py-2"} text-[13px] rounded-md transition-colors ${
           isActive
             ? "bg-[#d5e5fa] text-[#2c7be5]"
-            : "text-[#6e84a3] hover:bg-gray-100"
+            : "text-[#6e84a3] hover:bg-[#EDF2F9]"
         } ${isOverValid ? "ring-2 ring-primary bg-primary/10" : ""} ${
           isOverInvalid ? "ring-2 ring-destructive bg-destructive/10" : ""
         } ${isArchived ? "opacity-50" : ""}`}
@@ -117,10 +136,17 @@ export function SortableFolderItem({
             <i className="bi bi-folder text-[16px] flex-shrink-0" />
           )}
 
-          {/* Name */}
-          <span className="truncate tracking-[-0.13px]">
-            {folder.name}
-          </span>
+          {/* Name (with tooltip-on-truncate so long names are recoverable on hover) */}
+          <Tooltip open={nameTruncated ? undefined : false} delayDuration={300}>
+            <TooltipTrigger asChild>
+              <span ref={nameRef} className="truncate tracking-[-0.13px]">
+                {folder.name}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={8}>
+              {folder.name}
+            </TooltipContent>
+          </Tooltip>
         </button>
       </div>
 
