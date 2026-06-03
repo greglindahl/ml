@@ -1,6 +1,12 @@
+import { useLayoutEffect, useRef, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { FolderItem } from "@/lib/mockFolderData";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 interface SortableFolderItemProps {
@@ -53,6 +59,19 @@ export function SortableFolderItem({
 
   const isGallery = folder.type === "gallery";
   const isAllFiles = folder.id === "all";
+
+  // Detect whether the name overflows so we can show a tooltip on hover only when truncated.
+  const nameRef = useRef<HTMLSpanElement>(null);
+  const [nameTruncated, setNameTruncated] = useState(false);
+  useLayoutEffect(() => {
+    const el = nameRef.current;
+    if (!el) return;
+    const measure = () => setNameTruncated(el.scrollWidth > el.clientWidth);
+    measure();
+    const obs = new ResizeObserver(measure);
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [folder.name, depth]);
 
   // Base padding + depth-based indentation (20px per level)
   const baseIndent = 8;
@@ -117,10 +136,17 @@ export function SortableFolderItem({
             <i className="bi bi-folder text-[16px] flex-shrink-0" />
           )}
 
-          {/* Name */}
-          <span className="truncate tracking-[-0.13px]">
-            {folder.name}
-          </span>
+          {/* Name (with tooltip-on-truncate so long names are recoverable on hover) */}
+          <Tooltip open={nameTruncated ? undefined : false} delayDuration={300}>
+            <TooltipTrigger asChild>
+              <span ref={nameRef} className="truncate tracking-[-0.13px]">
+                {folder.name}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={8}>
+              {folder.name}
+            </TooltipContent>
+          </Tooltip>
         </button>
       </div>
 
