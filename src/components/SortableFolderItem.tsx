@@ -56,7 +56,7 @@ export function SortableFolderItem({
 
   // Base padding + depth-based indentation (20px per level)
   const baseIndent = 8;
-  const depthIndent = 20;
+  const depthIndent = 24;
   const getIndentation = (d: number) => {
     if (isAllFiles) return 24;
     return baseIndent + d * depthIndent;

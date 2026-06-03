@@ -150,7 +150,7 @@ export function LeftNav({
           </button>
           <button className="relative p-2 hover:bg-sidebar-accent rounded-md transition-colors">
             <i className="bi bi-envelope text-nav-text text-xl" />
-            <span className="absolute -top-1 -right-1 bg-[#E63757] text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full min-w-[20px] text-center leading-none">
+            <span className="absolute -top-1 -right-1 bg-[#E63757] text-white text-[10px] font-normal px-1.5 py-0.5 rounded-full min-w-[20px] text-center leading-none">
               99+
             </span>
           </button>
@@ -232,7 +232,7 @@ export function LeftNav({
             </button>
             <button className="relative p-2 hover:bg-sidebar-accent rounded-md transition-colors">
               <i className="bi bi-envelope text-nav-text text-xl" />
-              <span className="absolute -top-1 -right-1 bg-[#E63757] text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full min-w-[20px] text-center leading-none">
+              <span className="absolute -top-1 -right-1 bg-[#E63757] text-white text-[10px] font-normal px-1.5 py-0.5 rounded-full min-w-[20px] text-center leading-none">
                 99+
               </span>
             </button>
@@ -248,7 +248,7 @@ export function LeftNav({
           </button>
           <button className="relative p-2 hover:bg-sidebar-accent rounded-md transition-colors">
             <i className="bi bi-envelope text-nav-text text-xl" />
-            <span className="absolute -top-1 -right-1 bg-[#E63757] text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full min-w-[20px] text-center leading-none">
+            <span className="absolute -top-1 -right-1 bg-[#E63757] text-white text-[10px] font-normal px-1.5 py-0.5 rounded-full min-w-[20px] text-center leading-none">
               99+
             </span>
           </button>

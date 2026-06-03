@@ -144,34 +144,40 @@ Pulled verbatim from `FolderSidebar.tsx` and `SortableFolderItem.tsx`, then cros
 
 ### Typography
 
-| Element | Size | Weight | Tracking |
-|---------|------|--------|----------|
-| Header title ("Library") | 15px | medium | `-0.3px` |
-| Tree item name | 13px | normal | `-0.13px` |
-| Footer "View Archived" label | 13px | normal | `-0.13px` |
-| Item icon (folder / images / file) | 16px | — | — |
-| Per-folder expand chevron | 16px | — | — |
-| Sidebar toggle chevron + collapsed-state icons | 15px | — | — |
-| Drag handle icon | 14px (`w-3.5 h-3.5`) | — | — |
-| Footer archive icon | 14px | — | — |
+| Element | Portal token | Size (rem / px) | Weight | Tracking |
+|---------|--------------|------|--------|----------|
+| Header title ("Library") | `$font-size-base` | `0.9375rem` / 15px | `$font-weight-normal` (400) | `-0.3px` |
+| Tree item name | `$font-size-sm` | `0.8125rem` / 13px | `$font-weight-normal` (400) | `-0.13px` |
+| Footer "View Archived" label | `$font-size-sm` | `0.8125rem` / 13px | `$font-weight-normal` (400) | `-0.13px` |
+| Item icon (folder / images / file) | — (`1rem`) | `1rem` / 16px | — | — |
+| Per-folder expand chevron | — (`1rem`) | `1rem` / 16px | — | — |
+| Sidebar toggle chevron + collapsed-state icons | `$font-size-base` | `0.9375rem` / 15px | — | — |
+| Drag handle icon | — (`0.875rem`) | `0.875rem` / 14px | — | — |
+| Footer archive icon | — (`0.875rem`) | `0.875rem` / 14px | — | — |
+
+#### Icon-size note
+
+The 16px and 14px icon sizes don't map to a portal `$font-size-*` token — use the literal `1rem` / `0.875rem` values.
 
 ### Spacing & layout
 
-| Property | Value |
-|----------|-------|
-| Sidebar width (expanded) | **220px** |
-| Sidebar width (collapsed) | **50px** |
-| Sidebar inner padding | `pt-3 pb-6 px-1` (12 / 24 / 4) |
-| Header padding | `px-3 py-3` (12) |
-| Footer padding | `px-3 py-3` (12) |
-| Tree item vertical padding | `py-2` (8) |
-| Tree item base left padding | 8px |
-| Tree item right padding | 8px |
-| Depth indent step | **20px per level** |
-| "All Media" left padding (override) | 24px |
-| Tree item border radius | `rounded-md` (6px) |
-| Drag handle slot width | 18px |
-| Inner gaps | `gap-1` (4) for row, `gap-2` (8) for icon + label |
+Portal's `$spacer` is `1.5rem` (24px) — base spacers are `0.125 / 0.25 / 0.5 / 1 / 1.5 / 3 / 4.5 / 9` × `$spacer` (= 3 / 6 / 12 / 24 / 36 / 72 / 108 / 216 px). Values below cite the closest portal spacer where the proto value matches, or note "no portal match" where it doesn't.
+
+| Property | Value | Portal spacer |
+|----------|-------|---------------|
+| Sidebar width (expanded) | **216px** | `$spacers.8` (`$spacer * 9`) ✓ |
+| Sidebar width (collapsed) | **48px** | `$spacer * 2` (literal, not in default map) |
+| Sidebar inner padding (top / bottom / sides) | 12 / 24 / 4 px | `$spacers.3` ✓ / `$spacers.4` ✓ / (no match — closest `$spacers.1` = 3px) |
+| Header padding | 12px (`$spacers.3`) | ✓ |
+| Footer padding | 12px (`$spacers.3`) | ✓ |
+| Tree item vertical padding | 8px | (no match — between 6 and 12; keep literal `0.5rem`) |
+| Tree item base left padding | 8px | (no match — keep literal) |
+| Tree item right padding | 8px | (no match — keep literal) |
+| **Depth indent step** | **24px per level** | `$spacers.4` ✓ |
+| "All Media" left padding (override) | 24px | `$spacers.4` ✓ |
+| Tree item border radius | 6px (`rounded-md`) | matches `$spacers.2` value (coincidence; border-radius isn't a spacer token) |
+| Drag handle slot width | 18px | (no match — keep literal) |
+| Inner gaps | 4 / 8 px | `$spacers.1` ≈ 3px (1px off) / (no match for 8) |
 
 ### Transitions
 

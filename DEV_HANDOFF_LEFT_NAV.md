@@ -110,29 +110,35 @@ If undesired, drop `hover:bg-sidebar-accent` and let the text color flip carry t
 
 ### Typography
 
-| Element | Size |
-|---------|------|
-| Nav item label (expanded only) | 15px |
-| Nav item icon | `bi-md` (1.25rem ≈ 20px) |
-| Footer button icon (help / notifications / megaphone) | `text-xl` (1.25rem ≈ 20px) |
-| Chevron toggle icon | 15px |
-| Tooltip on collapsed icon | shadcn default |
-| Notification badge | 10px, font-medium |
+| Element | Portal token | Size (rem / px) | Weight |
+|---------|--------------|------|--------|
+| Nav item label (expanded only) | `$font-size-base` | `0.9375rem` / 15px | `$font-weight-normal` (400) |
+| Nav item icon | — (`1.25rem`) | `1.25rem` / 20px (`bi-md`) | — |
+| Footer button icon (help / notifications / megaphone) | — (`1.25rem`) | `1.25rem` / 20px (`text-xl`) | — |
+| Chevron toggle icon | `$font-size-base` | `0.9375rem` / 15px | — |
+| Tooltip on collapsed icon | (shadcn default) | — | — |
+| Notification badge text | `$font-size-xs` | `0.625rem` / 10px | `$font-weight-normal` (400) |
+
+#### Icon-size note
+
+The 20px nav-icon size doesn't have a portal `$font-size-*` token — use the literal `1.25rem`.
 
 ### Spacing & layout
 
-| Property | Value |
-|----------|-------|
-| Sidebar width (expanded) | **250px** |
-| Sidebar width (collapsed) | **72px** |
-| Width transition | 200ms ease-out |
-| Nav item padding (expanded) | `py-3 px-4` (12 / 16) |
-| Nav item layout (collapsed) | `py-3` + `justify-center` (icon centered, no label) |
-| Nav item left border (always present) | 2px (transparent until active) |
-| Footer utility button padding | `p-2` (8) |
-| Footer row padding (expanded) | `py-3 pb-4 px-4` |
-| Footer row layout (collapsed) | `flex-col items-center gap-3` (icons stacked) |
-| Avatar size | 40px (`h-10 w-10`) |
+Portal's `$spacer` is `1.5rem` (24px) — base spacers are `0.125 / 0.25 / 0.5 / 1 / 1.5 / 3 / 4.5 / 9` × `$spacer` (= 3 / 6 / 12 / 24 / 36 / 72 / 108 / 216 px). Values below cite the closest portal spacer where the proto value matches.
+
+| Property | Value | Portal spacer |
+|----------|-------|---------------|
+| Sidebar width (expanded) | **250px** | matches portal's `--gf-app-layout-sidebar-width: 250px` (existing CSS var, not in `$spacers`) |
+| Sidebar width (collapsed) | **72px** | `$spacers.6` (`$spacer * 3`) ✓ |
+| Width transition | 200ms ease-out | (not a spacer) |
+| Nav item padding (expanded) | 12 / 16 px | `$spacers.3` ✓ for 12; **16px has no portal match** (QA may flag — accepted) |
+| Nav item layout (collapsed) | `py-3` + `justify-center` | 12px = `$spacers.3` ✓ |
+| Nav item left border (always present) | 2px | (not a spacer) |
+| Footer utility button padding | 8px (`p-2`) | (no match — between 6 and 12; keep literal `0.5rem`) |
+| Footer row padding (expanded) | 12 / 16 / 16 px (`py-3 pb-4 px-4`) | `$spacers.3` ✓ for 12; 16 has no match |
+| Footer row layout (collapsed) | `flex-col items-center gap-3` (12px gap) | `$spacers.3` ✓ |
+| Avatar size | 40px (`h-10 w-10`) | (no match — between 36 and 72; keep literal) |
 
 ### Chevron toggle button (the hover-revealed circle)
 
