@@ -83,7 +83,115 @@ Implemented as a single conditional: `${isActive ? \`${icon}-fill\` : icon}` (se
 
 ---
 
-## 5. Layout & widths
+## 5. Dev specs (concrete CSS reference)
+
+Pulled from `LeftNav.tsx` and `NavItem.tsx`, cross-walked to portal Dashkit tokens (`portal/.../dashkit/theme/_variables.scss`). The proto's Tailwind CSS variables (`--nav-background`, `--sidebar-accent`, etc.) are friendly aliases for the portal values listed here. **Two values flagged ⚠ behave differently from prod and need designer/dev confirmation on the port.**
+
+### Color tokens
+
+| Use | Portal token | Hex |
+|-----|--------------|-----|
+| Nav background | `$gray-800-dark` (`$navbar-light-bg-dark`) | `#152E4D` |
+| Nav right-edge border | `$gray-900` | `#283E59` |
+| Inactive item text | `$gray-500` | `#B1C2D9` |
+| Hover item text | (white) | `#FFFFFF` |
+| Active item text | (white) | `#FFFFFF` |
+| **Hover item background** ⚠ | `$gray-900` | `#283E59` |
+| Active item background | `$gray-900` (same as hover) | `#283E59` |
+| Active item left-edge accent | `$primary` / `$blue` | `#2C7BE5` |
+| Notification badge background | `$danger` / `$red` | `#E63757` |
+| Notification badge text | (white) | `#FFFFFF` |
+
+#### ⚠ Hover background is new vs prod
+
+Production nav items today change text color only on hover (`_navbar.scss:56-62` — no background fill). The new design adds a `$gray-900` background fill on hover — visually identical to the active state minus the 2px left-edge accent. Make sure this is intended; the design "previews" the active state on hover, then promotes it to active when clicked by adding the left accent.
+
+If undesired, drop `hover:bg-sidebar-accent` and let the text color flip carry the hover signal alone.
+
+### Typography
+
+| Element | Size |
+|---------|------|
+| Nav item label (expanded only) | 15px |
+| Nav item icon | `bi-md` (1.25rem ≈ 20px) |
+| Footer button icon (help / notifications / megaphone) | `text-xl` (1.25rem ≈ 20px) |
+| Chevron toggle icon | 15px |
+| Tooltip on collapsed icon | shadcn default |
+| Notification badge | 10px, font-medium |
+
+### Spacing & layout
+
+| Property | Value |
+|----------|-------|
+| Sidebar width (expanded) | **250px** |
+| Sidebar width (collapsed) | **72px** |
+| Width transition | 200ms ease-out |
+| Nav item padding (expanded) | `py-3 px-4` (12 / 16) |
+| Nav item layout (collapsed) | `py-3` + `justify-center` (icon centered, no label) |
+| Nav item left border (always present) | 2px (transparent until active) |
+| Footer utility button padding | `p-2` (8) |
+| Footer row padding (expanded) | `py-3 pb-4 px-4` |
+| Footer row layout (collapsed) | `flex-col items-center gap-3` (icons stacked) |
+| Avatar size | 40px (`h-10 w-10`) |
+
+### Chevron toggle button (the hover-revealed circle)
+
+| Property | Value |
+|----------|-------|
+| Position | `absolute top-8 -right-3` (centered ~32px from top, 12px outside right edge) |
+| Size | 24×24 (`w-6 h-6`) |
+| Background | `$gray-800-dark` (#152E4D) |
+| Border | 1px `$gray-900` (#283E59) |
+| Border radius | `rounded-full` |
+| Shadow | `shadow-sm` |
+| Hover background | `$gray-900` (#283E59) |
+| Icon color | `$gray-500` (#B1C2D9) |
+| Default opacity | 0 |
+| Visible when | `group-hover` on sidebar root (= mouse anywhere over the sidebar) |
+| Transition | `transition-opacity` |
+| Tooltip | "Collapse" / "Expand", `delayDuration={700}` |
+
+### Collapsed-state icon tooltips
+
+| Property | Value |
+|----------|-------|
+| Tooltip side | `side="right"` |
+| Tooltip delay | **0ms** (instant — collapsed nav is icon-only, label must be discoverable without delay) |
+| Tooltip content | full page name (e.g. "Network") |
+
+### Notification badge
+
+| Property | Value |
+|----------|-------|
+| Background | `#E63757` (`$danger` / `$red`) |
+| Text color | white |
+| Font size | 10px, font-medium |
+| Padding | `px-1.5 py-0.5` |
+| Border radius | `rounded-full` |
+| Min width | 20px |
+| Position | `absolute -top-1 -right-1` over the envelope icon |
+| Content | `99+` when count > 99; otherwise the literal count |
+
+#### ⚠ Badge was previously Tailwind default red
+
+The badge was using `bg-red-500` (Tailwind default `#EF4444`) — replaced with `bg-[#E63757]` to match portal's `$danger`. Mention this to the prod team only as confirmation that the color matches their existing `$danger` token.
+
+### Icon set (Bootstrap Icons)
+
+See §4 for the per-item inactive/active fill mapping. Other icons used in the nav chrome:
+
+| Use | Class |
+|-----|-------|
+| Chevron toggle (collapsed) | `bi-chevron-double-right` |
+| Chevron toggle (expanded) | `bi-chevron-double-left` |
+| Help button | `bi-question-circle` |
+| Notifications button | `bi-envelope` |
+| Announcements button | `bi-megaphone` |
+| Avatar fallback (no user image) | `bi-person` |
+
+---
+
+## 6. Layout & widths
 
 | State      | Width | Notes |
 |------------|-------|-------|
@@ -95,7 +203,7 @@ Implemented as a single conditional: `${isActive ? \`${icon}-fill\` : icon}` (se
 
 ---
 
-## 6. Collapse / hover behavior
+## 7. Collapse / hover behavior
 
 The interaction model changes. Three patterns from prod are replaced by one new pattern.
 
@@ -115,11 +223,11 @@ The interaction model changes. Three patterns from prod are replaced by one new 
 
 **Why instant tooltips on collapsed icons:** the collapsed nav is icon-only, so the label needs to be discoverable without delay. (Filter chips and most other UI in the app use a 700ms delay; the nav is intentionally faster.)
 
-**Why no auto-peek:** the new collapsed state shows icons at full size with instant tooltips, so a hover-peek is redundant. The chevron click is the only way to commit the sidebar to expanded state, and that state persists (see §7).
+**Why no auto-peek:** the new collapsed state shows icons at full size with instant tooltips, so a hover-peek is redundant. The chevron click is the only way to commit the sidebar to expanded state, and that state persists (see §8).
 
 ---
 
-## 7. Persistence
+## 8. Persistence
 
 The user's expanded/collapsed preference is **persisted across sessions**.
 
@@ -135,7 +243,7 @@ Prod uses `localStorage['appSidebarCollapsed']` — different key, same idea. Cr
 
 ---
 
-## 8. Footer cluster
+## 9. Footer cluster
 
 The bottom of the sidebar carries a fixed cluster of utility controls. This is a structural change from prod (which only has Help + Greenfly logo down there).
 
@@ -154,34 +262,34 @@ The Greenfly logo always renders just above the utility row — it's positioned 
 
 ---
 
-## 9. Notification badges
+## 10. Notification badges
 
 Prod scatters red unread-count badges across nav items themselves (Library, Messages, etc.) via `app-nav-item.component.html:74–78`.
 
-**The new design removes all per-item nav badges.** Notifications consolidate into the single envelope badge in the footer cluster (see §8). Users still see counts; they just see them in one place.
+**The new design removes all per-item nav badges.** Notifications consolidate into the single envelope badge in the footer cluster (see §9). Users still see counts; they just see them in one place.
 
 ---
 
-## 10. Mobile / responsive
+## 11. Mobile / responsive
 
 Behavior matches prod and does not change.
 
 | Viewport | Behavior |
 |----------|----------|
-| ≥ 768px  | Sidebar visible by default. Collapse/expand per §6. |
+| ≥ 768px  | Sidebar visible by default. Collapse/expand per §7. |
 | < 768px  | Sidebar is an **off-canvas drawer** — hidden by default, slid offscreen via `translate3d(-100%, 0, 0)`. A hamburger button (`bi-list` / `bi-x-lg`) in the mobile top bar toggles it open/closed. The drawer closes automatically when the user taps a nav link. Body picks up an `is-mobile-nav-open`-style class while open. |
 
 The 767/768px line is shared with the rest of the Library filter-bar work (see `DEV_HANDOFF_LAYOUT.md` §2). Don't drift to 991 or 1199.
 
 ---
 
-## 11. Org switcher
+## 12. Org switcher
 
 **No change.** The org switcher at the top of the sidebar uses prod's existing `<auth-context-select>` component verbatim — multi-context users get a dropdown, single-context users get the static avatar + name. Skeleton-row transition during org switch (8 placeholder rows for 500ms) stays. The component is out of scope for this redesign; prototype wiring is illustrative only.
 
 ---
 
-## 12. Migration notes (for the prod port)
+## 13. Migration notes (for the prod port)
 
 What needs to change in `portal/web/greenflyPortal/`:
 
@@ -198,7 +306,7 @@ What needs to change in `portal/web/greenflyPortal/`:
 
 ---
 
-## 13. Cross-references
+## 14. Cross-references
 
 - `DEV_HANDOFF_LAYOUT.md` — Library filter bar & responsive behavior.
 - *(forthcoming)* `DEV_HANDOFF_FOLDER_NAV.md` — secondary folder-tree nav.

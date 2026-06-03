@@ -227,7 +227,7 @@
     --tiktok: 0 0% 0%;                /* #000000 */
 
     /* Navigation Specific - Dark Navy Sidebar */
-    --nav-background: 213 53% 16%;    /* #12263F (black/navy) */
+    --nav-background: 213 57% 19%;    /* #152E4D — portal $gray-800-dark (matches prod sidebar) */
     --nav-border: 213 35% 25%;        /* gray-900 */
     --nav-text: 214 30% 77%;          /* gray-500 */
     --nav-text-hover: 0 0% 100%;      /* white */
@@ -297,7 +297,7 @@
     --input: 213 53% 25%;
     --ring: 214 78% 54%;
 
-    --nav-background: 213 53% 12%;
+    --nav-background: 213 57% 19%;    /* #152E4D — portal $gray-800-dark (matches prod sidebar) */
     --nav-border: 213 53% 25%;
     --nav-text: 214 25% 69%;
     --nav-text-hover: 213 50% 98%;

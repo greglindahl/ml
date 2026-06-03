@@ -68,7 +68,7 @@ export function SortableFolderItem({
         className={`group flex items-center gap-1 ${isAllFiles ? "py-2 mx-2 h-10" : "py-2"} text-[13px] rounded-md transition-colors ${
           isActive
             ? "bg-[#d5e5fa] text-[#2c7be5]"
-            : "text-[#6e84a3] hover:bg-[#F9FBFD]"
+            : "text-[#6e84a3] hover:bg-[#EDF2F9]"
         } ${isOverValid ? "ring-2 ring-primary bg-primary/10" : ""} ${
           isOverInvalid ? "ring-2 ring-destructive bg-destructive/10" : ""
         } ${isArchived ? "opacity-50" : ""}`}

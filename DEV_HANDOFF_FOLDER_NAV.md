@@ -136,7 +136,7 @@ Pulled verbatim from `FolderSidebar.tsx` and `SortableFolderItem.tsx`, then cros
 | Sidebar / header / footer borders | `$gray-300` | `#E3EBF6` |
 | Body / muted text (inactive items, icons) | `$gray-700` | `#6E84A3` |
 | Header title text | `$body-color` / `$black` | `#12263F` |
-| Hover background (rows + chevron buttons) | `$gray-100` (same as Dashkit btn hover bg) | `#F9FBFD` |
+| Hover background (rows + chevron buttons) | `$gray-200` | `#EDF2F9` |
 | Active item background | `$primary-bg-subtle` (= `shift-color($primary, -80%)`) | `#D5E4FA` ≈ `#D5E5FA` |
 | Active item text | `$primary` / `$blue` | `#2C7BE5` |
 | Drop-target ring (valid) | `$primary` + 10% alpha fill | `ring-primary` + `bg-primary/10` |
