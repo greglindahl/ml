@@ -834,7 +834,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
           flattenedFolders={flatFolders}
         />
       ) : (
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-4 md:px-8 xl:px-16 content-container">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-6 md:px-9 content-container">
         {/* Breadcrumb spacer - matches FolderDetailsView/GalleryDetailsView for consistent header position */}
         <div className="mb-2 h-[44px] flex-shrink-0" />
 
