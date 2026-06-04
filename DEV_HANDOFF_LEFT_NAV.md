@@ -96,17 +96,15 @@ Pulled from `LeftNav.tsx` and `NavItem.tsx`, cross-walked to portal Dashkit toke
 | Inactive item text | `$gray-500` | `#B1C2D9` |
 | Hover item text | (white) | `#FFFFFF` |
 | Active item text | (white) | `#FFFFFF` |
-| **Hover item background** ⚠ | `$gray-900` | `#283E59` |
+| **Hover item background** | `$gray-900` | `#283E59` |
 | Active item background | `$gray-900` (same as hover) | `#283E59` |
 | Active item left-edge accent | `$primary` / `$blue` | `#2C7BE5` |
 | Notification badge background | `$danger` / `$red` | `#E63757` |
 | Notification badge text | (white) | `#FFFFFF` |
 
-#### ⚠ Hover background is new vs prod
+#### Hover background is new vs prod — confirmed intentional
 
-Production nav items today change text color only on hover (`_navbar.scss:56-62` — no background fill). The new design adds a `$gray-900` background fill on hover — visually identical to the active state minus the 2px left-edge accent. Make sure this is intended; the design "previews" the active state on hover, then promotes it to active when clicked by adding the left accent.
-
-If undesired, drop `hover:bg-sidebar-accent` and let the text color flip carry the hover signal alone.
+Production nav items today change text color only on hover (`_navbar.scss:56-62` — no background fill). The new design **deliberately** adds a `$gray-900` background fill on hover — visually identical to the active state minus the 2px left-edge accent. This is the intended behavior: the design "previews" the active state on hover, then promotes it to active when clicked by adding the left accent. **Build this fill in on the port; do not carry over prod's text-color-only hover.**
 
 ### Typography
 
@@ -132,10 +130,10 @@ Portal's `$spacer` is `1.5rem` (24px) — base spacers are `0.125 / 0.25 / 0.5 /
 | Sidebar width (expanded) | **250px** | matches portal's `--gf-app-layout-sidebar-width: 250px` (existing CSS var, not in `$spacers`) |
 | Sidebar width (collapsed) | **72px** | `$spacers.6` (`$spacer * 3`) ✓ |
 | Width transition | 200ms ease-out | (not a spacer) |
-| Nav item padding (expanded) | 12 / 16 px | `$spacers.3` ✓ for 12; **16px has no portal match** (QA may flag — accepted) |
+| Nav item padding (expanded) | 12 / 24 px (`py-3 px-6`) | `$spacers.3` ✓ for 12; `$spacers.4` ✓ for 24. The 24px horizontal inset also aligns the icon's left edge (2px border + 24px = 26px) with the collapsed-rail icon center (~27px), so the icon barely moves through the collapse/expand transition. |
 | Nav item layout (collapsed) | `py-3` + `justify-center` | 12px = `$spacers.3` ✓ |
 | Nav item left border (always present) | 2px | (not a spacer) |
-| Footer utility button padding | 8px (`p-2`) | (no match — between 6 and 12; keep literal `0.5rem`) |
+| Footer utility button padding | 8px (`p-2`) | `$btn-padding-y` / `$input-btn-padding-y` = `0.5rem` ✓ — Dashkit's standard button vertical padding (not a `$spacers` entry, but a real token). Applied symmetrically here since these are icon-only buttons. |
 | Footer row padding (expanded) | 12 / 16 / 16 px (`py-3 pb-4 px-4`) | `$spacers.3` ✓ for 12; 16 has no match |
 | Footer row layout (collapsed) | `flex-col items-center gap-3` (12px gap) | `$spacers.3` ✓ |
 | Avatar size | 40px (`h-10 w-10`) | (no match — between 36 and 72; keep literal) |
@@ -171,16 +169,16 @@ Portal's `$spacer` is `1.5rem` (24px) — base spacers are `0.125 / 0.25 / 0.5 /
 |----------|-------|
 | Background | `#E63757` (`$danger` / `$red`) |
 | Text color | white |
-| Font size | 10px, font-medium |
+| Font size | 10px, `font-normal` (400) |
 | Padding | `px-1.5 py-0.5` |
 | Border radius | `rounded-full` |
 | Min width | 20px |
 | Position | `absolute -top-1 -right-1` over the envelope icon |
 | Content | `99+` when count > 99; otherwise the literal count |
 
-#### ⚠ Badge was previously Tailwind default red
+#### Badge color uses the `$danger` token
 
-The badge was using `bg-red-500` (Tailwind default `#EF4444`) — replaced with `bg-[#E63757]` to match portal's `$danger`. Mention this to the prod team only as confirmation that the color matches their existing `$danger` token.
+The badge fill is `#E63757` — portal's `$danger` / `$red`. Use the existing `$danger` token on the port; no new color needed.
 
 ### Icon set (Bootstrap Icons)
 
@@ -203,7 +201,7 @@ See §4 for the per-item inactive/active fill mapping. Other icons used in the n
 |------------|-------|-------|
 | Expanded   | **250px** | Matches prod (`--gf-app-layout-sidebar-width`). |
 | Collapsed  | **72px**  | **New spec.** Prod uses 25px (icon-hairline); the new design keeps icons at full visible weight. |
-| Transition | 250ms   | Same easing/duration as prod (`cubic-bezier(0.19, 1, 0.22, 1)`). |
+| Transition | **200ms ease-out** | Proto uses `transition: width 0.2s ease-out` (`index.css` `.nav-transition`). Prod's existing easing (`cubic-bezier(0.19, 1, 0.22, 1)`) is fine to keep on the port if preferred — match one, don't mix. |
 
 `72px` is wide enough that the seven icons remain comfortably tappable and centered, without label text. This is the second-biggest visual change after the flat hierarchy.
 
@@ -283,7 +281,7 @@ Behavior matches prod and does not change.
 | Viewport | Behavior |
 |----------|----------|
 | ≥ 768px  | Sidebar visible by default. Collapse/expand per §7. |
-| < 768px  | Sidebar is an **off-canvas drawer** — hidden by default, slid offscreen via `translate3d(-100%, 0, 0)`. A hamburger button (`bi-list` / `bi-x-lg`) in the mobile top bar toggles it open/closed. The drawer closes automatically when the user taps a nav link. Body picks up an `is-mobile-nav-open`-style class while open. |
+| < 768px  | Sidebar is an **off-canvas drawer** — fixed **280px** wide (`LeftNav.tsx:104`), hidden by default and slid offscreen via `translate3d(-100%, 0, 0)`. A hamburger button (`bi-list` / `bi-x-lg`) in the mobile top bar toggles it open/closed. The drawer closes automatically when the user taps a nav link. Body picks up an `is-mobile-nav-open`-style class while open. Note the drawer is intentionally wider than the desktop expanded width (250px) — full labels + comfortable tap targets on touch. |
 
 The 767/768px line is shared with the rest of the Library filter-bar work (see `DEV_HANDOFF_LAYOUT.md` §2). Don't drift to 991 or 1199.
 
@@ -291,7 +289,9 @@ The 767/768px line is shared with the rest of the Library filter-bar work (see `
 
 ## 12. Org switcher
 
-**No change.** The org switcher at the top of the sidebar uses prod's existing `<auth-context-select>` component verbatim — multi-context users get a dropdown, single-context users get the static avatar + name. Skeleton-row transition during org switch (8 placeholder rows for 500ms) stays. The component is out of scope for this redesign; prototype wiring is illustrative only.
+**No change to the component.** The org switcher at the top of the sidebar uses prod's existing `<auth-context-select>` component verbatim — multi-context users get a dropdown, single-context users get the static avatar + name. Skeleton-row transition during org switch (8 placeholder rows for 500ms) stays. The component is out of scope for this redesign; prototype wiring is illustrative only.
+
+**One layout requirement does apply on the port:** the header must occupy the **same height collapsed vs expanded** so the nav items below don't shift vertically when the sidebar toggles. The org logo is anchored at the top; the org-name label appears only when expanded, so its vertical space must be **reserved (fixed-height slot) even when collapsed**. In the proto this is a fixed-height name slot under the logo (`OrgSwitcher.tsx` — `h-6` slot, empty when collapsed). Without this, the name's height pushes the nav down on expand and it springs back on collapse — a visible jump.
 
 ---
 
@@ -315,5 +315,5 @@ What needs to change in `portal/web/greenflyPortal/`:
 ## 14. Cross-references
 
 - `DEV_HANDOFF_LAYOUT.md` — Library filter bar & responsive behavior.
-- *(forthcoming)* `DEV_HANDOFF_FOLDER_NAV.md` — secondary folder-tree nav.
+- `DEV_HANDOFF_FOLDER_NAV.md` — secondary folder-tree nav.
 - `HANDOFF.md` (root) — session-level redesign notes, Mixpanel context, NHL skew data.

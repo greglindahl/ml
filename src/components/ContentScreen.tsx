@@ -70,7 +70,7 @@ export function ContentScreen({ screen, history, onBack, isMobile = false }: Con
   }
 
   return (
-    <div className={`flex-1 bg-background px-4 md:px-8 xl:px-16 pb-12 ${isMobile ? "pt-[58px]" : "pt-20"}`}>
+    <div className={`flex-1 bg-background px-6 md:px-9 pb-12 ${isMobile ? "pt-[58px]" : "pt-20"}`}>
       {/* Back button */}
       {canGoBack && screen !== "home" && (
         <button

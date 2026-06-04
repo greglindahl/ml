@@ -397,7 +397,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   }, [selectedGalleries, handleMoveGalleries]);
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-4 md:px-8 xl:px-16 content-container">
+    <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-6 md:px-9 content-container">
       {/* Breadcrumb Navigation - fixed height to prevent layout shift */}
       <nav className="flex items-center gap-[6px] text-[13px] tracking-[-0.13px] mb-2 flex-shrink-0 h-[44px] items-end">
         {breadcrumbPath.map((item, index) => (
@@ -1204,7 +1204,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         <FilterSection label="Date Range" icon="bi-calendar">
           <div className="text-sm text-muted-foreground">Date range filters will go here</div>
         </FilterSection>
-        <FilterSection label="More Filters" icon="bi-sliders">
+        <FilterSection label="More Filters" icon="bi-filter">
           <div className="text-sm text-muted-foreground">Source, Status, and other filters will go here</div>
         </FilterSection>
       </FiltersSheet>

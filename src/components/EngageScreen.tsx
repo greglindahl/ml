@@ -10,12 +10,12 @@ export function EngageScreen({ isMobile = false }: EngageScreenProps) {
       {/* Spacer for consistent header position - matches LibraryScreen */}
       {!isMobile && <div className="mb-2 h-[44px] flex-shrink-0" />}
       {/* Header */}
-      <div className="px-4 md:px-8 xl:px-16 flex items-center min-h-10 mb-6">
+      <div className="px-6 md:px-9 flex items-center min-h-10 mb-6">
         <h1 className="text-[26px] font-semibold text-foreground">Engage</h1>
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="campaigns" className="flex-1 flex flex-col px-4 md:px-8 xl:px-16">
+      <Tabs defaultValue="campaigns" className="flex-1 flex flex-col px-6 md:px-9">
         <div className="border-b">
           <TabsList>
             <TabsTrigger value="campaigns">Campaigns</TabsTrigger>

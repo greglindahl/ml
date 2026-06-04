@@ -249,7 +249,7 @@ export function AdminScreen({ isMobile = false }: AdminScreenProps) {
       {/* Spacer for consistent header position - matches LibraryScreen */}
       {!isMobile && <div className="mb-2 h-[44px] flex-shrink-0" />}
       {/* Header */}
-      <div className="px-4 md:px-8 xl:px-16 pb-4 flex items-center justify-between gap-3">
+      <div className="px-6 md:px-9 pb-4 flex items-center justify-between gap-3">
         <h1 className="text-[26px] font-semibold text-foreground">Network</h1>
         {activeTab === "groups" && (
           <Button onClick={() => {}}>
@@ -278,7 +278,7 @@ export function AdminScreen({ isMobile = false }: AdminScreenProps) {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as NetworkTab)} className="flex flex-col px-4 md:px-8 xl:px-16">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as NetworkTab)} className="flex flex-col px-6 md:px-9">
         <div className="border-b">
           <TabsList>
             <TabsTrigger value="groups">Groups</TabsTrigger>

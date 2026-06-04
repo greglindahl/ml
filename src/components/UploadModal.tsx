@@ -85,7 +85,7 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
               relative border-2 border-dashed rounded-lg cursor-pointer transition-colors
               ${isDragOver
                 ? "border-primary bg-primary/10"
-                : "border-[#B1C2D9] bg-[#F0F5FA]"
+                : "border-[#B1C2D9] bg-gray-100"
               }
             `}
             style={{ minHeight: "360px" }}
