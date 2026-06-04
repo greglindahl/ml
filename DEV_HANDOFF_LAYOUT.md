@@ -149,7 +149,7 @@ Three pills, in this order. **Branding is intentional here** (asymmetric vs All 
 | Source filter                | `bi-cloud-arrow-down`  |
 | Unviewed Only pill           | `bi-eye-slash`         |
 | Favorites pill               | `bi-heart`             |
-| Archived pill (Galleries)    | (keep current archive icon — confirm) |
+| Archived pill (Galleries)    | `bi-archive`           |
 
 **Do not use** `bi-funnel` or `bi-sliders` for the filter affordance.
 
