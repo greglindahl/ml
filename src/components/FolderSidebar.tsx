@@ -107,8 +107,13 @@ export function FolderSidebar({
     useSensor(KeyboardSensor)
   );
 
+  // "All Media" is the fixed root — it is excluded from the sortable set so the
+  // drag move-animation never shifts it or opens a slot above/at its position.
   const visibleIds = useMemo(
-    () => collectVisibleIds(folderTree, expandedFolders, showArchived),
+    () =>
+      collectVisibleIds(folderTree, expandedFolders, showArchived).filter(
+        (id) => id !== "all"
+      ),
     [folderTree, expandedFolders, showArchived]
   );
 
@@ -173,6 +178,10 @@ export function FolderSidebar({
 
       const draggedId = String(active.id);
       const overId = String(over.id);
+
+      // "All Media" stays anchored at the top — never a drag source or target.
+      if (draggedId === "all" || overId === "all") return;
+
       const overItem = findFolderById(folderTree, overId);
 
       if (!overItem) return;
@@ -234,7 +243,7 @@ export function FolderSidebar({
             isOverValid={isThisOverValid}
             isOverInvalid={isThisOverInvalid}
             isArchived={folder.archived === true}
-            disableDrag={folder.archived === true}
+            disableDrag={folder.archived === true || folder.id === "all"}
           >
             {hasChildren && isExpanded && (
               <div className="mt-1">
