@@ -22,6 +22,7 @@ interface SortableFolderItemProps {
   isOverInvalid?: boolean;
   isArchived?: boolean;
   disableDrag?: boolean;
+  disableDrop?: boolean;
 }
 
 export function SortableFolderItem({
@@ -37,6 +38,7 @@ export function SortableFolderItem({
   isOverInvalid,
   isArchived,
   disableDrag,
+  disableDrop,
 }: SortableFolderItemProps) {
   const {
     attributes,
@@ -48,7 +50,9 @@ export function SortableFolderItem({
   } = useSortable({
     id: folder.id,
     data: { type: folder.type, folder },
-    disabled: disableDrag,
+    // Granular so a node can be a drop target without being draggable
+    // (e.g. "All Media" — anchored, but accepts drops to move items to root).
+    disabled: { draggable: disableDrag ?? false, droppable: disableDrop ?? false },
   });
 
   const style = {

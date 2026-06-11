@@ -107,15 +107,25 @@ export function FolderSidebar({
     useSensor(KeyboardSensor)
   );
 
+  // "All Media" is the fixed root — it is excluded from the sortable set so the
+  // drag move-animation never shifts it or opens a slot above/at its position.
   const visibleIds = useMemo(
-    () => collectVisibleIds(folderTree, expandedFolders, showArchived),
+    () =>
+      collectVisibleIds(folderTree, expandedFolders, showArchived).filter(
+        (id) => id !== "all"
+      ),
     [folderTree, expandedFolders, showArchived]
   );
 
   const validateDrop = useCallback(
     (draggedId: string, overId: string): boolean => {
       if (draggedId === overId) return false;
-      if (overId === "all") return false;
+
+      // Dropping onto "All Media" moves the item out to the root level —
+      // valid unless the item already lives at the root.
+      if (overId === "all") {
+        return findParentId(folderTree, draggedId) !== null;
+      }
 
       const draggedItem = findFolderById(folderTree, draggedId);
       const overItem = findFolderById(folderTree, overId);
@@ -173,6 +183,18 @@ export function FolderSidebar({
 
       const draggedId = String(active.id);
       const overId = String(over.id);
+
+      // "All Media" is anchored — it can't be dragged.
+      if (draggedId === "all") return;
+
+      // Dropping onto "All Media" moves the item out of its folder to the root.
+      if (overId === "all") {
+        if (findParentId(folderTree, draggedId) !== null) {
+          onMoveItem(draggedId, null);
+        }
+        return;
+      }
+
       const overItem = findFolderById(folderTree, overId);
 
       if (!overItem) return;
@@ -234,7 +256,8 @@ export function FolderSidebar({
             isOverValid={isThisOverValid}
             isOverInvalid={isThisOverInvalid}
             isArchived={folder.archived === true}
-            disableDrag={folder.archived === true}
+            disableDrag={folder.archived === true || folder.id === "all"}
+            disableDrop={folder.archived === true}
           >
             {hasChildren && isExpanded && (
               <div className="mt-1">

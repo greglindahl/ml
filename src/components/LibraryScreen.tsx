@@ -856,11 +856,11 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setNewFolderDialogOpen(true)}>
                   <i className="bi bi-folder w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
-                  New Folder
+                  Folder
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setNewGalleryDialogOpen(true)}>
-                  <i className="bi bi-plus w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
-                  New Gallery
+                  <i className="bi bi-image w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
+                  Gallery
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

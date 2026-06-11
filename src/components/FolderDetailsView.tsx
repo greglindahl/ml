@@ -432,16 +432,12 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               {canCreateSubfolder && (
                 <DropdownMenuItem onClick={() => setNewFolderDialogOpen(true)}>
                   <i className="bi bi-folder w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
-                  New Folder
+                  Folder
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem onClick={() => setNewGalleryDialogOpen(true)}>
-                <i className="bi bi-plus w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
-                New Gallery
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setAddGalleryDialogOpen(true)}>
-                <i className="bi bi-images w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
-                Add Existing Gallery
+                <i className="bi bi-image w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
+                Gallery
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
