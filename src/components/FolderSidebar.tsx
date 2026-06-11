@@ -120,7 +120,12 @@ export function FolderSidebar({
   const validateDrop = useCallback(
     (draggedId: string, overId: string): boolean => {
       if (draggedId === overId) return false;
-      if (overId === "all") return false;
+
+      // Dropping onto "All Media" moves the item out to the root level —
+      // valid unless the item already lives at the root.
+      if (overId === "all") {
+        return findParentId(folderTree, draggedId) !== null;
+      }
 
       const draggedItem = findFolderById(folderTree, draggedId);
       const overItem = findFolderById(folderTree, overId);
@@ -179,8 +184,16 @@ export function FolderSidebar({
       const draggedId = String(active.id);
       const overId = String(over.id);
 
-      // "All Media" stays anchored at the top — never a drag source or target.
-      if (draggedId === "all" || overId === "all") return;
+      // "All Media" is anchored — it can't be dragged.
+      if (draggedId === "all") return;
+
+      // Dropping onto "All Media" moves the item out of its folder to the root.
+      if (overId === "all") {
+        if (findParentId(folderTree, draggedId) !== null) {
+          onMoveItem(draggedId, null);
+        }
+        return;
+      }
 
       const overItem = findFolderById(folderTree, overId);
 
@@ -244,6 +257,7 @@ export function FolderSidebar({
             isOverInvalid={isThisOverInvalid}
             isArchived={folder.archived === true}
             disableDrag={folder.archived === true || folder.id === "all"}
+            disableDrop={folder.archived === true}
           >
             {hasChildren && isExpanded && (
               <div className="mt-1">
