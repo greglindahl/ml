@@ -63,15 +63,15 @@ type SortField = "dateCreated" | "captureDate" | "name" | "creator" | null;
 type SortDir = "asc" | "desc";
 
 const SORT_OPTIONS: { value: NonNullable<SortField>; label: string }[] = [
-  { value: "dateCreated", label: "Date Created" },
-  { value: "captureDate", label: "Capture Date" },
+  { value: "dateCreated", label: "Added" },
+  { value: "captureDate", label: "Capture" },
   { value: "name", label: "Name" },
   { value: "creator", label: "Creator" },
 ];
 
 const SORT_LABELS: Record<NonNullable<SortField>, string> = {
-  dateCreated: "Date Created",
-  captureDate: "Capture Date",
+  dateCreated: "Added",
+  captureDate: "Capture",
   name: "Name",
   creator: "Creator",
 };
