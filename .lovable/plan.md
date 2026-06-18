@@ -1,10 +1,7 @@
-Update the sort dropdown so options read "Added" and "Capture" (and "Assets Last Added" where applicable) instead of "Added Date" / "Capture Date". Scope is limited to the sort dropdown — filter sections, column headers, and settings drawer labels stay as-is.
+Change the sort dropdown label "Capture" to "Captured" consistently across the three components that render this sort option:
 
-## Changes
+1. **src/components/LibraryScreen.tsx** — update the `captureDate` option label.
+2. **src/components/FolderDetailsView.tsx** — update the `captureDate` option label.
+3. **src/components/GalleryDetailsView.tsx** — update the `captureDate` option label in `SORT_OPTIONS` and the matching value in `SORT_LABELS`.
 
-- `src/components/LibraryScreen.tsx` — sort options: "Added Date" → "Added", "Capture Date" → "Capture".
-- `src/components/FolderDetailsView.tsx` — same two sort option labels.
-- `src/components/GalleryDetailsView.tsx` — sort option "Capture Date" → "Capture" (and matching `captureDate` display map used by the sort trigger).
-- `src/components/GalleryFilterBar.tsx` — sort option "Assets Last Added Date" → "Assets Last Added".
-
-Filter UI ("Capture Date" filter section), table column comments, and the asset/gallery settings drawer column-label lists are left untouched, since those aren't the sort dropdown.
+Out of scope: the "Capture Date" filter section label in `GalleryDetailsView.tsx` (line 631), since it is not part of the sort dropdown.
