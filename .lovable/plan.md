@@ -1,22 +1,10 @@
+Update the sort dropdown so options read "Added" and "Capture" (and "Assets Last Added" where applicable) instead of "Added Date" / "Capture Date". Scope is limited to the sort dropdown — filter sections, column headers, and settings drawer labels stay as-is.
 
+## Changes
 
-## Revert Chevron Expansion, Keep Subfolder Column
+- `src/components/LibraryScreen.tsx` — sort options: "Added Date" → "Added", "Capture Date" → "Capture".
+- `src/components/FolderDetailsView.tsx` — same two sort option labels.
+- `src/components/GalleryDetailsView.tsx` — sort option "Capture Date" → "Capture" (and matching `captureDate` display map used by the sort trigger).
+- `src/components/GalleryFilterBar.tsx` — sort option "Assets Last Added Date" → "Assets Last Added".
 
-### What Changes
-
-Remove the expandable tree row behavior (chevron toggle, `expandedFolders` state, recursive `renderRow`, indentation) from `FolderTableView`, reverting to a flat list of top-level folders. Keep the "Subfolders" column showing the count.
-
-### Implementation
-
-**`src/components/FolderTableView.tsx`**
-
-1. Remove `expandedFolders` state and `toggleExpand` function
-2. Remove the recursive `renderRow` function — go back to a flat `.map()` over `sorted`
-3. Remove the chevron button and depth-based indentation from each row
-4. Keep the folder icon column simple (just `FolderOpen` icon, no chevron)
-5. Keep the "Subfolders" column and `subfolderCount` in the enriched data
-6. Remove `ChevronRight` from imports if no longer used
-
-### File Modified
-- `src/components/FolderTableView.tsx`
-
+Filter UI ("Capture Date" filter section), table column comments, and the asset/gallery settings drawer column-label lists are left untouched, since those aren't the sort dropdown.
