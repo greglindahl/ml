@@ -476,8 +476,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
 
   const SORT_OPTIONS: { value: NonNullable<SortField>; label: string }[] = [
     { value: "creator", label: "Creator" },
-    { value: "dateCreated", label: "Added Date" },
-    { value: "captureDate", label: "Capture Date" },
+    { value: "dateCreated", label: "Added" },
+    { value: "captureDate", label: "Capture" },
     { value: "downloads", label: "Downloads" },
     { value: "shares", label: "Shares" },
     { value: "galleries", label: "Galleries" },
