@@ -18,7 +18,7 @@ import { GalleryTableView, DEFAULT_GALLERY_COLUMN_VISIBILITY, GALLERY_COLUMNS, t
 import { FolderTableView, DEFAULT_FOLDER_COLUMN_VISIBILITY, FOLDER_COLUMNS, type FolderColumnVisibility } from "@/components/FolderTableView";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
-import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds } from "@/lib/mockFolderData";
+import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries } from "@/lib/mockFolderData";
 import { FolderSidebar } from "@/components/FolderSidebar";
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
@@ -1395,20 +1395,19 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             {/* Folders Grid */}
             {(() => {
               const topLevelFolders = folderTree.filter(f => f.id !== "all" && f.type === "folder");
-              const filteredFolderCards = topLevelFolders
-                .filter(f => archivedFoldersOnly ? f.archived === true : f.archived !== true)
-                .map(f => ({ id: f.id, name: f.name, galleryCount: f.count || 0, timeAgo: "—" }));
+              const visibleFolders = topLevelFolders.filter(f => archivedFoldersOnly || f.archived !== true);
+              const filteredFolderCards = visibleFolders
+                .map(f => ({ id: f.id, name: f.name, galleryCount: countAllGalleries(f), timeAgo: "—", archived: f.archived === true }));
               return filteredFolderCards.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <i className="bi bi-folder text-5xl text-muted-foreground/30 mb-4" />
-                  <h3 className="text-lg font-medium mb-1">{archivedFoldersOnly ? "No archived folders" : "No folders"}</h3>
-                  <p className="text-sm text-muted-foreground">{archivedFoldersOnly ? "Archive a folder to see it here." : "Create a folder to get started."}</p>
+                  <h3 className="text-lg font-medium mb-1">No folders</h3>
+                  <p className="text-sm text-muted-foreground">Create a folder to get started.</p>
                 </div>
               ) : folderViewMode === "table" ? (
                 <FolderTableView
-                  folders={topLevelFolders.filter(f => archivedFoldersOnly ? f.archived === true : f.archived !== true)}
+                  folders={visibleFolders}
                   onNavigate={(folderId) => setActiveFolder(folderId)}
-                  archivedFoldersOnly={archivedFoldersOnly}
                   onUnarchiveFolder={(folderId) => {
                     handleUnarchiveFolder(folderId);
                     const name = topLevelFolders.find(f => f.id === folderId)?.name || "Folder";
@@ -1426,7 +1425,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                         name={folder.name}
                         galleryCount={folder.galleryCount}
                         onSelect={() => {
-                          if (!archivedFoldersOnly) {
+                          if (!folder.archived) {
                             setActiveFolder(folder.id);
                           }
                         }}

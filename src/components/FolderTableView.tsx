@@ -42,7 +42,6 @@ interface FolderTableViewProps {
   folders: FolderItem[];
   onNavigate: (folderId: string) => void;
   isLoading?: boolean;
-  archivedFoldersOnly?: boolean;
   onUnarchiveFolder?: (folderId: string) => void;
   /** Controlled perPage value (defaults to 40) */
   perPage?: number;
@@ -73,7 +72,6 @@ export function FolderTableView({
   folders,
   onNavigate,
   isLoading = false,
-  archivedFoldersOnly = false,
   onUnarchiveFolder,
   perPage = 40,
   columnVisibility = DEFAULT_FOLDER_COLUMN_VISIBILITY,
@@ -183,7 +181,7 @@ export function FolderTableView({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-popover">
-            {archivedFoldersOnly ? (
+            {folder.archived === true ? (
               <DropdownMenuItem onClick={() => onUnarchiveFolder?.(folder.id)}>
                 <i className="bi bi-arrow-counterclockwise w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />Unarchive
               </DropdownMenuItem>
