@@ -6,6 +6,7 @@ interface FolderCardProps {
   name: string;
   galleryCount?: number;
   isNew?: boolean;
+  isArchived?: boolean;
   state?: FolderCardState;
   onSelect?: () => void;
   onMoreOptions?: () => void;
@@ -16,6 +17,7 @@ export function FolderCard({
   name,
   galleryCount = 0,
   isNew = false,
+  isArchived = false,
   state = "default",
   onSelect,
   onMoreOptions,
@@ -66,12 +68,17 @@ export function FolderCard({
             </button>
           )}
 
-          {/* Right - New Badge */}
-          {isNew && (
-            <span className="text-[10px] font-medium text-success">
-              New
-            </span>
-          )}
+          {/* Right - New Badge and Archived Icon */}
+          <div className="flex items-center gap-2">
+            {isNew && (
+              <span className="text-[10px] font-medium text-success">
+                New
+              </span>
+            )}
+            {isArchived && (
+              <i className="bi bi-archive text-gray-700 text-base" />
+            )}
+          </div>
         </div>
 
         {/* Folder Icon - Centered */}

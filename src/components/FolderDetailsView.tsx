@@ -13,7 +13,7 @@ import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
 import { Badge } from "@/components/ui/badge";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
-import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries, Gallery, FlattenedFolder, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries } from "@/lib/mockFolderData";
+import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries, Gallery, FlattenedFolder, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath } from "@/lib/mockFolderData";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
@@ -908,8 +908,10 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                       key={gallery.id}
                       name={gallery.name}
                       assetCount={gallery.count || 0}
-                      timeAgo="2 days ago"
                       thumbnailUrl={galleryData?.thumbnailUrl}
+                      isArchived={gallery.archived === true}
+                      isPublic={galleryData?.isPublic}
+                      isInFolder={findGalleryParentPath(gallery.id, folderTree) !== null}
                       state={cardState}
                       onSelect={() => {
                         if (isAnyGallerySelected) {
@@ -920,9 +922,6 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                       }}
                       onFavorite={() => {
                         // TODO: Implement favorite functionality
-                      }}
-                      onShare={() => {
-                        // TODO: Implement share functionality
                       }}
                       onMoreOptions={() => {
                         // TODO: Implement more options menu
@@ -1027,6 +1026,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                       key={child.id}
                       name={child.name}
                       galleryCount={galleryCount}
+                      isArchived={child.archived}
                       state="default"
                       onSelect={() => {
                         if (!child.archived) {

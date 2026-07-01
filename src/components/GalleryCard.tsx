@@ -11,12 +11,13 @@ interface GalleryCardProps {
   newAssetCount?: number;
   thumbnailUrl?: string;
   isNew?: boolean;
-  timeAgo?: string;
+  isArchived?: boolean;
+  isPublic?: boolean;
+  isInFolder?: boolean;
   state?: GalleryCardState;
   onSelect?: () => void;
   onOpen?: () => void;
   onFavorite?: () => void;
-  onShare?: () => void;
   onMoreOptions?: () => void;
   className?: string;
 }
@@ -27,12 +28,13 @@ export function GalleryCard({
   newAssetCount,
   thumbnailUrl,
   isNew = false,
-  timeAgo,
+  isArchived = false,
+  isPublic = false,
+  isInFolder = false,
   state = "default",
   onSelect,
   onOpen,
   onFavorite,
-  onShare,
   onMoreOptions,
   className,
 }: GalleryCardProps) {
@@ -139,13 +141,19 @@ export function GalleryCard({
               <i className="bi bi-heart text-white text-xs" />
             </button>
 
-            {/* Share Button */}
-            <button
-              onClick={(e) => { e.stopPropagation(); onShare?.(); }}
-              className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full hover:bg-black/30 transition-colors"
-            >
-              <i className="bi bi-share text-white text-xs" />
-            </button>
+            {/* Public Gallery Icon */}
+            {isPublic && (
+              <div className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full">
+                <i className="bi bi-folder-symlink text-white text-xs" />
+              </div>
+            )}
+
+            {/* Archived Icon */}
+            {isArchived && (
+              <div className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full">
+                <i className="bi bi-archive text-white text-xs" />
+              </div>
+            )}
           </div>
         </div>
 
@@ -165,11 +173,10 @@ export function GalleryCard({
             <div className="flex items-center gap-1.5 text-white/80 text-[13px]">
               <i className="bi bi-images text-sm" />
               <span>{assetCount}</span>
-              {timeAgo && (
+              {isInFolder && (
                 <>
                   <span className="text-white/50">|</span>
-                  <i className="bi bi-clock text-sm" />
-                  <span>{timeAgo}</span>
+                  <i className="bi bi-folder text-sm" />
                 </>
               )}
             </div>

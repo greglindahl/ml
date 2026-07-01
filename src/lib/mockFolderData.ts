@@ -39,6 +39,7 @@ export interface Gallery {
   assetCount: number;
   timeAgo: string;
   thumbnailUrl?: string;
+  isPublic?: boolean;
 }
 
 export interface FolderCard {
@@ -65,7 +66,7 @@ export const folders: FolderItem[] = [
         countType: "galleries",
         children: [
           { id: "scoring-highlights", name: "Scoring Highlights", type: "gallery", count: 48, countType: "assets" },
-          { id: "rebounds-reels", name: "Rebounds Reels", type: "gallery", count: 48, countType: "assets" },
+          { id: "rebounds-reels", name: "Rebounds Reels", type: "gallery", count: 48, countType: "assets", archived: true },
         ],
       },
       { 
@@ -77,7 +78,7 @@ export const folders: FolderItem[] = [
         children: [
           { id: "shooting-drills", name: "Shooting Drills", type: "gallery", count: 24, countType: "assets" },
           { id: "scrimmage-footage", name: "Scrimmage Footage", type: "gallery", count: 36, countType: "assets" },
-          { id: "film-sessions", name: "Film Sessions", type: "gallery", count: 18, countType: "assets" },
+          { id: "film-sessions", name: "Film Sessions", type: "gallery", count: 18, countType: "assets", archived: true },
           {
             id: "conditioning",
             name: "Conditioning",
@@ -275,13 +276,13 @@ export const mockGalleries: Gallery[] = [
   { id: "rebounds-reels", name: "Rebounds Reels", assetCount: 48, timeAgo: "5 days ago", thumbnailUrl: "https://picsum.photos/seed/gal2/400/300" },
   { id: "big-moments", name: "Big Moments", assetCount: 48, timeAgo: "1 week ago", thumbnailUrl: "https://picsum.photos/seed/gal3/400/300" },
   { id: "shooting-drills", name: "Shooting Drills", assetCount: 24, timeAgo: "3 days ago", thumbnailUrl: "https://picsum.photos/seed/gal4/400/300" },
-  { id: "scrimmage-footage", name: "Scrimmage Footage", assetCount: 36, timeAgo: "4 days ago", thumbnailUrl: "https://picsum.photos/seed/gal5/400/300" },
+  { id: "scrimmage-footage", name: "Scrimmage Footage", assetCount: 36, timeAgo: "4 days ago", thumbnailUrl: "https://picsum.photos/seed/gal5/400/300", isPublic: true },
   { id: "film-sessions", name: "Film Sessions", assetCount: 18, timeAgo: "1 week ago", thumbnailUrl: "https://picsum.photos/seed/gal6/400/300" },
   { id: "cardio-sets", name: "Cardio Sets", assetCount: 15, timeAgo: "5 days ago", thumbnailUrl: "https://picsum.photos/seed/gal7/400/300" },
   { id: "agility-drills", name: "Agility Drills", assetCount: 20, timeAgo: "6 days ago", thumbnailUrl: "https://picsum.photos/seed/gal8/400/300" },
   { id: "halftime-shows", name: "Halftime Shows", assetCount: 30, timeAgo: "3 days ago", thumbnailUrl: "https://picsum.photos/seed/gal9/400/300" },
   { id: "autograph-signings", name: "Autograph Signings", assetCount: 22, timeAgo: "1 week ago", thumbnailUrl: "https://picsum.photos/seed/gal10/400/300" },
-  { id: "kids-day", name: "Kids Day", assetCount: 40, timeAgo: "4 days ago", thumbnailUrl: "https://picsum.photos/seed/gal11/400/300" },
+  { id: "kids-day", name: "Kids Day", assetCount: 40, timeAgo: "4 days ago", thumbnailUrl: "https://picsum.photos/seed/gal11/400/300", isPublic: true },
   { id: "scoring-highlights-2024", name: "Clutch Plays", assetCount: 48, timeAgo: "2 weeks ago", thumbnailUrl: "https://picsum.photos/seed/gal12/400/300" },
   { id: "rebounds-reels-2024", name: "Defensive Stops", assetCount: 48, timeAgo: "3 weeks ago", thumbnailUrl: "https://picsum.photos/seed/gal13/400/300" },
   { id: "big-moments-2024", name: "Playoff Run", assetCount: 48, timeAgo: "1 month ago", thumbnailUrl: "https://picsum.photos/seed/gal14/400/300" },

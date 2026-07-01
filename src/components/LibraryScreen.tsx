@@ -18,7 +18,7 @@ import { GalleryTableView, DEFAULT_GALLERY_COLUMN_VISIBILITY, GALLERY_COLUMNS, t
 import { FolderTableView, DEFAULT_FOLDER_COLUMN_VISIBILITY, FOLDER_COLUMNS, type FolderColumnVisibility } from "@/components/FolderTableView";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
-import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries } from "@/lib/mockFolderData";
+import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath } from "@/lib/mockFolderData";
 import { FolderSidebar } from "@/components/FolderSidebar";
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
@@ -1335,6 +1335,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     return archivedGalleriesOnly ? isArchived : !isArchived;
                   }).map((gallery) => {
                     const isSelected = selectedGalleries.has(gallery.id);
+                    const isGalleryArchived = findFolderById(folderTree, gallery.id)?.archived === true;
+                    const isGalleryInFolder = findGalleryParentPath(gallery.id, folderTree) !== null;
                     // Determine card state based on selection mode and selection status
                     let cardState: GalleryCardState = "default";
                     if (isAnyGallerySelected && !isSelected) {
@@ -1348,8 +1350,10 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                         key={gallery.id}
                         name={gallery.name}
                         assetCount={gallery.assetCount}
-                        timeAgo={gallery.timeAgo}
                         thumbnailUrl={gallery.thumbnailUrl}
+                        isArchived={isGalleryArchived}
+                        isPublic={gallery.isPublic}
+                        isInFolder={isGalleryInFolder}
                         state={cardState}
                         onSelect={() => {
                           if (archivedGalleriesOnly) return;
@@ -1365,9 +1369,6 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                         }}
                         onFavorite={() => {
                           // TODO: Implement favorite functionality
-                        }}
-                        onShare={() => {
-                          // TODO: Implement share functionality
                         }}
                         onMoreOptions={() => {
                           // TODO: Implement more options menu
@@ -1424,6 +1425,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                         key={folder.id}
                         name={folder.name}
                         galleryCount={folder.galleryCount}
+                        isArchived={folder.archived}
                         onSelect={() => {
                           if (!folder.archived) {
                             setActiveFolder(folder.id);
