@@ -149,12 +149,19 @@ export function FolderTableView({
       )}
       {columnVisibility.name && (
         <TableCell>
-          <button
-            onClick={() => onNavigate(folder.id)}
-            className="font-medium text-sm text-primary hover:underline text-left truncate max-w-[200px]"
-          >
-            {folder.name}
-          </button>
+          <div className="flex flex-col gap-1">
+            <button
+              onClick={() => onNavigate(folder.id)}
+              className="font-medium text-sm text-primary hover:underline text-left truncate max-w-[200px]"
+            >
+              {folder.name}
+            </button>
+            {folder.archived === true && (
+              <div className="flex items-center gap-1.5">
+                <i className="bi bi-archive text-gray-700 text-xs" />
+              </div>
+            )}
+          </div>
         </TableCell>
       )}
       {columnVisibility.subfolders && (

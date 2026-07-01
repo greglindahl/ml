@@ -863,7 +863,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                     id: g.id,
                     name: g.name,
                     assetCount: g.count || 0,
-                    timeAgo: "2 days ago"
+                    timeAgo: "2 days ago",
+                    archived: g.archived === true,
+                    isPublic: mockGalleries.find(mg => mg.id === g.id)?.isPublic,
                   }))}
                   onNavigate={onNavigate}
                   onMoveGalleries={handleMoveGalleries}

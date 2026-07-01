@@ -1321,7 +1321,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             <div className="min-h-[400px]">
               {galleriesViewMode === "list" ? (
                 <GalleryTableView
-                  galleries={galleryList}
+                  galleries={galleryList.map(g => ({ ...g, archived: findFolderById(folderTree, g.id)?.archived === true }))}
                   onNavigate={handleNavigate}
                   onMoveGalleries={handleMoveGalleries}
                   perPage={galleryPerPage}
