@@ -45,22 +45,34 @@ interface FolderSidebarProps {
   onToggleArchived: (v: boolean) => void;
 }
 
+// The "View Archived Folders" toggle only governs folders. A standalone archived
+// gallery at the root has nothing to do with folder archiving, so it never appears
+// here — but an archived gallery nested inside an archived folder still follows
+// the toggle, since it's part of that folder's contents.
+function isVisibleInFolderTree(item: FolderItem, showArchived: boolean, isRoot: boolean): boolean {
+  if (!item.archived) return true;
+  if (isRoot && item.type === "gallery") return false;
+  return showArchived;
+}
+
 // Collect all node IDs in the visible tree for SortableContext
 function collectVisibleIds(
   items: FolderItem[],
   expandedFolders: Set<string>,
-  showArchived: boolean
+  showArchived: boolean,
+  isRoot = true
 ): string[] {
   const ids: string[] = [];
   for (const item of items) {
-    if (!showArchived && item.archived) continue;
+    if (!isVisibleInFolderTree(item, showArchived, isRoot)) continue;
     ids.push(item.id);
     if (item.children && expandedFolders.has(item.id)) {
       ids.push(
         ...collectVisibleIds(
-          item.children.filter((c) => showArchived || !c.archived),
+          item.children.filter((c) => isVisibleInFolderTree(c, showArchived, false)),
           expandedFolders,
-          showArchived
+          showArchived,
+          false
         )
       );
     }
@@ -227,12 +239,12 @@ export function FolderSidebar({
     setIsOverValid(false);
   }, []);
 
-  const renderTree = (items: FolderItem[], depth = 0) => {
+  const renderTree = (items: FolderItem[], depth = 0, isRoot = true) => {
     return items
-      .filter((f) => showArchived || f.archived !== true)
+      .filter((f) => isVisibleInFolderTree(f, showArchived, isRoot))
       .map((folder) => {
         const visibleChildren =
-          folder.children?.filter((c) => showArchived || c.archived !== true) || [];
+          folder.children?.filter((c) => isVisibleInFolderTree(c, showArchived, false)) || [];
         const hasChildren = visibleChildren.length > 0;
         const isExpanded = expandedFolders.has(folder.id);
         const isGallery = folder.type === "gallery";
@@ -261,7 +273,7 @@ export function FolderSidebar({
           >
             {hasChildren && isExpanded && (
               <div className="mt-1">
-                {renderTree(visibleChildren, depth + 1)}
+                {renderTree(visibleChildren, depth + 1, false)}
               </div>
             )}
           </SortableFolderItem>

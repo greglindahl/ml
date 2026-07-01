@@ -18,7 +18,7 @@ import { GalleryTableView, DEFAULT_GALLERY_COLUMN_VISIBILITY, GALLERY_COLUMNS, t
 import { FolderTableView, DEFAULT_FOLDER_COLUMN_VISIBILITY, FOLDER_COLUMNS, type FolderColumnVisibility } from "@/components/FolderTableView";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
-import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds } from "@/lib/mockFolderData";
+import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath } from "@/lib/mockFolderData";
 import { FolderSidebar } from "@/components/FolderSidebar";
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
@@ -1321,7 +1321,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             <div className="min-h-[400px]">
               {galleriesViewMode === "list" ? (
                 <GalleryTableView
-                  galleries={galleryList}
+                  galleries={galleryList.map(g => ({ ...g, archived: findFolderById(folderTree, g.id)?.archived === true }))}
                   onNavigate={handleNavigate}
                   onMoveGalleries={handleMoveGalleries}
                   perPage={galleryPerPage}
@@ -1335,6 +1335,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                     return archivedGalleriesOnly ? isArchived : !isArchived;
                   }).map((gallery) => {
                     const isSelected = selectedGalleries.has(gallery.id);
+                    const isGalleryArchived = findFolderById(folderTree, gallery.id)?.archived === true;
+                    const isGalleryInFolder = findGalleryParentPath(gallery.id, folderTree) !== null;
                     // Determine card state based on selection mode and selection status
                     let cardState: GalleryCardState = "default";
                     if (isAnyGallerySelected && !isSelected) {
@@ -1348,8 +1350,10 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                         key={gallery.id}
                         name={gallery.name}
                         assetCount={gallery.assetCount}
-                        timeAgo={gallery.timeAgo}
                         thumbnailUrl={gallery.thumbnailUrl}
+                        isArchived={isGalleryArchived}
+                        isPublic={gallery.isPublic}
+                        isInFolder={isGalleryInFolder}
                         state={cardState}
                         onSelect={() => {
                           if (archivedGalleriesOnly) return;
@@ -1365,9 +1369,6 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                         }}
                         onFavorite={() => {
                           // TODO: Implement favorite functionality
-                        }}
-                        onShare={() => {
-                          // TODO: Implement share functionality
                         }}
                         onMoreOptions={() => {
                           // TODO: Implement more options menu
@@ -1395,20 +1396,19 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             {/* Folders Grid */}
             {(() => {
               const topLevelFolders = folderTree.filter(f => f.id !== "all" && f.type === "folder");
-              const filteredFolderCards = topLevelFolders
-                .filter(f => archivedFoldersOnly ? f.archived === true : f.archived !== true)
-                .map(f => ({ id: f.id, name: f.name, galleryCount: f.count || 0, timeAgo: "—" }));
+              const visibleFolders = topLevelFolders.filter(f => archivedFoldersOnly || f.archived !== true);
+              const filteredFolderCards = visibleFolders
+                .map(f => ({ id: f.id, name: f.name, galleryCount: countAllGalleries(f), timeAgo: "—", archived: f.archived === true }));
               return filteredFolderCards.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <i className="bi bi-folder text-5xl text-muted-foreground/30 mb-4" />
-                  <h3 className="text-lg font-medium mb-1">{archivedFoldersOnly ? "No archived folders" : "No folders"}</h3>
-                  <p className="text-sm text-muted-foreground">{archivedFoldersOnly ? "Archive a folder to see it here." : "Create a folder to get started."}</p>
+                  <h3 className="text-lg font-medium mb-1">No folders</h3>
+                  <p className="text-sm text-muted-foreground">Create a folder to get started.</p>
                 </div>
               ) : folderViewMode === "table" ? (
                 <FolderTableView
-                  folders={topLevelFolders.filter(f => archivedFoldersOnly ? f.archived === true : f.archived !== true)}
+                  folders={visibleFolders}
                   onNavigate={(folderId) => setActiveFolder(folderId)}
-                  archivedFoldersOnly={archivedFoldersOnly}
                   onUnarchiveFolder={(folderId) => {
                     handleUnarchiveFolder(folderId);
                     const name = topLevelFolders.find(f => f.id === folderId)?.name || "Folder";
@@ -1425,8 +1425,9 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                         key={folder.id}
                         name={folder.name}
                         galleryCount={folder.galleryCount}
+                        isArchived={folder.archived}
                         onSelect={() => {
-                          if (!archivedFoldersOnly) {
+                          if (!folder.archived) {
                             setActiveFolder(folder.id);
                           }
                         }}

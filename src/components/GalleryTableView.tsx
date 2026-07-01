@@ -58,6 +58,7 @@ export interface GalleryTableItem extends Gallery {
   downloads?: number;
   hasVideo?: boolean;
   isNew?: boolean;
+  archived?: boolean;
 }
 
 const GALLERY_MOVE_LIMIT = 5;
@@ -445,6 +446,16 @@ export function GalleryTableView({
                     >
                       {gallery.name}
                     </button>
+                    {(gallery.isPublic || gallery.archived) && (
+                      <div className="flex items-center gap-1.5">
+                        {gallery.isPublic && (
+                          <i className="bi bi-folder-symlink text-primary text-xs" />
+                        )}
+                        {gallery.archived && (
+                          <i className="bi bi-archive text-gray-700 text-xs" />
+                        )}
+                      </div>
+                    )}
                     {gallery.isNew && (
                       <Badge variant="default" className="w-fit text-[10px] px-1.5 py-0 h-5">
                         NEW

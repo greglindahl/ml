@@ -42,7 +42,6 @@ interface FolderTableViewProps {
   folders: FolderItem[];
   onNavigate: (folderId: string) => void;
   isLoading?: boolean;
-  archivedFoldersOnly?: boolean;
   onUnarchiveFolder?: (folderId: string) => void;
   /** Controlled perPage value (defaults to 40) */
   perPage?: number;
@@ -73,7 +72,6 @@ export function FolderTableView({
   folders,
   onNavigate,
   isLoading = false,
-  archivedFoldersOnly = false,
   onUnarchiveFolder,
   perPage = 40,
   columnVisibility = DEFAULT_FOLDER_COLUMN_VISIBILITY,
@@ -151,12 +149,19 @@ export function FolderTableView({
       )}
       {columnVisibility.name && (
         <TableCell>
-          <button
-            onClick={() => onNavigate(folder.id)}
-            className="font-medium text-sm text-primary hover:underline text-left truncate max-w-[200px]"
-          >
-            {folder.name}
-          </button>
+          <div className="flex flex-col gap-1">
+            <button
+              onClick={() => onNavigate(folder.id)}
+              className="font-medium text-sm text-primary hover:underline text-left truncate max-w-[200px]"
+            >
+              {folder.name}
+            </button>
+            {folder.archived === true && (
+              <div className="flex items-center gap-1.5">
+                <i className="bi bi-archive text-gray-700 text-xs" />
+              </div>
+            )}
+          </div>
         </TableCell>
       )}
       {columnVisibility.subfolders && (
@@ -183,7 +188,7 @@ export function FolderTableView({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-popover">
-            {archivedFoldersOnly ? (
+            {folder.archived === true ? (
               <DropdownMenuItem onClick={() => onUnarchiveFolder?.(folder.id)}>
                 <i className="bi bi-arrow-counterclockwise w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />Unarchive
               </DropdownMenuItem>

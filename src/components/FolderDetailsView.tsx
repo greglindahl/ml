@@ -13,7 +13,7 @@ import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
 import { Badge } from "@/components/ui/badge";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
-import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries, Gallery, FlattenedFolder, getGalleryLocationDisplay, collectAssignedGalleryIds } from "@/lib/mockFolderData";
+import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries, Gallery, FlattenedFolder, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath } from "@/lib/mockFolderData";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
@@ -863,7 +863,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                     id: g.id,
                     name: g.name,
                     assetCount: g.count || 0,
-                    timeAgo: "2 days ago"
+                    timeAgo: "2 days ago",
+                    archived: g.archived === true,
+                    isPublic: mockGalleries.find(mg => mg.id === g.id)?.isPublic,
                   }))}
                   onNavigate={onNavigate}
                   onMoveGalleries={handleMoveGalleries}
@@ -908,8 +910,10 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                       key={gallery.id}
                       name={gallery.name}
                       assetCount={gallery.count || 0}
-                      timeAgo="2 days ago"
                       thumbnailUrl={galleryData?.thumbnailUrl}
+                      isArchived={gallery.archived === true}
+                      isPublic={galleryData?.isPublic}
+                      isInFolder={findGalleryParentPath(gallery.id, folderTree) !== null}
                       state={cardState}
                       onSelect={() => {
                         if (isAnyGallerySelected) {
@@ -920,9 +924,6 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                       }}
                       onFavorite={() => {
                         // TODO: Implement favorite functionality
-                      }}
-                      onShare={() => {
-                        // TODO: Implement share functionality
                       }}
                       onMoreOptions={() => {
                         // TODO: Implement more options menu
@@ -966,9 +967,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             const searchFiltered = folderSearchQuery
               ? childFolders.filter(c => c.name.toLowerCase().includes(folderSearchQuery.toLowerCase()))
               : childFolders;
-            const filteredChildFolders = searchFiltered.filter(c => archivedFoldersOnly ? c.archived === true : c.archived !== true);
-            
-            if (childFolders.length === 0 && !archivedFoldersOnly) {
+            const filteredChildFolders = searchFiltered.filter(c => archivedFoldersOnly || c.archived !== true);
+
+            if (childFolders.length === 0) {
               return (
                 <div className="flex-1 flex flex-col items-center justify-center py-16 text-center">
                   <div className="relative mb-6">
@@ -1004,8 +1005,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               return (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <i className="bi bi-folder text-5xl text-muted-foreground/30 mb-4" />
-                  <h3 className="text-lg font-medium mb-1">{archivedFoldersOnly ? "No archived folders" : "No folders"}</h3>
-                  <p className="text-sm text-muted-foreground">{archivedFoldersOnly ? "Archive a folder to see it here." : "No sub-folders in this folder."}</p>
+                  <h3 className="text-lg font-medium mb-1">No folders</h3>
+                  <p className="text-sm text-muted-foreground">No sub-folders in this folder.</p>
                 </div>
               );
             }
@@ -1014,22 +1015,26 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               <FolderTableView
                 folders={filteredChildFolders}
                 onNavigate={onNavigate}
-                archivedFoldersOnly={archivedFoldersOnly}
                 onUnarchiveFolder={onUnarchiveFolder}
               />
             ) : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
                 {filteredChildFolders.map((child) => {
-                  // Count galleries in this folder
-                  const galleryCount = child.children?.filter(c => c.type === "gallery").length || 0;
+                  // Count all galleries nested within this folder, including sub-folders
+                  const galleryCount = countAllGalleries(child);
 
                   return (
                     <FolderCard
                       key={child.id}
                       name={child.name}
                       galleryCount={galleryCount}
+                      isArchived={child.archived}
                       state="default"
-                      onSelect={() => onNavigate(child.id)}
+                      onSelect={() => {
+                        if (!child.archived) {
+                          onNavigate(child.id);
+                        }
+                      }}
                       onMoreOptions={() => {
                         // TODO: Implement more options menu
                       }}
