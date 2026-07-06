@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { FolderItem } from "@/lib/mockFolderData";
+import { FolderItem, countAllGalleries } from "@/lib/mockFolderData";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -22,6 +22,7 @@ export const FOLDER_COLUMNS = [
   { key: "icon", label: "Icon" },
   { key: "name", label: "Name" },
   { key: "subfolders", label: "Subfolders" },
+  { key: "galleries", label: "Galleries" },
   { key: "created", label: "Created" },
   { key: "createdBy", label: "Created By" },
 ] as const;
@@ -33,6 +34,7 @@ export const DEFAULT_FOLDER_COLUMN_VISIBILITY: FolderColumnVisibility = {
   icon: true,
   name: true,
   subfolders: true,
+  galleries: true,
   created: true,
   createdBy: true,
 };
@@ -48,7 +50,7 @@ interface FolderTableViewProps {
   columnVisibility?: FolderColumnVisibility;
 }
 
-type SortField = "name" | "subfolders" | "created" | null;
+type SortField = "name" | "subfolders" | "galleries" | "created" | null;
 type SortDirection = "asc" | "desc";
 
 const CREATORS = ["Sarah Mitchell", "David Chen", "Emma Rodriguez", "Marcus Thompson", "Olivia Park", "James Wilson"];
@@ -62,6 +64,7 @@ function enrichFolder(folder: FolderItem, index: number) {
     creator: CREATORS[index % CREATORS.length],
     createdDate: d,
     subfolderCount: folder.children?.filter(c => c.type === "folder").length || 0,
+    galleryCount: countAllGalleries(folder),
   };
 }
 
@@ -102,6 +105,7 @@ export function FolderTableView({
     switch (sortField) {
       case "name": cmp = a.name.localeCompare(b.name); break;
       case "subfolders": cmp = a.subfolderCount - b.subfolderCount; break;
+      case "galleries": cmp = a.galleryCount - b.galleryCount; break;
       case "created": cmp = (a.createdDate?.getTime() || 0) - (b.createdDate?.getTime() || 0); break;
     }
     return sortDirection === "asc" ? cmp : -cmp;
@@ -142,6 +146,11 @@ export function FolderTableView({
       {columnVisibility.subfolders && (
         <TableCell>
           <span className="text-sm">{folder.subfolderCount}</span>
+        </TableCell>
+      )}
+      {columnVisibility.galleries && (
+        <TableCell>
+          <span className="text-sm">{folder.galleryCount}</span>
         </TableCell>
       )}
       {columnVisibility.created && (
@@ -193,6 +202,7 @@ export function FolderTableView({
               <TableHead className="w-12"></TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Subfolders</TableHead>
+              <TableHead>Galleries</TableHead>
               <TableHead>Created</TableHead>
               <TableHead>Created By</TableHead>
               <TableHead className="w-12"></TableHead>
@@ -203,6 +213,7 @@ export function FolderTableView({
               <TableRow key={i}>
                 <TableCell><div className="w-8 h-8 bg-muted rounded animate-pulse" /></TableCell>
                 <TableCell><div className="w-32 h-4 bg-muted rounded animate-pulse" /></TableCell>
+                <TableCell><div className="w-12 h-4 bg-muted rounded animate-pulse" /></TableCell>
                 <TableCell><div className="w-12 h-4 bg-muted rounded animate-pulse" /></TableCell>
                 <TableCell><div className="w-16 h-4 bg-muted rounded animate-pulse" /></TableCell>
                 <TableCell><div className="w-24 h-4 bg-muted rounded animate-pulse" /></TableCell>
@@ -232,6 +243,13 @@ export function FolderTableView({
                 <TableHead className="min-w-[100px]">
                   <button onClick={() => handleSort("subfolders")} className="flex items-center hover:text-foreground transition-colors uppercase text-xs tracking-wider">
                     Subfolders{getSortIcon("subfolders")}
+                  </button>
+                </TableHead>
+              )}
+              {columnVisibility.galleries && (
+                <TableHead className="min-w-[100px]">
+                  <button onClick={() => handleSort("galleries")} className="flex items-center hover:text-foreground transition-colors uppercase text-xs tracking-wider">
+                    Galleries{getSortIcon("galleries")}
                   </button>
                 </TableHead>
               )}
