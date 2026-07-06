@@ -1,7 +1,6 @@
 import { useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { FolderItem } from "@/lib/mockFolderData";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -76,21 +75,10 @@ export function FolderTableView({
   perPage = 40,
   columnVisibility = DEFAULT_FOLDER_COLUMN_VISIBILITY,
 }: FolderTableViewProps) {
-  const [selectedFolders, setSelectedFolders] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   const enrichedFolders = folders.map((f, i) => enrichFolder(f, i));
-
-  const handleSelectAll = (checked: boolean) => {
-    setSelectedFolders(checked ? new Set(folders.map(f => f.id)) : new Set());
-  };
-
-  const handleSelectFolder = (id: string, checked: boolean) => {
-    const next = new Set(selectedFolders);
-    checked ? next.add(id) : next.delete(id);
-    setSelectedFolders(next);
-  };
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -108,9 +96,6 @@ export function FolderTableView({
       : <i className="bi bi-arrow-down w-3 h-3 ml-1 inline-flex items-center justify-center leading-none" />;
   };
 
-
-
-
   const sorted = [...enrichedFolders].sort((a, b) => {
     if (!sortField) return 0;
     let cmp = 0;
@@ -125,23 +110,13 @@ export function FolderTableView({
   // Apply pagination
   const paginatedFolders = sorted.slice(0, perPage);
 
-  const allSelected = folders.length > 0 && selectedFolders.size === folders.length;
-  const someSelected = selectedFolders.size > 0 && selectedFolders.size < folders.length;
-
   const formatDate = (date: Date | undefined) => {
     if (!date) return "-";
     return date.toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "2-digit" });
   };
 
   const renderRow = (folder: EnrichedFolder) => (
-    <TableRow key={folder.id} data-state={selectedFolders.has(folder.id) ? "selected" : undefined}>
-      <TableCell>
-        <Checkbox
-          checked={selectedFolders.has(folder.id)}
-          onCheckedChange={(checked) => handleSelectFolder(folder.id, !!checked)}
-          aria-label={`Select ${folder.name}`}
-        />
-      </TableCell>
+    <TableRow key={folder.id}>
       {columnVisibility.icon && (
         <TableCell>
           <i className="bi bi-folder2-open text-lg text-muted-foreground" />
@@ -215,7 +190,6 @@ export function FolderTableView({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12"><Checkbox disabled /></TableHead>
               <TableHead className="w-12"></TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Subfolders</TableHead>
@@ -227,7 +201,6 @@ export function FolderTableView({
           <TableBody>
             {Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={i}>
-                <TableCell><div className="w-4 h-4 bg-muted rounded animate-pulse" /></TableCell>
                 <TableCell><div className="w-8 h-8 bg-muted rounded animate-pulse" /></TableCell>
                 <TableCell><div className="w-32 h-4 bg-muted rounded animate-pulse" /></TableCell>
                 <TableCell><div className="w-12 h-4 bg-muted rounded animate-pulse" /></TableCell>
@@ -247,14 +220,6 @@ export function FolderTableView({
       <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12">
-                <Checkbox
-                  checked={allSelected}
-                  onCheckedChange={handleSelectAll}
-                  aria-label="Select all folders"
-                  {...(someSelected ? { "data-state": "indeterminate" } : {})}
-                />
-              </TableHead>
               {columnVisibility.icon && <TableHead className="w-12"></TableHead>}
               {columnVisibility.name && (
                 <TableHead className="min-w-[180px]">
