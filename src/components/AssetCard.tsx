@@ -29,6 +29,7 @@ interface AssetCardProps {
   onComment?: () => void;
   onApprove?: () => void;
   onReject?: () => void;
+  onMoreOptions?: () => void;
   className?: string;
 }
 
@@ -49,6 +50,7 @@ export function AssetCard({
   onComment,
   onApprove,
   onReject,
+  onMoreOptions,
   className,
 }: AssetCardProps) {
   const isDefault = state === "default";
@@ -310,18 +312,35 @@ export function AssetCard({
             </div>
           )}
 
-          {/* Label - title, creator, or none based on displayLabel preference */}
-          <p className={cn(
-            "text-[15px] text-white font-normal leading-[1.2] tracking-tight",
-            displayLabel === "none" && "invisible"
-          )}>
-            {displayLabel === "title" ? (title || creatorName) : creatorName}
-          </p>
+          <div className="flex items-end justify-between gap-2 w-full">
+            <div className="flex flex-col gap-1 min-w-0">
+              {/* Label - title, creator, or none based on displayLabel preference */}
+              <p className={cn(
+                "text-[15px] text-white font-normal leading-[1.2] tracking-tight",
+                displayLabel === "none" && "invisible"
+              )}>
+                {displayLabel === "title" ? (title || creatorName) : creatorName}
+              </p>
 
-          {/* Timestamp */}
-          <p className="text-[13px] text-white/80 font-normal leading-[1.25] tracking-tight">
-            {timestamp}
-          </p>
+              {/* Timestamp */}
+              <p className="text-[13px] text-white/80 font-normal leading-[1.25] tracking-tight">
+                {timestamp}
+              </p>
+            </div>
+
+            {/* More Options Button */}
+            {onMoreOptions && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMoreOptions();
+                }}
+                className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full flex-shrink-0"
+              >
+                <i className="bi bi-three-dots-vertical text-white text-xs" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

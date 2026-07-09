@@ -17,7 +17,6 @@ const Index = () => {
   });
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [activeScreen, setActiveScreen] = useState<Screen>("home");
-  const [history, setHistory] = useState<Screen[]>(["home"]);
 
   // Persist the desktop nav expanded/collapsed preference across sessions.
   useEffect(() => {
@@ -42,20 +41,11 @@ const Index = () => {
 
   const handleNavigate = useCallback((screen: Screen) => {
     setActiveScreen(screen);
-    setHistory((prev) => [...prev, screen]);
     // Close mobile nav on navigation
     if (isMobile) {
       setIsMobileNavOpen(false);
     }
   }, [isMobile]);
-
-  const handleBack = useCallback(() => {
-    if (history.length > 1) {
-      const newHistory = history.slice(0, -1);
-      setHistory(newHistory);
-      setActiveScreen(newHistory[newHistory.length - 1]);
-    }
-  }, [history]);
 
   const handleCloseMobileNav = useCallback(() => {
     setIsMobileNavOpen(false);
@@ -95,8 +85,6 @@ const Index = () => {
       />
       <ContentScreen
         screen={activeScreen}
-        history={history}
-        onBack={handleBack}
         isMobile={isMobile}
       />
     </div>
