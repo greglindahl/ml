@@ -79,6 +79,7 @@ const RECENT_GALLERIES: RecentGallery[] = [
 interface ActivityItem {
   id: string;
   iconBg: string;
+  iconColor: string;
   icon: string;
   description: ReactNode;
   date: string;
@@ -88,6 +89,7 @@ const RECENT_ACTIVITY: ActivityItem[] = [
   {
     id: "activity-1",
     iconBg: "#fcedc4",
+    iconColor: "text-accent-yellow",
     icon: "bi-megaphone-fill",
     description: <>Amber Johnson (Admin) created an Announcement &quot;ANOTHER TEST!!!&quot; that was sent to 1 user</>,
     date: "03/15/2025, 2:30 PM",
@@ -95,6 +97,7 @@ const RECENT_ACTIVITY: ActivityItem[] = [
   {
     id: "activity-2",
     iconBg: "#f9c1cc",
+    iconColor: "text-accent-pink",
     icon: "bi-people-fill",
     description: <>User: 49654 joined Sportgeeks with invite code <a href="#" className="underline">SPORTGEEKS123</a></>,
     date: "03/15/2025, 2:30 PM",
@@ -102,6 +105,7 @@ const RECENT_ACTIVITY: ActivityItem[] = [
   {
     id: "activity-3",
     iconBg: "#c1d6f3",
+    iconColor: "text-accent-blue",
     icon: "bi-images",
     description: <>Tell Vickers (Admin) created gallery <a href="#" className="underline">tell create upload gallery</a></>,
     date: "03/15/2025, 2:30 PM",
@@ -109,6 +113,7 @@ const RECENT_ACTIVITY: ActivityItem[] = [
   {
     id: "activity-4",
     iconBg: "#e3cbe9",
+    iconColor: "text-accent-purple",
     icon: "bi-send-fill",
     description: <>Greg Lindahl TestAdmin sent a post to social request <a href="#" className="underline">Schedule Badge</a> to 1 user</>,
     date: "03/15/2025, 2:30 PM",
@@ -116,6 +121,7 @@ const RECENT_ACTIVITY: ActivityItem[] = [
   {
     id: "activity-5",
     iconBg: "#c1d6f3",
+    iconColor: "text-accent-blue",
     icon: "bi-images",
     description: <>Tell Vickers (Admin) created gallery <a href="#" className="underline">tell create upload gallery</a></>,
     date: "03/15/2025, 2:30 PM",
@@ -155,13 +161,13 @@ function SectionHeader({ title, size = "lg" }: { title: string; size?: "lg" | "m
   );
 }
 
-function ActivityCard({ title, icon, iconBg, children }: { title: string; icon: string; iconBg: string; children: ReactNode }) {
+function ActivityCard({ title, icon, iconBg, iconColor, children }: { title: string; icon: string; iconBg: string; iconColor: string; children: ReactNode }) {
   return (
     <div className="bg-white border border-gray-300 rounded-lg p-6 flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0" style={{ backgroundColor: iconBg }}>
-            <i className={`bi ${icon} text-primary text-lg`} />
+            <i className={`bi ${icon} ${iconColor} text-lg`} />
           </span>
           <h2 className="text-[20px] font-medium text-black tracking-tight">{title}</h2>
         </div>
@@ -192,7 +198,7 @@ function ActivityTable({ items }: { items: ActivityItem[] }) {
         >
           <div className="flex-1 flex items-center gap-3 px-6 py-[17px] min-w-0">
             <span className="flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0" style={{ backgroundColor: item.iconBg }}>
-              <i className={`bi ${item.icon} text-primary text-sm`} />
+              <i className={`bi ${item.icon} ${item.iconColor} text-sm`} />
             </span>
             <p className="text-[13px] text-black min-w-0">{item.description}</p>
           </div>
@@ -206,7 +212,7 @@ function ActivityTable({ items }: { items: ActivityItem[] }) {
   );
 }
 
-function TwoLineTable({ items, columnLabel, dateLabel, iconBg }: { items: TwoLineItem[]; columnLabel: string; dateLabel: string; iconBg: string }) {
+function TwoLineTable({ items, columnLabel, dateLabel, iconBg, iconColor }: { items: TwoLineItem[]; columnLabel: string; dateLabel: string; iconBg: string; iconColor: string }) {
   return (
     <div className="w-full">
       <div className="flex bg-gray-100 border border-gray-300 rounded-t-lg h-12">
@@ -223,7 +229,7 @@ function TwoLineTable({ items, columnLabel, dateLabel, iconBg }: { items: TwoLin
           className={`flex items-center gap-3 border-b border-l border-r border-gray-300 bg-white px-6 py-[17px] ${i === items.length - 1 ? "rounded-b-lg" : ""}`}
         >
           <span className="flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0" style={{ backgroundColor: iconBg }}>
-            <i className={`bi ${item.icon} text-primary text-sm`} />
+            <i className={`bi ${item.icon} ${iconColor} text-sm`} />
           </span>
           <div className="flex flex-col gap-1 min-w-0">
             <p className="text-[13px] text-black">{item.description}</p>
@@ -239,20 +245,20 @@ function renderActivityModule(id: string) {
   switch (id) {
     case "recent-activity":
       return (
-        <ActivityCard title="Recent Activity" icon="bi-activity" iconBg="#d5e5fa">
+        <ActivityCard title="Recent Activity" icon="bi-activity" iconBg="#d5e5fa" iconColor="text-accent-blue">
           <ActivityTable items={RECENT_ACTIVITY} />
         </ActivityCard>
       );
     case "recent-connect-jobs":
       return (
-        <ActivityCard title="Recent Connect Jobs" icon="bi-gear" iconBg="#d7eff6">
-          <TwoLineTable items={CONNECT_JOBS} columnLabel="Activity" dateLabel="Date" iconBg="#d7eff6" />
+        <ActivityCard title="Recent Connect Jobs" icon="bi-gear" iconBg="#d7eff6" iconColor="text-accent-cyan">
+          <TwoLineTable items={CONNECT_JOBS} columnLabel="Activity" dateLabel="Date" iconBg="#d7eff6" iconColor="text-accent-cyan" />
         </ActivityCard>
       );
     case "recent-requests":
       return (
-        <ActivityCard title="Recent Requests" icon="bi-camera" iconBg="#e3cbe9">
-          <TwoLineTable items={RECENT_REQUESTS} columnLabel="Request" dateLabel="Last Updated Date" iconBg="#e3cbe9" />
+        <ActivityCard title="Recent Requests" icon="bi-camera" iconBg="#e3cbe9" iconColor="text-accent-purple">
+          <TwoLineTable items={RECENT_REQUESTS} columnLabel="Request" dateLabel="Last Updated Date" iconBg="#e3cbe9" iconColor="text-accent-purple" />
         </ActivityCard>
       );
     default:

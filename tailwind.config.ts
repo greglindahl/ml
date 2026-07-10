@@ -112,6 +112,21 @@ export default {
           900: '#283E59',
         },
         black: '#12263F',
+        // Figma "Colors" palette (used for icon theming, e.g. activity feed icon circles)
+        accent: {
+          blue: '#2C7BE5',
+          indigo: '#727CF5',
+          violet: '#9747FF',
+          purple: '#6B5EAE',
+          pink: '#FF679B',
+          red: '#E63757',
+          orange: '#FD7E14',
+          yellow: '#F6C343',
+          green: '#00D97E',
+          teal: '#02A8B5',
+          cyan: '#39AFD1',
+          gf: '#3AAB47',
+        },
         // Body colors
         body: {
           DEFAULT: '#12263F',
