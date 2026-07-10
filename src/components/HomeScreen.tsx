@@ -1,9 +1,11 @@
-import { ReactNode } from "react";
+import { ReactNode, useMemo, useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AssetCard } from "@/components/AssetCard";
+import { AssetDetailModal } from "@/components/AssetDetailModal";
 import { GalleryCard } from "@/components/GalleryCard";
+import { getRelativeTime, mockLibraryAssets } from "@/lib/mockLibraryData";
 import stGalleryCard from "@/assets/st-gallery-card.svg";
 import stAssetOne from "@/assets/st-asset-one.svg";
 import stAssetTwo from "@/assets/st-asset-two.svg";
@@ -28,23 +30,11 @@ const QUICK_ACTIONS: QuickAction[] = [
   { id: "favorites", label: "Favorites", icon: "bi-heart" },
 ];
 
-interface RecentAsset {
-  id: string;
-  creatorName: string;
-  thumbnailUrl: string;
-  timestamp: string;
-  duration?: string;
-  isNew?: boolean;
-  isRequested?: boolean;
-}
-
-const RECENT_ASSETS: RecentAsset[] = [
-  { id: "home-asset-1", creatorName: "Amber Johnson", thumbnailUrl: "https://picsum.photos/seed/home-asset-1/400/300", timestamp: "1/14/26, 1:56 PM", duration: "0:05", isNew: true, isRequested: true },
-  { id: "home-asset-2", creatorName: "David Chen", thumbnailUrl: "https://picsum.photos/seed/home-asset-2/400/300", timestamp: "1/14/26, 1:56 PM", duration: "0:05", isNew: true, isRequested: true },
-  { id: "home-asset-3", creatorName: "Emma Rodriguez", thumbnailUrl: "https://picsum.photos/seed/home-asset-3/400/300", timestamp: "1/14/26, 1:56 PM", duration: "0:05", isNew: true, isRequested: true },
-  { id: "home-asset-4", creatorName: "Marcus Thompson", thumbnailUrl: "https://picsum.photos/seed/home-asset-4/400/300", timestamp: "1/14/26, 1:56 PM", duration: "0:05", isNew: true, isRequested: true },
-  { id: "home-asset-5", creatorName: "Olivia Park", thumbnailUrl: "https://picsum.photos/seed/home-asset-5/400/300", timestamp: "1/14/26, 1:56 PM", duration: "0:05", isNew: true, isRequested: true },
-];
+// The 5 most recently created real library assets, so this tile links straight
+// into the same asset data (and detail modal) used everywhere else in the app.
+const RECENT_ASSETS = [...mockLibraryAssets]
+  .sort((a, b) => b.dateCreated.getTime() - a.dateCreated.getTime())
+  .slice(0, 5);
 
 interface RecentGallery {
   id: string;
@@ -220,6 +210,14 @@ function TwoLineTable({ items, columnLabel, dateLabel, iconBg }: { items: TwoLin
 }
 
 export function HomeScreen({ isMobile = false, onOpenStarterGallery }: HomeScreenProps) {
+  const [viewingAssetId, setViewingAssetId] = useState<string | null>(null);
+
+  const viewingAssetIndex = useMemo(
+    () => RECENT_ASSETS.findIndex((a) => a.id === viewingAssetId),
+    [viewingAssetId]
+  );
+  const viewingAsset = viewingAssetIndex >= 0 ? RECENT_ASSETS[viewingAssetIndex] : null;
+
   return (
     <div className={`flex-1 flex flex-col pb-12 ${isMobile ? "pt-[58px]" : ""}`}>
       {!isMobile && <div className="mb-2 h-[44px] flex-shrink-0" />}
@@ -300,21 +298,20 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery }: HomeScree
           <SectionHeader title="Recent Assets" />
           <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-6">
             {RECENT_ASSETS.map((asset) => (
-              <AssetCard
-                key={asset.id}
-                creatorName={asset.creatorName}
-                thumbnailUrl={asset.thumbnailUrl}
-                timestamp={asset.timestamp}
-                duration={asset.duration}
-                isNew={asset.isNew}
-                isRequested={asset.isRequested}
-                onFavorite={() => {
-                  // TODO: Implement favorite functionality
-                }}
-                onMoreOptions={() => {
-                  // TODO: Implement more options menu
-                }}
-              />
+              <div key={asset.id} onClick={() => setViewingAssetId(asset.id)}>
+                <AssetCard
+                  creatorName={asset.creator}
+                  thumbnailUrl={asset.thumbnailUrl}
+                  timestamp={getRelativeTime(asset.dateCreated)}
+                  duration={asset.duration}
+                  onFavorite={() => {
+                    // TODO: Implement favorite functionality
+                  }}
+                  onMoreOptions={() => {
+                    // TODO: Implement more options menu
+                  }}
+                />
+              </div>
             ))}
           </div>
         </section>
@@ -358,6 +355,23 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery }: HomeScree
           </ActivityCard>
         </div>
       </div>
+
+      {/* Asset Detail Modal */}
+      <AssetDetailModal
+        open={viewingAssetId !== null}
+        onOpenChange={(open) => {
+          if (!open) setViewingAssetId(null);
+        }}
+        asset={viewingAsset}
+        currentIndex={viewingAssetIndex}
+        totalAssets={RECENT_ASSETS.length}
+        onPrevious={() => {
+          if (viewingAssetIndex > 0) setViewingAssetId(RECENT_ASSETS[viewingAssetIndex - 1].id);
+        }}
+        onNext={() => {
+          if (viewingAssetIndex < RECENT_ASSETS.length - 1) setViewingAssetId(RECENT_ASSETS[viewingAssetIndex + 1].id);
+        }}
+      />
     </div>
   );
 }

@@ -1093,6 +1093,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder }: Library
                   if (checked) setSelectedAssets(new Set(sortedResults.map(a => a.id)));
                   else setSelectedAssets(new Set());
                 }}
+                onOpenAsset={handleViewAsset}
                 perPage={assetPerPage}
                 columnVisibility={assetColumnVisibility}
               />
