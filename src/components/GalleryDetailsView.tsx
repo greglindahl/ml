@@ -261,7 +261,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           {/* Gallery Thumbnail */}
           <div className="w-[82px] h-[82px] rounded-lg overflow-hidden flex-shrink-0">
             <img
-              src={`https://picsum.photos/seed/${galleryId}/200/200`}
+              src={gallery.thumbnailUrl || `https://picsum.photos/seed/${galleryId}/200/200`}
               alt={gallery.name}
               className="w-full h-full object-cover"
             />

@@ -10,6 +10,8 @@ export interface FolderItem {
   countType?: "folders" | "galleries" | "assets";
   children?: FolderItem[];
   archived?: boolean;
+  /** Overrides the default placeholder thumbnail on the gallery details header. */
+  thumbnailUrl?: string;
 }
 
 // Helper to get all descendant folder/gallery IDs (including self)
@@ -277,6 +279,7 @@ export const folders: FolderItem[] = [
     type: "gallery",
     count: 18,
     countType: "assets",
+    thumbnailUrl: starterGalleryThumbnail,
   },
 ];
 

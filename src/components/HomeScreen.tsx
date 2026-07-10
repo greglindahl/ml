@@ -280,9 +280,15 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery }: HomeScree
                   <button onClick={onOpenStarterGallery} className="flex-shrink-0">
                     <img src={stGalleryCard} alt="Welcome to Greenfly" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
                   </button>
-                  <img src={stAssetOne} alt="Everyone is in the play" className="h-40 w-auto rounded-xl flex-shrink-0" />
-                  <img src={stAssetTwo} alt="Collect content from every source" className="h-40 w-auto rounded-xl flex-shrink-0" />
-                  <img src={stAssetThree} alt="Organize your content, view 14 more tour cards" className="h-40 w-auto rounded-xl flex-shrink-0" />
+                  <button onClick={onOpenStarterGallery} className="flex-shrink-0">
+                    <img src={stAssetOne} alt="Everyone is in the play" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
+                  </button>
+                  <button onClick={onOpenStarterGallery} className="flex-shrink-0">
+                    <img src={stAssetTwo} alt="Collect content from every source" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
+                  </button>
+                  <button onClick={onOpenStarterGallery} className="flex-shrink-0">
+                    <img src={stAssetThree} alt="Organize your content, view 14 more tour cards" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
+                  </button>
                 </div>
               </div>
             </AccordionContent>

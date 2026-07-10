@@ -11,7 +11,6 @@ import type { SelectedFacet, FacetedSearchWithTypeaheadHandle } from "@/componen
 import { FilterBar } from "@/components/FilterBar";
 import type { FilterBarHandle } from "@/components/FilterBar";
 import { GalleryDetailsView } from "@/components/GalleryDetailsView";
-import { StarterGalleryDetailsView } from "@/components/StarterGalleryDetailsView";
 import { FolderDetailsView } from "@/components/FolderDetailsView";
 import { AssetTableView, DEFAULT_ASSET_COLUMN_VISIBILITY, ASSET_COLUMNS, type AssetColumnVisibility } from "@/components/AssetTableView";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
@@ -809,9 +808,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder }: Library
       />
 
       {/* Main Content Area - Show GalleryDetailsView, FolderDetailsView, or Library content */}
-      {activeGallery?.id === "starter-gallery" ? (
-        <StarterGalleryDetailsView onBack={() => handleNavigate("all")} isMobile={isMobile} />
-      ) : activeGallery ? (
+      {activeGallery ? (
         <GalleryDetailsView
           galleryId={activeGallery.id}
           gallery={activeGallery}
