@@ -398,23 +398,23 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery }: HomeScree
                 </span>
               </AccordionTrigger>
               <AccordionContent className="px-6 pb-6">
-                <div className="flex items-start gap-6">
-                  <div className="flex-shrink-0 w-[280px] flex flex-col gap-2">
+                <div className="flex flex-col sm:flex-row items-start gap-6">
+                  <div className="w-full sm:w-[280px] sm:flex-shrink-0 flex flex-col gap-2">
                     <p className="text-[15px] text-gray-700 leading-snug">
                       A quick tour of what the platform can do, explore anytime.
                     </p>
                   </div>
-                  <div className="flex gap-4 overflow-x-auto min-w-0">
+                  <div className="flex gap-4 overflow-x-auto min-w-0 max-w-full">
                     <button onClick={onOpenStarterGallery} className="flex-shrink-0">
                       <img src={stGalleryCard} alt="Welcome to Greenfly" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
                     </button>
-                    <button onClick={onOpenStarterGallery} className="flex-shrink-0">
+                    <button onClick={onOpenStarterGallery} className="hidden sm:block flex-shrink-0">
                       <img src={stAssetOne} alt="Everyone is in the play" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
                     </button>
-                    <button onClick={onOpenStarterGallery} className="flex-shrink-0">
+                    <button onClick={onOpenStarterGallery} className="hidden sm:block flex-shrink-0">
                       <img src={stAssetTwo} alt="Collect content from every source" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
                     </button>
-                    <button onClick={onOpenStarterGallery} className="flex-shrink-0">
+                    <button onClick={onOpenStarterGallery} className="hidden sm:block flex-shrink-0">
                       <img src={stAssetThree} alt="Organize your content, view 14 more tour cards" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
                     </button>
                   </div>
