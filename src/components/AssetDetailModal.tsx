@@ -71,6 +71,7 @@ export function AssetDetailModal({
       <DialogContent
         className="max-w-[1200px] w-[95vw] h-[90vh] max-h-[900px] p-0 gap-0 flex flex-col bg-gray-100"
         onKeyDown={handleKeyDown}
+        hideClose
       >
         {/* Header */}
         <DialogHeader className="flex-shrink-0 px-6 py-4 border-b bg-gray-100 flex flex-row items-center justify-between">
@@ -89,21 +90,21 @@ export function AssetDetailModal({
           </DialogDescription>
 
           {/* Pagination */}
-          <div className="flex items-center gap-1.5">
+          <div className="inline-flex rounded-lg">
             <Button
-              variant="primary-outline"
-              size="sm"
+              variant="white"
+              className="rounded-r-none"
               onClick={onPrevious}
               disabled={currentIndex === 0}
             >
               Previous
             </Button>
-            <span className="h-10 px-3 flex items-center justify-center border border-primary rounded-lg text-[15px] text-primary tracking-tight">
+            <span className="h-10 px-4 flex items-center justify-center border-y border-[#D2DDEC] bg-white text-[15px] text-foreground tracking-tight">
               {currentIndex + 1} of {totalAssets}
             </span>
             <Button
-              variant="primary-outline"
-              size="sm"
+              variant="white"
+              className="rounded-l-none"
               onClick={onNext}
               disabled={currentIndex === totalAssets - 1}
             >
@@ -118,7 +119,7 @@ export function AssetDetailModal({
             aria-label="Toggle details panel"
             aria-pressed={showDetailsPanel}
           >
-            <i className="bi bi-info-circle text-white text-base" />
+            <i className="bi bi-list-ul text-white text-base" />
           </button>
         </DialogHeader>
 
@@ -140,7 +141,7 @@ export function AssetDetailModal({
 
             {/* Crop button overlay */}
             <button
-              className="absolute bottom-6 left-1/2 -translate-x-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 transition-colors"
+              className="absolute bottom-6 right-6 w-10 h-10 flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 transition-colors"
               aria-label="Crop"
             >
               <i className="bi bi-crop text-white text-base" />
