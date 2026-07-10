@@ -116,8 +116,10 @@ function SortableGroup<T extends ToggleItem>({
 
   return (
     <section>
-      <h3 className="text-[13px] font-semibold text-black uppercase tracking-wide mb-1">{title}</h3>
-      {description && <p className="text-[13px] text-gray-600 mb-3">{description}</p>}
+      <div className="mb-3 flex flex-col gap-1">
+        <h3 className="text-[13px] font-semibold text-black uppercase tracking-wide">{title}</h3>
+        {description && <p className="text-[13px] text-gray-600">{description}</p>}
+      </div>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
