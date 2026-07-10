@@ -69,7 +69,7 @@ export function AssetCard({
   return (
     <div
       className={cn(
-        "relative flex flex-col w-full aspect-[5/6] min-w-[160px] rounded-[24px] overflow-hidden cursor-pointer group",
+        "relative flex flex-col w-full aspect-[5/6] rounded-[24px] overflow-hidden cursor-pointer group",
         isHover && "shadow-[0_32px_32px_rgba(18,38,63,0.12)]",
         className
       )}

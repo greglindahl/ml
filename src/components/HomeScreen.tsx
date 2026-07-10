@@ -74,6 +74,7 @@ const RECENT_GALLERIES: RecentGallery[] = [
   { id: "home-gallery-2", name: "Media Day", assetCount: 32, thumbnailUrl: "https://picsum.photos/seed/home-gallery-2/400/300" },
   { id: "home-gallery-3", name: "Fan Engagement", assetCount: 22, thumbnailUrl: "https://picsum.photos/seed/home-gallery-3/400/300" },
   { id: "home-gallery-4", name: "Behind the Scenes", assetCount: 40, thumbnailUrl: "https://picsum.photos/seed/home-gallery-4/400/300" },
+  { id: "home-gallery-5", name: "Community Day", assetCount: 26, thumbnailUrl: "https://picsum.photos/seed/home-gallery-5/400/300" },
 ];
 
 interface ActivityItem {
@@ -372,7 +373,7 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery }: HomeScree
               {visibleQuickActions.map((action) => (
                 <button
                   key={action.id}
-                  className="flex-1 min-w-[180px] flex items-center gap-3 bg-white border border-gray-300 rounded-full px-6 py-3 hover:bg-gray-100 transition-colors"
+                  className="flex-shrink-0 flex-grow-0 basis-full sm:basis-[calc(50%-0.75rem)] xl:basis-[calc(33.333%-1rem)] xxl:basis-[clamp(11rem,calc(20%-1.2rem),18rem)] flex items-center gap-3 bg-white border border-gray-300 rounded-full px-6 py-3 hover:bg-gray-100 transition-colors"
                 >
                   <span className="flex items-center justify-center w-12 h-12 rounded-full bg-[#d5e5fa] text-primary flex-shrink-0">
                     <i className={`bi ${action.icon} text-xl`} />
@@ -429,7 +430,7 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery }: HomeScree
             return (
               <section key={module.id} className="flex flex-col gap-3">
                 <SectionHeader title="Recent Assets" />
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                   {RECENT_ASSETS.map((asset) => (
                     <div key={asset.id} onClick={() => setViewingAssetId(asset.id)}>
                       <AssetCard
@@ -454,7 +455,7 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery }: HomeScree
             return (
               <section key={module.id} className="flex flex-col gap-3">
                 <SectionHeader title="Recent Galleries" />
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-5">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
                   {RECENT_GALLERIES.map((gallery) => (
                     <GalleryCard
                       key={gallery.id}
