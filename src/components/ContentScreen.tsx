@@ -11,17 +11,20 @@ import { AdminScreen } from "./AdminScreen";
 interface ContentScreenProps {
   screen: Screen;
   isMobile?: boolean;
+  /** Gallery/folder id Library should open on mount (e.g. the Starter Gallery deep-linked from Home). */
+  initialLibraryFolderId?: string;
+  onOpenStarterGallery?: () => void;
 }
 
-export function ContentScreen({ screen, isMobile = false }: ContentScreenProps) {
+export function ContentScreen({ screen, isMobile = false, initialLibraryFolderId, onOpenStarterGallery }: ContentScreenProps) {
   // Home has its own dedicated screen
   if (screen === "home") {
-    return <HomeScreen isMobile={isMobile} />;
+    return <HomeScreen isMobile={isMobile} onOpenStarterGallery={onOpenStarterGallery} />;
   }
 
   // Library has its own dedicated screen with secondary nav
   if (screen === "library") {
-    return <LibraryScreen isMobile={isMobile} />;
+    return <LibraryScreen isMobile={isMobile} initialActiveFolder={initialLibraryFolderId} />;
   }
 
   // Engage has its own dedicated screen with tabs

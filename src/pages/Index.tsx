@@ -17,6 +17,9 @@ const Index = () => {
   });
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [activeScreen, setActiveScreen] = useState<Screen>("home");
+  // Folder/gallery id for Library to open on its next mount (e.g. deep-linked from Home).
+  // Cleared right after Library mounts — LibraryScreen only reads it once, as a useState initializer.
+  const [pendingLibraryFolderId, setPendingLibraryFolderId] = useState<string | null>(null);
 
   // Persist the desktop nav expanded/collapsed preference across sessions.
   useEffect(() => {
@@ -50,6 +53,18 @@ const Index = () => {
   const handleCloseMobileNav = useCallback(() => {
     setIsMobileNavOpen(false);
   }, []);
+
+  const handleOpenStarterGallery = useCallback(() => {
+    setPendingLibraryFolderId("starter-gallery");
+    setActiveScreen("library");
+  }, []);
+
+  // Consume the pending id once Library has mounted with it.
+  useEffect(() => {
+    if (pendingLibraryFolderId) {
+      setPendingLibraryFolderId(null);
+    }
+  }, [pendingLibraryFolderId]);
 
   return (
     <div className="flex min-h-screen w-full">
@@ -86,6 +101,8 @@ const Index = () => {
       <ContentScreen
         screen={activeScreen}
         isMobile={isMobile}
+        initialLibraryFolderId={pendingLibraryFolderId ?? undefined}
+        onOpenStarterGallery={handleOpenStarterGallery}
       />
     </div>
   );

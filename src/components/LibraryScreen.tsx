@@ -11,6 +11,7 @@ import type { SelectedFacet, FacetedSearchWithTypeaheadHandle } from "@/componen
 import { FilterBar } from "@/components/FilterBar";
 import type { FilterBarHandle } from "@/components/FilterBar";
 import { GalleryDetailsView } from "@/components/GalleryDetailsView";
+import { StarterGalleryDetailsView } from "@/components/StarterGalleryDetailsView";
 import { FolderDetailsView } from "@/components/FolderDetailsView";
 import { AssetTableView, DEFAULT_ASSET_COLUMN_VISIBILITY, ASSET_COLUMNS, type AssetColumnVisibility } from "@/components/AssetTableView";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
@@ -95,12 +96,14 @@ function computeFilterCounts(assets: LibraryAsset[]) {
 
 interface LibraryScreenProps {
   isMobile?: boolean;
+  /** Folder/gallery id to open immediately on mount (e.g. deep-linked from another screen). Defaults to "all". */
+  initialActiveFolder?: string;
 }
 
-export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
+export function LibraryScreen({ isMobile = false, initialActiveFolder }: LibraryScreenProps) {
   const [activeTab, setActiveTab] = useState("assets");
   const [isFolderSidebarExpanded, setIsFolderSidebarExpanded] = useState(false);
-  const [activeFolder, setActiveFolder] = useState("all");
+  const [activeFolder, setActiveFolder] = useState(initialActiveFolder ?? "all");
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [assetsViewMode, setAssetsViewMode] = useState<"grid" | "list">("grid");
   const [galleriesViewMode, setGalleriesViewMode] = useState<"grid" | "list">("grid");
@@ -806,7 +809,9 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
       />
 
       {/* Main Content Area - Show GalleryDetailsView, FolderDetailsView, or Library content */}
-      {activeGallery ? (
+      {activeGallery?.id === "starter-gallery" ? (
+        <StarterGalleryDetailsView onBack={() => handleNavigate("all")} isMobile={isMobile} />
+      ) : activeGallery ? (
         <GalleryDetailsView
           galleryId={activeGallery.id}
           gallery={activeGallery}

@@ -1,11 +1,17 @@
 import { ReactNode } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Button } from "@/components/ui/button";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AssetCard } from "@/components/AssetCard";
 import { GalleryCard } from "@/components/GalleryCard";
+import stGalleryCard from "@/assets/st-gallery-card.svg";
+import stAssetOne from "@/assets/st-asset-one.svg";
+import stAssetTwo from "@/assets/st-asset-two.svg";
+import stAssetThree from "@/assets/st-asset-three.svg";
 
 interface HomeScreenProps {
   isMobile?: boolean;
+  onOpenStarterGallery?: () => void;
 }
 
 interface QuickAction {
@@ -213,7 +219,7 @@ function TwoLineTable({ items, columnLabel, dateLabel, iconBg }: { items: TwoLin
   );
 }
 
-export function HomeScreen({ isMobile = false }: HomeScreenProps) {
+export function HomeScreen({ isMobile = false, onOpenStarterGallery }: HomeScreenProps) {
   return (
     <div className={`flex-1 flex flex-col pb-12 ${isMobile ? "pt-[58px]" : ""}`}>
       {!isMobile && <div className="mb-2 h-[44px] flex-shrink-0" />}
@@ -251,6 +257,37 @@ export function HomeScreen({ isMobile = false }: HomeScreenProps) {
             ))}
           </div>
         </section>
+
+        {/* Get Started with Greenfly */}
+        <Accordion type="single" collapsible defaultValue="get-started" className="bg-white border border-gray-300 rounded-lg">
+          <AccordionItem value="get-started" className="border-b-0">
+            <AccordionTrigger className="px-6 py-4 hover:no-underline [&>svg]:text-primary">
+              <span className="flex items-center gap-2">
+                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-[#d5e5fa] flex-shrink-0">
+                  <i className="bi bi-rocket-takeoff text-primary text-lg" />
+                </span>
+                <span className="text-[20px] font-medium text-black tracking-tight">Get Started with Greenfly</span>
+              </span>
+            </AccordionTrigger>
+            <AccordionContent className="px-6 pb-6">
+              <div className="flex items-start gap-6">
+                <div className="flex-shrink-0 w-[280px] flex flex-col gap-2">
+                  <p className="text-[15px] text-gray-700 leading-snug">
+                    A quick tour of what the platform can do, explore anytime.
+                  </p>
+                </div>
+                <div className="flex gap-4 overflow-x-auto">
+                  <button onClick={onOpenStarterGallery} className="flex-shrink-0">
+                    <img src={stGalleryCard} alt="Welcome to Greenfly" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
+                  </button>
+                  <img src={stAssetOne} alt="Everyone is in the play" className="h-40 w-auto rounded-xl flex-shrink-0" />
+                  <img src={stAssetTwo} alt="Collect content from every source" className="h-40 w-auto rounded-xl flex-shrink-0" />
+                  <img src={stAssetThree} alt="Organize your content, view 14 more tour cards" className="h-40 w-auto rounded-xl flex-shrink-0" />
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
 
         {/* Recent Assets */}
         <section className="flex flex-col gap-3">
