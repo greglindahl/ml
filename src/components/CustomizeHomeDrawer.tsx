@@ -1,5 +1,7 @@
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useIsNarrowScreen } from "@/hooks/use-mobile";
 import {
   DndContext,
   closestCenter,
@@ -129,10 +131,7 @@ function SortableGroup<T extends ToggleItem>({
   );
 }
 
-export function CustomizeHomeDrawer({
-  open,
-  onCancel,
-  onSave,
+function CustomizeGroups({
   quickActions,
   onQuickActionsChange,
   onboardingModules,
@@ -141,7 +140,60 @@ export function CustomizeHomeDrawer({
   onRecentMediaModulesChange,
   activityModules,
   onActivityModulesChange,
-}: CustomizeHomeDrawerProps) {
+}: Omit<CustomizeHomeDrawerProps, "open" | "onCancel" | "onSave">) {
+  return (
+    <>
+      <SortableGroup
+        title="Quick Actions"
+        description="Drag to reorder or toggle visibility."
+        items={quickActions}
+        onChange={onQuickActionsChange}
+      />
+      <hr className="border-gray-300" />
+      <SortableGroup title="Onboarding" items={onboardingModules} onChange={onOnboardingModulesChange} />
+      <hr className="border-gray-300" />
+      <SortableGroup title="Recent Media" items={recentMediaModules} onChange={onRecentMediaModulesChange} />
+      <hr className="border-gray-300" />
+      <SortableGroup title="Recent Portal Activity" items={activityModules} onChange={onActivityModulesChange} />
+    </>
+  );
+}
+
+export function CustomizeHomeDrawer(props: CustomizeHomeDrawerProps) {
+  const { open, onCancel, onSave } = props;
+  const isNarrow = useIsNarrowScreen();
+
+  // Below ~425px a right-side drawer is essentially full-width anyway, just
+  // awkwardly anchored — a bottom sheet (matching the Library page's Filters
+  // pattern) is the more natural mobile gesture here.
+  if (isNarrow) {
+    return (
+      <Sheet open={open} onOpenChange={(next) => { if (!next) onCancel(); }}>
+        <SheetContent side="bottom" className="h-[85vh] max-h-[700px] flex flex-col p-0 rounded-t-lg">
+          <SheetHeader className="px-4 py-3 border-b flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <i className="bi bi-sliders text-lg" />
+              <SheetTitle className="text-base font-semibold">Customize Homepage</SheetTitle>
+            </div>
+          </SheetHeader>
+
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
+            <CustomizeGroups {...props} />
+          </div>
+
+          <div className="flex-shrink-0 border-t px-4 py-3 flex items-center gap-3">
+            <Button variant="secondary" className="flex-1" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button className="flex-1" onClick={onSave}>
+              Save
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
   if (!open) return null;
 
   return (
@@ -159,18 +211,7 @@ export function CustomizeHomeDrawer({
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          <SortableGroup
-            title="Quick Actions"
-            description="Drag to reorder or toggle visibility."
-            items={quickActions}
-            onChange={onQuickActionsChange}
-          />
-          <hr className="border-gray-300" />
-          <SortableGroup title="Onboarding" items={onboardingModules} onChange={onOnboardingModulesChange} />
-          <hr className="border-gray-300" />
-          <SortableGroup title="Recent Media" items={recentMediaModules} onChange={onRecentMediaModulesChange} />
-          <hr className="border-gray-300" />
-          <SortableGroup title="Recent Portal Activity" items={activityModules} onChange={onActivityModulesChange} />
+          <CustomizeGroups {...props} />
         </div>
 
         <div className="px-6 py-4 border-t border-gray-300 flex items-center justify-end gap-3 flex-shrink-0">

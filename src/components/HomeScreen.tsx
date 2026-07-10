@@ -404,7 +404,7 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery }: HomeScree
                       A quick tour of what the platform can do, explore anytime.
                     </p>
                   </div>
-                  <div className="flex gap-4 overflow-x-auto">
+                  <div className="flex gap-4 overflow-x-auto min-w-0">
                     <button onClick={onOpenStarterGallery} className="flex-shrink-0">
                       <img src={stGalleryCard} alt="Welcome to Greenfly" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
                     </button>
