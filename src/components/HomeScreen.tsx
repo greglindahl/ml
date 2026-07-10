@@ -45,6 +45,11 @@ const DEFAULT_ACTIVITY_MODULES: ToggleItem[] = [
   { id: "recent-requests", label: "Recent Requests", visible: true },
 ];
 
+// Activity modules that may share a row (two-up). Recent Activity is
+// intentionally absent — it always needs the full width. Add future compact
+// modules (e.g. Engage Campaigns, Workflows) here and to the defaults above.
+const COMPACT_ACTIVITY_MODULES = new Set(["recent-connect-jobs", "recent-requests"]);
+
 function loadPersistedList<T>(key: string, fallback: T[]): T[] {
   if (typeof window === "undefined") return fallback;
   const raw = window.localStorage.getItem(key);
@@ -327,27 +332,31 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery }: HomeScree
   const isOnboardingVisible = onboardingModules.find((m) => m.id === "get-started")?.visible ?? false;
   const visibleRecentMediaModules = recentMediaModules.filter((m) => m.visible);
 
-  // Group visible activity modules into layout blocks: Recent Connect Jobs and
-  // Recent Requests pair up side-by-side (a lone survivor takes the full row),
-  // while Recent Activity always renders as its own full-width block.
+  // Group visible activity modules into layout blocks. Modules in
+  // COMPACT_ACTIVITY_MODULES pair up side-by-side: each consecutive run of
+  // them chunks into rows of two, and an odd one out takes the full row.
+  // Everything else (Recent Activity) always renders as its own full-width
+  // block, wherever the user places it.
   const activityBlocks: { key: string; ids: string[] }[] = [];
   {
     let pairBuffer: string[] = [];
-    const flushPair = () => {
-      if (pairBuffer.length === 0) return;
-      activityBlocks.push({ key: pairBuffer.join("-"), ids: pairBuffer });
+    const flushPairs = () => {
+      for (let i = 0; i < pairBuffer.length; i += 2) {
+        const ids = pairBuffer.slice(i, i + 2);
+        activityBlocks.push({ key: ids.join("-"), ids });
+      }
       pairBuffer = [];
     };
     for (const m of activityModules) {
       if (!m.visible) continue;
-      if (m.id === "recent-connect-jobs" || m.id === "recent-requests") {
+      if (COMPACT_ACTIVITY_MODULES.has(m.id)) {
         pairBuffer.push(m.id);
       } else {
-        flushPair();
+        flushPairs();
         activityBlocks.push({ key: m.id, ids: [m.id] });
       }
     }
-    flushPair();
+    flushPairs();
   }
 
   return (
