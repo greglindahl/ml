@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { LeftNav, Screen } from "@/components/LeftNav";
 import { ContentScreen } from "@/components/ContentScreen";
+import { HomeViewAllTarget } from "@/components/HomeScreen";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu, User } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -20,6 +21,9 @@ const Index = () => {
   // Folder/gallery id for Library to open on its next mount (e.g. deep-linked from Home).
   // Cleared right after Library mounts — LibraryScreen only reads it once, as a useState initializer.
   const [pendingLibraryFolderId, setPendingLibraryFolderId] = useState<string | null>(null);
+  // Same consume-once pattern for tab deep-links from Home's View All buttons.
+  const [pendingLibraryTab, setPendingLibraryTab] = useState<string | null>(null);
+  const [pendingStatsTab, setPendingStatsTab] = useState<string | null>(null);
 
   // Persist the desktop nav expanded/collapsed preference across sessions.
   useEffect(() => {
@@ -59,12 +63,45 @@ const Index = () => {
     setActiveScreen("library");
   }, []);
 
-  // Consume the pending id once Library has mounted with it.
+  const handleViewAll = useCallback((target: HomeViewAllTarget) => {
+    switch (target) {
+      case "recent-assets":
+        setPendingLibraryTab("assets");
+        setActiveScreen("library");
+        break;
+      case "recent-galleries":
+        setPendingLibraryTab("galleries");
+        setActiveScreen("library");
+        break;
+      case "recent-activity":
+        setPendingStatsTab("activity");
+        setActiveScreen("stats");
+        break;
+      case "recent-connect-jobs":
+        setActiveScreen("connect");
+        break;
+      case "recent-requests":
+        setActiveScreen("requests");
+        break;
+    }
+  }, []);
+
+  // Consume the pending deep-link values once their screen has mounted with them.
   useEffect(() => {
     if (pendingLibraryFolderId) {
       setPendingLibraryFolderId(null);
     }
   }, [pendingLibraryFolderId]);
+  useEffect(() => {
+    if (pendingLibraryTab) {
+      setPendingLibraryTab(null);
+    }
+  }, [pendingLibraryTab]);
+  useEffect(() => {
+    if (pendingStatsTab) {
+      setPendingStatsTab(null);
+    }
+  }, [pendingStatsTab]);
 
   return (
     <div className="flex min-h-screen w-full">
@@ -102,7 +139,10 @@ const Index = () => {
         screen={activeScreen}
         isMobile={isMobile}
         initialLibraryFolderId={pendingLibraryFolderId ?? undefined}
+        initialLibraryTab={pendingLibraryTab ?? undefined}
+        initialStatsTab={pendingStatsTab ?? undefined}
         onOpenStarterGallery={handleOpenStarterGallery}
+        onViewAll={handleViewAll}
       />
     </div>
   );

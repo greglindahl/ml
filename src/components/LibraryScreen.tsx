@@ -97,10 +97,12 @@ interface LibraryScreenProps {
   isMobile?: boolean;
   /** Folder/gallery id to open immediately on mount (e.g. deep-linked from another screen). Defaults to "all". */
   initialActiveFolder?: string;
+  /** Tab to open on mount (e.g. "galleries" when deep-linked from Home). Defaults to "assets". */
+  initialActiveTab?: string;
 }
 
-export function LibraryScreen({ isMobile = false, initialActiveFolder }: LibraryScreenProps) {
-  const [activeTab, setActiveTab] = useState("assets");
+export function LibraryScreen({ isMobile = false, initialActiveFolder, initialActiveTab }: LibraryScreenProps) {
+  const [activeTab, setActiveTab] = useState(initialActiveTab ?? "assets");
   const [isFolderSidebarExpanded, setIsFolderSidebarExpanded] = useState(false);
   const [activeFolder, setActiveFolder] = useState(initialActiveFolder ?? "all");
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());

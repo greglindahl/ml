@@ -12,9 +12,18 @@ import stAssetOne from "@/assets/st-asset-one.svg";
 import stAssetTwo from "@/assets/st-asset-two.svg";
 import stAssetThree from "@/assets/st-asset-three.svg";
 
+export type HomeViewAllTarget =
+  | "recent-assets"
+  | "recent-galleries"
+  | "recent-activity"
+  | "recent-connect-jobs"
+  | "recent-requests";
+
 interface HomeScreenProps {
   isMobile?: boolean;
   onOpenStarterGallery?: () => void;
+  /** Called when a module's "View All" is clicked; the owner navigates to the matching screen. */
+  onViewAll?: (target: HomeViewAllTarget) => void;
 }
 
 const QUICK_ACTIONS_KEY = "homeQuickActions";
@@ -154,22 +163,22 @@ const RECENT_REQUESTS: TwoLineItem[] = [
   { id: "request-4", icon: "bi-camera-fill", description: "Amber Johnson (Admin) created a post to social request [Name]", subLabel: "03/15/2025, 2:30 PM" },
 ];
 
-function SectionHeader({ title, size = "lg" }: { title: string; size?: "lg" | "md" }) {
+function SectionHeader({ title, size = "lg", onViewAll }: { title: string; size?: "lg" | "md"; onViewAll?: () => void }) {
   return (
     <div className="flex items-center justify-between">
       <h2 className={size === "lg" ? "text-[20px] font-medium text-black tracking-tight" : "text-[15px] font-medium text-black tracking-tight"}>
         {title}
       </h2>
-      <Button variant="link" className="h-auto p-0 text-[15px]">
+      <Button variant="link" className="h-auto p-0 text-[15px]" onClick={onViewAll}>
         View All
       </Button>
     </div>
   );
 }
 
-function ActivityCard({ title, icon, iconBg, iconColor, children }: { title: string; icon: string; iconBg: string; iconColor: string; children: ReactNode }) {
+function ActivityCard({ title, icon, iconBg, iconColor, onViewAll, children }: { title: string; icon: string; iconBg: string; iconColor: string; onViewAll?: () => void; children: ReactNode }) {
   return (
-    <div className="bg-white border border-gray-300 rounded-lg p-6 flex flex-col gap-3">
+    <div className="h-full bg-white border border-gray-300 rounded-lg p-6 flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0" style={{ backgroundColor: iconBg }}>
@@ -177,7 +186,7 @@ function ActivityCard({ title, icon, iconBg, iconColor, children }: { title: str
           </span>
           <h2 className="text-[20px] font-medium text-black tracking-tight">{title}</h2>
         </div>
-        <Button variant="link" className="h-auto p-0 text-[15px]">
+        <Button variant="link" className="h-auto p-0 text-[15px]" onClick={onViewAll}>
           View All
         </Button>
       </div>
@@ -218,15 +227,12 @@ function ActivityTable({ items }: { items: ActivityItem[] }) {
   );
 }
 
-function TwoLineTable({ items, columnLabel, dateLabel, iconBg, iconColor }: { items: TwoLineItem[]; columnLabel: string; dateLabel: string; iconBg: string; iconColor: string }) {
+function TwoLineTable({ items, columnLabel, iconBg, iconColor }: { items: TwoLineItem[]; columnLabel: string; iconBg: string; iconColor: string }) {
   return (
     <div className="w-full">
       <div className="flex bg-gray-100 border border-gray-300 rounded-t-lg h-12">
         <div className="flex-1 flex items-center px-6">
           <span className="text-[11px] font-bold uppercase tracking-wide text-gray-600">{columnLabel}</span>
-        </div>
-        <div className="w-[180px] flex items-center px-6">
-          <span className="text-[11px] font-bold uppercase tracking-wide text-gray-600">{dateLabel}</span>
         </div>
       </div>
       {items.map((item, i) => (
@@ -247,24 +253,24 @@ function TwoLineTable({ items, columnLabel, dateLabel, iconBg, iconColor }: { it
   );
 }
 
-function renderActivityModule(id: string) {
+function renderActivityModule(id: string, onViewAll?: (target: HomeViewAllTarget) => void) {
   switch (id) {
     case "recent-activity":
       return (
-        <ActivityCard title="Recent Activity" icon="bi-activity" iconBg="#d5e5fa" iconColor="text-accent-blue">
+        <ActivityCard title="Recent Activity" icon="bi-activity" iconBg="#d5e5fa" iconColor="text-accent-blue" onViewAll={() => onViewAll?.("recent-activity")}>
           <ActivityTable items={RECENT_ACTIVITY} />
         </ActivityCard>
       );
     case "recent-connect-jobs":
       return (
-        <ActivityCard title="Recent Connect Jobs" icon="bi-gear" iconBg="#d7eff6" iconColor="text-accent-cyan">
-          <TwoLineTable items={CONNECT_JOBS} columnLabel="Activity" dateLabel="Date" iconBg="#d7eff6" iconColor="text-accent-cyan" />
+        <ActivityCard title="Recent Connect Jobs" icon="bi-gear" iconBg="#d7eff6" iconColor="text-accent-cyan" onViewAll={() => onViewAll?.("recent-connect-jobs")}>
+          <TwoLineTable items={CONNECT_JOBS} columnLabel="Activity" iconBg="#d7eff6" iconColor="text-accent-cyan" />
         </ActivityCard>
       );
     case "recent-requests":
       return (
-        <ActivityCard title="Recent Requests" icon="bi-camera" iconBg="#e3cbe9" iconColor="text-accent-purple">
-          <TwoLineTable items={RECENT_REQUESTS} columnLabel="Request" dateLabel="Last Updated Date" iconBg="#e3cbe9" iconColor="text-accent-purple" />
+        <ActivityCard title="Recent Requests" icon="bi-camera" iconBg="#e3cbe9" iconColor="text-accent-purple" onViewAll={() => onViewAll?.("recent-requests")}>
+          <TwoLineTable items={RECENT_REQUESTS} columnLabel="Request" iconBg="#e3cbe9" iconColor="text-accent-purple" />
         </ActivityCard>
       );
     default:
@@ -272,7 +278,7 @@ function renderActivityModule(id: string) {
   }
 }
 
-export function HomeScreen({ isMobile = false, onOpenStarterGallery }: HomeScreenProps) {
+export function HomeScreen({ isMobile = false, onOpenStarterGallery, onViewAll }: HomeScreenProps) {
   const [viewingAssetId, setViewingAssetId] = useState<string | null>(null);
 
   const viewingAssetIndex = useMemo(
@@ -366,17 +372,24 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery }: HomeScree
       <div className="px-6 md:px-9 flex flex-col gap-8">
         <div className="flex items-center justify-between gap-6">
           <h1 className="text-[26px] font-medium text-black tracking-tight">Welcome</h1>
-          <Button variant="primary-outline" onClick={handleOpenCustomize}>
-            Customize
-          </Button>
+          {visibleQuickActions.length === 0 && (
+            <Button variant="primary-outline" onClick={handleOpenCustomize}>
+              Customize
+            </Button>
+          )}
         </div>
 
         {/* Quick Actions */}
         {visibleQuickActions.length > 0 && (
           <section className="flex flex-col gap-6">
-            <div className="flex flex-col gap-1.5">
-              <h2 className="text-[20px] font-medium text-black tracking-tight">Quick Actions</h2>
-              <p className="text-[17px] text-black">Quickly start an upload, create a gallery, or add a user.</p>
+            <div className="flex items-start justify-between gap-6">
+              <div className="flex flex-col gap-1.5">
+                <h2 className="text-[20px] font-medium text-black tracking-tight">Quick Actions</h2>
+                <p className="text-[17px] text-black">Quickly start an upload, create a gallery, or add a user.</p>
+              </div>
+              <Button variant="primary-outline" onClick={handleOpenCustomize}>
+                Customize
+              </Button>
             </div>
             <div className="flex gap-6 flex-wrap">
               {visibleQuickActions.map((action) => (
@@ -438,7 +451,7 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery }: HomeScree
           if (module.id === "recent-assets") {
             return (
               <section key={module.id} className="flex flex-col gap-3">
-                <SectionHeader title="Recent Assets" />
+                <SectionHeader title="Recent Assets" onViewAll={() => onViewAll?.("recent-assets")} />
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                   {RECENT_ASSETS.map((asset) => (
                     <div key={asset.id} onClick={() => setViewingAssetId(asset.id)}>
@@ -463,7 +476,7 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery }: HomeScree
           if (module.id === "recent-galleries") {
             return (
               <section key={module.id} className="flex flex-col gap-3">
-                <SectionHeader title="Recent Galleries" />
+                <SectionHeader title="Recent Galleries" onViewAll={() => onViewAll?.("recent-galleries")} />
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
                   {RECENT_GALLERIES.map((gallery) => (
                     <GalleryCard
@@ -494,11 +507,11 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery }: HomeScree
           block.ids.length === 2 ? (
             <div key={block.key} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {block.ids.map((id) => (
-                <div key={id}>{renderActivityModule(id)}</div>
+                <div key={id}>{renderActivityModule(id, onViewAll)}</div>
               ))}
             </div>
           ) : (
-            <div key={block.key}>{renderActivityModule(block.ids[0])}</div>
+            <div key={block.key}>{renderActivityModule(block.ids[0], onViewAll)}</div>
           )
         )}
       </div>
