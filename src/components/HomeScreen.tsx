@@ -32,9 +32,9 @@ const RECENT_MEDIA_MODULES_KEY = "homeRecentMediaModules";
 const ACTIVITY_MODULES_KEY = "homeActivityModules";
 
 const DEFAULT_QUICK_ACTIONS: QuickActionItem[] = [
-  { id: "upload", label: "Upload", icon: "bi-cloud-upload", visible: true },
-  { id: "new-gallery", label: "New Gallery", icon: "bi-images", visible: true },
-  { id: "add-user", label: "Add User", icon: "bi-person-plus", visible: true },
+  { id: "upload", label: "Upload", icon: "bi-upload", visible: true },
+  { id: "new-gallery", label: "New Gallery", icon: "bi-image", visible: true },
+  { id: "add-user", label: "Add User", icon: "bi-person-add", visible: true },
   { id: "uploads", label: "Uploads", icon: "bi-cloud-arrow-up", visible: true },
   { id: "favorites", label: "Favorites", icon: "bi-heart", visible: true },
 ];
@@ -291,7 +291,12 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery, onViewAll }
   // toggling/reordering in the drawer previews instantly behind it. Opening the
   // drawer snapshots the committed state; Cancel restores it, Save persists it.
   const [quickActions, setQuickActions] = useState<QuickActionItem[]>(() =>
-    loadPersistedList(QUICK_ACTIONS_KEY, DEFAULT_QUICK_ACTIONS)
+    // Icons always come from the defaults — localStorage only decides order
+    // and visibility, so icon changes in code reach users with saved lists.
+    loadPersistedList(QUICK_ACTIONS_KEY, DEFAULT_QUICK_ACTIONS).map((item) => ({
+      ...item,
+      icon: DEFAULT_QUICK_ACTIONS.find((d) => d.id === item.id)?.icon ?? item.icon,
+    }))
   );
   const [onboardingModules, setOnboardingModules] = useState<ToggleItem[]>(() =>
     loadPersistedList(ONBOARDING_MODULES_KEY, DEFAULT_ONBOARDING_MODULES)
