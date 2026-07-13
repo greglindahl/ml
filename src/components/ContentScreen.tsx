@@ -1,47 +1,35 @@
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { Link } from "react-router-dom";
 import { Screen } from "./LeftNav";
+import { HomeScreen, HomeViewAllTarget } from "./HomeScreen";
 import { LibraryScreen } from "./LibraryScreen";
 import { EngageScreen } from "./EngageScreen";
 import { ConnectScreen } from "./ConnectScreen";
 import { RequestsScreen } from "./RequestsScreen";
 import { StatsScreen } from "./StatsScreen";
 import { AdminScreen } from "./AdminScreen";
-import { Button } from "./ui/button";
 
 interface ContentScreenProps {
   screen: Screen;
-  history: Screen[];
-  onBack: () => void;
   isMobile?: boolean;
+  /** Gallery/folder id Library should open on mount (e.g. the Starter Gallery deep-linked from Home). */
+  initialLibraryFolderId?: string;
+  /** Tab Library should open on mount (e.g. "galleries" via Home's View All). */
+  initialLibraryTab?: string;
+  /** Tab Insights should open on mount (e.g. "activity" via Home's View All). */
+  initialStatsTab?: string;
+  onOpenStarterGallery?: () => void;
+  onViewAll?: (target: HomeViewAllTarget) => void;
 }
 
-const screenTitles: Record<Screen, string> = {
-  home: "Home",
-  library: "Library",
-  network: "Network",
-  connect: "Connect",
-  engage: "Engage",
-  requests: "Requests",
-  stats: "Insights",
-};
-
-const screenDescriptions: Record<Screen, string> = {
-  home: "Dashboard overview and quick actions",
-  library: "Your content library and media files",
-  network: "Manage your network and members",
-  connect: "Integrations and connected services",
-  engage: "Customer engagement and conversations",
-  requests: "Content requests and campaigns",
-  stats: "Analytics and performance metrics",
-};
-
-export function ContentScreen({ screen, history, onBack, isMobile = false }: ContentScreenProps) {
-  const canGoBack = history.length > 1;
+export function ContentScreen({ screen, isMobile = false, initialLibraryFolderId, initialLibraryTab, initialStatsTab, onOpenStarterGallery, onViewAll }: ContentScreenProps) {
+  // Home has its own dedicated screen
+  if (screen === "home") {
+    return <HomeScreen isMobile={isMobile} onOpenStarterGallery={onOpenStarterGallery} onViewAll={onViewAll} />;
+  }
 
   // Library has its own dedicated screen with secondary nav
   if (screen === "library") {
-    return <LibraryScreen isMobile={isMobile} />;
+    return <LibraryScreen isMobile={isMobile} initialActiveFolder={initialLibraryFolderId} initialActiveTab={initialLibraryTab} />;
   }
 
   // Engage has its own dedicated screen with tabs
@@ -61,7 +49,7 @@ export function ContentScreen({ screen, history, onBack, isMobile = false }: Con
 
   // Stats has its own dedicated screen with tabs
   if (screen === "stats") {
-    return <StatsScreen isMobile={isMobile} />;
+    return <StatsScreen isMobile={isMobile} initialTab={initialStatsTab} />;
   }
 
   // Network has its own dedicated screen with tabs
@@ -69,77 +57,6 @@ export function ContentScreen({ screen, history, onBack, isMobile = false }: Con
     return <AdminScreen isMobile={isMobile} />;
   }
 
-  return (
-    <div className={`flex-1 bg-background px-6 md:px-9 pb-12 ${isMobile ? "pt-[58px]" : "pt-20"}`}>
-      {/* Back button */}
-      {canGoBack && screen !== "home" && (
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        >
-          <i className="bi bi-arrow-left w-4 h-4 inline-flex items-center justify-center leading-none" />
-          <span className="text-sm">Back</span>
-        </button>
-      )}
-
-      {/* Lo-fi content placeholder */}
-      <div className="border-2 border-dashed border-border rounded-lg p-8 max-w-2xl">
-        <div className="space-y-4">
-          {/* Title placeholder */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-muted rounded" />
-            <div>
-              <h1 className="text-xl font-medium">{screenTitles[screen]}</h1>
-              <p className="text-sm text-muted-foreground">
-                {screenDescriptions[screen]}
-              </p>
-            </div>
-          </div>
-
-          {/* Content placeholders */}
-          <div className="pt-6 space-y-3">
-            <div className="h-4 bg-muted rounded w-3/4" />
-            <div className="h-4 bg-muted rounded w-1/2" />
-            <div className="h-4 bg-muted rounded w-2/3" />
-          </div>
-
-          {/* Card placeholders */}
-          <div className="pt-6 grid grid-cols-2 gap-4">
-            <div className="h-24 bg-muted rounded border" />
-            <div className="h-24 bg-muted rounded border" />
-            <div className="h-24 bg-muted rounded border" />
-            <div className="h-24 bg-muted rounded border" />
-          </div>
-
-          {/* Action placeholder */}
-          <div className="pt-6 flex gap-3">
-            <div className="h-9 w-24 bg-muted rounded border" />
-            <div className="h-9 w-24 bg-muted/50 rounded border border-dashed" />
-          </div>
-
-          {/* Dev Spec link - hidden for now */}
-          {/* {screen === "home" && (
-            <div className="pt-8 border-t border-border mt-8">
-              <Link to="/dev-spec">
-                <Button variant="outline" className="gap-2">
-                  <FileCode className="w-4 h-4" />
-                  View Developer Spec
-                </Button>
-              </Link>
-            </div>
-          )} */}
-        </div>
-      </div>
-
-      {/* Screen indicator - hidden for now */}
-      {/* <div className="mt-8 text-xs text-muted-foreground">
-        Current screen: <span className="font-mono">{screen}</span>
-        {history.length > 1 && (
-          <span className="ml-4">
-            History: {history.map((s) => screenTitles[s]).join(" → ")}
-          </span>
-        )}
-      </div> */}
-    </div>
-  );
+  const exhaustiveCheck: never = screen;
+  throw new Error(`Unhandled screen: ${exhaustiveCheck}`);
 }

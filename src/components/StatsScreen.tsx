@@ -2,9 +2,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface StatsScreenProps {
   isMobile?: boolean;
+  /** Tab to open on mount (e.g. "activity" when deep-linked from Home). Defaults to "overview". */
+  initialTab?: string;
 }
 
-export function StatsScreen({ isMobile = false }: StatsScreenProps) {
+export function StatsScreen({ isMobile = false, initialTab }: StatsScreenProps) {
   return (
     <div className={`flex-1 flex flex-col pb-12 ${isMobile ? "pt-[58px]" : ""}`}>
       {/* Spacer for consistent header position - matches LibraryScreen */}
@@ -15,7 +17,7 @@ export function StatsScreen({ isMobile = false }: StatsScreenProps) {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="overview" className="flex-1 flex flex-col px-6 md:px-9">
+      <Tabs defaultValue={initialTab ?? "overview"} className="flex-1 flex flex-col px-6 md:px-9">
         <div className="border-b">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>

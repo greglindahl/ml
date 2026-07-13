@@ -1,5 +1,23 @@
 // Mock library data for realistic search testing
 import Fuse from 'fuse.js';
+import starterAsset1 from "@/assets/starter-gallery/1.svg";
+import starterAsset2 from "@/assets/starter-gallery/2.svg";
+import starterAsset3 from "@/assets/starter-gallery/3.svg";
+import starterAsset4 from "@/assets/starter-gallery/4.svg";
+import starterAsset5 from "@/assets/starter-gallery/5.svg";
+import starterAsset6 from "@/assets/starter-gallery/6.svg";
+import starterAsset7 from "@/assets/starter-gallery/7.svg";
+import starterAsset8 from "@/assets/starter-gallery/8.svg";
+import starterAsset9 from "@/assets/starter-gallery/9.svg";
+import starterAsset10 from "@/assets/starter-gallery/10.svg";
+import starterAsset11 from "@/assets/starter-gallery/11.svg";
+import starterAsset12 from "@/assets/starter-gallery/12.svg";
+import starterAsset13 from "@/assets/starter-gallery/13.svg";
+import starterAsset14 from "@/assets/starter-gallery/14.svg";
+import starterAsset15 from "@/assets/starter-gallery/15.svg";
+import starterAsset19 from "@/assets/starter-gallery/19.svg";
+import starterAsset20 from "@/assets/starter-gallery/20.svg";
+import starterAsset21 from "@/assets/starter-gallery/21.svg";
 
 export interface TagInfo {
   value: string;
@@ -628,7 +646,7 @@ const folderIds = [
 ];
 
 // Generate 80 mock assets with good distribution of tags
-export const mockLibraryAssets: LibraryAsset[] = (() => {
+const generatedLibraryAssets: LibraryAsset[] = (() => {
   // Use a simple seeded random for consistent results
   let seed = 12345;
   const seededRandom = () => {
@@ -744,6 +762,40 @@ export const mockLibraryAssets: LibraryAsset[] = (() => {
     };
   });
 })();
+
+// The Starter Gallery's 18 curated tour assets — fixed, not part of the generated pool,
+// since they're specific onboarding illustrations rather than searchable library content.
+const starterGalleryAssets: LibraryAsset[] = [
+  starterAsset1, starterAsset2, starterAsset3, starterAsset4, starterAsset5,
+  starterAsset6, starterAsset7, starterAsset8, starterAsset9, starterAsset10,
+  starterAsset11, starterAsset12, starterAsset13, starterAsset14, starterAsset15,
+  starterAsset19, starterAsset20, starterAsset21,
+].map((thumbnailUrl, i) => ({
+  id: `starter-gallery-asset-${i + 1}`,
+  name: `Starter Gallery Asset ${i + 1}`,
+  creator: "Greenfly",
+  creatorId: "greenfly",
+  type: "image",
+  dateCreated: new Date(2026, 0, 1),
+  captureDate: new Date(2026, 0, 1),
+  aspectRatio: "1:1",
+  status: "approved",
+  tags: ["Starter Gallery"],
+  fileSize: "1.2 MB",
+  dimensions: "2048x2048",
+  folderId: "starter-gallery",
+  thumbnailUrl,
+  downloads: 0,
+  shares: 0,
+  galleries: 0,
+  viewers: 0,
+  publicViews: 0,
+  publicDownloads: 0,
+  favorites: 0,
+  lastDownloadDate: null,
+}));
+
+export const mockLibraryAssets: LibraryAsset[] = [...generatedLibraryAssets, ...starterGalleryAssets];
 
 // Helper to get relative time string
 export function getRelativeTime(date: Date): string {

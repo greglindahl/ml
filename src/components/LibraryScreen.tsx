@@ -95,12 +95,16 @@ function computeFilterCounts(assets: LibraryAsset[]) {
 
 interface LibraryScreenProps {
   isMobile?: boolean;
+  /** Folder/gallery id to open immediately on mount (e.g. deep-linked from another screen). Defaults to "all". */
+  initialActiveFolder?: string;
+  /** Tab to open on mount (e.g. "galleries" when deep-linked from Home). Defaults to "assets". */
+  initialActiveTab?: string;
 }
 
-export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
-  const [activeTab, setActiveTab] = useState("assets");
+export function LibraryScreen({ isMobile = false, initialActiveFolder, initialActiveTab }: LibraryScreenProps) {
+  const [activeTab, setActiveTab] = useState(initialActiveTab ?? "assets");
   const [isFolderSidebarExpanded, setIsFolderSidebarExpanded] = useState(false);
-  const [activeFolder, setActiveFolder] = useState("all");
+  const [activeFolder, setActiveFolder] = useState(initialActiveFolder ?? "all");
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [assetsViewMode, setAssetsViewMode] = useState<"grid" | "list">("grid");
   const [galleriesViewMode, setGalleriesViewMode] = useState<"grid" | "list">("grid");
@@ -116,6 +120,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
   const [archivedFoldersOnly, setArchivedFoldersOnly] = useState(false);
   const [folderViewMode, setFolderViewMode] = useState<"grid" | "table">("grid");
   const [archivedGalleriesOnly, setArchivedGalleriesOnly] = useState(false);
+  const [unsortedGalleriesOnly, setUnsortedGalleriesOnly] = useState(false);
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
   const [viewingAssetId, setViewingAssetId] = useState<string | null>(null);
 
@@ -1091,6 +1096,7 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   if (checked) setSelectedAssets(new Set(sortedResults.map(a => a.id)));
                   else setSelectedAssets(new Set());
                 }}
+                onOpenAsset={handleViewAsset}
                 perPage={assetPerPage}
                 columnVisibility={assetColumnVisibility}
               />
@@ -1238,6 +1244,8 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
             {/* Filter Row */}
             <div className="mb-3">
               <GalleryFilterBar
+                isUnsortedActive={unsortedGalleriesOnly}
+                onUnsortedToggle={setUnsortedGalleriesOnly}
                 isArchivedActive={archivedGalleriesOnly}
                 onArchivedToggle={setArchivedGalleriesOnly}
                 onOpenFiltersSheet={() => setGalleriesFiltersSheetOpen(true)}
@@ -1332,7 +1340,15 @@ export function LibraryScreen({ isMobile = false }: LibraryScreenProps) {
                   {galleryList.filter(g => {
                     const treeItem = findFolderById(folderTree, g.id);
                     const isArchived = treeItem?.archived === true;
-                    return archivedGalleriesOnly ? isArchived : !isArchived;
+                    if (archivedGalleriesOnly ? !isArchived : isArchived) return false;
+                    if (unsortedGalleriesOnly) {
+                      // Unsorted = not inside any real folder ("All Media" doesn't
+                      // count, matching getGalleryLocationDisplay's semantics)
+                      const path = findGalleryParentPath(g.id, folderTree);
+                      const inFolder = path !== null && path.some(p => p !== "All Media");
+                      if (inFolder) return false;
+                    }
+                    return true;
                   }).map((gallery) => {
                     const isSelected = selectedGalleries.has(gallery.id);
                     const isGalleryArchived = findFolderById(folderTree, gallery.id)?.archived === true;

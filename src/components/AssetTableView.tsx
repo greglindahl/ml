@@ -49,6 +49,8 @@ interface AssetTableViewProps {
   selectedAssets?: Set<string>;
   onSelectAsset?: (assetId: string, checked: boolean) => void;
   onSelectAll?: (checked: boolean) => void;
+  /** Opens the asset detail modal for this asset. When in bulk-select mode, row clicks toggle selection instead. */
+  onOpenAsset?: (assetId: string) => void;
   /** Controlled perPage value */
   perPage: number;
   /** Controlled column visibility */
@@ -91,6 +93,7 @@ export function AssetTableView({
   selectedAssets: externalSelected,
   onSelectAsset: externalSelectAsset,
   onSelectAll: externalSelectAll,
+  onOpenAsset,
   perPage,
   columnVisibility,
 }: AssetTableViewProps) {
@@ -282,12 +285,21 @@ export function AssetTableView({
           </TableHeader>
           <TableBody>
             {paginatedAssets.map((asset) => (
-            <TableRow 
+            <TableRow
               key={asset.id}
               data-state={selectedAssets.has(asset.id) ? "selected" : undefined}
+              className={onOpenAsset ? "cursor-pointer" : undefined}
+              onClick={() => {
+                if (!onOpenAsset) return;
+                if (selectedAssets.size > 0) {
+                  handleSelectAsset(asset.id, !selectedAssets.has(asset.id));
+                } else {
+                  onOpenAsset(asset.id);
+                }
+              }}
             >
               {/* Checkbox */}
-              <TableCell>
+              <TableCell onClick={(e) => e.stopPropagation()}>
                 <Checkbox
                   checked={selectedAssets.has(asset.id)}
                   onCheckedChange={(checked) => handleSelectAsset(asset.id, !!checked)}
@@ -383,7 +395,7 @@ export function AssetTableView({
               )}
 
               {/* Actions Menu */}
-              <TableCell>
+              <TableCell onClick={(e) => e.stopPropagation()}>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -392,7 +404,7 @@ export function AssetTableView({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="bg-popover">
-                    <DropdownMenuItem>View Details</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onOpenAsset?.(asset.id)}>View Details</DropdownMenuItem>
                     <DropdownMenuItem>Download</DropdownMenuItem>
                     <DropdownMenuItem>Share</DropdownMenuItem>
                     <DropdownMenuItem>Add to Gallery</DropdownMenuItem>

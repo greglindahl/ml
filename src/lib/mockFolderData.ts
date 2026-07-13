@@ -1,3 +1,5 @@
+import starterGalleryThumbnail from "@/assets/starter-gallery/1.svg";
+
 export type ItemType = "folder" | "gallery";
 
 export interface FolderItem {
@@ -8,6 +10,8 @@ export interface FolderItem {
   countType?: "folders" | "galleries" | "assets";
   children?: FolderItem[];
   archived?: boolean;
+  /** Overrides the default placeholder thumbnail on the gallery details header. */
+  thumbnailUrl?: string;
 }
 
 // Helper to get all descendant folder/gallery IDs (including self)
@@ -269,6 +273,14 @@ export const folders: FolderItem[] = [
     countType: "assets",
     archived: true,
   },
+  {
+    id: "starter-gallery",
+    name: "Starter Gallery",
+    type: "gallery",
+    count: 18,
+    countType: "assets",
+    thumbnailUrl: starterGalleryThumbnail,
+  },
 ];
 
 export const mockGalleries: Gallery[] = [
@@ -309,6 +321,7 @@ export const mockGalleries: Gallery[] = [
   { id: "media-day-2025", name: "Media Day 2025", assetCount: 56, timeAgo: "3 days ago", thumbnailUrl: "https://picsum.photos/seed/gal35/400/300" },
   { id: "social-media-clips", name: "Social Media Clips", assetCount: 34, timeAgo: "2 days ago", thumbnailUrl: "https://picsum.photos/seed/gal36/400/300" },
   { id: "behind-the-scenes", name: "Behind the Scenes", assetCount: 28, timeAgo: "5 days ago", thumbnailUrl: "https://picsum.photos/seed/gal37/400/300" },
+  { id: "starter-gallery", name: "Starter Gallery", assetCount: 18, timeAgo: "Just now", thumbnailUrl: starterGalleryThumbnail },
 ];
 
 // Collect all gallery IDs that are assigned to any folder in the tree

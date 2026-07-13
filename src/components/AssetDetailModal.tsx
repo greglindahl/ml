@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,7 +7,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import type { LibraryAsset } from "@/lib/mockLibraryData";
 
@@ -25,6 +24,12 @@ interface AssetDetailModalProps {
   onNext: () => void;
 }
 
+function getOrientationLabel(aspectRatio: LibraryAsset["aspectRatio"]) {
+  if (aspectRatio === "9:16") return "Portrait";
+  if (aspectRatio === "1:1") return "Square";
+  return "Landscape";
+}
+
 export function AssetDetailModal({
   open,
   onOpenChange,
@@ -34,6 +39,8 @@ export function AssetDetailModal({
   onPrevious,
   onNext,
 }: AssetDetailModalProps) {
+  const [showDetailsPanel, setShowDetailsPanel] = useState(true);
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "ArrowLeft") {
@@ -50,19 +57,24 @@ export function AssetDetailModal({
   if (!asset) return null;
 
   const formattedDate = asset.dateCreated.toLocaleDateString("en-US", {
-    month: "short",
+    month: "numeric",
     day: "numeric",
     year: "numeric",
+  });
+  const formattedTime = asset.dateCreated.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
   });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-[1200px] w-[95vw] h-[90vh] max-h-[900px] p-0 gap-0 flex flex-col"
+        className="max-w-[1200px] w-[95vw] h-[90vh] max-h-[900px] p-0 gap-0 flex flex-col bg-gray-100"
         onKeyDown={handleKeyDown}
+        hideClose
       >
         {/* Header */}
-        <DialogHeader className="flex-shrink-0 px-4 py-3 border-b flex flex-row items-center justify-between">
+        <DialogHeader className="flex-shrink-0 px-6 py-4 border-b bg-gray-100 flex flex-row items-center justify-between">
           <Button
             variant="ghost"
             size="icon"
@@ -78,23 +90,21 @@ export function AssetDetailModal({
           </DialogDescription>
 
           {/* Pagination */}
-          <div className="flex items-center gap-1">
+          <div className="inline-flex rounded-lg">
             <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-3 text-[13px] text-muted-foreground hover:text-foreground"
+              variant="white"
+              className="rounded-r-none"
               onClick={onPrevious}
               disabled={currentIndex === 0}
             >
               Previous
             </Button>
-            <span className="text-[13px] text-muted-foreground px-2">
+            <span className="h-10 px-4 flex items-center justify-center border-y border-[#D2DDEC] bg-white text-[15px] text-foreground tracking-tight">
               {currentIndex + 1} of {totalAssets}
             </span>
             <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-3 text-[13px] text-muted-foreground hover:text-foreground"
+              variant="white"
+              className="rounded-l-none"
               onClick={onNext}
               disabled={currentIndex === totalAssets - 1}
             >
@@ -102,17 +112,21 @@ export function AssetDetailModal({
             </Button>
           </div>
 
-          {/* Action button */}
-          <Button variant="outline" size="sm" className="h-8 px-3 gap-2">
-            <i className="bi bi-pencil w-3 h-3 inline-flex items-center justify-center leading-none" />
-            Edit
-          </Button>
+          {/* Toggle Details Button */}
+          <button
+            onClick={() => setShowDetailsPanel((prev) => !prev)}
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 transition-colors flex-shrink-0"
+            aria-label="Toggle details panel"
+            aria-pressed={showDetailsPanel}
+          >
+            <i className="bi bi-list-ul text-white text-base" />
+          </button>
         </DialogHeader>
 
         {/* Body */}
-        <div className="flex-1 flex min-h-0 overflow-hidden">
+        <div className="flex-1 flex gap-6 min-h-0 overflow-hidden p-6">
           {/* Image Preview */}
-          <div className="flex-1 bg-black flex items-center justify-center relative min-w-0">
+          <div className="flex-1 bg-black rounded-md flex items-center justify-center relative min-w-0">
             {asset.thumbnailUrl ? (
               <img
                 src={asset.thumbnailUrl}
@@ -126,115 +140,122 @@ export function AssetDetailModal({
             )}
 
             {/* Crop button overlay */}
-            <Button
-              variant="default"
-              size="icon"
-              className="absolute bottom-4 right-4 h-10 w-10 rounded-full bg-primary hover:bg-primary/90"
+            <button
+              className="absolute bottom-6 right-6 w-10 h-10 flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 transition-colors"
+              aria-label="Crop"
             >
-              <i className="bi bi-crop w-4 h-4 inline-flex items-center justify-center leading-none" />
-            </Button>
+              <i className="bi bi-crop text-white text-base" />
+            </button>
           </div>
 
           {/* Details Panel */}
-          <div className="w-[320px] flex-shrink-0 border-l bg-background flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {/* Title Section */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-[13px] font-medium text-muted-foreground uppercase tracking-wide">
-                    Title
-                  </h3>
-                  <button className="text-[13px] text-primary hover:underline">
-                    Edit Fields
-                  </button>
-                </div>
-                <p className="text-[15px] text-foreground">{asset.name}</p>
-              </div>
-
-              {/* Description Section */}
-              <div>
-                <h3 className="text-[13px] font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                  Description
-                </h3>
-                <p className="text-[15px] text-muted-foreground italic">
-                  No description added
-                </p>
-              </div>
-
-              {/* Tags Section */}
-              <div>
-                <h3 className="text-[13px] font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                  Tags
-                </h3>
-                {asset.tags.length > 0 ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    {asset.tags.map((tag, index) => (
-                      <Badge
-                        key={index}
-                        colorStyle="primary"
-                        theme="soft"
-                        shape="rounded"
-                        className="text-[13px] normal-case tracking-normal font-normal"
-                      >
-                        {tag}
-                      </Badge>
-                    ))}
+          {showDetailsPanel && (
+            <div className="w-[300px] flex-shrink-0 border border-gray-300 rounded-md bg-white flex flex-col overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {/* Title Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-[15px] font-bold text-black tracking-tight">
+                      Title
+                    </h3>
+                    <button className="flex items-center gap-1 text-[15px] text-primary hover:underline">
+                      <i className="bi bi-pencil text-sm" />
+                      Edit Fields
+                    </button>
                   </div>
-                ) : (
-                  <p className="text-[15px] text-muted-foreground italic">
-                    No tags added
-                  </p>
-                )}
-              </div>
+                  <p className="text-[13px] text-gray-600">{asset.name}</p>
+                </div>
 
-              {/* Galleries Section */}
-              <div>
-                <h3 className="text-[13px] font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                  Galleries
-                </h3>
-                {asset.galleries > 0 ? (
-                  <button className="text-[15px] text-primary hover:underline">
-                    {asset.galleries} {asset.galleries === 1 ? "gallery" : "galleries"}
-                  </button>
-                ) : (
-                  <p className="text-[15px] text-muted-foreground italic">
-                    Not in any galleries
+                <div className="h-px bg-gray-300" />
+
+                {/* Description Section */}
+                <div>
+                  <h3 className="text-[15px] font-bold text-black tracking-tight mb-2">
+                    Description
+                  </h3>
+                  <p className="text-[13px] text-gray-600 italic">
+                    No description added
                   </p>
-                )}
+                </div>
+
+                <div className="h-px bg-gray-300" />
+
+                {/* Tags Section */}
+                <div>
+                  <h3 className="text-[15px] font-bold text-black tracking-tight mb-2">
+                    Tags
+                  </h3>
+                  {asset.tags.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {asset.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="bg-[#e5e6eb] text-gray-700 text-[10px] font-medium tracking-tight px-2 py-0.5 rounded"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[13px] text-gray-600 italic">
+                      No tags added
+                    </p>
+                  )}
+                </div>
+
+                <div className="h-px bg-gray-300" />
+
+                {/* Galleries Section */}
+                <div>
+                  <h3 className="text-[15px] font-bold text-black tracking-tight mb-2">
+                    Galleries
+                  </h3>
+                  {asset.galleries > 0 ? (
+                    <button className="text-[13px] text-primary hover:underline">
+                      {asset.galleries} {asset.galleries === 1 ? "gallery" : "galleries"}
+                    </button>
+                  ) : (
+                    <p className="text-[13px] text-gray-600 italic">
+                      Not in any galleries
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Footer */}
-        <div className="flex-shrink-0 px-4 py-3 border-t flex items-center justify-between">
+        <div className="flex-shrink-0 px-6 py-4 border-t bg-gray-100 flex items-end justify-between">
           {/* Action Buttons */}
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <i className="bi bi-download w-4 h-4 inline-flex items-center justify-center leading-none" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <i className="bi bi-share w-4 h-4 inline-flex items-center justify-center leading-none" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <i className="bi bi-heart w-4 h-4 inline-flex items-center justify-center leading-none" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <i className="bi bi-folder-plus w-4 h-4 inline-flex items-center justify-center leading-none" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <i className="bi bi-three-dots w-4 h-4 inline-flex items-center justify-center leading-none" />
-            </Button>
+          <div className="flex items-center gap-1.5">
+            <button className="h-10 w-10 flex items-center justify-center bg-white border border-gray-300 rounded-md hover:bg-gray-100 transition-colors">
+              <i className="bi bi-download text-base" />
+            </button>
+            <button className="h-10 w-10 flex items-center justify-center bg-white border border-gray-300 rounded-md hover:bg-gray-100 transition-colors">
+              <i className="bi bi-share text-base" />
+            </button>
+            <button className="h-10 w-10 flex items-center justify-center bg-white border border-gray-300 rounded-md hover:bg-gray-100 transition-colors">
+              <i className="bi bi-heart text-base" />
+            </button>
+            <button className="h-10 w-10 flex items-center justify-center bg-white border border-gray-300 rounded-md hover:bg-gray-100 transition-colors">
+              <i className="bi bi-folder-plus text-base" />
+            </button>
+            <button className="h-10 w-10 flex items-center justify-center hover:bg-gray-200 rounded-md transition-colors">
+              <i className="bi bi-three-dots text-base" />
+            </button>
           </div>
 
           {/* Metadata */}
-          <div className="flex items-center gap-4 text-[13px] text-muted-foreground">
-            <span>{asset.aspectRatio}</span>
-            {asset.dimensions && <span>{asset.dimensions}</span>}
-            <span>{asset.fileSize}</span>
-            <span>ID: {asset.id.slice(0, 8)}</span>
-            <span>
-              Uploaded by {asset.creator} on {formattedDate}
+          <div className="flex flex-col items-end gap-1.5 text-[13px] text-gray-600">
+            <div className="flex items-center gap-1.5">
+              <i className="bi bi-aspect-ratio text-xs" />
+              <span>
+                {getOrientationLabel(asset.aspectRatio)} | {asset.aspectRatio} | {asset.fileSize} | Asset ID: {asset.id}
+              </span>
+            </div>
+            <span className="italic text-black">
+              Uploaded by {asset.creator} {formattedDate}, {formattedTime}
             </span>
           </div>
         </div>

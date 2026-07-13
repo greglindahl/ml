@@ -25,6 +25,7 @@ import {
 import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleriesDialog";
 import { toast } from "@/hooks/use-toast";
 import { AssetCard, AssetCardState } from "@/components/AssetCard";
+import { AssetDetailModal } from "@/components/AssetDetailModal";
 
 // Icon component for asset types
 function AssetTypeIcon({ type, className }: { type: LibraryAsset["type"]; className?: string }) {
@@ -84,6 +85,9 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
 
   // Asset selection state for bulk actions
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
+
+  // Asset detail modal state
+  const [viewingAssetId, setViewingAssetId] = useState<string | null>(null);
 
   // Settings drawer state
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
@@ -197,6 +201,32 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
     customDateRange,
   ]);
 
+  const viewingAsset = useMemo(() => {
+    if (!viewingAssetId) return null;
+    return filteredResults.find((a) => a.id === viewingAssetId) || null;
+  }, [viewingAssetId, filteredResults]);
+
+  const viewingAssetIndex = useMemo(() => {
+    if (!viewingAssetId) return -1;
+    return filteredResults.findIndex((a) => a.id === viewingAssetId);
+  }, [viewingAssetId, filteredResults]);
+
+  const handleViewAsset = useCallback((assetId: string) => {
+    setViewingAssetId(assetId);
+  }, []);
+
+  const handlePreviousAsset = useCallback(() => {
+    if (viewingAssetIndex > 0) {
+      setViewingAssetId(filteredResults[viewingAssetIndex - 1].id);
+    }
+  }, [viewingAssetIndex, filteredResults]);
+
+  const handleNextAsset = useCallback(() => {
+    if (viewingAssetIndex < filteredResults.length - 1) {
+      setViewingAssetId(filteredResults[viewingAssetIndex + 1].id);
+    }
+  }, [viewingAssetIndex, filteredResults]);
+
   // Handle search from FacetedSearch component
   const handleSearch = useCallback(
     (query: string, selectedFacets: string[]) => {
@@ -261,7 +291,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           {/* Gallery Thumbnail */}
           <div className="w-[82px] h-[82px] rounded-lg overflow-hidden flex-shrink-0">
             <img
-              src={`https://picsum.photos/seed/${galleryId}/200/200`}
+              src={gallery.thumbnailUrl || `https://picsum.photos/seed/${galleryId}/200/200`}
               alt={gallery.name}
               className="w-full h-full object-cover"
             />
@@ -480,6 +510,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   if (checked) setSelectedAssets(new Set(filteredResults.map(a => a.id)));
                   else setSelectedAssets(new Set());
                 }}
+                onOpenAsset={handleViewAsset}
                 perPage={assetPerPage}
                 columnVisibility={assetColumnVisibility}
               />
@@ -513,28 +544,45 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   }
 
                   return (
-                    <AssetCard
+                    <div
                       key={asset.id}
-                      creatorName={asset.creator}
-                      title={asset.name}
-                      displayLabel={displayLabel}
-                      duration={asset.duration}
-                      timestamp={getRelativeTime(asset.dateCreated)}
-                      thumbnailUrl={asset.thumbnailUrl}
-                      state={cardState}
-                      onSelect={() => {
-                        const next = new Set(selectedAssets);
-                        if (next.has(asset.id)) {
-                          next.delete(asset.id);
+                      onClick={() => {
+                        // If in bulk select mode, toggle selection instead of opening detail
+                        if (selectedAssets.size > 0) {
+                          const next = new Set(selectedAssets);
+                          if (next.has(asset.id)) {
+                            next.delete(asset.id);
+                          } else {
+                            next.add(asset.id);
+                          }
+                          setSelectedAssets(next);
                         } else {
-                          next.add(asset.id);
+                          handleViewAsset(asset.id);
                         }
-                        setSelectedAssets(next);
                       }}
-                      onFavorite={() => {
-                        // TODO: Implement favorite functionality
-                      }}
-                    />
+                    >
+                      <AssetCard
+                        creatorName={asset.creator}
+                        title={asset.name}
+                        displayLabel={displayLabel}
+                        duration={asset.duration}
+                        timestamp={getRelativeTime(asset.dateCreated)}
+                        thumbnailUrl={asset.thumbnailUrl}
+                        state={cardState}
+                        onSelect={() => {
+                          const next = new Set(selectedAssets);
+                          if (next.has(asset.id)) {
+                            next.delete(asset.id);
+                          } else {
+                            next.add(asset.id);
+                          }
+                          setSelectedAssets(next);
+                        }}
+                        onFavorite={() => {
+                          // TODO: Implement favorite functionality
+                        }}
+                      />
+                    </div>
                   );
                 })}
               </div>
@@ -697,6 +745,19 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           );
         })()}
       </SettingsDrawer>
+
+      {/* Asset Detail Modal */}
+      <AssetDetailModal
+        open={viewingAssetId !== null}
+        onOpenChange={(open) => {
+          if (!open) setViewingAssetId(null);
+        }}
+        asset={viewingAsset}
+        currentIndex={viewingAssetIndex}
+        totalAssets={filteredResults.length}
+        onPrevious={handlePreviousAsset}
+        onNext={handleNextAsset}
+      />
     </div>
   );
 }
