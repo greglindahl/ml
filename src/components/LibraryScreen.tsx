@@ -120,6 +120,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   const [archivedFoldersOnly, setArchivedFoldersOnly] = useState(false);
   const [folderViewMode, setFolderViewMode] = useState<"grid" | "table">("grid");
   const [archivedGalleriesOnly, setArchivedGalleriesOnly] = useState(false);
+  const [unsortedGalleriesOnly, setUnsortedGalleriesOnly] = useState(false);
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
   const [viewingAssetId, setViewingAssetId] = useState<string | null>(null);
 
@@ -1243,6 +1244,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             {/* Filter Row */}
             <div className="mb-3">
               <GalleryFilterBar
+                isUnsortedActive={unsortedGalleriesOnly}
+                onUnsortedToggle={setUnsortedGalleriesOnly}
                 isArchivedActive={archivedGalleriesOnly}
                 onArchivedToggle={setArchivedGalleriesOnly}
                 onOpenFiltersSheet={() => setGalleriesFiltersSheetOpen(true)}
@@ -1337,7 +1340,15 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                   {galleryList.filter(g => {
                     const treeItem = findFolderById(folderTree, g.id);
                     const isArchived = treeItem?.archived === true;
-                    return archivedGalleriesOnly ? isArchived : !isArchived;
+                    if (archivedGalleriesOnly ? !isArchived : isArchived) return false;
+                    if (unsortedGalleriesOnly) {
+                      // Unsorted = not inside any real folder ("All Media" doesn't
+                      // count, matching getGalleryLocationDisplay's semantics)
+                      const path = findGalleryParentPath(g.id, folderTree);
+                      const inFolder = path !== null && path.some(p => p !== "All Media");
+                      if (inFolder) return false;
+                    }
+                    return true;
                   }).map((gallery) => {
                     const isSelected = selectedGalleries.has(gallery.id);
                     const isGalleryArchived = findFolderById(folderTree, gallery.id)?.archived === true;

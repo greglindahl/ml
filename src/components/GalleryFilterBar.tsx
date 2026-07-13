@@ -86,12 +86,16 @@ const galleryFilters: FilterConfig[] = [
 
 
 interface GalleryFilterBarProps {
+  isUnsortedActive?: boolean;
+  onUnsortedToggle?: (active: boolean) => void;
   isArchivedActive?: boolean;
   onArchivedToggle?: (active: boolean) => void;
   onOpenFiltersSheet?: () => void;
 }
 
 export function GalleryFilterBar({
+  isUnsortedActive = false,
+  onUnsortedToggle,
   isArchivedActive = false,
   onArchivedToggle,
   onOpenFiltersSheet,
@@ -307,7 +311,14 @@ export function GalleryFilterBar({
       })}
       </div>{/* End filters-expanded */}
 
-      {/* Archived pill (always visible) */}
+      {/* Toggle Pills (always visible) */}
+      <TogglePill
+        label="Unsorted"
+        iconClass="bi-inbox"
+        tooltip="Show only galleries not in any folder"
+        isActive={isUnsortedActive}
+        onClick={() => onUnsortedToggle?.(!isUnsortedActive)}
+      />
       <TogglePill
         label="Archived"
         iconClass="bi-archive"
