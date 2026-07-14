@@ -454,6 +454,15 @@ export function countSubFolders(folder: FolderItem): number {
   return folder.children.filter(c => c.type === "folder").length;
 }
 
+// Count all folders nested anywhere within a folder (excluding the folder itself)
+export function countAllSubFolders(folder: FolderItem): number {
+  if (!folder.children) return 0;
+  return folder.children.reduce(
+    (sum, child) => sum + (child.type === "folder" ? 1 + countAllSubFolders(child) : 0),
+    0
+  );
+}
+
 // Count all galleries nested anywhere within a folder, including those inside sub-folders
 export function countAllGalleries(folder: FolderItem): number {
   if (folder.type === "gallery") return 1;
