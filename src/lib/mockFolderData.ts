@@ -10,6 +10,9 @@ export interface FolderItem {
   countType?: "folders" | "galleries" | "assets";
   children?: FolderItem[];
   archived?: boolean;
+  /** Demo hook: the simulated move "server" rejects moving this folder even when
+   *  the client-side count is under MOVE_MEDIA_ITEM_LIMIT (mimics a stale count). */
+  simulateMoveRejection?: boolean;
   /** Overrides the default placeholder thumbnail on the gallery details header. */
   thumbnailUrl?: string;
 }
@@ -243,6 +246,30 @@ export const folders: FolderItem[] = [
     ],
   },
   {
+    id: "season-archive",
+    name: "Season Archive",
+    type: "folder",
+    count: 3,
+    countType: "galleries",
+    children: [
+      { id: "archive-full-games", name: "Full Game Broadcasts", type: "gallery", count: 6200, countType: "assets" },
+      { id: "archive-raw-photos", name: "Raw Photo Dumps", type: "gallery", count: 4800, countType: "assets" },
+      { id: "archive-press-photos", name: "Press Photo Archive", type: "gallery", count: 1450, countType: "assets" },
+    ],
+  },
+  {
+    id: "broadcast-masters",
+    name: "Broadcast Masters",
+    type: "folder",
+    count: 2,
+    countType: "galleries",
+    simulateMoveRejection: true,
+    children: [
+      { id: "broadcast-masters-2324", name: "2023-24 Game Masters", type: "gallery", count: 5100, countType: "assets" },
+      { id: "broadcast-masters-2425", name: "2024-25 Game Masters", type: "gallery", count: 4350, countType: "assets" },
+    ],
+  },
+  {
     id: "season-2022-archived",
     name: "Season 22-23",
     type: "folder",
@@ -322,6 +349,11 @@ export const mockGalleries: Gallery[] = [
   { id: "social-media-clips", name: "Social Media Clips", assetCount: 34, timeAgo: "2 days ago", thumbnailUrl: "https://picsum.photos/seed/gal36/400/300" },
   { id: "behind-the-scenes", name: "Behind the Scenes", assetCount: 28, timeAgo: "5 days ago", thumbnailUrl: "https://picsum.photos/seed/gal37/400/300" },
   { id: "starter-gallery", name: "Starter Gallery", assetCount: 18, timeAgo: "Just now", thumbnailUrl: starterGalleryThumbnail },
+  { id: "archive-full-games", name: "Full Game Broadcasts", assetCount: 6200, timeAgo: "6 months ago", thumbnailUrl: "https://picsum.photos/seed/gal38/400/300" },
+  { id: "archive-raw-photos", name: "Raw Photo Dumps", assetCount: 4800, timeAgo: "6 months ago", thumbnailUrl: "https://picsum.photos/seed/gal39/400/300" },
+  { id: "archive-press-photos", name: "Press Photo Archive", assetCount: 1450, timeAgo: "5 months ago", thumbnailUrl: "https://picsum.photos/seed/gal40/400/300" },
+  { id: "broadcast-masters-2324", name: "2023-24 Game Masters", assetCount: 5100, timeAgo: "8 months ago", thumbnailUrl: "https://picsum.photos/seed/gal41/400/300" },
+  { id: "broadcast-masters-2425", name: "2024-25 Game Masters", assetCount: 4350, timeAgo: "2 months ago", thumbnailUrl: "https://picsum.photos/seed/gal42/400/300" },
 ];
 
 // Collect all gallery IDs that are assigned to any folder in the tree
