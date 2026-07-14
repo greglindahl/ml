@@ -17,6 +17,18 @@ export interface FolderItem {
   thumbnailUrl?: string;
 }
 
+// Total media items in a folder subtree (sums gallery counts recursively)
+export function countTotalAssets(folder: FolderItem): number {
+  let total = 0;
+  if (folder.type === "gallery" && folder.count) total += folder.count;
+  if (folder.children) {
+    for (const child of folder.children) {
+      total += countTotalAssets(child);
+    }
+  }
+  return total;
+}
+
 // Helper to get all descendant folder/gallery IDs (including self)
 export function getAllDescendantIds(folder: FolderItem): string[] {
   const ids = [folder.id];

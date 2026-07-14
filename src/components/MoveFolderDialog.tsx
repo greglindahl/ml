@@ -27,21 +27,10 @@ import {
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { FolderItem, FlattenedFolder } from "@/lib/mockFolderData";
-import { getMaxDepth, getAllDescendantIds } from "@/lib/mockFolderData";
+import { getMaxDepth, getAllDescendantIds, countTotalAssets } from "@/lib/mockFolderData";
 import { MOVE_MEDIA_ITEM_LIMIT } from "@/lib/limits";
 
 import { collectNestedFolders } from "@/lib/mockFolderData";
-
-function countTotalAssets(folder: FolderItem): number {
-  let total = 0;
-  if (folder.type === "gallery" && folder.count) total += folder.count;
-  if (folder.children) {
-    for (const child of folder.children) {
-      total += countTotalAssets(child);
-    }
-  }
-  return total;
-}
 
 type MovePhase = "form" | "submitting" | "error";
 

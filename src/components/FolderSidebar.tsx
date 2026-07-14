@@ -29,7 +29,8 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import type { FolderItem } from "@/lib/mockFolderData";
-import { findFolderById, getMaxDepth, getFolderDepth } from "@/lib/mockFolderData";
+import { findFolderById, getMaxDepth, getFolderDepth, countTotalAssets } from "@/lib/mockFolderData";
+import { MOVE_MEDIA_ITEM_LIMIT } from "@/lib/limits";
 
 interface FolderSidebarProps {
   folderTree: FolderItem[];
@@ -113,6 +114,8 @@ export function FolderSidebar({
   const [overTargetId, setOverTargetId] = useState<string | null>(null);
   const [isOverValid, setIsOverValid] = useState(false);
   const [showDepthAlert, setShowDepthAlert] = useState(false);
+  // Set when a drop is rejected for exceeding the media item limit; holds the dragged item so the alert can show its name and count.
+  const [limitAlertItem, setLimitAlertItem] = useState<FolderItem | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -133,13 +136,17 @@ export function FolderSidebar({
     (draggedId: string, overId: string): boolean => {
       if (draggedId === overId) return false;
 
+      const draggedItem = findFolderById(folderTree, draggedId);
+
+      // Item-count limit: a subtree over the media item limit can't be moved anywhere
+      if (draggedItem && countTotalAssets(draggedItem) > MOVE_MEDIA_ITEM_LIMIT) return false;
+
       // Dropping onto "All Media" moves the item out to the root level —
       // valid unless the item already lives at the root.
       if (overId === "all") {
         return findParentId(folderTree, draggedId) !== null;
       }
 
-      const draggedItem = findFolderById(folderTree, draggedId);
       const overItem = findFolderById(folderTree, overId);
       if (!draggedItem || !overItem) return false;
 
@@ -199,10 +206,18 @@ export function FolderSidebar({
       // "All Media" is anchored — it can't be dragged.
       if (draggedId === "all") return;
 
+      const draggedItem = findFolderById(folderTree, draggedId);
+      const exceedsMoveLimit =
+        draggedItem != null && countTotalAssets(draggedItem) > MOVE_MEDIA_ITEM_LIMIT;
+
       // Dropping onto "All Media" moves the item out of its folder to the root.
       if (overId === "all") {
         if (findParentId(folderTree, draggedId) !== null) {
-          onMoveItem(draggedId, null);
+          if (exceedsMoveLimit) {
+            setLimitAlertItem(draggedItem);
+          } else {
+            onMoveItem(draggedId, null);
+          }
         }
         return;
       }
@@ -215,6 +230,8 @@ export function FolderSidebar({
       if (overItem.type === "folder" && overId !== "all") {
         if (validateDrop(draggedId, overId)) {
           onMoveItem(draggedId, overId);
+        } else if (exceedsMoveLimit) {
+          setLimitAlertItem(draggedItem);
         } else {
           setShowDepthAlert(true);
         }
@@ -369,6 +386,24 @@ export function FolderSidebar({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setShowDepthAlert(false)}>
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={limitAlertItem != null} onOpenChange={(open) => !open && setLimitAlertItem(null)}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Move not allowed</AlertDialogTitle>
+            <AlertDialogDescription>
+              <strong className="font-semibold text-foreground">Too many items to move.</strong> This move would affect{" "}
+              <strong className="font-semibold text-foreground">{limitAlertItem ? countTotalAssets(limitAlertItem).toLocaleString() : ""} media items</strong>, which exceeds the{" "}
+              {MOVE_MEDIA_ITEM_LIMIT.toLocaleString()} media item limit for a single move. Try moving subfolders individually in smaller batches.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setLimitAlertItem(null)}>
               OK
             </AlertDialogAction>
           </AlertDialogFooter>
