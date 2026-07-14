@@ -19,7 +19,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import type { FolderItem } from "@/lib/mockFolderData";
-import { collectNestedFolders } from "@/lib/mockFolderData";
+import { collectNestedFolders, countAllSubFolders, countAllGalleries } from "@/lib/mockFolderData";
 
 interface ArchiveFolderDialogProps {
   open: boolean;
@@ -29,7 +29,59 @@ interface ArchiveFolderDialogProps {
   breadcrumbPath: string;
 }
 
-export function ArchiveFolderDialog({ open, onOpenChange, onArchive, folder, breadcrumbPath }: ArchiveFolderDialogProps) {
+export function ArchiveFolderDialog({ open, onOpenChange, onArchive, folder }: ArchiveFolderDialogProps) {
+  const subFolderCount = useMemo(() => countAllSubFolders(folder), [folder]);
+  const galleryCount = useMemo(() => countAllGalleries(folder), [folder]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Archive Folder</DialogTitle>
+          <DialogDescription>
+            Archiving a folder hides it from users. If you decide later you want to make an archived folder available, you can unarchive it.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Folder</TableHead>
+                <TableHead className="text-right">Subfolders</TableHead>
+                <TableHead className="text-right">Galleries</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell className="font-medium">{folder.name}</TableCell>
+                <TableCell className="text-right">{subFolderCount}</TableCell>
+                <TableCell className="text-right">{galleryCount}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+
+          {/* Light-treatment info note (design system Alert, type=Light) */}
+          <div className="flex items-start gap-3 rounded-md bg-[#EDF2F9] px-6 py-3 text-[#12263F] text-[15px] leading-snug tracking-[-0.01em]">
+            <i className="bi bi-info-circle flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
+            <p>Galleries and assets are not deleted.</p>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={onArchive}>Archive</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Previous archive modal (folder list with locations) — kept for rollback.
+// To restore, swap the export names so call sites pick this up again.
+export function ArchiveFolderDialogLegacy({ open, onOpenChange, onArchive, folder, breadcrumbPath }: ArchiveFolderDialogProps) {
   const nestedRows = useMemo(() => collectNestedFolders(folder, breadcrumbPath), [folder, breadcrumbPath]);
 
   return (
