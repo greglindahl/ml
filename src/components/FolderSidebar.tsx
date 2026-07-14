@@ -46,13 +46,14 @@ interface FolderSidebarProps {
   onToggleArchived: (v: boolean) => void;
 }
 
-// The "View Archived Folders" toggle only governs folders. A standalone archived
-// gallery at the root has nothing to do with folder archiving, so it never appears
-// here — but an archived gallery nested inside an archived folder still follows
-// the toggle, since it's part of that folder's contents.
+// The folder tree only lists galleries that live inside a folder — a standalone
+// gallery at the root never appears here (it's still reachable from the Galleries
+// tab). The "View Archived Folders" toggle only governs folders; an archived
+// gallery nested inside an archived folder follows the toggle, since it's part
+// of that folder's contents.
 function isVisibleInFolderTree(item: FolderItem, showArchived: boolean, isRoot: boolean): boolean {
-  if (!item.archived) return true;
   if (isRoot && item.type === "gallery") return false;
+  if (!item.archived) return true;
   return showArchived;
 }
 
