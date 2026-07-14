@@ -25,21 +25,39 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import { toast as sonnerToast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { FolderItem, FlattenedFolder } from "@/lib/mockFolderData";
-import { getMaxDepth, getAllDescendantIds } from "@/lib/mockFolderData";
+import { getMaxDepth, getAllDescendantIds, countTotalAssets } from "@/lib/mockFolderData";
+import { MOVE_MEDIA_ITEM_LIMIT } from "@/lib/limits";
 
 import { collectNestedFolders } from "@/lib/mockFolderData";
 
-function countTotalAssets(folder: FolderItem): number {
-  let total = 0;
-  if (folder.type === "gallery" && folder.count) total += folder.count;
-  if (folder.children) {
-    for (const child of folder.children) {
-      total += countTotalAssets(child);
-    }
-  }
-  return total;
+type MovePhase = "form" | "submitting" | "error";
+
+// Danger-treatment failure toast: slides in from the bottom-left, auto-dismisses after 10s.
+function showMoveFailureToast(folder: FolderItem) {
+  sonnerToast.custom(
+    (t) => (
+      <div className="flex items-start gap-3 rounded-lg bg-[#FCE7EB] p-4 w-[380px] shadow-lg">
+        <i className="bi bi-x-circle-fill text-[#E63757] text-[20px] flex-shrink-0 inline-flex items-center justify-center leading-none" />
+        <div className="flex-1 text-[#12263F]">
+          <p className="font-bold text-[16px] leading-tight mb-1">Move couldn't be completed</p>
+          <p className="text-[14px] leading-snug">
+            "{folder.name}" exceeds the {MOVE_MEDIA_ITEM_LIMIT.toLocaleString()} media item limit for a single move, so nothing was moved. Try moving subfolders individually in smaller batches.
+          </p>
+        </div>
+        <button
+          onClick={() => sonnerToast.dismiss(t)}
+          aria-label="Dismiss"
+          className="flex-shrink-0 text-[#6e84a3] hover:text-[#12263F] transition-colors"
+        >
+          <i className="bi bi-x-lg text-[16px] inline-flex items-center justify-center leading-none" />
+        </button>
+      </div>
+    ),
+    { position: "bottom-left", duration: 10_000 }
+  );
 }
 
 interface MoveFolderDialogProps {
@@ -63,10 +81,17 @@ export function MoveFolderDialog({
 }: MoveFolderDialogProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [targetLocationId, setTargetLocationId] = useState<string | null>(null);
+  const [phase, setPhase] = useState<MovePhase>("form");
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
-    if (open) setTargetLocationId(null);
+    if (open) {
+      setTargetLocationId(null);
+      setPhase("form");
+    }
   }, [open]);
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
 
   // Exclude the folder itself and its descendants from valid targets
   const excludedIds = useMemo(() => getAllDescendantIds(folder), [folder]);
@@ -90,95 +115,167 @@ export function MoveFolderDialog({
 
   const nestedRows = useMemo(() => collectNestedFolders(folder, breadcrumbPath), [folder, breadcrumbPath]);
   const totalAssets = useMemo(() => countTotalAssets(folder), [folder]);
+  const exceedsMoveLimit = totalAssets > MOVE_MEDIA_ITEM_LIMIT;
+
+  const handleMove = () => {
+    setPhase("submitting");
+    timerRef.current = setTimeout(() => {
+      if (folder.simulateMoveRejection) {
+        // Scenario B (in-dialog error phase) is disabled in favor of a failure
+        // toast — restore by swapping these two lines for setPhase("error")
+        // and un-commenting the error-phase JSX below.
+        onOpenChange(false);
+        showMoveFailureToast(folder);
+      } else {
+        onMove(targetLocationId);
+      }
+    }, 1200);
+  };
+
+  const handleOpenChange = (next: boolean) => {
+    if (!next && phase === "submitting") return;
+    onOpenChange(next);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg" ref={contentRef}>
-        <DialogHeader>
-          <DialogTitle>Move Folder</DialogTitle>
-          <DialogDescription>
-            Galleries, assets, and sharing are not affected.
-          </DialogDescription>
-        </DialogHeader>
+        {/* Scenario B in-dialog error phase — disabled in favor of the failure toast (see handleMove). Restore by replacing the fragment below with this ternary:
+        {phase === "error" ? (
+          <>
+            <DialogHeader>
+              <DialogTitle>Move Folder</DialogTitle>
+              <DialogDescription className="sr-only">
+                The move could not be completed.
+              </DialogDescription>
+            </DialogHeader>
 
-        <div className="space-y-4 py-2">
-          {/* Nested folders summary + scrollable table */}
-          <p className="text-sm text-muted-foreground">{nestedRows.length} {nestedRows.length === 1 ? "folder" : "folders"} will be moved</p>
-          <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader className="sticky top-0 bg-background z-10">
-                <TableRow>
-                  <TableHead className="text-xs font-medium">Folder</TableHead>
-                  <TableHead className="text-xs font-medium">Current Location</TableHead>
-                </TableRow>
-              </TableHeader>
-            </Table>
-            <ScrollArea className="max-h-[200px]">
-              <Table>
-                <TableBody>
-                  {nestedRows.map((row, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="py-2">
-                        <div className="flex items-center gap-2">
-                          <i className="bi bi-folder w-4 h-4 text-muted-foreground flex-shrink-0 inline-flex items-center justify-center leading-none" />
-                          <span className="text-sm font-medium">{row.name}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-2 text-sm text-muted-foreground">{row.path}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </ScrollArea>
-          </div>
-
-          {/* Target location */}
-          <div className="space-y-2">
-            <Label>Location</Label>
-            <Select
-              value={targetLocationId === null ? "root" : (targetLocationId ?? "root")}
-              onValueChange={(v) => setTargetLocationId(v === "root" ? null : v)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select new location..." />
-              </SelectTrigger>
-              <SelectContent container={contentRef.current}>
-                <SelectItem value="root">All Media</SelectItem>
-                {validLocations.map((f) => (
-                  <SelectItem key={f.id} value={f.id}>
-                    {f.displayName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Depth limit error */}
-          {exceedsDepthLimit && (
-            <div className="flex items-start gap-2 p-3 rounded-lg border border-destructive/50 bg-destructive/10 text-destructive text-sm">
-              <i className="bi bi-exclamation-triangle w-4 h-4 flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
-              <p>This move would exceed the 4-level folder limit. Choose a different location.</p>
+            <div className="space-y-4 py-2">
+              <div className="flex items-start gap-2 p-3 rounded-lg border border-destructive/50 bg-destructive/10 text-destructive text-sm">
+                <i className="bi bi-exclamation-triangle w-4 h-4 flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
+                <div className="space-y-1">
+                  <p className="font-semibold">Move couldn't be completed</p>
+                  <p>
+                    "{folder.name}" exceeds the {MOVE_MEDIA_ITEM_LIMIT.toLocaleString()} media item limit for a single move, so nothing was moved.
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Move its subfolders individually in smaller batches, then try again.
+              </p>
             </div>
-          )}
 
-          {/* Info banner */}
-          <div className="flex items-start gap-2 p-3 rounded-lg border bg-muted/50 text-sm text-muted-foreground">
-            <i className="bi bi-info-circle w-4 h-4 flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
-            <p>
-              This move will affect <strong className="text-foreground">{totalAssets} media items</strong> and may take some time to complete. The move will continue in the background.{" "}
-              <strong className="text-foreground">Content will not be searchable until the move is finished.</strong>
-            </p>
-          </div>
-        </div>
+            <DialogFooter>
+              <Button onClick={() => onOpenChange(false)}>Close</Button>
+            </DialogFooter>
+          </>
+        ) : (...)}
+        */}
+        <>
+            <DialogHeader>
+              <DialogTitle>Move Folder</DialogTitle>
+              <DialogDescription>
+                Galleries, assets, and sharing are not affected.
+              </DialogDescription>
+            </DialogHeader>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={() => onMove(targetLocationId)} disabled={exceedsDepthLimit}>
-            Move
-          </Button>
-        </DialogFooter>
+            <div className="space-y-4 py-2">
+              {/* Nested folders summary + scrollable table */}
+              <p className="text-sm text-muted-foreground">{nestedRows.length} {nestedRows.length === 1 ? "folder" : "folders"} will be moved</p>
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-background z-10">
+                    <TableRow>
+                      <TableHead className="text-xs font-medium">Folder</TableHead>
+                      <TableHead className="text-xs font-medium">Current Location</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                </Table>
+                <ScrollArea className="max-h-[200px]">
+                  <Table>
+                    <TableBody>
+                      {nestedRows.map((row, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="py-2">
+                            <div className="flex items-center gap-2">
+                              <i className="bi bi-folder w-4 h-4 text-muted-foreground flex-shrink-0 inline-flex items-center justify-center leading-none" />
+                              <span className="text-sm font-medium">{row.name}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-2 text-sm text-muted-foreground">{row.path}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              </div>
+
+              {/* Target location */}
+              <div className="space-y-2">
+                <Label>Location</Label>
+                <Select
+                  value={targetLocationId === null ? "root" : (targetLocationId ?? "root")}
+                  onValueChange={(v) => setTargetLocationId(v === "root" ? null : v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select new location..." />
+                  </SelectTrigger>
+                  <SelectContent container={contentRef.current}>
+                    <SelectItem value="root">All Media</SelectItem>
+                    {validLocations.map((f) => (
+                      <SelectItem key={f.id} value={f.id}>
+                        {f.displayName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Depth limit error */}
+              {exceedsDepthLimit && (
+                <div className="flex items-start gap-2 p-3 rounded-lg border border-destructive/50 bg-destructive/10 text-destructive text-sm">
+                  <i className="bi bi-exclamation-triangle w-4 h-4 flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
+                  <p>This move would exceed the 4-level folder limit. Choose a different location.</p>
+                </div>
+              )}
+
+              {/* Move size limit warning */}
+              {exceedsMoveLimit ? (
+                <div className="flex items-start gap-3 rounded-md bg-[#F6C343] px-6 py-3 text-[#12263F] text-[15px] leading-snug tracking-[-0.01em]">
+                  <i className="bi bi-info-circle flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
+                  <p>
+                    <strong className="font-semibold">Too many items to move.</strong> This move would affect{" "}
+                    <strong className="font-semibold">{totalAssets.toLocaleString()} media items</strong>, which exceeds the{" "}
+                    {MOVE_MEDIA_ITEM_LIMIT.toLocaleString()} media item limit for a single move. Try moving subfolders individually in smaller batches.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex items-start gap-2 p-3 rounded-lg border bg-muted/50 text-sm text-muted-foreground">
+                  <i className="bi bi-info-circle w-4 h-4 flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
+                  <p>
+                    This move will affect <strong className="text-foreground">{totalAssets.toLocaleString()} media items</strong> and may take some time to complete. The move will continue in the background.{" "}
+                    <strong className="text-foreground">Content will not be searchable until the move is finished.</strong>
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => onOpenChange(false)} disabled={phase === "submitting"}>
+                Cancel
+              </Button>
+              <Button onClick={handleMove} disabled={exceedsDepthLimit || exceedsMoveLimit || phase === "submitting"}>
+                {phase === "submitting" ? (
+                  <>
+                    <i className="bi bi-arrow-repeat animate-spin w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    Moving...
+                  </>
+                ) : (
+                  "Move"
+                )}
+              </Button>
+            </DialogFooter>
+        </>
       </DialogContent>
     </Dialog>
   );

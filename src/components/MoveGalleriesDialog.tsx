@@ -22,7 +22,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { FlattenedFolder } from "@/lib/mockFolderData";
+import { FlattenedFolder, mockGalleries } from "@/lib/mockFolderData";
+import { MOVE_MEDIA_ITEM_LIMIT } from "@/lib/limits";
 
 export interface MoveGalleryItem {
   id: string;
@@ -49,6 +50,12 @@ export function MoveGalleriesDialog({
   const [locationId, setLocationId] = useState<string | null>(null);
   const [locationSelected, setLocationSelected] = useState(false);
   const [locationPopoverOpen, setLocationPopoverOpen] = useState(false);
+
+  const totalAssets = useMemo(
+    () => galleries.reduce((sum, g) => sum + (mockGalleries.find((m) => m.id === g.id)?.assetCount ?? 0), 0),
+    [galleries]
+  );
+  const exceedsMoveLimit = totalAssets > MOVE_MEDIA_ITEM_LIMIT;
 
   const selectedLocationLabel = useMemo(() => {
     if (!locationSelected) return "Select Location";
@@ -157,12 +164,23 @@ export function MoveGalleriesDialog({
           </Popover>
         </div>
 
-        <Alert className="bg-muted/50 border-muted">
-          <i className="bi bi-info-circle h-4 w-4 inline-flex items-center justify-center leading-none" />
-          <AlertDescription className="text-xs text-muted-foreground">
-            This move will affect 10,000 media items and may take some time to complete. The move will continue in the background. <strong>Content will not be searchable until the move is finished.</strong>
-          </AlertDescription>
-        </Alert>
+        {exceedsMoveLimit ? (
+          <div className="flex items-start gap-3 rounded-md bg-[#F6C343] px-6 py-3 text-[#12263F] text-[15px] leading-snug tracking-[-0.01em]">
+            <i className="bi bi-info-circle flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
+            <p>
+              <strong className="font-semibold">Too many items to move.</strong> This move would affect{" "}
+              <strong className="font-semibold">{totalAssets.toLocaleString()} media items</strong>, which exceeds the{" "}
+              {MOVE_MEDIA_ITEM_LIMIT.toLocaleString()} media item limit for a single move. Try moving fewer galleries in smaller batches.
+            </p>
+          </div>
+        ) : (
+          <Alert className="bg-muted/50 border-muted">
+            <i className="bi bi-info-circle h-4 w-4 inline-flex items-center justify-center leading-none" />
+            <AlertDescription className="text-sm text-muted-foreground">
+              This move will affect <strong>{totalAssets.toLocaleString()} media items</strong> and may take some time to complete. The move will continue in the background. <strong>Content will not be searchable until the move is finished.</strong>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <DialogFooter>
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
@@ -170,7 +188,7 @@ export function MoveGalleriesDialog({
           </Button>
           <Button
             onClick={handleMove}
-            disabled={!locationSelected}
+            disabled={!locationSelected || exceedsMoveLimit}
             className="bg-foreground text-background hover:bg-foreground/90"
           >
             Move
