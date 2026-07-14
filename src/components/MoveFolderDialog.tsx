@@ -35,7 +35,7 @@ import { collectNestedFolders } from "@/lib/mockFolderData";
 
 type MovePhase = "form" | "submitting" | "error";
 
-// Danger-treatment failure toast: slides in from the bottom-left, stays until dismissed.
+// Danger-treatment failure toast: slides in from the bottom-left, auto-dismisses after 10s.
 function showMoveFailureToast(folder: FolderItem) {
   sonnerToast.custom(
     (t) => (
@@ -56,7 +56,7 @@ function showMoveFailureToast(folder: FolderItem) {
         </button>
       </div>
     ),
-    { position: "bottom-left", duration: Infinity }
+    { position: "bottom-left", duration: 10_000 }
   );
 }
 
