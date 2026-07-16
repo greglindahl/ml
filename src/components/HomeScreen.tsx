@@ -10,11 +10,13 @@ import { getRelativeTime, mockLibraryAssets } from "@/lib/mockLibraryData";
 import stGalleryCard from "@/assets/st-gallery-card.svg";
 import stAssetOne from "@/assets/st-asset-one.svg";
 import stAssetTwo from "@/assets/st-asset-two.svg";
-import stAssetThree from "@/assets/st-asset-three.svg";
 import stTourFive from "@/assets/starter-gallery/5.svg";
 import stTourSix from "@/assets/starter-gallery/6.svg";
 import stTourSeven from "@/assets/starter-gallery/7.svg";
 import stTourEight from "@/assets/starter-gallery/8.svg";
+import stTourNine from "@/assets/starter-gallery/9.svg";
+import stTourTen from "@/assets/starter-gallery/10.svg";
+import stTourEleven from "@/assets/starter-gallery/11.svg";
 
 export type HomeViewAllTarget =
   | "recent-assets"
@@ -29,6 +31,23 @@ interface HomeScreenProps {
   /** Called when a module's "View All" is clicked; the owner navigates to the matching screen. */
   onViewAll?: (target: HomeViewAllTarget) => void;
 }
+
+// Starter gallery tour deck shown in the Get Started module. The row does not
+// scroll — it ends with a "+ X more" card (backed by stTourTen) that opens the
+// starter gallery. X = total deck size minus every card rendered in the row.
+const TOUR_TOTAL_ASSETS = 18;
+const TOUR_CARDS = [
+  { src: stGalleryCard, alt: "Welcome to Greenfly" },
+  { src: stAssetOne, alt: "Everyone is in the play" },
+  { src: stAssetTwo, alt: "Collect content from every source" },
+  { src: stTourFive, alt: "Distribute the right content to every stakeholder" },
+  { src: stTourSix, alt: "Activate every relevant stakeholder" },
+  { src: stTourSeven, alt: "Measure by sharing the team wins" },
+  { src: stTourEight, alt: "Your team is on it" },
+  { src: stTourNine, alt: "Starter gallery tour card" },
+  { src: stTourTen, alt: "ProCapture tour card" },
+];
+const TOUR_REMAINING_COUNT = TOUR_TOTAL_ASSETS - TOUR_CARDS.length - 1;
 
 const QUICK_ACTIONS_KEY = "homeQuickActions";
 const ONBOARDING_MODULES_KEY = "homeOnboardingModules";
@@ -433,30 +452,17 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery, onViewAll }
                   <p className="text-[15px] text-gray-700 leading-snug">
                     A quick tour of what the platform can do, explore anytime.
                   </p>
-                  <div className="flex gap-4 overflow-x-auto min-w-0 max-w-full w-full">
-                    <button onClick={onOpenStarterGallery} className="flex-shrink-0">
-                      <img src={stGalleryCard} alt="Welcome to Greenfly" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
-                    </button>
-                    <button onClick={onOpenStarterGallery} className="hidden sm:block flex-shrink-0">
-                      <img src={stAssetOne} alt="Everyone is in the play" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
-                    </button>
-                    <button onClick={onOpenStarterGallery} className="hidden sm:block flex-shrink-0">
-                      <img src={stAssetTwo} alt="Collect content from every source" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
-                    </button>
-                    <button onClick={onOpenStarterGallery} className="hidden sm:block flex-shrink-0">
-                      <img src={stTourFive} alt="Starter gallery tour card" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
-                    </button>
-                    <button onClick={onOpenStarterGallery} className="hidden sm:block flex-shrink-0">
-                      <img src={stTourSix} alt="Starter gallery tour card" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
-                    </button>
-                    <button onClick={onOpenStarterGallery} className="hidden sm:block flex-shrink-0">
-                      <img src={stTourSeven} alt="Starter gallery tour card" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
-                    </button>
-                    <button onClick={onOpenStarterGallery} className="hidden sm:block flex-shrink-0">
-                      <img src={stTourEight} alt="Starter gallery tour card" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
-                    </button>
-                    <button onClick={onOpenStarterGallery} className="hidden sm:block flex-shrink-0">
-                      <img src={stAssetThree} alt="Organize your content, view 14 more tour cards" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
+                  <div className="flex gap-4 overflow-hidden min-w-0 max-w-full w-full">
+                    {TOUR_CARDS.map((card, i) => (
+                      <button key={i} onClick={onOpenStarterGallery} className={`${i === 0 ? "" : "hidden sm:block "}flex-shrink-0`}>
+                        <img src={card.src} alt={card.alt} className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
+                      </button>
+                    ))}
+                    <button onClick={onOpenStarterGallery} className="hidden sm:block flex-shrink-0 relative">
+                      <img src={stTourEleven} alt={`View ${TOUR_REMAINING_COUNT} more tour cards`} className="h-40 w-auto rounded-xl" />
+                      <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/50 text-white text-[17px] font-medium hover:bg-black/40 transition-colors">
+                        + {TOUR_REMAINING_COUNT} more
+                      </span>
                     </button>
                   </div>
                 </div>
