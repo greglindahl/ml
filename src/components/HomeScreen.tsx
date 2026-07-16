@@ -1,7 +1,6 @@
 import { ReactNode, useMemo, useRef, useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Button } from "@/components/ui/button";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AssetCard } from "@/components/AssetCard";
 import { AssetDetailModal } from "@/components/AssetDetailModal";
 import { GalleryCard } from "@/components/GalleryCard";
@@ -10,7 +9,13 @@ import { getRelativeTime, mockLibraryAssets } from "@/lib/mockLibraryData";
 import stGalleryCard from "@/assets/st-gallery-card.svg";
 import stAssetOne from "@/assets/st-asset-one.svg";
 import stAssetTwo from "@/assets/st-asset-two.svg";
-import stAssetThree from "@/assets/st-asset-three.svg";
+import stTourFive from "@/assets/starter-gallery/5.svg";
+import stTourSix from "@/assets/starter-gallery/6.svg";
+import stTourSeven from "@/assets/starter-gallery/7.svg";
+import stTourEight from "@/assets/starter-gallery/8.svg";
+import stTourNine from "@/assets/starter-gallery/9.svg";
+import stTourTen from "@/assets/starter-gallery/10.svg";
+import stTourEleven from "@/assets/starter-gallery/11.svg";
 
 export type HomeViewAllTarget =
   | "recent-assets"
@@ -25,6 +30,23 @@ interface HomeScreenProps {
   /** Called when a module's "View All" is clicked; the owner navigates to the matching screen. */
   onViewAll?: (target: HomeViewAllTarget) => void;
 }
+
+// Starter gallery tour deck shown in the Get Started module. The row does not
+// scroll — it ends with a "+ X more" card (backed by stTourTen) that opens the
+// starter gallery. X = total deck size minus every card rendered in the row.
+const TOUR_TOTAL_ASSETS = 18;
+const TOUR_CARDS = [
+  { src: stGalleryCard, alt: "Welcome to Greenfly" },
+  { src: stAssetOne, alt: "Everyone is in the play" },
+  { src: stAssetTwo, alt: "Collect content from every source" },
+  { src: stTourFive, alt: "Distribute the right content to every stakeholder" },
+  { src: stTourSix, alt: "Activate every relevant stakeholder" },
+  { src: stTourSeven, alt: "Measure by sharing the team wins" },
+  { src: stTourEight, alt: "Your team is on it" },
+  { src: stTourNine, alt: "Starter gallery tour card" },
+  { src: stTourTen, alt: "ProCapture tour card" },
+];
+const TOUR_REMAINING_COUNT = TOUR_TOTAL_ASSETS - TOUR_CARDS.length - 1;
 
 const QUICK_ACTIONS_KEY = "homeQuickActions";
 const ONBOARDING_MODULES_KEY = "homeOnboardingModules";
@@ -308,6 +330,7 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery, onViewAll }
     loadPersistedList(ACTIVITY_MODULES_KEY, DEFAULT_ACTIVITY_MODULES)
   );
   const [customizeOpen, setCustomizeOpen] = useState(false);
+  const [isGetStartedExpanded, setIsGetStartedExpanded] = useState(true);
   const customizeSnapshotRef = useRef<{
     quickActions: QuickActionItem[];
     onboardingModules: ToggleItem[];
@@ -414,41 +437,39 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery, onViewAll }
 
         {/* Get Started with Greenfly */}
         {isOnboardingVisible && (
-          <Accordion type="single" collapsible defaultValue="get-started" className="bg-white border border-gray-300 rounded-lg">
-            <AccordionItem value="get-started" className="border-b-0">
-              <AccordionTrigger className="px-6 py-4 hover:no-underline [&>svg]:text-primary">
-                <span className="flex items-center gap-2">
-                  <span className="flex items-center justify-center w-10 h-10 rounded-full bg-[#d5e5fa] flex-shrink-0">
-                    <i className="bi bi-rocket-takeoff text-primary text-lg" />
-                  </span>
-                  <span className="text-[20px] font-medium text-black tracking-tight">Get Started with Greenfly</span>
-                </span>
-              </AccordionTrigger>
-              <AccordionContent className="px-6 pb-6">
-                <div className="flex flex-col sm:flex-row items-start gap-6">
-                  <div className="w-full sm:w-[280px] sm:flex-shrink-0 flex flex-col gap-2">
-                    <p className="text-[15px] text-gray-700 leading-snug">
-                      A quick tour of what the platform can do, explore anytime.
-                    </p>
-                  </div>
-                  <div className="flex gap-4 overflow-x-auto min-w-0 max-w-full">
-                    <button onClick={onOpenStarterGallery} className="flex-shrink-0">
-                      <img src={stGalleryCard} alt="Welcome to Greenfly" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
+          <section className="flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-6">
+              <div className="flex flex-col gap-1.5">
+                <h2 className="text-[20px] font-medium text-black tracking-tight">Get Started with Greenfly</h2>
+                <p className="text-[17px] text-gray-700">A quick tour of what the platform can do, explore anytime.</p>
+              </div>
+              <Button
+                variant="link"
+                className="h-auto p-0 text-[15px]"
+                onClick={() => setIsGetStartedExpanded((v) => !v)}
+                aria-label={isGetStartedExpanded ? "Collapse Get Started" : "Expand Get Started"}
+              >
+                <i className={`bi ${isGetStartedExpanded ? "bi-chevron-up" : "bi-chevron-down"} text-lg`} />
+              </Button>
+            </div>
+            {isGetStartedExpanded && (
+              <div className="bg-white border border-gray-300 rounded-lg p-6">
+                <div className="flex gap-4 overflow-hidden min-w-0 max-w-full w-full">
+                  {TOUR_CARDS.map((card, i) => (
+                    <button key={i} onClick={onOpenStarterGallery} className={`${i === 0 ? "" : "hidden sm:block "}flex-shrink-0`}>
+                      <img src={card.src} alt={card.alt} className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
                     </button>
-                    <button onClick={onOpenStarterGallery} className="hidden sm:block flex-shrink-0">
-                      <img src={stAssetOne} alt="Everyone is in the play" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
-                    </button>
-                    <button onClick={onOpenStarterGallery} className="hidden sm:block flex-shrink-0">
-                      <img src={stAssetTwo} alt="Collect content from every source" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
-                    </button>
-                    <button onClick={onOpenStarterGallery} className="hidden sm:block flex-shrink-0">
-                      <img src={stAssetThree} alt="Organize your content, view 14 more tour cards" className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
-                    </button>
-                  </div>
+                  ))}
+                  <button onClick={onOpenStarterGallery} className="hidden sm:block flex-shrink-0 relative">
+                    <img src={stTourEleven} alt={`View ${TOUR_REMAINING_COUNT} more tour cards`} className="h-40 w-auto rounded-xl" />
+                    <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/50 text-white text-[17px] font-medium hover:bg-black/40 transition-colors">
+                      + {TOUR_REMAINING_COUNT} more
+                    </span>
+                  </button>
                 </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+              </div>
+            )}
+          </section>
         )}
 
         {/* Recent Media (Recent Assets / Recent Galleries) */}
