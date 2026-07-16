@@ -1,7 +1,6 @@
 import { ReactNode, useMemo, useRef, useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Button } from "@/components/ui/button";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AssetCard } from "@/components/AssetCard";
 import { AssetDetailModal } from "@/components/AssetDetailModal";
 import { GalleryCard } from "@/components/GalleryCard";
@@ -331,6 +330,7 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery, onViewAll }
     loadPersistedList(ACTIVITY_MODULES_KEY, DEFAULT_ACTIVITY_MODULES)
   );
   const [customizeOpen, setCustomizeOpen] = useState(false);
+  const [isGetStartedExpanded, setIsGetStartedExpanded] = useState(true);
   const customizeSnapshotRef = useRef<{
     quickActions: QuickActionItem[];
     onboardingModules: ToggleItem[];
@@ -437,38 +437,39 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery, onViewAll }
 
         {/* Get Started with Greenfly */}
         {isOnboardingVisible && (
-          <Accordion type="single" collapsible defaultValue="get-started" className="bg-white border border-gray-300 rounded-lg">
-            <AccordionItem value="get-started" className="border-b-0">
-              <AccordionTrigger className="px-6 py-4 hover:no-underline [&>svg]:text-primary">
-                <span className="flex items-center gap-2">
-                  <span className="flex items-center justify-center w-10 h-10 rounded-full bg-[#d5e5fa] flex-shrink-0">
-                    <i className="bi bi-rocket-takeoff text-primary text-lg" />
-                  </span>
-                  <span className="text-[20px] font-medium text-black tracking-tight">Get Started with Greenfly</span>
-                </span>
-              </AccordionTrigger>
-              <AccordionContent className="px-6 pb-6">
-                <div className="flex flex-col items-start gap-4">
-                  <p className="text-[15px] text-gray-700 leading-snug">
-                    A quick tour of what the platform can do, explore anytime.
-                  </p>
-                  <div className="flex gap-4 overflow-hidden min-w-0 max-w-full w-full">
-                    {TOUR_CARDS.map((card, i) => (
-                      <button key={i} onClick={onOpenStarterGallery} className={`${i === 0 ? "" : "hidden sm:block "}flex-shrink-0`}>
-                        <img src={card.src} alt={card.alt} className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
-                      </button>
-                    ))}
-                    <button onClick={onOpenStarterGallery} className="hidden sm:block flex-shrink-0 relative">
-                      <img src={stTourEleven} alt={`View ${TOUR_REMAINING_COUNT} more tour cards`} className="h-40 w-auto rounded-xl" />
-                      <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/50 text-white text-[17px] font-medium hover:bg-black/40 transition-colors">
-                        + {TOUR_REMAINING_COUNT} more
-                      </span>
+          <section className="flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-6">
+              <div className="flex flex-col gap-1.5">
+                <h2 className="text-[20px] font-medium text-black tracking-tight">Get Started with Greenfly</h2>
+                <p className="text-[17px] text-gray-700">A quick tour of what the platform can do, explore anytime.</p>
+              </div>
+              <Button
+                variant="link"
+                className="h-auto p-0 text-[15px]"
+                onClick={() => setIsGetStartedExpanded((v) => !v)}
+                aria-label={isGetStartedExpanded ? "Collapse Get Started" : "Expand Get Started"}
+              >
+                <i className={`bi ${isGetStartedExpanded ? "bi-chevron-up" : "bi-chevron-down"} text-lg`} />
+              </Button>
+            </div>
+            {isGetStartedExpanded && (
+              <div className="bg-white border border-gray-300 rounded-lg p-6">
+                <div className="flex gap-4 overflow-hidden min-w-0 max-w-full w-full">
+                  {TOUR_CARDS.map((card, i) => (
+                    <button key={i} onClick={onOpenStarterGallery} className={`${i === 0 ? "" : "hidden sm:block "}flex-shrink-0`}>
+                      <img src={card.src} alt={card.alt} className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
                     </button>
-                  </div>
+                  ))}
+                  <button onClick={onOpenStarterGallery} className="hidden sm:block flex-shrink-0 relative">
+                    <img src={stTourEleven} alt={`View ${TOUR_REMAINING_COUNT} more tour cards`} className="h-40 w-auto rounded-xl" />
+                    <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/50 text-white text-[17px] font-medium hover:bg-black/40 transition-colors">
+                      + {TOUR_REMAINING_COUNT} more
+                    </span>
+                  </button>
                 </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+              </div>
+            )}
+          </section>
         )}
 
         {/* Recent Media (Recent Assets / Recent Galleries) */}
