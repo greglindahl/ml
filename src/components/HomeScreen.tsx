@@ -457,11 +457,11 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery, onViewAll }
                 <div className="flex gap-4 overflow-hidden min-w-0 max-w-full w-full">
                   {TOUR_CARDS.map((card, i) => (
                     <button key={i} onClick={onOpenStarterGallery} className={`${i === 0 ? "" : "hidden sm:block "}flex-shrink-0`}>
-                      <img src={card.src} alt={card.alt} className="h-40 w-auto rounded-xl hover:opacity-90 transition-opacity" />
+                      <img src={card.src} alt={card.alt} className={`h-40 ${i === 0 ? "w-auto" : "w-[132px] object-cover"} rounded-xl hover:opacity-90 transition-opacity`} />
                     </button>
                   ))}
                   <button onClick={onOpenStarterGallery} className="hidden sm:block flex-shrink-0 relative">
-                    <img src={stTourEleven} alt={`View ${TOUR_REMAINING_COUNT} more tour cards`} className="h-40 w-auto rounded-xl" />
+                    <img src={stTourEleven} alt={`View ${TOUR_REMAINING_COUNT} more tour cards`} className="h-40 w-[132px] object-cover rounded-xl" />
                     <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/50 text-white text-[17px] font-medium hover:bg-black/40 transition-colors">
                       + {TOUR_REMAINING_COUNT} more
                     </span>
