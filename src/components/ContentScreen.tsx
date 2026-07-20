@@ -17,11 +17,13 @@ interface ContentScreenProps {
   initialLibraryTab?: string;
   /** Tab Insights should open on mount (e.g. "activity" via Home's View All). */
   initialStatsTab?: string;
+  /** Remount key for Library — bumped when the Library nav item is clicked so it resets to All Assets. */
+  libraryResetKey?: number;
   onOpenStarterGallery?: () => void;
   onViewAll?: (target: HomeViewAllTarget) => void;
 }
 
-export function ContentScreen({ screen, isMobile = false, initialLibraryFolderId, initialLibraryTab, initialStatsTab, onOpenStarterGallery, onViewAll }: ContentScreenProps) {
+export function ContentScreen({ screen, isMobile = false, initialLibraryFolderId, initialLibraryTab, initialStatsTab, libraryResetKey, onOpenStarterGallery, onViewAll }: ContentScreenProps) {
   // Home has its own dedicated screen
   if (screen === "home") {
     return <HomeScreen isMobile={isMobile} onOpenStarterGallery={onOpenStarterGallery} onViewAll={onViewAll} />;
@@ -29,7 +31,7 @@ export function ContentScreen({ screen, isMobile = false, initialLibraryFolderId
 
   // Library has its own dedicated screen with secondary nav
   if (screen === "library") {
-    return <LibraryScreen isMobile={isMobile} initialActiveFolder={initialLibraryFolderId} initialActiveTab={initialLibraryTab} />;
+    return <LibraryScreen key={libraryResetKey} isMobile={isMobile} initialActiveFolder={initialLibraryFolderId} initialActiveTab={initialLibraryTab} />;
   }
 
   // Engage has its own dedicated screen with tabs

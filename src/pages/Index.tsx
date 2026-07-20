@@ -24,6 +24,9 @@ const Index = () => {
   // Same consume-once pattern for tab deep-links from Home's View All buttons.
   const [pendingLibraryTab, setPendingLibraryTab] = useState<string | null>(null);
   const [pendingStatsTab, setPendingStatsTab] = useState<string | null>(null);
+  // Bumped on every Library nav click; used as LibraryScreen's key so re-clicking
+  // the nav item while already on Library remounts it back to All Assets.
+  const [libraryResetKey, setLibraryResetKey] = useState(0);
 
   // Persist the desktop nav expanded/collapsed preference across sessions.
   useEffect(() => {
@@ -47,6 +50,9 @@ const Index = () => {
   }, [isMobile]);
 
   const handleNavigate = useCallback((screen: Screen) => {
+    if (screen === "library") {
+      setLibraryResetKey((prev) => prev + 1);
+    }
     setActiveScreen(screen);
     // Close mobile nav on navigation
     if (isMobile) {
@@ -138,6 +144,7 @@ const Index = () => {
       <ContentScreen
         screen={activeScreen}
         isMobile={isMobile}
+        libraryResetKey={libraryResetKey}
         initialLibraryFolderId={pendingLibraryFolderId ?? undefined}
         initialLibraryTab={pendingLibraryTab ?? undefined}
         initialStatsTab={pendingStatsTab ?? undefined}
