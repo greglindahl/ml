@@ -1,5 +1,11 @@
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useMemo } from "react";
 
 export type GalleryCardState = "default" | "hover" | "bulk-select" | "selected" | "empty";
@@ -18,7 +24,9 @@ interface GalleryCardProps {
   onSelect?: () => void;
   onOpen?: () => void;
   onFavorite?: () => void;
-  onMoreOptions?: () => void;
+  onMove?: () => void;
+  onArchive?: () => void;
+  onUnarchive?: () => void;
   className?: string;
 }
 
@@ -35,7 +43,9 @@ export function GalleryCard({
   onSelect,
   onOpen,
   onFavorite,
-  onMoreOptions,
+  onMove,
+  onArchive,
+  onUnarchive,
   className,
 }: GalleryCardProps) {
   const isDefault = state === "default";
@@ -187,13 +197,51 @@ export function GalleryCard({
             </h3>
           </div>
 
-          {/* More Options Button */}
-          <button
-            onClick={(e) => { e.stopPropagation(); onMoreOptions?.(); }}
-            className="w-6 h-6 flex items-center justify-center hover:bg-black/20 rounded-full transition-colors"
-          >
-            <i className="bi bi-three-dots-vertical text-white text-sm" />
-          </button>
+          {/* More Options Menu (plain button when no actions are wired, e.g. Home) */}
+          {!(onMove || onArchive || onUnarchive) ? (
+            <button
+              onClick={(e) => e.stopPropagation()}
+              className="w-6 h-6 flex items-center justify-center hover:bg-black/20 rounded-full transition-colors"
+              aria-label="Gallery options"
+            >
+              <i className="bi bi-three-dots-vertical text-white text-sm" />
+            </button>
+          ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                onClick={(e) => e.stopPropagation()}
+                className="w-6 h-6 flex items-center justify-center hover:bg-black/20 rounded-full transition-colors"
+                aria-label="Gallery options"
+              >
+                <i className="bi bi-three-dots-vertical text-white text-sm" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              {onMove && (
+                <DropdownMenuItem onClick={onMove}>
+                  <i className="bi bi-folder-symlink w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
+                  Move
+                </DropdownMenuItem>
+              )}
+              {isArchived ? (
+                onUnarchive && (
+                  <DropdownMenuItem onClick={onUnarchive}>
+                    <i className="bi bi-archive w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
+                    Unarchive
+                  </DropdownMenuItem>
+                )
+              ) : (
+                onArchive && (
+                  <DropdownMenuItem onClick={onArchive}>
+                    <i className="bi bi-archive w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
+                    Archive
+                  </DropdownMenuItem>
+                )
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          )}
         </div>
       </div>
     </div>

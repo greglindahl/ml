@@ -113,11 +113,13 @@ interface FolderDetailsViewProps {
   onAddGalleriesToFolder?: (galleryIds: string[], targetFolderId: string | null) => void;
   onCreateFolder?: (data: NewFolderData) => void;
   onMoveGalleries?: (galleryIds: string[], locationId: string | null) => void;
+  onArchiveGallery?: (galleryId: string) => void;
+  onUnarchiveGallery?: (galleryId: string) => void;
   galleryList?: Gallery[];
   flattenedFolders?: FlattenedFolder[];
 }
 
-export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = false, folderTree, onEditFolder, onMoveFolder, onArchiveFolder, onUnarchiveFolder, onDeleteFolder, onCreateGallery, onAddGalleriesToFolder, onCreateFolder, onMoveGalleries, galleryList, flattenedFolders }: FolderDetailsViewProps) {
+export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = false, folderTree, onEditFolder, onMoveFolder, onArchiveFolder, onUnarchiveFolder, onDeleteFolder, onCreateGallery, onAddGalleriesToFolder, onCreateFolder, onMoveGalleries, onArchiveGallery, onUnarchiveGallery, galleryList, flattenedFolders }: FolderDetailsViewProps) {
   const [activeTab, setActiveTab] = useState("assets");
   
   // Dialog states
@@ -921,6 +923,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   }))}
                   onNavigate={onNavigate}
                   onMoveGalleries={handleMoveGalleries}
+                  onArchiveGallery={onArchiveGallery}
+                  onUnarchiveGallery={onUnarchiveGallery}
                   perPage={galleryPerPage}
                   columnVisibility={galleryColumnVisibility}
                 />
@@ -977,9 +981,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                       onFavorite={() => {
                         // TODO: Implement favorite functionality
                       }}
-                      onMoreOptions={() => {
-                        // TODO: Implement more options menu
-                      }}
+                      onMove={() => handleMoveGalleries([gallery.id])}
+                      onArchive={() => onArchiveGallery?.(gallery.id)}
+                      onUnarchive={() => onUnarchiveGallery?.(gallery.id)}
                     />
                   );
                 })}

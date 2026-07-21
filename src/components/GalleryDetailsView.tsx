@@ -58,6 +58,8 @@ interface GalleryDetailsViewProps {
   onNavigate: (folderId: string) => void;
   isMobile?: boolean;
   folderTree: FolderItem[];
+  onArchiveGallery?: (galleryId: string) => void;
+  onUnarchiveGallery?: (galleryId: string) => void;
 }
 
 // Sort options for gallery assets
@@ -78,7 +80,7 @@ const SORT_LABELS: Record<NonNullable<SortField>, string> = {
   creator: "Creator",
 };
 
-export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = false, folderTree }: GalleryDetailsViewProps) {
+export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = false, folderTree, onArchiveGallery, onUnarchiveGallery }: GalleryDetailsViewProps) {
   const [activeTab, setActiveTab] = useState("assets");
   const [moveGalleriesOpen, setMoveGalleriesOpen] = useState(false);
   // View mode state (grid vs list)
@@ -348,6 +350,15 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 <DropdownMenuItem onClick={() => setMoveGalleriesOpen(true)}>
                   <i className="bi bi-arrows-move w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Move
                 </DropdownMenuItem>
+                {gallery.archived === true ? (
+                  <DropdownMenuItem onClick={() => onUnarchiveGallery?.(galleryId)}>
+                    <i className="bi bi-archive w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Unarchive
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={() => onArchiveGallery?.(galleryId)}>
+                    <i className="bi bi-archive w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Archive
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem className="text-destructive focus:text-destructive">
                   <i className="bi bi-trash w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Delete
                 </DropdownMenuItem>

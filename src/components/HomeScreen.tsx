@@ -516,9 +516,6 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery, onViewAll }
                       onFavorite={() => {
                         // TODO: Implement favorite functionality
                       }}
-                      onMoreOptions={() => {
-                        // TODO: Implement more options menu
-                      }}
                     />
                   ))}
                 </div>

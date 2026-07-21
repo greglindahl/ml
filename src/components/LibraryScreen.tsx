@@ -19,7 +19,7 @@ import { GalleryTableView, DEFAULT_GALLERY_COLUMN_VISIBILITY, GALLERY_COLUMNS, t
 import { FolderTableView, DEFAULT_FOLDER_COLUMN_VISIBILITY, FOLDER_COLUMNS, type FolderColumnVisibility } from "@/components/FolderTableView";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
-import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath } from "@/lib/mockFolderData";
+import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor } from "@/lib/mockFolderData";
 import { FolderSidebar } from "@/components/FolderSidebar";
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
@@ -27,6 +27,7 @@ import { NewGalleryDialog, type NewGalleryData } from "@/components/NewGalleryDi
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleriesDialog";
+import { MoveToUnarchiveDialog } from "@/components/MoveToUnarchiveDialog";
 import { useToast } from "@/hooks/use-toast";
 import { toast as sonnerToast } from "sonner";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
@@ -192,6 +193,21 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     });
   }, []);
 
+  // Set archived on the matching node AND every descendant (subfolders + galleries).
+  // Archiving/unarchiving a folder cascades through its whole subtree per spec.
+  const setArchivedDeep = useCallback((tree: FolderItem[], id: string, archived: boolean): FolderItem[] => {
+    const applyDeep = (item: FolderItem): FolderItem => ({
+      ...item,
+      archived,
+      children: item.children?.map(applyDeep),
+    });
+    return tree.map(item => {
+      if (item.id === id) return applyDeep(item);
+      if (item.children) return { ...item, children: setArchivedDeep(item.children, id, archived) };
+      return item;
+    });
+  }, []);
+
   const handleCreateFolder = useCallback((data: NewFolderData) => {
     const newFolder: FolderItem = {
       id: `folder-${Date.now()}`,
@@ -331,13 +347,13 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   }, []);
 
   const handleArchiveFolder = useCallback((folderId: string) => {
-    setFolderTree(prev => updateFolderInTree(prev, folderId, { archived: true }));
+    setFolderTree(prev => setArchivedDeep(prev, folderId, true));
     setActiveFolder("all");
-  }, [updateFolderInTree]);
+  }, [setArchivedDeep]);
 
   const handleUnarchiveFolder = useCallback((folderId: string) => {
-    setFolderTree(prev => updateFolderInTree(prev, folderId, { archived: false }));
-  }, [updateFolderInTree]);
+    setFolderTree(prev => setArchivedDeep(prev, folderId, false));
+  }, [setArchivedDeep]);
 
   const handleDeleteFolder = useCallback((folderId: string) => {
     setFolderTree(prev => removeFolderById(prev, folderId));
@@ -460,6 +476,98 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
       description: `${count} ${count === 1 ? "gallery" : "galleries"} moved successfully.`,
     });
   }, [toast, removeFolderById, insertFolderAt]);
+
+  // ----- Gallery archive/unarchive -----
+  // Gallery blocked from unarchiving in place (ancestor folder archived): the
+  // "Move to unarchive" dialog targets this gallery until dismissed/confirmed.
+  const [moveToUnarchiveGalleryId, setMoveToUnarchiveGalleryId] = useState<string | null>(null);
+
+  // Dual-write helper: archived state lives on the tree node (source of truth)
+  // and is mirrored onto the flat galleryList so root/unsorted galleries
+  // (no tree node) keep their state.
+  const setGalleriesArchived = useCallback((galleryIds: string[], archived: boolean) => {
+    const ids = new Set(galleryIds);
+    setGalleryList(prev => prev.map(g => ids.has(g.id) ? { ...g, archived } : g));
+    setFolderTree(prev => {
+      let tree = prev;
+      for (const id of ids) {
+        tree = updateFolderInTree(tree, id, { archived });
+      }
+      return tree;
+    });
+  }, [updateFolderInTree]);
+
+  // Tree node is the source of truth; the flat galleryList flag covers
+  // root/unsorted galleries that have no tree node (e.g. after a move to All Media).
+  const isGalleryArchivedById = useCallback((id: string): boolean => {
+    const node = findFolderById(folderTree, id);
+    if (node) return node.archived === true;
+    return galleryList.find(g => g.id === id)?.archived === true;
+  }, [folderTree, galleryList]);
+
+  // Blocked = inside an archived folder hierarchy; bulk unarchive is disabled
+  // (with an explanatory tooltip) while any blocked gallery is selected.
+  const anySelectedBlocked = useMemo(
+    () => Array.from(selectedGalleries).some(id => hasArchivedAncestor(id, folderTree)),
+    [selectedGalleries, folderTree]
+  );
+
+  const handleArchiveGallery = useCallback((galleryId: string) => {
+    setGalleriesArchived([galleryId], true);
+    const name = galleryList.find(g => g.id === galleryId)?.name ?? findFolderById(folderTree, galleryId)?.name;
+    toast({
+      title: "Gallery archived",
+      description: name ? `"${name}" has been archived.` : "The gallery has been archived.",
+    });
+  }, [setGalleriesArchived, galleryList, folderTree, toast]);
+
+  const handleUnarchiveGallery = useCallback((galleryId: string) => {
+    if (hasArchivedAncestor(galleryId, folderTree)) {
+      setMoveToUnarchiveGalleryId(galleryId);
+      return;
+    }
+    setGalleriesArchived([galleryId], false);
+    const name = galleryList.find(g => g.id === galleryId)?.name ?? findFolderById(folderTree, galleryId)?.name;
+    toast({
+      title: "Gallery unarchived",
+      description: name ? `"${name}" has been unarchived.` : "The gallery has been unarchived.",
+    });
+  }, [folderTree, setGalleriesArchived, galleryList, toast]);
+
+  const handleMoveToUnarchiveConfirm = useCallback((locationId: string | null, unarchive: boolean) => {
+    const galleryId = moveToUnarchiveGalleryId;
+    if (!galleryId) return;
+    setMoveToUnarchiveGalleryId(null);
+
+    const movedName = findFolderById(folderTree, galleryId)?.name
+      ?? galleryList.find(g => g.id === galleryId)?.name;
+    setFolderTree(prev => {
+      const galleryNode = findFolderById(prev, galleryId);
+      if (!galleryNode) return prev;
+      const updatedNode = { ...galleryNode, archived: unarchive ? false : galleryNode.archived };
+      let tree = removeFolderById(prev, galleryId);
+      if (locationId) {
+        tree = insertFolderAt(tree, locationId, updatedNode);
+      }
+      // locationId null ("All Media") = root: node leaves the tree, so the
+      // flat-list mirror below is what preserves its archived state.
+      return tree;
+    });
+    setGalleryList(prev => prev.map(g =>
+      g.id === galleryId ? { ...g, archived: unarchive ? false : true } : g
+    ));
+
+    if (locationId) {
+      setExpandedFolders(prev => new Set([...prev, locationId]));
+    }
+
+    toast({
+      title: unarchive ? "Gallery moved and unarchived" : "Gallery moved",
+      description: movedName
+        ? `"${movedName}" ${unarchive ? "is now active in its new location" : "was moved"}.`
+        : unarchive ? "The gallery is now active in its new location." : "The gallery was moved.",
+    });
+  }, [moveToUnarchiveGalleryId, folderTree, galleryList, removeFolderById, insertFolderAt, toast]);
 
   // Auto-expand/collapse sidebar based on active tab
   useEffect(() => {
@@ -830,6 +938,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
           onNavigate={handleNavigate}
           isMobile={isMobile}
           folderTree={folderTree}
+          onArchiveGallery={handleArchiveGallery}
+          onUnarchiveGallery={handleUnarchiveGallery}
         />
       ) : activeFolderItem ? (
         <FolderDetailsView 
@@ -847,6 +957,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
           onAddGalleriesToFolder={handleAddGalleriesToFolder}
           onCreateFolder={handleCreateFolder}
           onMoveGalleries={applyGalleryMoves}
+          onArchiveGallery={handleArchiveGallery}
+          onUnarchiveGallery={handleUnarchiveGallery}
           galleryList={galleryList}
           flattenedFolders={flatFolders}
         />
@@ -1279,20 +1391,54 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     </TooltipTrigger>
                     <TooltipContent>Favorite</TooltipContent>
                   </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
-                        setGalleryList(prev => prev.map(g => selectedGalleries.has(g.id) ? { ...g, archived: true } : g));
-                        selectedGalleries.forEach(id => {
-                          setFolderTree(prev => updateFolderInTree(prev, id, { archived: true }));
-                        });
-                        setSelectedGalleries(new Set());
-                      }}>
-                        <i className="bi bi-archive w-4 h-4 inline-flex items-center justify-center leading-none" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Archive</TooltipContent>
-                  </Tooltip>
+                  {archivedGalleriesOnly ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        {/* div wrapper: disabled buttons don't fire the pointer events the tooltip needs */}
+                        <div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            disabled={anySelectedBlocked}
+                            onClick={() => {
+                              const count = selectedGalleries.size;
+                              setGalleriesArchived(Array.from(selectedGalleries), false);
+                              setSelectedGalleries(new Set());
+                              toast({
+                                title: "Galleries unarchived",
+                                description: `${count} ${count === 1 ? "gallery" : "galleries"} unarchived.`,
+                              });
+                            }}
+                          >
+                            <i className="bi bi-archive w-4 h-4 inline-flex items-center justify-center leading-none" />
+                          </Button>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {anySelectedBlocked
+                          ? "Some selected galleries are in archived folders. Move them out of the archived folder to unarchive them."
+                          : "Unarchive"}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
+                          const count = selectedGalleries.size;
+                          setGalleriesArchived(Array.from(selectedGalleries), true);
+                          setSelectedGalleries(new Set());
+                          toast({
+                            title: "Galleries archived",
+                            description: `${count} ${count === 1 ? "gallery" : "galleries"} archived.`,
+                          });
+                        }}>
+                          <i className="bi bi-archive w-4 h-4 inline-flex items-center justify-center leading-none" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Archive</TooltipContent>
+                    </Tooltip>
+                  )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -1332,17 +1478,18 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             <div className="min-h-[400px]">
               {galleriesViewMode === "list" ? (
                 <GalleryTableView
-                  galleries={galleryList.map(g => ({ ...g, archived: findFolderById(folderTree, g.id)?.archived === true }))}
+                  galleries={galleryList.map(g => ({ ...g, archived: isGalleryArchivedById(g.id) }))}
                   onNavigate={handleNavigate}
                   onMoveGalleries={handleMoveGalleries}
+                  onArchiveGallery={handleArchiveGallery}
+                  onUnarchiveGallery={handleUnarchiveGallery}
                   perPage={galleryPerPage}
                   columnVisibility={galleryColumnVisibility}
                 />
               ) : (
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
                   {galleryList.filter(g => {
-                    const treeItem = findFolderById(folderTree, g.id);
-                    const isArchived = treeItem?.archived === true;
+                    const isArchived = isGalleryArchivedById(g.id);
                     if (archivedGalleriesOnly ? !isArchived : isArchived) return false;
                     if (unsortedGalleriesOnly) {
                       // Unsorted = not inside any real folder ("All Media" doesn't
@@ -1354,7 +1501,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     return true;
                   }).map((gallery) => {
                     const isSelected = selectedGalleries.has(gallery.id);
-                    const isGalleryArchived = findFolderById(folderTree, gallery.id)?.archived === true;
+                    const isGalleryArchived = isGalleryArchivedById(gallery.id);
                     const isGalleryInFolder = findGalleryParentPath(gallery.id, folderTree) !== null;
                     // Determine card state based on selection mode and selection status
                     let cardState: GalleryCardState = "default";
@@ -1375,11 +1522,14 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                         isInFolder={isGalleryInFolder}
                         state={cardState}
                         onSelect={() => {
-                          if (archivedGalleriesOnly) return;
                           toggleGallerySelection(gallery.id);
                         }}
                         onOpen={() => {
-                          if (archivedGalleriesOnly) return;
+                          if (archivedGalleriesOnly) {
+                            // Archived galleries can be selected (for bulk unarchive) but not opened
+                            if (isAnyGallerySelected) toggleGallerySelection(gallery.id);
+                            return;
+                          }
                           if (isAnyGallerySelected) {
                             toggleGallerySelection(gallery.id);
                           } else {
@@ -1389,9 +1539,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                         onFavorite={() => {
                           // TODO: Implement favorite functionality
                         }}
-                        onMoreOptions={() => {
-                          // TODO: Implement more options menu
-                        }}
+                        onMove={() => handleMoveGalleries([gallery.id])}
+                        onArchive={() => handleArchiveGallery(gallery.id)}
+                        onUnarchive={() => handleUnarchiveGallery(gallery.id)}
                       />
                     );
                   })}
@@ -1487,6 +1637,12 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
         galleries={selectedMoveItems}
         flattenedFolders={flatFolders}
         onMove={(locationId) => applyGalleryMoves(Array.from(selectedGalleries), locationId)}
+      />
+      <MoveToUnarchiveDialog
+        open={moveToUnarchiveGalleryId !== null}
+        onOpenChange={(open) => { if (!open) setMoveToUnarchiveGalleryId(null); }}
+        flattenedFolders={flatFolders.filter(f => !f.archived)}
+        onMove={handleMoveToUnarchiveConfirm}
       />
       <NewFolderDialog
         open={newFolderDialogOpen}

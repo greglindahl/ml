@@ -59,6 +59,7 @@ export interface Gallery {
   timeAgo: string;
   thumbnailUrl?: string;
   isPublic?: boolean;
+  archived?: boolean;
 }
 
 export interface FolderCard {
@@ -388,21 +389,24 @@ export interface FlattenedFolder {
   name: string;
   depth: number;
   displayName: string; // indented name for display
+  archived?: boolean; // true if the folder or any ancestor is archived
 }
 
-export function flattenFolders(items: FolderItem[], depth = 0): FlattenedFolder[] {
+export function flattenFolders(items: FolderItem[], depth = 0, parentArchived = false): FlattenedFolder[] {
   const result: FlattenedFolder[] = [];
   for (const item of items) {
     if (item.type === "folder" && item.id !== "all") {
+      const archived = parentArchived || item.archived === true;
       const indent = "\u00A0\u00A0".repeat(depth);
       result.push({
         id: item.id,
         name: item.name,
         depth,
         displayName: `${indent}${item.name}`,
+        archived,
       });
       if (item.children) {
-        result.push(...flattenFolders(item.children, depth + 1));
+        result.push(...flattenFolders(item.children, depth + 1, archived));
       }
     }
   }
@@ -487,6 +491,30 @@ export function findGalleryParentPath(
     }
   }
   return null;
+}
+
+// Whether any ANCESTOR of the item is archived (the item's own flag is ignored).
+// A gallery inside an archived folder hierarchy is "blocked": it can't be
+// unarchived in place — it must be moved to an active location first.
+export function hasArchivedAncestor(
+  itemId: string,
+  items: FolderItem[],
+  ancestorArchived = false
+): boolean {
+  for (const item of items) {
+    if (item.id === itemId) {
+      return ancestorArchived;
+    }
+    if (item.children) {
+      const found = hasArchivedAncestor(
+        itemId,
+        item.children,
+        ancestorArchived || item.archived === true
+      );
+      if (found) return true;
+    }
+  }
+  return false;
 }
 
 // Get the display string for a gallery's current location
