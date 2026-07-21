@@ -6,7 +6,7 @@ interface ConnectScreenProps {
 
 export function ConnectScreen({ isMobile = false }: ConnectScreenProps) {
   return (
-    <div className={`flex-1 flex flex-col pb-12 ${isMobile ? "pt-[58px]" : ""}`}>
+    <div className={`flex-1 flex flex-col pb-12 ${isMobile ? "pt-[72px]" : ""}`}>
       {/* Spacer for consistent header position - matches LibraryScreen */}
       {!isMobile && <div className="mb-2 h-[44px] flex-shrink-0" />}
       {/* Header */}

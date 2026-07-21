@@ -92,7 +92,7 @@ const DevSpec = () => {
                 <tr>
                   <td className="border p-2">Header Height</td>
                   <td className="border p-2"><code>80px</code> (pt-20)</td>
-                  <td className="border p-2"><code>58px</code> (pt-[58px])</td>
+                  <td className="border p-2"><code>72px</code> (pt-[72px])</td>
                 </tr>
                 <tr>
                   <td className="border p-2">Mobile Header Bar</td>

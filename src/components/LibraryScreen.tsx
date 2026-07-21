@@ -839,9 +839,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
           flattenedFolders={flatFolders}
         />
       ) : (
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-6 md:px-9 content-container">
+      <div className={`flex-1 flex flex-col min-w-0 h-full overflow-hidden px-6 md:px-9 content-container ${isMobile ? "pt-[72px]" : ""}`}>
         {/* Breadcrumb spacer - matches FolderDetailsView/GalleryDetailsView for consistent header position */}
-        <div className="mb-2 h-[44px] flex-shrink-0" />
+        {!isMobile && <div className="mb-2 h-[44px] flex-shrink-0" />}
 
         {/* Header with title and actions */}
         <div className="flex items-center justify-between flex-shrink-0 mb-6">

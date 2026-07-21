@@ -394,7 +394,7 @@ export function HomeScreen({ isMobile = false, onOpenStarterGallery, onViewAll }
   }
 
   return (
-    <div className={`flex-1 flex flex-col pb-12 ${isMobile ? "pt-[58px]" : ""}`}>
+    <div className={`flex-1 flex flex-col pb-12 ${isMobile ? "pt-[72px]" : ""}`}>
       {!isMobile && <div className="mb-2 h-[44px] flex-shrink-0" />}
 
       <div className="px-6 md:px-9 flex flex-col gap-8">
