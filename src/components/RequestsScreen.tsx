@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { SectionTabs } from "@/components/SectionTabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -134,12 +135,15 @@ export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
 
       {/* Primary Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "campaigns" | "requests")} className="flex flex-col px-6 md:px-9">
-        <div className="border-b">
-          <TabsList>
-            <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
-            <TabsTrigger value="requests">Requests</TabsTrigger>
-          </TabsList>
-        </div>
+        <SectionTabs
+          tabs={[
+            { value: "campaigns", label: "Campaigns" },
+            { value: "requests", label: "Requests" },
+          ]}
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as "campaigns" | "requests")}
+          isMobile={isMobile}
+        />
 
         {/* Campaigns Tab */}
         <TabsContent value="campaigns" className="py-6 flex flex-col gap-4 data-[state=inactive]:hidden">

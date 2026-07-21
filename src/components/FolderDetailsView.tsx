@@ -4,7 +4,8 @@ import { AssetTableView } from "@/components/AssetTableView";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { GalleryTableView, GalleryTableItem } from "@/components/GalleryTableView";
 import { FolderTableView } from "@/components/FolderTableView";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { SectionTabs } from "@/components/SectionTabs";
 import { Button } from "@/components/ui/button";
 import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
 import { FilterBar, FilterBarHandle } from "@/components/FilterBar";
@@ -507,13 +508,16 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-        <div className="border-b flex-shrink-0">
-          <TabsList>
-            <TabsTrigger value="assets">Assets</TabsTrigger>
-            <TabsTrigger value="galleries">Galleries</TabsTrigger>
-            <TabsTrigger value="folders">Folders</TabsTrigger>
-          </TabsList>
-        </div>
+        <SectionTabs
+          tabs={[
+            { value: "assets", label: "Assets" },
+            { value: "galleries", label: "Galleries" },
+            { value: "folders", label: "Folders" },
+          ]}
+          value={activeTab}
+          onValueChange={setActiveTab}
+          isMobile={isMobile}
+        />
 
         {/* Assets Tab */}
         <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">

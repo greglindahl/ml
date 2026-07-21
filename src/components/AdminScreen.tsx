@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { SectionTabs } from "@/components/SectionTabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -279,13 +280,16 @@ export function AdminScreen({ isMobile = false }: AdminScreenProps) {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as NetworkTab)} className="flex flex-col px-6 md:px-9">
-        <div className="border-b">
-          <TabsList>
-            <TabsTrigger value="groups">Groups</TabsTrigger>
-            <TabsTrigger value="invite-codes">Invite Codes</TabsTrigger>
-            <TabsTrigger value="manage-users">Manage Users</TabsTrigger>
-          </TabsList>
-        </div>
+        <SectionTabs
+          tabs={[
+            { value: "groups", label: "Groups" },
+            { value: "invite-codes", label: "Invite Codes" },
+            { value: "manage-users", label: "Manage Users" },
+          ]}
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as NetworkTab)}
+          isMobile={isMobile}
+        />
 
         <TabsContent value="groups" className="py-6 mt-0 flex flex-col gap-4 data-[state=inactive]:hidden">
           {/* Search Row */}

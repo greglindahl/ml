@@ -5,7 +5,8 @@ import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { AssetTableView, DEFAULT_ASSET_COLUMN_VISIBILITY, ASSET_COLUMNS, type AssetColumnVisibility } from "@/components/AssetTableView";
 import { SettingsDrawer, useDisplayLabel, usePerPagePreference, useColumnVisibility } from "@/components/SettingsDrawer";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { SectionTabs } from "@/components/SectionTabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
@@ -359,13 +360,16 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-        <div className="border-b flex-shrink-0">
-          <TabsList>
-            <TabsTrigger value="assets">Assets</TabsTrigger>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="public-settings">Public Settings</TabsTrigger>
-          </TabsList>
-        </div>
+        <SectionTabs
+          tabs={[
+            { value: "assets", label: "Assets" },
+            { value: "overview", label: "Overview" },
+            { value: "public-settings", label: "Public Settings" },
+          ]}
+          value={activeTab}
+          onValueChange={setActiveTab}
+          isMobile={isMobile}
+        />
 
         <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">
           {/* Search Row with Utility Cluster */}

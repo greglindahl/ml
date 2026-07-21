@@ -1,10 +1,20 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { SectionTabs } from "@/components/SectionTabs";
+
+const ENGAGE_TABS = [
+  { value: "campaigns", label: "Campaigns" },
+  { value: "themes", label: "Themes" },
+  { value: "settings", label: "Settings" },
+];
 
 interface EngageScreenProps {
   isMobile?: boolean;
 }
 
 export function EngageScreen({ isMobile = false }: EngageScreenProps) {
+  const [activeTab, setActiveTab] = useState("campaigns");
+
   return (
     <div className={`flex-1 flex flex-col pb-12 ${isMobile ? "pt-[72px]" : ""}`}>
       {/* Spacer for consistent header position - matches LibraryScreen */}
@@ -15,14 +25,8 @@ export function EngageScreen({ isMobile = false }: EngageScreenProps) {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="campaigns" className="flex-1 flex flex-col px-6 md:px-9">
-        <div className="border-b">
-          <TabsList>
-            <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
-            <TabsTrigger value="themes">Themes</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
-        </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col px-6 md:px-9">
+        <SectionTabs tabs={ENGAGE_TABS} value={activeTab} onValueChange={setActiveTab} isMobile={isMobile} />
 
         <TabsContent value="campaigns" className="flex-1 py-6 mt-0">
           <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">

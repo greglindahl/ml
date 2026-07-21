@@ -3,7 +3,8 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { SectionTabs } from "@/components/SectionTabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
@@ -92,6 +93,17 @@ function computeFilterCounts(assets: LibraryAsset[]) {
 
   return { creators, contentTypes, aspectRatios, total: assets.length };
 }
+
+// Library section tabs — rendered as a TabsList on desktop and a dropdown on
+// mobile, where the full set doesn't fit horizontally (mirrors the prod app).
+const LIBRARY_TABS = [
+  { value: "assets", label: "All Assets" },
+  { value: "galleries", label: "Galleries" },
+  { value: "folders", label: "Folders" },
+  { value: "favorites", label: "Favorites" },
+  { value: "branding", label: "Branding" },
+  { value: "workflows", label: "Workflows" },
+];
 
 interface LibraryScreenProps {
   isMobile?: boolean;
@@ -878,16 +890,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-          <div className="border-b flex-shrink-0">
-            <TabsList>
-              <TabsTrigger value="assets">All Assets</TabsTrigger>
-              <TabsTrigger value="galleries">Galleries</TabsTrigger>
-              <TabsTrigger value="folders">Folders</TabsTrigger>
-              <TabsTrigger value="favorites">Favorites</TabsTrigger>
-              <TabsTrigger value="branding">Branding</TabsTrigger>
-              <TabsTrigger value="workflows">Workflows</TabsTrigger>
-            </TabsList>
-          </div>
+          <SectionTabs tabs={LIBRARY_TABS} value={activeTab} onValueChange={setActiveTab} isMobile={isMobile} />
 
           <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">
             {/* Search Row with Utility Cluster */}
