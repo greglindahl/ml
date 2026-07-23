@@ -1,4 +1,13 @@
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SectionTabs } from "@/components/SectionTabs";
+
+const STATS_TABS = [
+  { value: "overview", label: "Overview" },
+  { value: "activity", label: "Activity" },
+  { value: "users", label: "Users" },
+  { value: "social-shares", label: "Social Shares" },
+];
 
 interface StatsScreenProps {
   isMobile?: boolean;
@@ -7,8 +16,10 @@ interface StatsScreenProps {
 }
 
 export function StatsScreen({ isMobile = false, initialTab }: StatsScreenProps) {
+  const [activeTab, setActiveTab] = useState(initialTab ?? "overview");
+
   return (
-    <div className={`flex-1 flex flex-col pb-12 ${isMobile ? "pt-[58px]" : ""}`}>
+    <div className={`flex-1 flex flex-col pb-12 ${isMobile ? "pt-[72px]" : ""}`}>
       {/* Spacer for consistent header position - matches LibraryScreen */}
       {!isMobile && <div className="mb-2 h-[44px] flex-shrink-0" />}
       {/* Header */}
@@ -17,15 +28,8 @@ export function StatsScreen({ isMobile = false, initialTab }: StatsScreenProps) 
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue={initialTab ?? "overview"} className="flex-1 flex flex-col px-6 md:px-9">
-        <div className="border-b">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
-            <TabsTrigger value="social-shares">Social Shares</TabsTrigger>
-          </TabsList>
-        </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col px-6 md:px-9">
+        <SectionTabs tabs={STATS_TABS} value={activeTab} onValueChange={setActiveTab} isMobile={isMobile} />
 
         <TabsContent value="overview" className="flex-1 py-6 mt-0">
           <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">

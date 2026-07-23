@@ -5,7 +5,8 @@ import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { AssetTableView, DEFAULT_ASSET_COLUMN_VISIBILITY, ASSET_COLUMNS, type AssetColumnVisibility } from "@/components/AssetTableView";
 import { SettingsDrawer, useDisplayLabel, usePerPagePreference, useColumnVisibility } from "@/components/SettingsDrawer";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { SectionTabs } from "@/components/SectionTabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
@@ -57,6 +58,8 @@ interface GalleryDetailsViewProps {
   onNavigate: (folderId: string) => void;
   isMobile?: boolean;
   folderTree: FolderItem[];
+  onArchiveGallery?: (galleryId: string) => void;
+  onUnarchiveGallery?: (galleryId: string) => void;
 }
 
 // Sort options for gallery assets
@@ -77,7 +80,7 @@ const SORT_LABELS: Record<NonNullable<SortField>, string> = {
   creator: "Creator",
 };
 
-export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = false, folderTree }: GalleryDetailsViewProps) {
+export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = false, folderTree, onArchiveGallery, onUnarchiveGallery }: GalleryDetailsViewProps) {
   const [activeTab, setActiveTab] = useState("assets");
   const [moveGalleriesOpen, setMoveGalleriesOpen] = useState(false);
   // View mode state (grid vs list)
@@ -265,7 +268,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
   }, []);
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-6 md:px-9 content-container">
+    <div className={`flex-1 flex flex-col min-w-0 h-full overflow-hidden px-6 md:px-9 content-container ${isMobile ? "pt-[72px]" : ""}`}>
       {/* Breadcrumb Navigation - fixed height to prevent layout shift */}
       <nav className="flex items-center gap-[6px] text-[13px] tracking-[-0.13px] mb-2 flex-shrink-0 h-[44px] items-end">
         {breadcrumbPath.map((item, index) => (
@@ -347,6 +350,15 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 <DropdownMenuItem onClick={() => setMoveGalleriesOpen(true)}>
                   <i className="bi bi-arrows-move w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Move
                 </DropdownMenuItem>
+                {gallery.archived === true ? (
+                  <DropdownMenuItem onClick={() => onUnarchiveGallery?.(galleryId)}>
+                    <i className="bi bi-archive w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Unarchive
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={() => onArchiveGallery?.(galleryId)}>
+                    <i className="bi bi-archive w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Archive
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem className="text-destructive focus:text-destructive">
                   <i className="bi bi-trash w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Delete
                 </DropdownMenuItem>
@@ -359,13 +371,16 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-        <div className="border-b flex-shrink-0">
-          <TabsList>
-            <TabsTrigger value="assets">Assets</TabsTrigger>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="public-settings">Public Settings</TabsTrigger>
-          </TabsList>
-        </div>
+        <SectionTabs
+          tabs={[
+            { value: "assets", label: "Assets" },
+            { value: "overview", label: "Overview" },
+            { value: "public-settings", label: "Public Settings" },
+          ]}
+          value={activeTab}
+          onValueChange={setActiveTab}
+          isMobile={isMobile}
+        />
 
         <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">
           {/* Search Row with Utility Cluster */}
@@ -649,6 +664,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           id: galleryId,
           name: gallery.name,
           currentLocation: getGalleryLocationDisplay(galleryId, folderTree),
+          assetCount: gallery.countType === "assets" ? gallery.count : undefined,
         }]}
         flattenedFolders={flattenFolders(folderTree)}
         onMove={(locationId) => {

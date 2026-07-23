@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, ReactNode } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import {
   Dialog,
@@ -9,7 +9,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Table,
   TableBody,
@@ -29,6 +28,8 @@ export interface MoveGalleryItem {
   id: string;
   name: string;
   currentLocation: string;
+  /** Media count for the affected-items notice; falls back to a mockGalleries lookup when omitted. */
+  assetCount?: number;
 }
 
 interface MoveGalleriesDialogProps {
@@ -37,6 +38,9 @@ interface MoveGalleriesDialogProps {
   galleries: MoveGalleryItem[];
   flattenedFolders: FlattenedFolder[];
   onMove: (locationId: string | null) => void;
+  /** Header copy overrides — used by the "Move to unarchive" flow; defaults keep the standard move copy. */
+  title?: string;
+  description?: ReactNode;
 }
 
 export function MoveGalleriesDialog({
@@ -45,6 +49,8 @@ export function MoveGalleriesDialog({
   galleries,
   flattenedFolders,
   onMove,
+  title = "Move Galleries",
+  description,
 }: MoveGalleriesDialogProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [locationId, setLocationId] = useState<string | null>(null);
@@ -52,7 +58,7 @@ export function MoveGalleriesDialog({
   const [locationPopoverOpen, setLocationPopoverOpen] = useState(false);
 
   const totalAssets = useMemo(
-    () => galleries.reduce((sum, g) => sum + (mockGalleries.find((m) => m.id === g.id)?.assetCount ?? 0), 0),
+    () => galleries.reduce((sum, g) => sum + (g.assetCount ?? mockGalleries.find((m) => m.id === g.id)?.assetCount ?? 0), 0),
     [galleries]
   );
   const exceedsMoveLimit = totalAssets > MOVE_MEDIA_ITEM_LIMIT;
@@ -82,13 +88,17 @@ export function MoveGalleriesDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl" ref={contentRef}>
         <DialogHeader>
-          <DialogTitle>Move Galleries</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="space-y-1">
-            <span className="block">
-              You're about to move {galleries.length} {galleries.length === 1 ? "gallery" : "galleries"} to a new location.
-            </span>
-            <span className="block">This changes where they appear in the folder hierarchy.</span>
-            <span className="block">Sharing, assets, and access are not affected.</span>
+            {description ?? (
+              <>
+                <span className="block">
+                  You're about to move {galleries.length} {galleries.length === 1 ? "gallery" : "galleries"} to a new location.
+                </span>
+                <span className="block">This changes where they appear in the folder hierarchy.</span>
+                <span className="block">Sharing, assets, and access are not affected.</span>
+              </>
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -174,23 +184,19 @@ export function MoveGalleriesDialog({
             </p>
           </div>
         ) : (
-          <Alert className="bg-muted/50 border-muted">
-            <i className="bi bi-info-circle h-4 w-4 inline-flex items-center justify-center leading-none" />
-            <AlertDescription className="text-sm text-muted-foreground">
-              This move will affect <strong>{totalAssets.toLocaleString()} media items</strong> and may take some time to complete. The move will continue in the background. <strong>Content will not be searchable until the move is finished.</strong>
-            </AlertDescription>
-          </Alert>
+          <div className="flex items-start gap-3 rounded-md bg-[#EDF2F9] px-6 py-3 text-[#12263F] text-[15px] leading-snug tracking-[-0.01em]">
+            <i className="bi bi-info-circle flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
+            <p>
+              This move will affect <strong className="font-semibold">{totalAssets.toLocaleString()} media items</strong> and may take some time to complete. The move will continue in the background. <strong className="font-semibold">Content will not be searchable until the move is finished.</strong>
+            </p>
+          </div>
         )}
 
         <DialogFooter>
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
-          <Button
-            onClick={handleMove}
-            disabled={!locationSelected || exceedsMoveLimit}
-            className="bg-foreground text-background hover:bg-foreground/90"
-          >
+          <Button onClick={handleMove} disabled={!locationSelected || exceedsMoveLimit}>
             Move
           </Button>
         </DialogFooter>

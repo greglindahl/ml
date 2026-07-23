@@ -4,7 +4,8 @@ import { AssetTableView } from "@/components/AssetTableView";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { GalleryTableView, GalleryTableItem } from "@/components/GalleryTableView";
 import { FolderTableView } from "@/components/FolderTableView";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { SectionTabs } from "@/components/SectionTabs";
 import { Button } from "@/components/ui/button";
 import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
 import { FilterBar, FilterBarHandle } from "@/components/FilterBar";
@@ -112,11 +113,13 @@ interface FolderDetailsViewProps {
   onAddGalleriesToFolder?: (galleryIds: string[], targetFolderId: string | null) => void;
   onCreateFolder?: (data: NewFolderData) => void;
   onMoveGalleries?: (galleryIds: string[], locationId: string | null) => void;
+  onArchiveGallery?: (galleryId: string) => void;
+  onUnarchiveGallery?: (galleryId: string) => void;
   galleryList?: Gallery[];
   flattenedFolders?: FlattenedFolder[];
 }
 
-export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = false, folderTree, onEditFolder, onMoveFolder, onArchiveFolder, onUnarchiveFolder, onDeleteFolder, onCreateGallery, onAddGalleriesToFolder, onCreateFolder, onMoveGalleries, galleryList, flattenedFolders }: FolderDetailsViewProps) {
+export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = false, folderTree, onEditFolder, onMoveFolder, onArchiveFolder, onUnarchiveFolder, onDeleteFolder, onCreateGallery, onAddGalleriesToFolder, onCreateFolder, onMoveGalleries, onArchiveGallery, onUnarchiveGallery, galleryList, flattenedFolders }: FolderDetailsViewProps) {
   const [activeTab, setActiveTab] = useState("assets");
   
   // Dialog states
@@ -395,6 +398,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         id,
         name: gallery?.name || id,
         currentLocation: getGalleryLocationDisplay(id, folderTree),
+        assetCount: gallery?.countType === "assets" ? gallery.count : undefined,
       };
     });
     setMoveGalleryItems(items);
@@ -427,7 +431,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   }, [selectedGalleries, handleMoveGalleries]);
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden px-6 md:px-9 content-container">
+    <div className={`flex-1 flex flex-col min-w-0 h-full overflow-hidden px-6 md:px-9 content-container ${isMobile ? "pt-[72px]" : ""}`}>
       {/* Breadcrumb Navigation - fixed height to prevent layout shift */}
       <nav className="flex items-center gap-[6px] text-[13px] tracking-[-0.13px] mb-2 flex-shrink-0 h-[44px] items-end">
         {breadcrumbPath.map((item, index) => (
@@ -507,13 +511,16 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-        <div className="border-b flex-shrink-0">
-          <TabsList>
-            <TabsTrigger value="assets">Assets</TabsTrigger>
-            <TabsTrigger value="galleries">Galleries</TabsTrigger>
-            <TabsTrigger value="folders">Folders</TabsTrigger>
-          </TabsList>
-        </div>
+        <SectionTabs
+          tabs={[
+            { value: "assets", label: "Assets" },
+            { value: "galleries", label: "Galleries" },
+            { value: "folders", label: "Folders" },
+          ]}
+          value={activeTab}
+          onValueChange={setActiveTab}
+          isMobile={isMobile}
+        />
 
         {/* Assets Tab */}
         <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">
@@ -917,6 +924,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   }))}
                   onNavigate={onNavigate}
                   onMoveGalleries={handleMoveGalleries}
+                  onArchiveGallery={onArchiveGallery}
+                  onUnarchiveGallery={onUnarchiveGallery}
                   perPage={galleryPerPage}
                   columnVisibility={galleryColumnVisibility}
                 />
@@ -973,9 +982,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                       onFavorite={() => {
                         // TODO: Implement favorite functionality
                       }}
-                      onMoreOptions={() => {
-                        // TODO: Implement more options menu
-                      }}
+                      onMove={() => handleMoveGalleries([gallery.id])}
+                      onArchive={() => onArchiveGallery?.(gallery.id)}
+                      onUnarchive={() => onUnarchiveGallery?.(gallery.id)}
                     />
                   );
                 })}

@@ -69,6 +69,8 @@ interface GalleryTableViewProps {
   isLoading?: boolean;
   onNavigate?: (galleryId: string) => void;
   onMoveGalleries?: (galleryIds: string[]) => void;
+  onArchiveGallery?: (galleryId: string) => void;
+  onUnarchiveGallery?: (galleryId: string) => void;
   /** Controlled perPage value */
   perPage: number;
   /** Controlled column visibility */
@@ -121,6 +123,8 @@ export function GalleryTableView({
   isLoading = false,
   onNavigate,
   onMoveGalleries,
+  onArchiveGallery,
+  onUnarchiveGallery,
   perPage,
   columnVisibility,
 }: GalleryTableViewProps) {
@@ -534,6 +538,11 @@ export function GalleryTableView({
                     <DropdownMenuItem>Edit Details</DropdownMenuItem>
                     <DropdownMenuItem>Share</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onMoveGalleries?.([gallery.id])}>Move</DropdownMenuItem>
+                    {gallery.archived === true ? (
+                      <DropdownMenuItem onClick={() => onUnarchiveGallery?.(gallery.id)}>Unarchive</DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem onClick={() => onArchiveGallery?.(gallery.id)}>Archive</DropdownMenuItem>
+                    )}
                     <DropdownMenuItem>Download All</DropdownMenuItem>
                     <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
                   </DropdownMenuContent>
