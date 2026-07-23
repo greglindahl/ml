@@ -27,7 +27,6 @@ import { NewGalleryDialog, type NewGalleryData } from "@/components/NewGalleryDi
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleriesDialog";
-import { MoveToUnarchiveDialog } from "@/components/MoveToUnarchiveDialog";
 import { useToast } from "@/hooks/use-toast";
 import { toast as sonnerToast } from "sonner";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
@@ -442,6 +441,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
         id: gallery.id,
         name: gallery.name,
         currentLocation: getGalleryLocationDisplay(gallery.id, folderTree),
+        assetCount: gallery.assetCount,
       }));
   }, [galleryList, selectedGalleries, folderTree]);
 
@@ -481,6 +481,19 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   // Gallery blocked from unarchiving in place (ancestor folder archived): the
   // "Move to unarchive" dialog targets this gallery until dismissed/confirmed.
   const [moveToUnarchiveGalleryId, setMoveToUnarchiveGalleryId] = useState<string | null>(null);
+
+  // Single-row table entry for the "Move to unarchive" dialog (reuses MoveGalleriesDialog)
+  const moveToUnarchiveItems: MoveGalleryItem[] = useMemo(() => {
+    if (!moveToUnarchiveGalleryId) return [];
+    const node = findFolderById(folderTree, moveToUnarchiveGalleryId);
+    const flat = galleryList.find(g => g.id === moveToUnarchiveGalleryId);
+    return [{
+      id: moveToUnarchiveGalleryId,
+      name: node?.name ?? flat?.name ?? "",
+      currentLocation: getGalleryLocationDisplay(moveToUnarchiveGalleryId, folderTree),
+      assetCount: (node?.countType === "assets" ? node.count : undefined) ?? flat?.assetCount,
+    }];
+  }, [moveToUnarchiveGalleryId, folderTree, galleryList]);
 
   // Dual-write helper: archived state lives on the tree node (source of truth)
   // and is mirrored onto the flat galleryList so root/unsorted galleries
@@ -1638,11 +1651,14 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
         flattenedFolders={flatFolders}
         onMove={(locationId) => applyGalleryMoves(Array.from(selectedGalleries), locationId)}
       />
-      <MoveToUnarchiveDialog
+      <MoveGalleriesDialog
         open={moveToUnarchiveGalleryId !== null}
         onOpenChange={(open) => { if (!open) setMoveToUnarchiveGalleryId(null); }}
+        galleries={moveToUnarchiveItems}
         flattenedFolders={flatFolders.filter(f => !f.archived)}
-        onMove={handleMoveToUnarchiveConfirm}
+        onMove={(locationId) => handleMoveToUnarchiveConfirm(locationId, true)}
+        title="Move to Unarchive"
+        description="This gallery can't be unarchived because it's located in an archived folder. To unarchive it, move the gallery to All Media or another active folder."
       />
       <NewFolderDialog
         open={newFolderDialogOpen}

@@ -398,6 +398,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         id,
         name: gallery?.name || id,
         currentLocation: getGalleryLocationDisplay(id, folderTree),
+        assetCount: gallery?.countType === "assets" ? gallery.count : undefined,
       };
     });
     setMoveGalleryItems(items);

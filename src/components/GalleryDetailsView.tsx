@@ -664,6 +664,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           id: galleryId,
           name: gallery.name,
           currentLocation: getGalleryLocationDisplay(galleryId, folderTree),
+          assetCount: gallery.countType === "assets" ? gallery.count : undefined,
         }]}
         flattenedFolders={flattenFolders(folderTree)}
         onMove={(locationId) => {
