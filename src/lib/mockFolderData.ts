@@ -52,6 +52,18 @@ export function findFolderById(folders: FolderItem[], id: string): FolderItem | 
   return null;
 }
 
+// Ancestor ids from root down to (excluding) the folder itself; null if not found
+export function findFolderAncestorIds(folders: FolderItem[], id: string, path: string[] = []): string[] | null {
+  for (const folder of folders) {
+    if (folder.id === id) return path;
+    if (folder.children) {
+      const found = findFolderAncestorIds(folder.children, id, [...path, folder.id]);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 export interface Gallery {
   id: string;
   name: string;

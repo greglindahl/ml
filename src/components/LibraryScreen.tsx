@@ -19,7 +19,7 @@ import { GalleryTableView, DEFAULT_GALLERY_COLUMN_VISIBILITY, GALLERY_COLUMNS, t
 import { FolderTableView, DEFAULT_FOLDER_COLUMN_VISIBILITY, FOLDER_COLUMNS, type FolderColumnVisibility } from "@/components/FolderTableView";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
-import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor } from "@/lib/mockFolderData";
+import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, findFolderAncestorIds, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor } from "@/lib/mockFolderData";
 import { FolderSidebar } from "@/components/FolderSidebar";
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
@@ -243,8 +243,30 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     });
     setIsFolderSidebarExpanded(true);
     setNewFolderDialogOpen(false);
-    sonnerToast.success("Folder created successfully");
-  }, [insertFolderAt, galleryList]);
+
+    // Open the folder detail view; expand the full ancestor chain so the
+    // sidebar highlight is visible even in a collapsed subtree
+    const goToFolder = () => {
+      setExpandedFolders(prev => {
+        const next = new Set(prev);
+        if (data.locationId) {
+          (findFolderAncestorIds(folderTree, data.locationId) ?? []).forEach(id => next.add(id));
+          next.add(data.locationId);
+        }
+        return next;
+      });
+      setActiveFolder(newFolder.id);
+    };
+
+    if (data.navigateOnCreate) {
+      goToFolder();
+      sonnerToast.success("Folder created successfully");
+    } else {
+      sonnerToast.success("Folder created successfully", {
+        action: { label: "Go to folder", onClick: goToFolder },
+      });
+    }
+  }, [insertFolderAt, galleryList, folderTree]);
 
   const handleEditFolder = useCallback((folderId: string, data: { name: string; locationId: string | null; galleryIds: string[] }) => {
     setFolderTree(prev => {
