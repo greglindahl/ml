@@ -131,6 +131,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   const { toast } = useToast();
   const [archivedFoldersOnly, setArchivedFoldersOnly] = useState(false);
   const [folderViewMode, setFolderViewMode] = useState<"grid" | "table">("grid");
+  // Front-end-only filter of the folders visible at this level (no recursive search)
+  const [folderSearchQuery, setFolderSearchQuery] = useState("");
   const [archivedGalleriesOnly, setArchivedGalleriesOnly] = useState(false);
   const [unsortedGalleriesOnly, setUnsortedGalleriesOnly] = useState(false);
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
@@ -1564,28 +1566,43 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
           </TabsContent>
 
           <TabsContent value="folders" className="flex-1 overflow-y-auto py-6 mt-0">
-            <div className="flex items-center justify-end mb-6">
-              <div className="flex items-center border rounded-md bg-card">
-                <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-r-none text-[#6e84a3] ${folderViewMode === "grid" ? "bg-accent" : ""}`} onClick={() => setFolderViewMode("grid")}>
-                  <i className="bi bi-grid w-4 h-4 inline-flex items-center justify-center leading-none" />
-                </Button>
-                <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-l-none border-l text-[#6e84a3] ${folderViewMode === "table" ? "bg-accent" : ""}`} onClick={() => setFolderViewMode("table")}>
-                  <i className="bi bi-table w-4 h-4 inline-flex items-center justify-center leading-none" />
-                </Button>
+            {/* Search Row with Utility Cluster */}
+            <div className="flex items-center gap-4 mb-3 cq-search-row">
+              <div className="flex-1 min-w-0 cq-search-input">
+                <FacetedSearchWithTypeahead onSearch={(query) => setFolderSearchQuery(query)} placeholder="Search" />
               </div>
+
+              <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
+                <div className="flex items-center border border-gray-300 rounded-md bg-white">
+                  <Button variant="ghost" size="icon" className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${folderViewMode === "grid" ? "bg-gray-100" : ""}`} onClick={() => setFolderViewMode("grid")}>
+                    <i className="bi bi-grid w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className={`h-10 w-10 rounded-l-none border-l border-gray-300 text-[#6e84a3] ${folderViewMode === "table" ? "bg-gray-100" : ""}`} onClick={() => setFolderViewMode("table")}>
+                    <i className="bi bi-table w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Applied Filter Chips - reserved height to prevent layout shift */}
+            <div className="min-h-[24px] mb-4">
+              {/* Filter chips would go here when filters are active */}
             </div>
 
             {/* Folders Grid */}
             {(() => {
               const topLevelFolders = folderTree.filter(f => f.id !== "all" && f.type === "folder");
-              const visibleFolders = topLevelFolders.filter(f => archivedFoldersOnly || f.archived !== true);
+              const searchFiltered = folderSearchQuery
+                ? topLevelFolders.filter(f => f.name.toLowerCase().includes(folderSearchQuery.toLowerCase()))
+                : topLevelFolders;
+              const visibleFolders = searchFiltered.filter(f => archivedFoldersOnly || f.archived !== true);
               const filteredFolderCards = visibleFolders
                 .map(f => ({ id: f.id, name: f.name, galleryCount: countAllGalleries(f), timeAgo: "—", archived: f.archived === true }));
               return filteredFolderCards.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <i className="bi bi-folder text-5xl text-muted-foreground/30 mb-4" />
                   <h3 className="text-lg font-medium mb-1">No folders</h3>
-                  <p className="text-sm text-muted-foreground">Create a folder to get started.</p>
+                  <p className="text-sm text-muted-foreground">{folderSearchQuery ? "No folders match your search." : "Create a folder to get started."}</p>
                 </div>
               ) : folderViewMode === "table" ? (
                 <FolderTableView
