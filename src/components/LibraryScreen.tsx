@@ -260,9 +260,12 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
     if (data.navigateOnCreate) {
       goToFolder();
-      sonnerToast.success("Folder created successfully");
+      sonnerToast.success("Folder created", {
+        description: `"${data.name}" has been created.`,
+      });
     } else {
-      sonnerToast.success("Folder created successfully", {
+      sonnerToast.success("Folder created", {
+        description: `"${data.name}" has been created.`,
         action: { label: "Go to folder", onClick: goToFolder },
       });
     }
