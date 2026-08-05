@@ -251,9 +251,8 @@ export function NewFolderDialog({
                 </div>
               )}
             </div>
-          </div>
 
-          <DialogFooter className="sm:justify-between gap-y-3">
+            {/* Full row below the gallery selector — long translations (e.g. German) don't fit beside the footer buttons */}
             <div className="flex items-center gap-2">
               <Checkbox
                 id="navigate-on-create"
@@ -264,12 +263,13 @@ export function NewFolderDialog({
                 Take me there after creating
               </Label>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => handleOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreate}>Create</Button>
-            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => handleOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreate}>Create</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
