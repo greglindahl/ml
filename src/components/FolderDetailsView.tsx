@@ -1193,9 +1193,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         defaultLocationId={folderId}
         onCreateFolder={(data) => {
           const folderData = { ...data, locationId: data.locationId ?? folderId };
+          // Toast (and optional navigation) handled by the parent's create handler
           onCreateFolder?.(folderData);
           setNewFolderDialogOpen(false);
-          sonnerToast.success("Folder created successfully");
         }}
         flattenedFolders={flattenedFolders ?? flattenFolders(folderTree)}
         galleries={galleryList ?? mockGalleries}

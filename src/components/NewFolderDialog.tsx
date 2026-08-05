@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
 import "bootstrap-icons/font/bootstrap-icons.css";
@@ -23,7 +24,12 @@ export interface NewFolderData {
   name: string;
   locationId: string | null;
   galleryIds: string[];
+  navigateOnCreate: boolean;
 }
+
+// Persisted across sessions: off during initial bulk setup, on once users
+// switch to one-at-a-time creation
+const NAVIGATE_PREF_KEY = "library-folder-create-navigate";
 
 interface NewFolderDialogProps {
   open: boolean;
@@ -54,6 +60,12 @@ export function NewFolderDialog({
   const [addGalleryOpen, setAddGalleryOpen] = useState(false);
   const [newGalleryDialogOpen, setNewGalleryDialogOpen] = useState(false);
   const [locationPopoverOpen, setLocationPopoverOpen] = useState(false);
+  const [navigateOnCreate, setNavigateOnCreate] = useState(() => localStorage.getItem(NAVIGATE_PREF_KEY) === "true");
+
+  const handleNavigateOnCreateChange = useCallback((checked: boolean) => {
+    setNavigateOnCreate(checked);
+    localStorage.setItem(NAVIGATE_PREF_KEY, String(checked));
+  }, []);
 
   const selectedLocationLabel = useMemo(() => {
     if (!locationId) return "Select Location";
@@ -92,9 +104,10 @@ export function NewFolderDialog({
       name: trimmed,
       locationId,
       galleryIds: selectedGalleryIds,
+      navigateOnCreate,
     });
     resetForm();
-  }, [name, locationId, selectedGalleryIds, onCreateFolder, resetForm]);
+  }, [name, locationId, selectedGalleryIds, navigateOnCreate, onCreateFolder, resetForm]);
 
   const removeGallery = useCallback((galleryId: string) => {
     setSelectedGalleryIds((prev) => prev.filter((id) => id !== galleryId));
@@ -237,6 +250,18 @@ export function NewFolderDialog({
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* Full row below the gallery selector — long translations (e.g. German) don't fit beside the footer buttons */}
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="navigate-on-create"
+                checked={navigateOnCreate}
+                onCheckedChange={(checked) => handleNavigateOnCreateChange(checked === true)}
+              />
+              <Label htmlFor="navigate-on-create" className="text-sm font-normal text-muted-foreground cursor-pointer">
+                Take me there after creating
+              </Label>
             </div>
           </div>
 
