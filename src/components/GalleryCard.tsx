@@ -19,6 +19,7 @@ interface GalleryCardProps {
   isNew?: boolean;
   isArchived?: boolean;
   isPublic?: boolean;
+  isFavorite?: boolean;
   isInFolder?: boolean;
   state?: GalleryCardState;
   onSelect?: () => void;
@@ -38,6 +39,7 @@ export function GalleryCard({
   isNew = false,
   isArchived = false,
   isPublic = false,
+  isFavorite = false,
   isInFolder = false,
   state = "default",
   onSelect,
@@ -148,7 +150,7 @@ export function GalleryCard({
               onClick={(e) => { e.stopPropagation(); onFavorite?.(); }}
               className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full hover:bg-black/30 transition-colors"
             >
-              <i className="bi bi-heart text-white text-xs" />
+              <i className={`bi ${isFavorite ? "bi-heart-fill" : "bi-heart"} text-white text-xs`} />
             </button>
 
             {/* Public Gallery Icon */}

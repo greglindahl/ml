@@ -90,6 +90,8 @@ interface GalleryFilterBarProps {
   onUnsortedToggle?: (active: boolean) => void;
   isArchivedActive?: boolean;
   onArchivedToggle?: (active: boolean) => void;
+  isFavoritesActive?: boolean;
+  onFavoritesToggle?: (active: boolean) => void;
   onOpenFiltersSheet?: () => void;
 }
 
@@ -98,6 +100,8 @@ export function GalleryFilterBar({
   onUnsortedToggle,
   isArchivedActive = false,
   onArchivedToggle,
+  isFavoritesActive = false,
+  onFavoritesToggle,
   onOpenFiltersSheet,
 }: GalleryFilterBarProps = {}) {
   const [activeFilters, setActiveFilters] = useState<
@@ -325,6 +329,13 @@ export function GalleryFilterBar({
         tooltip="Show only archived galleries"
         isActive={isArchivedActive}
         onClick={() => onArchivedToggle?.(!isArchivedActive)}
+      />
+      <TogglePill
+        label="Favorites"
+        iconClass={isFavoritesActive ? "bi-heart-fill" : "bi-heart"}
+        tooltip="Show only favorited galleries"
+        isActive={isFavoritesActive}
+        onClick={() => onFavoritesToggle?.(!isFavoritesActive)}
       />
     </div>);
 

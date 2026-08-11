@@ -215,7 +215,6 @@ export interface ActiveFilterChip {
 interface GalleryDetailsFilterBarProps {
   onFilterChange?: (filterId: string, values: string[]) => void;
   onCustomDateChange?: (range: CustomDateRange) => void;
-  onFavoritesToggle?: (active: boolean) => void;
   onActiveFiltersChange?: (chips: ActiveFilterChip[]) => void;
   handleRef?: React.MutableRefObject<GalleryDetailsFilterBarHandle | null>;
   // Toggle pill states
@@ -223,21 +222,18 @@ interface GalleryDetailsFilterBarProps {
   onUnviewedToggle?: (active: boolean) => void;
   isBrandingActive?: boolean;
   onBrandingToggle?: (active: boolean) => void;
-  isFavoritesActive?: boolean;
   onOpenFiltersSheet?: () => void;
 }
 
 export function GalleryDetailsFilterBar({
   onFilterChange,
   onCustomDateChange,
-  onFavoritesToggle,
   onActiveFiltersChange,
   handleRef,
   isUnviewedActive = false,
   onUnviewedToggle,
   isBrandingActive = false,
   onBrandingToggle,
-  isFavoritesActive = false,
   onOpenFiltersSheet,
 }: GalleryDetailsFilterBarProps) {
   const [activeFilters, setActiveFilters] = useState<Record<string, { value: string; label: string }[]>>({});
@@ -861,13 +857,6 @@ export function GalleryDetailsFilterBar({
         tooltip="Show only branded assets"
         isActive={isBrandingActive}
         onClick={() => onBrandingToggle?.(!isBrandingActive)}
-      />
-      <TogglePill
-        label="Favorites"
-        iconClass={isFavoritesActive ? "bi-heart-fill" : "bi-heart"}
-        tooltip="Show only favorited assets"
-        isActive={isFavoritesActive}
-        onClick={() => onFavoritesToggle?.(!isFavoritesActive)}
       />
     </div>
   );

@@ -204,6 +204,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   // Archive toggle states
   const [archivedFoldersOnly, setArchivedFoldersOnly] = useState(false);
   const [archivedGalleriesOnly, setArchivedGalleriesOnly] = useState(false);
+  const [favoriteGalleriesOnly, setFavoriteGalleriesOnly] = useState(false);
   const [folderSearchQuery, setFolderSearchQuery] = useState("");
   const [folderViewMode, setFolderViewMode] = useState<"grid" | "table">("grid");
   // folderSearchInputRef removed — now using FacetedSearchWithTypeahead
@@ -846,6 +847,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             <GalleryFilterBar
               isArchivedActive={archivedGalleriesOnly}
               onArchivedToggle={setArchivedGalleriesOnly}
+              isFavoritesActive={favoriteGalleriesOnly}
+              onFavoritesToggle={setFavoriteGalleriesOnly}
               onOpenFiltersSheet={() => setGalleriesFiltersSheetOpen(true)}
             />
           </div>
@@ -909,7 +912,12 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
 
           {/* Table Controls - shown above table in list view */}
           {(() => {
-            const filteredGalleries = childGalleries.filter(g => archivedGalleriesOnly ? g.archived === true : g.archived !== true);
+            const filteredGalleries = childGalleries.filter(g => {
+              if (archivedGalleriesOnly ? g.archived !== true : g.archived === true) return false;
+              // Favorite status lives on the mockGalleries entry (single source of truth)
+              if (favoriteGalleriesOnly && !mockGalleries.find(mg => mg.id === g.id)?.isFavorite) return false;
+              return true;
+            });
 
             if (galleriesViewMode === "list") {
               return (
@@ -936,11 +944,11 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               return (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <i className="bi bi-images text-5xl text-muted-foreground/30 mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">{archivedGalleriesOnly ? "No archived galleries" : "No galleries yet"}</h3>
+                  <h3 className="text-xl font-semibold mb-2">{archivedGalleriesOnly ? "No archived galleries" : favoriteGalleriesOnly ? "No favorited galleries" : "No galleries yet"}</h3>
                   <p className="text-sm text-muted-foreground max-w-sm mb-8">
-                    {archivedGalleriesOnly ? "Archive a gallery to see it here." : "Add existing galleries to this folder or create a new one."}
+                    {archivedGalleriesOnly ? "Archive a gallery to see it here." : favoriteGalleriesOnly ? "Favorite a gallery to see it here." : "Add existing galleries to this folder or create a new one."}
                   </p>
-                  {!archivedGalleriesOnly && (
+                  {!archivedGalleriesOnly && !favoriteGalleriesOnly && (
                     <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setAddGalleryDialogOpen(true)}>Add Galleries</Button>
                   )}
                 </div>
@@ -970,6 +978,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                       thumbnailUrl={galleryData?.thumbnailUrl}
                       isArchived={gallery.archived === true}
                       isPublic={galleryData?.isPublic}
+                      isFavorite={galleryData?.isFavorite}
                       isInFolder={findGalleryParentPath(gallery.id, folderTree) !== null}
                       state={cardState}
                       onSelect={() => {
