@@ -135,6 +135,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   const [folderSearchQuery, setFolderSearchQuery] = useState("");
   const [archivedGalleriesOnly, setArchivedGalleriesOnly] = useState(false);
   const [unsortedGalleriesOnly, setUnsortedGalleriesOnly] = useState(false);
+  const [favoriteGalleriesOnly, setFavoriteGalleriesOnly] = useState(false);
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
   const [viewingAssetId, setViewingAssetId] = useState<string | null>(null);
 
@@ -1403,6 +1404,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 onUnsortedToggle={setUnsortedGalleriesOnly}
                 isArchivedActive={archivedGalleriesOnly}
                 onArchivedToggle={setArchivedGalleriesOnly}
+                isFavoritesActive={favoriteGalleriesOnly}
+                onFavoritesToggle={setFavoriteGalleriesOnly}
                 onOpenFiltersSheet={() => setGalleriesFiltersSheetOpen(true)}
               />
             </div>
@@ -1531,6 +1534,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                   {galleryList.filter(g => {
                     const isArchived = isGalleryArchivedById(g.id);
                     if (archivedGalleriesOnly ? !isArchived : isArchived) return false;
+                    if (favoriteGalleriesOnly && !g.isFavorite) return false;
                     if (unsortedGalleriesOnly) {
                       // Unsorted = not inside any real folder ("All Media" doesn't
                       // count, matching getGalleryLocationDisplay's semantics)
@@ -1559,6 +1563,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                         thumbnailUrl={gallery.thumbnailUrl}
                         isArchived={isGalleryArchived}
                         isPublic={gallery.isPublic}
+                        isFavorite={gallery.isFavorite}
                         isInFolder={isGalleryInFolder}
                         state={cardState}
                         onSelect={() => {

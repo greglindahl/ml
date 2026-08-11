@@ -72,6 +72,7 @@ export interface Gallery {
   thumbnailUrl?: string;
   isPublic?: boolean;
   archived?: boolean;
+  isFavorite?: boolean;
 }
 
 export interface FolderCard {
@@ -336,17 +337,17 @@ export const folders: FolderItem[] = [
 ];
 
 export const mockGalleries: Gallery[] = [
-  { id: "scoring-highlights", name: "Scoring Highlights", assetCount: 48, timeAgo: "2 days ago", thumbnailUrl: "https://picsum.photos/seed/gal1/400/300" },
+  { id: "scoring-highlights", name: "Scoring Highlights", assetCount: 48, timeAgo: "2 days ago", thumbnailUrl: "https://picsum.photos/seed/gal1/400/300", isFavorite: true },
   { id: "rebounds-reels", name: "Rebounds Reels", assetCount: 48, timeAgo: "5 days ago", thumbnailUrl: "https://picsum.photos/seed/gal2/400/300" },
-  { id: "big-moments", name: "Big Moments", assetCount: 48, timeAgo: "1 week ago", thumbnailUrl: "https://picsum.photos/seed/gal3/400/300" },
-  { id: "shooting-drills", name: "Shooting Drills", assetCount: 24, timeAgo: "3 days ago", thumbnailUrl: "https://picsum.photos/seed/gal4/400/300" },
+  { id: "big-moments", name: "Big Moments", assetCount: 48, timeAgo: "1 week ago", thumbnailUrl: "https://picsum.photos/seed/gal3/400/300", isFavorite: true },
+  { id: "shooting-drills", name: "Shooting Drills", assetCount: 24, timeAgo: "3 days ago", thumbnailUrl: "https://picsum.photos/seed/gal4/400/300", isFavorite: true },
   { id: "scrimmage-footage", name: "Scrimmage Footage", assetCount: 36, timeAgo: "4 days ago", thumbnailUrl: "https://picsum.photos/seed/gal5/400/300", isPublic: true },
   { id: "film-sessions", name: "Film Sessions", assetCount: 18, timeAgo: "1 week ago", thumbnailUrl: "https://picsum.photos/seed/gal6/400/300" },
   { id: "cardio-sets", name: "Cardio Sets", assetCount: 15, timeAgo: "5 days ago", thumbnailUrl: "https://picsum.photos/seed/gal7/400/300" },
   { id: "agility-drills", name: "Agility Drills", assetCount: 20, timeAgo: "6 days ago", thumbnailUrl: "https://picsum.photos/seed/gal8/400/300" },
-  { id: "halftime-shows", name: "Halftime Shows", assetCount: 30, timeAgo: "3 days ago", thumbnailUrl: "https://picsum.photos/seed/gal9/400/300" },
+  { id: "halftime-shows", name: "Halftime Shows", assetCount: 30, timeAgo: "3 days ago", thumbnailUrl: "https://picsum.photos/seed/gal9/400/300", isFavorite: true },
   { id: "autograph-signings", name: "Autograph Signings", assetCount: 22, timeAgo: "1 week ago", thumbnailUrl: "https://picsum.photos/seed/gal10/400/300" },
-  { id: "kids-day", name: "Kids Day", assetCount: 40, timeAgo: "4 days ago", thumbnailUrl: "https://picsum.photos/seed/gal11/400/300", isPublic: true },
+  { id: "kids-day", name: "Kids Day", assetCount: 40, timeAgo: "4 days ago", thumbnailUrl: "https://picsum.photos/seed/gal11/400/300", isPublic: true, isFavorite: true },
   { id: "scoring-highlights-2024", name: "Clutch Plays", assetCount: 48, timeAgo: "2 weeks ago", thumbnailUrl: "https://picsum.photos/seed/gal12/400/300" },
   { id: "rebounds-reels-2024", name: "Defensive Stops", assetCount: 48, timeAgo: "3 weeks ago", thumbnailUrl: "https://picsum.photos/seed/gal13/400/300" },
   { id: "big-moments-2024", name: "Playoff Run", assetCount: 48, timeAgo: "1 month ago", thumbnailUrl: "https://picsum.photos/seed/gal14/400/300" },
@@ -369,10 +370,10 @@ export const mockGalleries: Gallery[] = [
   { id: "hospital-visits", name: "Hospital Visits", assetCount: 20, timeAgo: "2 months ago", thumbnailUrl: "https://picsum.photos/seed/gal31/400/300" },
   { id: "food-drive", name: "Food Drive", assetCount: 15, timeAgo: "3 months ago", thumbnailUrl: "https://picsum.photos/seed/gal32/400/300" },
   { id: "youth-basketball-clinic", name: "Youth Basketball Clinic", assetCount: 38, timeAgo: "2 months ago", thumbnailUrl: "https://picsum.photos/seed/gal33/400/300" },
-  { id: "player-portraits", name: "Player Portraits", assetCount: 42, timeAgo: "1 week ago", thumbnailUrl: "https://picsum.photos/seed/gal34/400/300" },
-  { id: "media-day-2025", name: "Media Day 2025", assetCount: 56, timeAgo: "3 days ago", thumbnailUrl: "https://picsum.photos/seed/gal35/400/300" },
+  { id: "player-portraits", name: "Player Portraits", assetCount: 42, timeAgo: "1 week ago", thumbnailUrl: "https://picsum.photos/seed/gal34/400/300", isFavorite: true },
+  { id: "media-day-2025", name: "Media Day 2025", assetCount: 56, timeAgo: "3 days ago", thumbnailUrl: "https://picsum.photos/seed/gal35/400/300", isFavorite: true },
   { id: "social-media-clips", name: "Social Media Clips", assetCount: 34, timeAgo: "2 days ago", thumbnailUrl: "https://picsum.photos/seed/gal36/400/300" },
-  { id: "behind-the-scenes", name: "Behind the Scenes", assetCount: 28, timeAgo: "5 days ago", thumbnailUrl: "https://picsum.photos/seed/gal37/400/300" },
+  { id: "behind-the-scenes", name: "Behind the Scenes", assetCount: 28, timeAgo: "5 days ago", thumbnailUrl: "https://picsum.photos/seed/gal37/400/300", isFavorite: true },
   { id: "starter-gallery", name: "Starter Gallery", assetCount: 18, timeAgo: "Just now", thumbnailUrl: starterGalleryThumbnail },
   { id: "archive-full-games", name: "Full Game Broadcasts", assetCount: 6200, timeAgo: "6 months ago", thumbnailUrl: "https://picsum.photos/seed/gal38/400/300" },
   { id: "archive-raw-photos", name: "Raw Photo Dumps", assetCount: 4800, timeAgo: "6 months ago", thumbnailUrl: "https://picsum.photos/seed/gal39/400/300" },
