@@ -316,13 +316,17 @@ export function GalleryFilterBar({
       </div>{/* End filters-expanded */}
 
       {/* Toggle Pills (always visible) */}
-      <TogglePill
-        label="Unsorted"
-        iconClass="bi-inbox"
-        tooltip="Show only galleries not in any folder"
-        isActive={isUnsortedActive}
-        onClick={() => onUnsortedToggle?.(!isUnsortedActive)}
-      />
+      {/* Unsorted only applies at the top All Media level — inside a folder the
+          parent doesn't pass onUnsortedToggle and the pill is hidden */}
+      {onUnsortedToggle && (
+        <TogglePill
+          label="Unsorted"
+          iconClass="bi-inbox"
+          tooltip="Show only galleries not in any folder"
+          isActive={isUnsortedActive}
+          onClick={() => onUnsortedToggle(!isUnsortedActive)}
+        />
+      )}
       <TogglePill
         label="Archived"
         iconClass="bi-archive"
