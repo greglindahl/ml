@@ -41,6 +41,9 @@ interface MoveGalleriesDialogProps {
   /** Header copy overrides — used by the "Move to unarchive" flow; defaults keep the standard move copy. */
   title?: string;
   description?: ReactNode;
+  /** True when every gallery being moved is archived — archived items may move into
+   *  archived destinations (they stay archived). Active items are blocked there. */
+  movingArchivedOnly?: boolean;
 }
 
 export function MoveGalleriesDialog({
@@ -51,6 +54,7 @@ export function MoveGalleriesDialog({
   onMove,
   title = "Move Galleries",
   description,
+  movingArchivedOnly = false,
 }: MoveGalleriesDialogProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [locationId, setLocationId] = useState<string | null>(null);
@@ -62,6 +66,14 @@ export function MoveGalleriesDialog({
     [galleries]
   );
   const exceedsMoveLimit = totalAssets > MOVE_MEDIA_ITEM_LIMIT;
+
+  // Active galleries can't move into an archived destination — the user must
+  // unarchive it first. Archived galleries can move anywhere (they stay archived).
+  const selectedFolder = useMemo(
+    () => (locationId === null ? null : flattenedFolders.find((f) => f.id === locationId) ?? null),
+    [locationId, flattenedFolders]
+  );
+  const blockedByArchivedDest = !movingArchivedOnly && selectedFolder?.archived === true;
 
   const selectedLocationLabel = useMemo(() => {
     if (!locationSelected) return "Select Location";
@@ -174,6 +186,13 @@ export function MoveGalleriesDialog({
           </Popover>
         </div>
 
+        {blockedByArchivedDest && (
+          <div className="flex items-start gap-2 p-3 rounded-lg border border-destructive/50 bg-destructive/10 text-destructive text-sm">
+            <i className="bi bi-exclamation-triangle w-4 h-4 flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
+            <p>"{selectedFolder?.name}" is archived. Unarchive it first, or choose an active location.</p>
+          </div>
+        )}
+
         {exceedsMoveLimit ? (
           <div className="flex items-start gap-3 rounded-md bg-[#F6C343] px-6 py-3 text-[#12263F] text-[15px] leading-snug tracking-[-0.01em]">
             <i className="bi bi-info-circle flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
@@ -196,7 +215,7 @@ export function MoveGalleriesDialog({
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleMove} disabled={!locationSelected || exceedsMoveLimit}>
+          <Button onClick={handleMove} disabled={!locationSelected || exceedsMoveLimit || blockedByArchivedDest}>
             Move
           </Button>
         </DialogFooter>

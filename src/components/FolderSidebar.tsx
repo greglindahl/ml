@@ -117,6 +117,8 @@ export function FolderSidebar({
   const [showDepthAlert, setShowDepthAlert] = useState(false);
   // Set when a drop is rejected for exceeding the media item limit; holds the dragged item so the alert can show its name and count.
   const [limitAlertItem, setLimitAlertItem] = useState<FolderItem | null>(null);
+  // Set when an active item is dropped on an archived folder; holds the destination so the alert can name it.
+  const [archivedDestAlert, setArchivedDestAlert] = useState<FolderItem | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -153,6 +155,10 @@ export function FolderSidebar({
 
       // Can't drop a folder onto a gallery
       if (overItem.type === "gallery") return false;
+
+      // Active items can't move into an archived folder — the destination must
+      // be unarchived first. Archived items can move anywhere (they stay archived).
+      if (overItem.archived === true && draggedItem.archived !== true) return false;
 
       // Check depth: target's depth + dragged subtree depth must be <= 4
       const targetDepth = getFolderDepth(overId, folderTree);
@@ -233,6 +239,8 @@ export function FolderSidebar({
           onMoveItem(draggedId, overId);
         } else if (exceedsMoveLimit) {
           setLimitAlertItem(draggedItem);
+        } else if (overItem.archived === true && draggedItem?.archived !== true) {
+          setArchivedDestAlert(overItem);
         } else {
           setShowDepthAlert(true);
         }
@@ -286,8 +294,7 @@ export function FolderSidebar({
             isOverValid={isThisOverValid}
             isOverInvalid={isThisOverInvalid}
             isArchived={folder.archived === true}
-            disableDrag={folder.archived === true || folder.id === "all"}
-            disableDrop={folder.archived === true}
+            disableDrag={folder.id === "all"}
           >
             {hasChildren && isExpanded && (
               <div className="mt-1">
@@ -387,6 +394,25 @@ export function FolderSidebar({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setShowDepthAlert(false)}>
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={archivedDestAlert != null} onOpenChange={(open) => !open && setArchivedDestAlert(null)}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <i className="bi bi-info-circle w-5 h-5 text-destructive inline-flex items-center justify-center leading-none" />
+              Move not allowed
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              "{archivedDestAlert?.name}" is archived. Unarchive it first to move items into it.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setArchivedDestAlert(null)}>
               OK
             </AlertDialogAction>
           </AlertDialogFooter>

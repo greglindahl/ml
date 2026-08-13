@@ -20,6 +20,7 @@ import { FolderTableView, DEFAULT_FOLDER_COLUMN_VISIBILITY, FOLDER_COLUMNS, type
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
 import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, findFolderAncestorIds, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor } from "@/lib/mockFolderData";
+import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
 import { FolderSidebar } from "@/components/FolderSidebar";
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
@@ -379,8 +380,18 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   }, [setArchivedDeep]);
 
   const handleUnarchiveFolder = useCallback((folderId: string) => {
+    // Unarchive is top-down only: blocked while any ancestor is archived.
+    if (hasArchivedAncestor(folderId, folderTree)) {
+      const name = findFolderById(folderTree, folderId)?.name;
+      toast({
+        title: "Can't unarchive",
+        description: `${name ? `"${name}"` : "This folder"} is inside an archived folder. Unarchive the parent folder first, or move it to an active location.`,
+        variant: "destructive",
+      });
+      return;
+    }
     setFolderTree(prev => setArchivedDeep(prev, folderId, false));
-  }, [setArchivedDeep]);
+  }, [setArchivedDeep, folderTree, toast]);
 
   const handleDeleteFolder = useCallback((folderId: string) => {
     setFolderTree(prev => removeFolderById(prev, folderId));
@@ -605,8 +616,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     toast({
       title: unarchive ? "Gallery moved and unarchived" : "Gallery moved",
       description: movedName
-        ? `"${movedName}" ${unarchive ? "is now active in its new location" : "was moved"}.`
-        : unarchive ? "The gallery is now active in its new location." : "The gallery was moved.",
+        ? `"${movedName}" ${unarchive ? "is now active in its new location" : "was moved and is still archived — unarchive it from its new location"}.`
+        : unarchive ? "The gallery is now active in its new location." : "The gallery was moved and is still archived — unarchive it from its new location.",
     });
   }, [moveToUnarchiveGalleryId, folderTree, galleryList, removeFolderById, insertFolderAt, toast]);
 
@@ -625,8 +636,10 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   const [brandFilter, setBrandFilter] = useState<string[]>([]);
   const [tagsFilter, setTagsFilter] = useState<string[]>([]);
   const [folderFilter, setFolderFilter] = useState<string[]>([]);
-  const [dateRangeFilter, setDateRangeFilter] = useState<"today" | "week" | "month" | "quarter" | "year" | "custom" | null>(null);
-  const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
+  const [addedDateFilter, setAddedDateFilter] = useState<DateRangeValue | null>(null);
+  const [capturedDateFilter, setCapturedDateFilter] = useState<DateRangeValue | null>(null);
+  // Custom ranges keyed by date filter id ("added-date" / "captured-date")
+  const [customDateRanges, setCustomDateRanges] = useState<Record<string, CustomRange>>({});
   const [isBrandedActive, setIsBrandedActive] = useState(false);
   const [sourceFilter, setSourceFilter] = useState<string[]>([]);
   const [orgStatusFilter, setOrgStatusFilter] = useState<string[]>([]);
@@ -746,32 +759,11 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
         if (!matchesAny) return false;
       }
 
-      // Date range filter
-      if (dateRangeFilter) {
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const assetDate = new Date(asset.dateCreated.getFullYear(), asset.dateCreated.getMonth(), asset.dateCreated.getDate());
-        
-        if (dateRangeFilter === "custom" && customDateRange.from && customDateRange.to) {
-          // Custom date range filtering
-          const fromDate = new Date(customDateRange.from.getFullYear(), customDateRange.from.getMonth(), customDateRange.from.getDate());
-          const toDate = new Date(customDateRange.to.getFullYear(), customDateRange.to.getMonth(), customDateRange.to.getDate());
-          if (assetDate < fromDate || assetDate > toDate) return false;
-        } else {
-          const diffDays = Math.floor((today.getTime() - assetDate.getTime()) / 86400000);
-          const matches =
-            dateRangeFilter === "today"
-              ? diffDays === 0
-              : dateRangeFilter === "week"
-                ? diffDays <= 7
-                : dateRangeFilter === "month"
-                  ? diffDays <= 30
-                  : dateRangeFilter === "quarter"
-                    ? diffDays <= 90
-                    : diffDays <= 365;
-          if (!matches) return false;
-        }
-      }
+      // Added Date filter (when the asset entered Greenfly)
+      if (addedDateFilter && !matchesDateRange(asset.dateCreated, addedDateFilter, customDateRanges["added-date"])) return false;
+
+      // Captured Date filter (when the media was originally shot)
+      if (capturedDateFilter && !matchesDateRange(asset.captureDate, capturedDateFilter, customDateRanges["captured-date"])) return false;
 
       // Folder dropdown filter (from FilterBar - uses folder IDs and descendants)
       if (folderFilter.length) {
@@ -802,8 +794,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     brandFilter,
     tagsFilter,
     folderFilter,
-    dateRangeFilter,
-    customDateRange,
+    addedDateFilter,
+    capturedDateFilter,
+    customDateRanges,
     isBrandedActive,
   ]);
 
@@ -902,8 +895,11 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
       case "folders":
         setFolderFilter(values);
         break;
-      case "date-range":
-        setDateRangeFilter((values[0] as "today" | "week" | "month" | "quarter" | "year" | "custom") ?? null);
+      case "added-date":
+        setAddedDateFilter((values[0] as DateRangeValue) ?? null);
+        break;
+      case "captured-date":
+        setCapturedDateFilter((values[0] as DateRangeValue) ?? null);
         break;
       case "source":
         setSourceFilter(values);
@@ -917,8 +913,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     }
   }, []);
 
-  const handleCustomDateChange = useCallback((range: { from: Date | undefined; to: Date | undefined }) => {
-    setCustomDateRange(range);
+  const handleCustomDateChange = useCallback((filterId: string, range: CustomRange) => {
+    setCustomDateRanges(prev => ({ ...prev, [filterId]: range }));
   }, []);
 
   const toggleFolderExpand = (folderId: string) => {
@@ -1170,9 +1166,14 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 creatorFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "creator", icon: <i className="bi bi-person text-sm" /> }));
                 contentTypeFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "content-type", icon: <i className="bi bi-image text-sm" /> }));
                 aspectRatioFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "aspect-ratio", icon: <i className="bi bi-tag text-sm" /> }));
-                if (dateRangeFilter) {
-                  const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 Days", month: "Last 30 Days", quarter: "Last 90 Days", year: "Last Year", custom: "Custom Date" };
-                  chips.push({ label: dateLabels[dateRangeFilter] || dateRangeFilter, value: dateRangeFilter, sourceId: "date-range", icon: <i className="bi bi-tag text-sm" /> });
+                {
+                  const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 days", "two-weeks": "Last 14 days", month: "Last 30 days", mtd: "Month to Date", quarter: "Last 90 days", year: "Last 12 months", custom: "Custom Date" };
+                  if (addedDateFilter) {
+                    chips.push({ label: `Added: ${dateLabels[addedDateFilter] || addedDateFilter}`, value: addedDateFilter, sourceId: "added-date", icon: <i className="bi bi-calendar text-sm" /> });
+                  }
+                  if (capturedDateFilter) {
+                    chips.push({ label: `Captured: ${dateLabels[capturedDateFilter] || capturedDateFilter}`, value: capturedDateFilter, sourceId: "captured-date", icon: <i className="bi bi-calendar text-sm" /> });
+                  }
                 }
                 folderFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "folders", icon: <i className="bi bi-folder text-sm" /> }));
                 sourceFilter.forEach(v => chips.push({ label: v.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), value: v, sourceId: "source", icon: <i className="bi bi-cloud-arrow-down text-sm" /> }));
@@ -1417,7 +1418,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
             {/* Bulk Action Bar */}
             {isAnyGallerySelected && galleriesViewMode === "grid" && (
-              <div className="flex items-center justify-between mb-4 px-3 py-2 bg-muted/50 border rounded-lg">
+              <div className="flex items-center justify-between mb-4 px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg">
                 <div className="flex items-center gap-3">
                   <Checkbox
                     checked={allGalleriesSelected}
@@ -1697,15 +1698,17 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
         galleries={selectedMoveItems}
         flattenedFolders={flatFolders}
         onMove={(locationId) => applyGalleryMoves(Array.from(selectedGalleries), locationId)}
+        movingArchivedOnly={selectedMoveItems.length > 0 && selectedMoveItems.every(item => galleryList.find(g => g.id === item.id)?.archived === true)}
       />
       <MoveGalleriesDialog
         open={moveToUnarchiveGalleryId !== null}
         onOpenChange={(open) => { if (!open) setMoveToUnarchiveGalleryId(null); }}
         galleries={moveToUnarchiveItems}
-        flattenedFolders={flatFolders.filter(f => !f.archived)}
-        onMove={(locationId) => handleMoveToUnarchiveConfirm(locationId, true)}
-        title="Move to Unarchive"
-        description="This gallery can't be unarchived because it's located in an archived folder. To unarchive it, move the gallery to All Media or another active folder."
+        flattenedFolders={flatFolders}
+        onMove={(locationId) => handleMoveToUnarchiveConfirm(locationId, false)}
+        movingArchivedOnly
+        title="Move Gallery"
+        description="This gallery can't be unarchived because it's located in an archived folder. Move it to All Media or another active folder — it will stay archived — then unarchive it from its new location."
       />
       <NewFolderDialog
         open={newFolderDialogOpen}

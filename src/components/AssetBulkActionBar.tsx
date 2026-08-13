@@ -43,7 +43,8 @@ export function AssetBulkActionBar({
   const isOverLimit = selectedCount > ASSET_BULK_LIMIT;
 
   return (
-    <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border rounded-lg mb-4">
+    // Default toolbar treatment: surface.elevated fill, border.subtle, radius md
+    <div className="flex items-center justify-between px-4 py-2 bg-white border border-[#E6E6E6] rounded-lg mb-4">
       <div className="flex items-center gap-3">
         <Checkbox
           checked={allSelected}
