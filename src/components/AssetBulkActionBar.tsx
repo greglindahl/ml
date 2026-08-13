@@ -20,11 +20,17 @@ interface AssetBulkActionBarProps {
   /** Label for the gallery action — "Add to Gallery" or "Remove from Gallery" */
   galleryActionLabel?: string;
   onFavorite?: () => void;
-  onArchive?: () => void;
   onDownload?: () => void;
   onShare?: () => void;
   onGalleryAction?: () => void;
   onDelete?: () => void;
+  onManageTags?: () => void;
+  onManageDescription?: () => void;
+  onManageNotes?: () => void;
+  onBranding?: () => void;
+  /** Gallery-details-only overflow items — rendered above the standard set when provided. */
+  onMoveToGallery?: () => void;
+  onRemoveFromGallery?: () => void;
 }
 
 export function AssetBulkActionBar({
@@ -34,16 +40,22 @@ export function AssetBulkActionBar({
   onSelectAll,
   galleryActionLabel = "Add to Gallery",
   onFavorite,
-  onArchive,
   onDownload,
   onShare,
   onGalleryAction,
   onDelete,
+  onManageTags,
+  onManageDescription,
+  onManageNotes,
+  onBranding,
+  onMoveToGallery,
+  onRemoveFromGallery,
 }: AssetBulkActionBarProps) {
   const isOverLimit = selectedCount > ASSET_BULK_LIMIT;
 
   return (
-    <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border rounded-lg mb-4">
+    // Default toolbar treatment: surface.elevated fill, border.subtle, radius md
+    <div className="flex items-center justify-between px-4 py-2 bg-white border border-[#E6E6E6] rounded-lg mb-4">
       <div className="flex items-center gap-3">
         <Checkbox
           checked={allSelected}
@@ -54,54 +66,70 @@ export function AssetBulkActionBar({
         <span className="text-sm font-medium">{selectedCount} selected</span>
       </div>
       <div className="flex items-center gap-1">
+        {/* Direct actions: Download, gallery action, Slack share */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onFavorite}>
-              <i className="bi bi-heart w-4 h-4 inline-flex items-center justify-center leading-none" />
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onDownload}>
+              <i className="bi bi-download w-4 h-4 inline-flex items-center justify-center leading-none" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Favorite</TooltipContent>
+          <TooltipContent>Download</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onArchive}>
-              <i className="bi bi-archive w-4 h-4 inline-flex items-center justify-center leading-none" />
-            </Button>
+            {/* div wrapper: disabled buttons don't fire the pointer events the tooltip needs */}
+            <div>
+              <Button variant="ghost" size="icon" className="h-8 w-8" disabled={isOverLimit} onClick={onGalleryAction}>
+                <i className="bi bi-folder-plus w-4 h-4 inline-flex items-center justify-center leading-none" />
+              </Button>
+            </div>
           </TooltipTrigger>
-          <TooltipContent>Archive</TooltipContent>
+          <TooltipContent>{isOverLimit ? ASSET_LIMIT_MESSAGE : galleryActionLabel}</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div>
+              <Button variant="ghost" size="icon" className="h-8 w-8" disabled={isOverLimit} onClick={onShare}>
+                <i className="bi bi-slack w-4 h-4 inline-flex items-center justify-center leading-none" />
+              </Button>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>{isOverLimit ? ASSET_LIMIT_MESSAGE : "Share to Slack"}</TooltipContent>
         </Tooltip>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
-              <i className="bi bi-three-dots w-4 h-4 inline-flex items-center justify-center leading-none" />
+              <i className="bi bi-three-dots-vertical w-4 h-4 inline-flex items-center justify-center leading-none" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-popover">
-            <DropdownMenuItem onClick={onDownload}>
-              <i className="bi bi-download w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Download
-            </DropdownMenuItem>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
-                  <DropdownMenuItem disabled={isOverLimit} onClick={onShare}>
-                    <i className="bi bi-share w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Share
-                  </DropdownMenuItem>
-                </div>
-              </TooltipTrigger>
-              {isOverLimit && <TooltipContent side="left">{ASSET_LIMIT_MESSAGE}</TooltipContent>}
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
-                  <DropdownMenuItem disabled={isOverLimit} onClick={onGalleryAction}>
-                    <i className="bi bi-images w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> {galleryActionLabel}
-                  </DropdownMenuItem>
-                </div>
-              </TooltipTrigger>
-              {isOverLimit && <TooltipContent side="left">{ASSET_LIMIT_MESSAGE}</TooltipContent>}
-            </Tooltip>
-            <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+            {onMoveToGallery && (
+              <DropdownMenuItem onClick={onMoveToGallery}>
+                <i className="bi bi-arrow-right-circle w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Move to Gallery
+              </DropdownMenuItem>
+            )}
+            {onRemoveFromGallery && (
+              <DropdownMenuItem onClick={onRemoveFromGallery}>
+                <i className="bi bi-dash-circle w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Remove from Gallery
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={onDelete}>
               <i className="bi bi-trash w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Delete
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onManageTags}>
+              <i className="bi bi-tag w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Manage Tags
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onManageDescription}>
+              <i className="bi bi-text-left w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Manage Description
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onManageNotes}>
+              <i className="bi bi-pencil-square w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Manage Notes
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onFavorite}>
+              <i className="bi bi-heart w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Mark as Favorite
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onBranding}>
+              <i className="bi bi-palette w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Mark for Branding
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

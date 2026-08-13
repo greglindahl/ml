@@ -107,6 +107,19 @@ const sourceOptions: FilterOption[] = [
   { label: "Requested Content", value: "requested-content", count: 3 },
 ];
 
+// Added Date and Captured Date share the same range options. "Added" = when the
+// media entered Greenfly (back-end "created"); "Captured" = when it was originally shot.
+const DATE_RANGE_OPTIONS: FilterOption[] = [
+  { label: "Last 7 days", value: "week" },
+  { label: "Last 14 days", value: "two-weeks" },
+  { label: "Last 30 days", value: "month" },
+  { label: "Month to Date", value: "mtd" },
+  { label: "Last 90 days", value: "quarter" },
+  { label: "Last 12 months", value: "year" },
+  { label: "Custom", value: "custom" },
+];
+const DATE_FILTER_IDS = ["added-date", "captured-date"];
+
 const filters: FilterConfig[] = [{
   id: "tags",
   label: "Tags",
@@ -129,18 +142,15 @@ const filters: FilterConfig[] = [{
       }));
   })(),
 }, {
-  id: "date-range",
-  label: "Date",
+  id: "added-date",
+  label: "Added",
+  icon: <i className="bi bi-calendar-plus" />,
+  options: DATE_RANGE_OPTIONS,
+}, {
+  id: "captured-date",
+  label: "Captured",
   icon: <i className="bi bi-calendar" />,
-  options: [
-    { label: "Last 7 days", value: "week" },
-    { label: "Last 14 days", value: "two-weeks" },
-    { label: "Last 30 days", value: "month" },
-    { label: "Month to Date", value: "mtd" },
-    { label: "Last 90 days", value: "quarter" },
-    { label: "Last 12 months", value: "year" },
-    { label: "Custom", value: "custom" },
-  ],
+  options: DATE_RANGE_OPTIONS,
 }, {
   id: "creator",
   label: "Creator",
@@ -214,7 +224,7 @@ export interface ActiveFilterChip {
 
 interface GalleryDetailsFilterBarProps {
   onFilterChange?: (filterId: string, values: string[]) => void;
-  onCustomDateChange?: (range: CustomDateRange) => void;
+  onCustomDateChange?: (filterId: string, range: CustomDateRange) => void;
   onActiveFiltersChange?: (chips: ActiveFilterChip[]) => void;
   handleRef?: React.MutableRefObject<GalleryDetailsFilterBarHandle | null>;
   // Toggle pill states
@@ -237,9 +247,11 @@ export function GalleryDetailsFilterBar({
   onOpenFiltersSheet,
 }: GalleryDetailsFilterBarProps) {
   const [activeFilters, setActiveFilters] = useState<Record<string, { value: string; label: string }[]>>({});
-  const [customDateRange, setCustomDateRange] = useState<CustomDateRange>({ from: undefined, to: undefined });
+  // Custom ranges keyed by date filter id ("added-date" / "captured-date")
+  const [customDateRanges, setCustomDateRanges] = useState<Record<string, CustomDateRange>>({});
   const [tempDateRange, setTempDateRange] = useState<DateRange | undefined>(undefined);
-  const [customDateOpen, setCustomDateOpen] = useState(false);
+  // Which date filter's custom-range popover is open (null = closed)
+  const [customDateOpenFor, setCustomDateOpenFor] = useState<string | null>(null);
   // Search state for standard filter dropdowns
   const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
   // Search state for sub-flyouts (AI Tags)
@@ -281,8 +293,8 @@ export function GalleryDetailsFilterBar({
     if (handleRef) {
       handleRef.current = {
         removeValue: (filterId: string, value: string) => {
-          if (filterId === "date-range" && value === "custom") {
-            setCustomDateRange({ from: undefined, to: undefined });
+          if (DATE_FILTER_IDS.includes(filterId) && value === "custom") {
+            setCustomDateRanges(prev => ({ ...prev, [filterId]: { from: undefined, to: undefined } }));
           }
           setActiveFilters(prev => {
             const current = prev[filterId] || [];
@@ -304,7 +316,7 @@ export function GalleryDetailsFilterBar({
             });
             return {};
           });
-          setCustomDateRange({ from: undefined, to: undefined });
+          setCustomDateRanges({});
         },
       };
     }
@@ -331,9 +343,10 @@ export function GalleryDetailsFilterBar({
   };
 
   const handleSingleSelect = (filterId: string, value: string, label: string) => {
-    if (filterId === "date-range" && value === "custom") {
-      setTempDateRange(customDateRange.from ? { from: customDateRange.from, to: customDateRange.to } : undefined);
-      setCustomDateOpen(true);
+    if (DATE_FILTER_IDS.includes(filterId) && value === "custom") {
+      const existing = customDateRanges[filterId];
+      setTempDateRange(existing?.from ? { from: existing.from, to: existing.to } : undefined);
+      setCustomDateOpenFor(filterId);
       return;
     }
     setActiveFilters(prev => {
@@ -350,35 +363,39 @@ export function GalleryDetailsFilterBar({
   };
 
   const handleCustomDateApply = () => {
-    if (tempDateRange?.from) {
+    const filterId = customDateOpenFor;
+    if (filterId && tempDateRange?.from) {
       const from = tempDateRange.from;
       const to = tempDateRange.to || tempDateRange.from;
       const label = `${format(from, "MMM d, yyyy")} - ${format(to, "MMM d, yyyy")}`;
-      setCustomDateRange({ from, to });
+      setCustomDateRanges(prev => ({ ...prev, [filterId]: { from, to } }));
       setActiveFilters(prev => ({
         ...prev,
-        "date-range": [{ value: "custom", label }]
+        [filterId]: [{ value: "custom", label }]
       }));
-      onFilterChange?.("date-range", ["custom"]);
-      onCustomDateChange?.({ from, to });
-      setCustomDateOpen(false);
+      onFilterChange?.(filterId, ["custom"]);
+      onCustomDateChange?.(filterId, { from, to });
+      setCustomDateOpenFor(null);
     }
   };
 
   const handleCustomDateClear = () => {
+    const filterId = customDateOpenFor;
     setTempDateRange(undefined);
-    setCustomDateRange({ from: undefined, to: undefined });
-    setActiveFilters(prev => {
-      const newFilters = { ...prev };
-      delete newFilters["date-range"];
-      onFilterChange?.("date-range", []);
-      return newFilters;
-    });
-    setCustomDateOpen(false);
+    if (filterId) {
+      setCustomDateRanges(prev => ({ ...prev, [filterId]: { from: undefined, to: undefined } }));
+      setActiveFilters(prev => {
+        const newFilters = { ...prev };
+        delete newFilters[filterId];
+        onFilterChange?.(filterId, []);
+        return newFilters;
+      });
+    }
+    setCustomDateOpenFor(null);
   };
 
   return (
-    <div className="filter-bar-container cq-filterbar-hide-label flex flex-wrap items-center gap-1.5">
+    <div className="filter-bar-container cq-filterbar-hide-label-xwide flex flex-wrap items-center gap-1.5">
       {/* Collapsed Filters Button (visible at narrow widths) */}
       <Tooltip delayDuration={700}>
         <TooltipTrigger asChild>
@@ -559,7 +576,7 @@ export function GalleryDetailsFilterBar({
         const selected = activeFilters[filter.id] || [];
         const isActive = selected.length > 0;
         const isMulti = filter.multiSelect;
-        const isDateFilter = filter.id === "date-range";
+        const isDateFilter = DATE_FILTER_IDS.includes(filter.id);
 
         const dropdownMenu = (
           <DropdownMenu key={filter.id}>
@@ -720,9 +737,9 @@ export function GalleryDetailsFilterBar({
           return (
             <div key={filter.id} className="relative">
               {dropdownMenu}
-              {customDateOpen && (
+              {customDateOpenFor === filter.id && (
                 <>
-                  <div className="fixed inset-0 z-40" onClick={() => setCustomDateOpen(false)} />
+                  <div className="fixed inset-0 z-40" onClick={() => setCustomDateOpenFor(null)} />
                   <div className="absolute top-full left-0 mt-1 z-50 w-auto p-0 bg-white rounded-lg shadow-lg border animate-in fade-in-0 zoom-in-95">
                     <div className="p-4 pb-0">
                       <Calendar

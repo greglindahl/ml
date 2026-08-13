@@ -8,6 +8,20 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const LEFT_NAV_EXPANDED_KEY = "leftNavExpanded";
 
+// Deep-link support: ?gallery=<id> or ?folder=<id> opens Library at that item,
+// ?tab=<assets|galleries|folders> picks the Library tab, &bulk=1 preselects all
+// assets on a gallery details view. Read once at module init so the very first
+// render mounts the right screen (e.g. /?gallery=scoring-highlights&bulk=1).
+const initialDeepLink = (() => {
+  if (typeof window === "undefined") return { folderId: null, tab: null, bulk: false };
+  const params = new URLSearchParams(window.location.search);
+  return {
+    folderId: params.get("gallery") ?? params.get("folder"),
+    tab: params.get("tab"),
+    bulk: params.get("bulk") === "1",
+  };
+})();
+
 const Index = () => {
   const isMobile = useIsMobile();
   // Hydrate from localStorage on first render so the user's preference
@@ -17,12 +31,16 @@ const Index = () => {
     return window.localStorage.getItem(LEFT_NAV_EXPANDED_KEY) === "true";
   });
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-  const [activeScreen, setActiveScreen] = useState<Screen>("home");
+  const [activeScreen, setActiveScreen] = useState<Screen>(
+    initialDeepLink.folderId || initialDeepLink.tab ? "library" : "home"
+  );
   // Folder/gallery id for Library to open on its next mount (e.g. deep-linked from Home).
   // Cleared right after Library mounts — LibraryScreen only reads it once, as a useState initializer.
-  const [pendingLibraryFolderId, setPendingLibraryFolderId] = useState<string | null>(null);
+  const [pendingLibraryFolderId, setPendingLibraryFolderId] = useState<string | null>(initialDeepLink.folderId);
   // Same consume-once pattern for tab deep-links from Home's View All buttons.
-  const [pendingLibraryTab, setPendingLibraryTab] = useState<string | null>(null);
+  const [pendingLibraryTab, setPendingLibraryTab] = useState<string | null>(initialDeepLink.tab);
+  // URL-only deep link (&bulk=1): preselect all assets on the linked gallery's details view.
+  const [pendingLibraryBulk, setPendingLibraryBulk] = useState(initialDeepLink.bulk);
   const [pendingStatsTab, setPendingStatsTab] = useState<string | null>(null);
   // Bumped on every Library nav click; used as LibraryScreen's key so re-clicking
   // the nav item while already on Library remounts it back to All Assets.
@@ -104,6 +122,11 @@ const Index = () => {
     }
   }, [pendingLibraryTab]);
   useEffect(() => {
+    if (pendingLibraryBulk) {
+      setPendingLibraryBulk(false);
+    }
+  }, [pendingLibraryBulk]);
+  useEffect(() => {
     if (pendingStatsTab) {
       setPendingStatsTab(null);
     }
@@ -147,6 +170,7 @@ const Index = () => {
         libraryResetKey={libraryResetKey}
         initialLibraryFolderId={pendingLibraryFolderId ?? undefined}
         initialLibraryTab={pendingLibraryTab ?? undefined}
+        initialLibraryBulkSelect={pendingLibraryBulk || undefined}
         initialStatsTab={pendingStatsTab ?? undefined}
         onOpenStarterGallery={handleOpenStarterGallery}
         onViewAll={handleViewAll}

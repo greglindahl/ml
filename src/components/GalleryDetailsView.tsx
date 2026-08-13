@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { cn } from "@/lib/utils";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
@@ -15,6 +15,7 @@ import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
 import { FolderItem, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay } from "@/lib/mockFolderData";
+import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -60,6 +61,8 @@ interface GalleryDetailsViewProps {
   folderTree: FolderItem[];
   onArchiveGallery?: (galleryId: string) => void;
   onUnarchiveGallery?: (galleryId: string) => void;
+  /** Deep link (&bulk=1): select all assets once they load, so the bulk bar is open on arrival. */
+  initialSelectAll?: boolean;
 }
 
 // Sort options for gallery assets
@@ -80,7 +83,7 @@ const SORT_LABELS: Record<NonNullable<SortField>, string> = {
   creator: "Creator",
 };
 
-export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = false, folderTree, onArchiveGallery, onUnarchiveGallery }: GalleryDetailsViewProps) {
+export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = false, folderTree, onArchiveGallery, onUnarchiveGallery, initialSelectAll = false }: GalleryDetailsViewProps) {
   const [activeTab, setActiveTab] = useState("assets");
   const [moveGalleriesOpen, setMoveGalleriesOpen] = useState(false);
   // View mode state (grid vs list)
@@ -125,8 +128,10 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
   const [creatorFilter, setCreatorFilter] = useState<string[]>([]);
   const [aspectRatioFilter, setAspectRatioFilter] = useState<LibraryAsset["aspectRatio"][]>([]);
   const [peopleFilter, setPeopleFilter] = useState<string[]>([]);
-  const [dateRangeFilter, setDateRangeFilter] = useState<"today" | "week" | "month" | "quarter" | "year" | "custom" | null>(null);
-  const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
+  const [addedDateFilter, setAddedDateFilter] = useState<DateRangeValue | null>(null);
+  const [capturedDateFilter, setCapturedDateFilter] = useState<DateRangeValue | null>(null);
+  // Custom ranges keyed by date filter id ("added-date" / "captured-date")
+  const [customDateRanges, setCustomDateRanges] = useState<Record<string, CustomRange>>({});
 
   // Use the library search hook
   const { results, allAssets, isLoading, search } = useLibrarySearch();
@@ -165,31 +170,11 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
         if (!matchesAny) return false;
       }
 
-      // Date range filter
-      if (dateRangeFilter) {
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const assetDate = new Date(asset.dateCreated.getFullYear(), asset.dateCreated.getMonth(), asset.dateCreated.getDate());
-        
-        if (dateRangeFilter === "custom" && customDateRange.from && customDateRange.to) {
-          const fromDate = new Date(customDateRange.from.getFullYear(), customDateRange.from.getMonth(), customDateRange.from.getDate());
-          const toDate = new Date(customDateRange.to.getFullYear(), customDateRange.to.getMonth(), customDateRange.to.getDate());
-          if (assetDate < fromDate || assetDate > toDate) return false;
-        } else {
-          const diffDays = Math.floor((today.getTime() - assetDate.getTime()) / 86400000);
-          const matches =
-            dateRangeFilter === "today"
-              ? diffDays === 0
-              : dateRangeFilter === "week"
-                ? diffDays <= 7
-                : dateRangeFilter === "month"
-                  ? diffDays <= 30
-                  : dateRangeFilter === "quarter"
-                    ? diffDays <= 90
-                    : diffDays <= 365;
-          if (!matches) return false;
-        }
-      }
+      // Added Date filter (when the asset entered Greenfly)
+      if (addedDateFilter && !matchesDateRange(asset.dateCreated, addedDateFilter, customDateRanges["added-date"])) return false;
+
+      // Captured Date filter (when the media was originally shot)
+      if (capturedDateFilter && !matchesDateRange(asset.captureDate, capturedDateFilter, customDateRanges["captured-date"])) return false;
 
       return true;
     });
@@ -200,9 +185,20 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
     creatorFilter,
     aspectRatioFilter,
     peopleFilter,
-    dateRangeFilter,
-    customDateRange,
+    addedDateFilter,
+    capturedDateFilter,
+    customDateRanges,
   ]);
+
+  // Apply the deep-linked select-all once assets have loaded (consume-once, so
+  // clearing the selection afterwards doesn't re-trigger it).
+  const bulkAppliedRef = useRef(false);
+  useEffect(() => {
+    if (initialSelectAll && !bulkAppliedRef.current && filteredResults.length > 0) {
+      bulkAppliedRef.current = true;
+      setSelectedAssets(new Set(filteredResults.map(a => a.id)));
+    }
+  }, [initialSelectAll, filteredResults]);
 
   const viewingAsset = useMemo(() => {
     if (!viewingAssetId) return null;
@@ -257,14 +253,17 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
       case "people":
         setPeopleFilter(values);
         break;
-      case "date-range":
-        setDateRangeFilter((values[0] as "today" | "week" | "month" | "quarter" | "year" | "custom") ?? null);
+      case "added-date":
+        setAddedDateFilter((values[0] as DateRangeValue) ?? null);
+        break;
+      case "captured-date":
+        setCapturedDateFilter((values[0] as DateRangeValue) ?? null);
         break;
     }
   }, []);
 
-  const handleCustomDateChange = useCallback((range: { from: Date | undefined; to: Date | undefined }) => {
-    setCustomDateRange(range);
+  const handleCustomDateChange = useCallback((filterId: string, range: CustomRange) => {
+    setCustomDateRanges(prev => ({ ...prev, [filterId]: range }));
   }, []);
 
   return (
@@ -347,20 +346,36 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => {
+                  // TODO: Implement edit gallery
+                }}>
+                  <i className="bi bi-pencil-square w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Edit Gallery
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  navigator.clipboard?.writeText(window.location.href);
+                  toast({ title: "Link copied", description: "Gallery link copied to clipboard." });
+                }}>
+                  <i className="bi bi-link-45deg w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Copy Gallery Link
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setMoveGalleriesOpen(true)}>
-                  <i className="bi bi-arrows-move w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Move
+                  <i className="bi bi-arrows-move w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Move Gallery
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  // TODO: Implement favorite gallery
+                }}>
+                  <i className="bi bi-heart w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Mark as Favorite
                 </DropdownMenuItem>
                 {gallery.archived === true ? (
                   <DropdownMenuItem onClick={() => onUnarchiveGallery?.(galleryId)}>
-                    <i className="bi bi-archive w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Unarchive
+                    <i className="bi bi-archive w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Unarchive Gallery
                   </DropdownMenuItem>
                 ) : (
                   <DropdownMenuItem onClick={() => onArchiveGallery?.(galleryId)}>
-                    <i className="bi bi-archive w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Archive
+                    <i className="bi bi-archive w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Archive Gallery
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem className="text-destructive focus:text-destructive">
-                  <i className="bi bi-trash w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Delete
+                <DropdownMenuItem>
+                  <i className="bi bi-trash w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Delete Gallery
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -459,6 +474,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           <div className="mb-3">
             <GalleryDetailsFilterBar
               onFilterChange={handleFilterChange}
+              onCustomDateChange={handleCustomDateChange}
               onActiveFiltersChange={setFilterChips}
               handleRef={filterBarHandleRef}
               onOpenFiltersSheet={() => setFiltersSheetOpen(true)}
@@ -505,7 +521,12 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   setSelectedAssets(new Set());
                 }
               }}
-              galleryActionLabel="Remove from Gallery"
+              onMoveToGallery={() => {
+                // TODO: Implement move to gallery
+              }}
+              onRemoveFromGallery={() => {
+                // TODO: Implement remove from gallery
+              }}
             />
           )}
 
@@ -671,6 +692,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           setMoveGalleriesOpen(false);
           toast({ title: "Gallery moved", description: `"${gallery.name}" has been moved successfully.` });
         }}
+        movingArchivedOnly={gallery.archived === true}
       />
 
       {/* Filters Sheet (for narrow widths) */}

@@ -111,6 +111,14 @@ export function MoveFolderDialog({
   }, [targetLocationId, flattenedFolders]);
 
   const exceedsDepthLimit = targetDepth + movingDepth - 1 > 3;
+
+  // Active folders can't move into an archived destination — the user must
+  // unarchive it first. Archived folders can move anywhere (they stay archived).
+  const targetFolder = useMemo(
+    () => (targetLocationId === null ? null : flattenedFolders.find((f) => f.id === targetLocationId) ?? null),
+    [targetLocationId, flattenedFolders]
+  );
+  const blockedByArchivedDest = folder.archived !== true && targetFolder?.archived === true;
   const hasSelected = targetLocationId !== undefined;
 
   const nestedRows = useMemo(() => collectNestedFolders(folder, breadcrumbPath), [folder, breadcrumbPath]);
@@ -231,6 +239,14 @@ export function MoveFolderDialog({
                 </Select>
               </div>
 
+              {/* Archived destination error */}
+              {blockedByArchivedDest && (
+                <div className="flex items-start gap-2 p-3 rounded-lg border border-destructive/50 bg-destructive/10 text-destructive text-sm">
+                  <i className="bi bi-exclamation-triangle w-4 h-4 flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
+                  <p>"{targetFolder?.name}" is archived. Unarchive it first, or choose an active location.</p>
+                </div>
+              )}
+
               {/* Depth limit error */}
               {exceedsDepthLimit && (
                 <div className="flex items-start gap-2 p-3 rounded-lg border border-destructive/50 bg-destructive/10 text-destructive text-sm">
@@ -264,7 +280,7 @@ export function MoveFolderDialog({
               <Button variant="outline" onClick={() => onOpenChange(false)} disabled={phase === "submitting"}>
                 Cancel
               </Button>
-              <Button onClick={handleMove} disabled={exceedsDepthLimit || exceedsMoveLimit || phase === "submitting"}>
+              <Button onClick={handleMove} disabled={exceedsDepthLimit || exceedsMoveLimit || blockedByArchivedDest || phase === "submitting"}>
                 {phase === "submitting" ? (
                   <>
                     <i className="bi bi-arrow-repeat animate-spin w-4 h-4 inline-flex items-center justify-center leading-none" />

@@ -14,7 +14,8 @@ import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
 import { Badge } from "@/components/ui/badge";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
-import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries, Gallery, FlattenedFolder, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath } from "@/lib/mockFolderData";
+import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries, Gallery, FlattenedFolder, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor } from "@/lib/mockFolderData";
+import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
@@ -214,8 +215,10 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   const [creatorFilter, setCreatorFilter] = useState<string[]>([]);
   const [aspectRatioFilter, setAspectRatioFilter] = useState<LibraryAsset["aspectRatio"][]>([]);
   const [peopleFilter, setPeopleFilter] = useState<string[]>([]);
-  const [dateRangeFilter, setDateRangeFilter] = useState<"today" | "week" | "month" | "quarter" | "year" | "custom" | null>(null);
-  const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
+  const [addedDateFilter, setAddedDateFilter] = useState<DateRangeValue | null>(null);
+  const [capturedDateFilter, setCapturedDateFilter] = useState<DateRangeValue | null>(null);
+  // Custom ranges keyed by date filter id ("added-date" / "captured-date")
+  const [customDateRanges, setCustomDateRanges] = useState<Record<string, CustomRange>>({});
   const filterBarHandleRef = useRef<FilterBarHandle | null>(null);
 
   // Use the library search hook
@@ -263,31 +266,11 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         if (!matchesAny) return false;
       }
 
-      // Date range filter
-      if (dateRangeFilter) {
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const assetDate = new Date(asset.dateCreated.getFullYear(), asset.dateCreated.getMonth(), asset.dateCreated.getDate());
-        
-        if (dateRangeFilter === "custom" && customDateRange.from && customDateRange.to) {
-          const fromDate = new Date(customDateRange.from.getFullYear(), customDateRange.from.getMonth(), customDateRange.from.getDate());
-          const toDate = new Date(customDateRange.to.getFullYear(), customDateRange.to.getMonth(), customDateRange.to.getDate());
-          if (assetDate < fromDate || assetDate > toDate) return false;
-        } else {
-          const diffDays = Math.floor((today.getTime() - assetDate.getTime()) / 86400000);
-          const matches =
-            dateRangeFilter === "today"
-              ? diffDays === 0
-              : dateRangeFilter === "week"
-                ? diffDays <= 7
-                : dateRangeFilter === "month"
-                  ? diffDays <= 30
-                  : dateRangeFilter === "quarter"
-                    ? diffDays <= 90
-                    : diffDays <= 365;
-          if (!matches) return false;
-        }
-      }
+      // Added Date filter (when the asset entered Greenfly)
+      if (addedDateFilter && !matchesDateRange(asset.dateCreated, addedDateFilter, customDateRanges["added-date"])) return false;
+
+      // Captured Date filter (when the media was originally shot)
+      if (capturedDateFilter && !matchesDateRange(asset.captureDate, capturedDateFilter, customDateRanges["captured-date"])) return false;
 
       return true;
     });
@@ -298,8 +281,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
     creatorFilter,
     aspectRatioFilter,
     peopleFilter,
-    dateRangeFilter,
-    customDateRange,
+    addedDateFilter,
+    capturedDateFilter,
+    customDateRanges,
   ]);
 
   // Sort filtered results
@@ -382,14 +366,17 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
       case "people":
         setPeopleFilter(values);
         break;
-      case "date-range":
-        setDateRangeFilter((values[0] as "today" | "week" | "month" | "quarter" | "year" | "custom") ?? null);
+      case "added-date":
+        setAddedDateFilter((values[0] as DateRangeValue) ?? null);
+        break;
+      case "captured-date":
+        setCapturedDateFilter((values[0] as DateRangeValue) ?? null);
         break;
     }
   }, []);
 
-  const handleCustomDateChange = useCallback((range: { from: Date | undefined; to: Date | undefined }) => {
-    setCustomDateRange(range);
+  const handleCustomDateChange = useCallback((filterId: string, range: CustomRange) => {
+    setCustomDateRanges(prev => ({ ...prev, [filterId]: range }));
   }, []);
 
   const handleMoveGalleries = useCallback((galleryIds: string[]) => {
@@ -494,7 +481,20 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <i className="bi bi-arrows-move w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Move
               </DropdownMenuItem>
               {folder.archived ? (
-                <DropdownMenuItem onClick={() => setUnarchiveOpen(true)}>
+                <DropdownMenuItem
+                  onClick={() => {
+                    // Unarchive is top-down only — blocked while an ancestor is archived
+                    if (folderTree && hasArchivedAncestor(folderId, folderTree)) {
+                      toast({
+                        title: "Can't unarchive",
+                        description: `"${folder.name}" is inside an archived folder. Unarchive the parent folder first, or move it to an active location.`,
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    setUnarchiveOpen(true);
+                  }}
+                >
                   <i className="bi bi-archive w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Unarchive
                 </DropdownMenuItem>
               ) : (
@@ -628,9 +628,14 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               creatorFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "creator" }));
               contentTypeFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "content-type" }));
               aspectRatioFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "aspect-ratio" }));
-              if (dateRangeFilter) {
-                const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 Days", month: "Last 30 Days", quarter: "Last 90 Days", year: "Last Year", custom: "Custom Date" };
-                chips.push({ label: dateLabels[dateRangeFilter] || dateRangeFilter, value: dateRangeFilter, sourceId: "date-range" });
+              {
+                const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 days", "two-weeks": "Last 14 days", month: "Last 30 days", mtd: "Month to Date", quarter: "Last 90 days", year: "Last 12 months", custom: "Custom Date" };
+                if (addedDateFilter) {
+                  chips.push({ label: `Added: ${dateLabels[addedDateFilter] || addedDateFilter}`, value: addedDateFilter, sourceId: "added-date" });
+                }
+                if (capturedDateFilter) {
+                  chips.push({ label: `Captured: ${dateLabels[capturedDateFilter] || capturedDateFilter}`, value: capturedDateFilter, sourceId: "captured-date" });
+                }
               }
 
               if (chips.length === 0) return null;
@@ -860,7 +865,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
 
           {/* Bulk Action Bar */}
           {isAnyGallerySelected && galleriesViewMode === "grid" && (
-            <div className="flex items-center justify-between mb-4 px-3 py-2 bg-muted/50 border rounded-lg">
+            <div className="flex items-center justify-between mb-4 px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg">
               <div className="flex items-center gap-3">
                 <Checkbox
                   checked={allGalleriesSelected}
@@ -1222,6 +1227,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           setSelectedGalleries(new Set());
           onMoveGalleries?.(idsToMove, locationId);
         }}
+        movingArchivedOnly={moveGalleryItems.length > 0 && moveGalleryItems.every(item => (galleryList ?? mockGalleries).find(g => g.id === item.id)?.archived === true)}
       />
 
       {/* Asset Settings Drawer */}
