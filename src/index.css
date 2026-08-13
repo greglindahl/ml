@@ -476,6 +476,15 @@
   }
 }
 
+/* Widest threshold for the assets filter bars, which carry both Added and
+   Captured date dropdowns. Tuned to the row's natural full-label width (~1250px)
+   so labels only show when the whole row fits on one line. */
+@container filterbar (max-width: 1249px) {
+  .cq-filterbar-hide-label-xwide .filter-label {
+    display: none;
+  }
+}
+
 /* Responsive filter bar: collapse to "Filters" button at narrow widths */
 @container filterbar (max-width: 767px) {
   .filters-expanded {

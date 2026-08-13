@@ -1169,10 +1169,10 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 {
                   const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 days", "two-weeks": "Last 14 days", month: "Last 30 days", mtd: "Month to Date", quarter: "Last 90 days", year: "Last 12 months", custom: "Custom Date" };
                   if (addedDateFilter) {
-                    chips.push({ label: `Added: ${dateLabels[addedDateFilter] || addedDateFilter}`, value: addedDateFilter, sourceId: "added-date", icon: <i className="bi bi-calendar text-sm" /> });
+                    chips.push({ label: `Added: ${dateLabels[addedDateFilter] || addedDateFilter}`, value: addedDateFilter, sourceId: "added-date", icon: <i className="bi bi-calendar-plus text-sm" /> });
                   }
                   if (capturedDateFilter) {
-                    chips.push({ label: `Captured: ${dateLabels[capturedDateFilter] || capturedDateFilter}`, value: capturedDateFilter, sourceId: "captured-date", icon: <i className="bi bi-calendar text-sm" /> });
+                    chips.push({ label: `Captured: ${dateLabels[capturedDateFilter] || capturedDateFilter}`, value: capturedDateFilter, sourceId: "captured-date", icon: <i className="bi bi-camera text-sm" /> });
                   }
                 }
                 folderFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "folders", icon: <i className="bi bi-folder text-sm" /> }));
@@ -1838,8 +1838,11 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
         <FilterSection label="Creator" icon="bi-person">
           <div className="text-sm text-muted-foreground">Creator filters will go here</div>
         </FilterSection>
-        <FilterSection label="Date Range" icon="bi-calendar">
-          <div className="text-sm text-muted-foreground">Date range filters will go here</div>
+        <FilterSection label="Added Date" icon="bi-calendar-plus">
+          <div className="text-sm text-muted-foreground">Added date filters will go here</div>
+        </FilterSection>
+        <FilterSection label="Captured Date" icon="bi-camera">
+          <div className="text-sm text-muted-foreground">Captured date filters will go here</div>
         </FilterSection>
         <FilterSection label="More Filters" icon="bi-filter">
           <div className="text-sm text-muted-foreground">Source, Status, and other filters will go here</div>

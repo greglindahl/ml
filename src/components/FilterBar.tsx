@@ -128,13 +128,13 @@ const filters: FilterConfig[] = [{
   })(),
 }, {
   id: "added-date",
-  label: "Added Date",
-  icon: <i className="bi bi-calendar" />,
+  label: "Added",
+  icon: <i className="bi bi-calendar-plus" />,
   options: DATE_RANGE_OPTIONS
 }, {
   id: "captured-date",
-  label: "Captured Date",
-  icon: <i className="bi bi-calendar" />,
+  label: "Captured",
+  icon: <i className="bi bi-camera" />,
   options: DATE_RANGE_OPTIONS
 }, {
   id: "creator",
@@ -385,7 +385,7 @@ export function FilterBar({
   const totalActiveCount = standardFiltersCount + aiTagsCount + sourceCount;
 
   return (
-    <div className="filter-bar-container cq-filterbar-hide-label flex flex-wrap items-center gap-1.5">
+    <div className="filter-bar-container cq-filterbar-hide-label-xwide flex flex-wrap items-center gap-1.5">
       {/* Collapsed Filters Button (visible at narrow widths) */}
       <Tooltip delayDuration={700}>
         <TooltipTrigger asChild>
