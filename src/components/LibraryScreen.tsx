@@ -112,12 +112,18 @@ interface LibraryScreenProps {
   initialActiveFolder?: string;
   /** Tab to open on mount (e.g. "galleries" when deep-linked from Home). Defaults to "assets". */
   initialActiveTab?: string;
+  /** Deep link (&bulk=1): preselect all assets on the initially linked gallery's details view. */
+  initialBulkSelect?: boolean;
 }
 
-export function LibraryScreen({ isMobile = false, initialActiveFolder, initialActiveTab }: LibraryScreenProps) {
+export function LibraryScreen({ isMobile = false, initialActiveFolder, initialActiveTab, initialBulkSelect }: LibraryScreenProps) {
   const [activeTab, setActiveTab] = useState(initialActiveTab ?? "assets");
   const [isFolderSidebarExpanded, setIsFolderSidebarExpanded] = useState(false);
   const [activeFolder, setActiveFolder] = useState(initialActiveFolder ?? "all");
+  // Consume-once: bulk preselect only applies to the gallery the deep link opened.
+  const [pendingBulkSelectFor] = useState<string | null>(
+    initialBulkSelect && initialActiveFolder ? initialActiveFolder : null
+  );
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [assetsViewMode, setAssetsViewMode] = useState<"grid" | "list">("grid");
   const [galleriesViewMode, setGalleriesViewMode] = useState<"grid" | "list">("grid");
@@ -950,6 +956,21 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     setActiveFolder(folderId);
   }, []);
 
+  // Keep the address bar shareable: reflect the current Library location as
+  // query params (?gallery=<id> / ?folder=<id> / ?tab=<tab>) so any view can be
+  // deep-linked by copying the URL. replaceState avoids polluting history.
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (activeFolder !== "all") {
+      const node = findFolderById(folderTree, activeFolder);
+      params.set(node?.type === "gallery" ? "gallery" : "folder", activeFolder);
+    } else if (activeTab !== "assets") {
+      params.set("tab", activeTab);
+    }
+    const query = params.toString();
+    window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
+  }, [activeFolder, activeTab, folderTree]);
+
   return (
     <div className="flex-1 flex h-screen overflow-hidden">
       {/* Folders Sidebar with DnD */}
@@ -977,6 +998,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
           folderTree={folderTree}
           onArchiveGallery={handleArchiveGallery}
           onUnarchiveGallery={handleUnarchiveGallery}
+          initialSelectAll={pendingBulkSelectFor === activeGallery.id}
         />
       ) : activeFolderItem ? (
         <FolderDetailsView 

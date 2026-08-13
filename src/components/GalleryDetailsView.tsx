@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { cn } from "@/lib/utils";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
@@ -61,6 +61,8 @@ interface GalleryDetailsViewProps {
   folderTree: FolderItem[];
   onArchiveGallery?: (galleryId: string) => void;
   onUnarchiveGallery?: (galleryId: string) => void;
+  /** Deep link (&bulk=1): select all assets once they load, so the bulk bar is open on arrival. */
+  initialSelectAll?: boolean;
 }
 
 // Sort options for gallery assets
@@ -81,7 +83,7 @@ const SORT_LABELS: Record<NonNullable<SortField>, string> = {
   creator: "Creator",
 };
 
-export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = false, folderTree, onArchiveGallery, onUnarchiveGallery }: GalleryDetailsViewProps) {
+export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = false, folderTree, onArchiveGallery, onUnarchiveGallery, initialSelectAll = false }: GalleryDetailsViewProps) {
   const [activeTab, setActiveTab] = useState("assets");
   const [moveGalleriesOpen, setMoveGalleriesOpen] = useState(false);
   // View mode state (grid vs list)
@@ -187,6 +189,16 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
     capturedDateFilter,
     customDateRanges,
   ]);
+
+  // Apply the deep-linked select-all once assets have loaded (consume-once, so
+  // clearing the selection afterwards doesn't re-trigger it).
+  const bulkAppliedRef = useRef(false);
+  useEffect(() => {
+    if (initialSelectAll && !bulkAppliedRef.current && filteredResults.length > 0) {
+      bulkAppliedRef.current = true;
+      setSelectedAssets(new Set(filteredResults.map(a => a.id)));
+    }
+  }, [initialSelectAll, filteredResults]);
 
   const viewingAsset = useMemo(() => {
     if (!viewingAssetId) return null;
