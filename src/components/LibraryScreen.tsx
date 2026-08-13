@@ -1172,7 +1172,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     chips.push({ label: `Added: ${dateLabels[addedDateFilter] || addedDateFilter}`, value: addedDateFilter, sourceId: "added-date", icon: <i className="bi bi-calendar-plus text-sm" /> });
                   }
                   if (capturedDateFilter) {
-                    chips.push({ label: `Captured: ${dateLabels[capturedDateFilter] || capturedDateFilter}`, value: capturedDateFilter, sourceId: "captured-date", icon: <i className="bi bi-camera text-sm" /> });
+                    chips.push({ label: `Captured: ${dateLabels[capturedDateFilter] || capturedDateFilter}`, value: capturedDateFilter, sourceId: "captured-date", icon: <i className="bi bi-calendar text-sm" /> });
                   }
                 }
                 folderFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "folders", icon: <i className="bi bi-folder text-sm" /> }));
@@ -1841,7 +1841,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
         <FilterSection label="Added Date" icon="bi-calendar-plus">
           <div className="text-sm text-muted-foreground">Added date filters will go here</div>
         </FilterSection>
-        <FilterSection label="Captured Date" icon="bi-camera">
+        <FilterSection label="Captured Date" icon="bi-calendar">
           <div className="text-sm text-muted-foreground">Captured date filters will go here</div>
         </FilterSection>
         <FilterSection label="More Filters" icon="bi-filter">

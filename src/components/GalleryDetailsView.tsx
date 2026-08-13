@@ -334,20 +334,36 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => {
+                  // TODO: Implement edit gallery
+                }}>
+                  <i className="bi bi-pencil-square w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Edit Gallery
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  navigator.clipboard?.writeText(window.location.href);
+                  toast({ title: "Link copied", description: "Gallery link copied to clipboard." });
+                }}>
+                  <i className="bi bi-link-45deg w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Copy Gallery Link
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setMoveGalleriesOpen(true)}>
-                  <i className="bi bi-arrows-move w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Move
+                  <i className="bi bi-arrows-move w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Move Gallery
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  // TODO: Implement favorite gallery
+                }}>
+                  <i className="bi bi-heart w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Mark as Favorite
                 </DropdownMenuItem>
                 {gallery.archived === true ? (
                   <DropdownMenuItem onClick={() => onUnarchiveGallery?.(galleryId)}>
-                    <i className="bi bi-archive w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Unarchive
+                    <i className="bi bi-archive w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Unarchive Gallery
                   </DropdownMenuItem>
                 ) : (
                   <DropdownMenuItem onClick={() => onArchiveGallery?.(galleryId)}>
-                    <i className="bi bi-archive w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Archive
+                    <i className="bi bi-archive w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Archive Gallery
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem className="text-destructive focus:text-destructive">
-                  <i className="bi bi-trash w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Delete
+                <DropdownMenuItem>
+                  <i className="bi bi-trash w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Delete Gallery
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -493,7 +509,12 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   setSelectedAssets(new Set());
                 }
               }}
-              galleryActionLabel="Remove from Gallery"
+              onMoveToGallery={() => {
+                // TODO: Implement move to gallery
+              }}
+              onRemoveFromGallery={() => {
+                // TODO: Implement remove from gallery
+              }}
             />
           )}
 

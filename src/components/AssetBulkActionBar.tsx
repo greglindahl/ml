@@ -28,6 +28,9 @@ interface AssetBulkActionBarProps {
   onManageDescription?: () => void;
   onManageNotes?: () => void;
   onBranding?: () => void;
+  /** Gallery-details-only overflow items — rendered above the standard set when provided. */
+  onMoveToGallery?: () => void;
+  onRemoveFromGallery?: () => void;
 }
 
 export function AssetBulkActionBar({
@@ -45,6 +48,8 @@ export function AssetBulkActionBar({
   onManageDescription,
   onManageNotes,
   onBranding,
+  onMoveToGallery,
+  onRemoveFromGallery,
 }: AssetBulkActionBarProps) {
   const isOverLimit = selectedCount > ASSET_BULK_LIMIT;
 
@@ -98,6 +103,16 @@ export function AssetBulkActionBar({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-popover">
+            {onMoveToGallery && (
+              <DropdownMenuItem onClick={onMoveToGallery}>
+                <i className="bi bi-arrow-right-circle w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Move to Gallery
+              </DropdownMenuItem>
+            )}
+            {onRemoveFromGallery && (
+              <DropdownMenuItem onClick={onRemoveFromGallery}>
+                <i className="bi bi-dash-circle w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Remove from Gallery
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={onDelete}>
               <i className="bi bi-trash w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Delete
             </DropdownMenuItem>

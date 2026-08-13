@@ -134,7 +134,7 @@ const filters: FilterConfig[] = [{
 }, {
   id: "captured-date",
   label: "Captured",
-  icon: <i className="bi bi-camera" />,
+  icon: <i className="bi bi-calendar" />,
   options: DATE_RANGE_OPTIONS
 }, {
   id: "creator",
