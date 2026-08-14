@@ -236,15 +236,15 @@ export function GalleryTableView({
           <TableHeader>
             <TableRow>
               <TableHead className="w-12"><Checkbox disabled /></TableHead>
-              <TableHead className="w-24">Thumbnail</TableHead>
-              <TableHead>Gallery Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Creator</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead>Last Added</TableHead>
-              <TableHead>Sharing</TableHead>
-              <TableHead className="text-right">Downloads</TableHead>
-              <TableHead className="text-right">Total Assets</TableHead>
+              <TableHead className="w-24"></TableHead>
+              <TableHead className="text-xs tracking-wider">Gallery Name</TableHead>
+              <TableHead className="text-xs tracking-wider">Description</TableHead>
+              <TableHead className="text-xs tracking-wider">Creator</TableHead>
+              <TableHead className="text-xs tracking-wider">Created</TableHead>
+              <TableHead className="text-xs tracking-wider">Last Added</TableHead>
+              <TableHead className="text-xs tracking-wider">Sharing</TableHead>
+              <TableHead className="text-right text-xs tracking-wider">Downloads</TableHead>
+              <TableHead className="text-right text-xs tracking-wider">Total Assets</TableHead>
               <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
