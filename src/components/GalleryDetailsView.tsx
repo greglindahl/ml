@@ -397,7 +397,9 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           isMobile={isMobile}
         />
 
-        <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">
+        <TabsContent value="assets" className="flex-1 overflow-y-auto pb-6 mt-0">
+          {/* Sticky header: search + filters + chips + bulk bar pin while content scrolls */}
+          <div className="sticky top-0 z-20 bg-background pt-6">
           {/* Search Row with Utility Cluster */}
           <div className="flex items-center gap-4 mb-3 cq-search-row">
             <div className="flex-1 min-w-0 cq-search-input">
@@ -529,6 +531,8 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
               }}
             />
           )}
+
+          </div>{/* End sticky header */}
 
           {/* Assets Grid/Table with Loading State */}
           <div className="min-h-[400px]">

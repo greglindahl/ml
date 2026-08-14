@@ -190,13 +190,13 @@ export function AssetTableView({
           <TableHeader>
             <TableRow>
               <TableHead className="w-12"><Checkbox disabled /></TableHead>
-              <TableHead className="w-20">Thumbnail</TableHead>
-              <TableHead>Creator</TableHead>
-              <TableHead>Added</TableHead>
-              <TableHead>Captured</TableHead>
-              <TableHead>Details</TableHead>
-              <TableHead>Metadata</TableHead>
-              <TableHead className="text-right">Downloads</TableHead>
+              <TableHead className="w-20"></TableHead>
+              <TableHead className="text-xs tracking-wider">Creator</TableHead>
+              <TableHead className="text-xs tracking-wider">Added</TableHead>
+              <TableHead className="text-xs tracking-wider">Captured</TableHead>
+              <TableHead className="text-xs tracking-wider">Details</TableHead>
+              <TableHead className="text-xs tracking-wider">Metadata</TableHead>
+              <TableHead className="text-right text-xs tracking-wider">Downloads</TableHead>
               <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
@@ -233,12 +233,12 @@ export function AssetTableView({
                   {...(someSelected ? { "data-state": "indeterminate" } : {})}
                 />
               </TableHead>
-              {columnVisibility.thumbnail && <TableHead className="w-24">Thumbnail</TableHead>}
+              {columnVisibility.thumbnail && <TableHead className="w-24"></TableHead>}
               {columnVisibility.creator && (
                 <TableHead className="min-w-[120px]">
                   <button
                     onClick={() => handleSort("creator")}
-                    className="flex items-center hover:text-foreground transition-colors"
+                    className="flex items-center hover:text-foreground transition-colors uppercase text-xs tracking-wider"
                   >
                     Creator
                     {getSortIcon("creator")}
@@ -249,7 +249,7 @@ export function AssetTableView({
                 <TableHead className="min-w-[100px]">
                   <button
                     onClick={() => handleSort("dateCreated")}
-                    className="flex items-center hover:text-foreground transition-colors"
+                    className="flex items-center hover:text-foreground transition-colors uppercase text-xs tracking-wider"
                   >
                     Added
                     {getSortIcon("dateCreated")}
@@ -260,20 +260,20 @@ export function AssetTableView({
                 <TableHead className="min-w-[100px]">
                   <button
                     onClick={() => handleSort("captureDate")}
-                    className="flex items-center hover:text-foreground transition-colors"
+                    className="flex items-center hover:text-foreground transition-colors uppercase text-xs tracking-wider"
                   >
                     Captured
                     {getSortIcon("captureDate")}
                   </button>
                 </TableHead>
               )}
-              {columnVisibility.details && <TableHead className="min-w-[200px]">Details</TableHead>}
-              {columnVisibility.metadata && <TableHead className="min-w-[140px]">Metadata</TableHead>}
+              {columnVisibility.details && <TableHead className="min-w-[200px] text-xs tracking-wider">Details</TableHead>}
+              {columnVisibility.metadata && <TableHead className="min-w-[140px] text-xs tracking-wider">Metadata</TableHead>}
               {columnVisibility.downloads && (
                 <TableHead className="text-right min-w-[90px]">
                   <button
                     onClick={() => handleSort("downloads")}
-                    className="flex items-center justify-end w-full hover:text-foreground transition-colors"
+                    className="flex items-center justify-end w-full hover:text-foreground transition-colors uppercase text-xs tracking-wider"
                   >
                     Downloads
                     {getSortIcon("downloads")}

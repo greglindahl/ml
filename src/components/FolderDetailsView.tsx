@@ -9,7 +9,7 @@ import { SectionTabs } from "@/components/SectionTabs";
 import { Button } from "@/components/ui/button";
 import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
 import { FilterBar, FilterBarHandle } from "@/components/FilterBar";
-import { GalleryFilterBar } from "@/components/GalleryFilterBar";
+import { GalleryFilterBar, type GalleryFilterBarHandle, type GalleryFilterChip } from "@/components/GalleryFilterBar";
 import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
 import { Badge } from "@/components/ui/badge";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
@@ -220,6 +220,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   // Custom ranges keyed by date filter id ("added-date" / "captured-date")
   const [customDateRanges, setCustomDateRanges] = useState<Record<string, CustomRange>>({});
   const filterBarHandleRef = useRef<FilterBarHandle | null>(null);
+  // Galleries tab filter chips (new pattern, matching the assets bars)
+  const [galleryFilterChips, setGalleryFilterChips] = useState<GalleryFilterChip[]>([]);
+  const galleryFilterBarHandleRef = useRef<GalleryFilterBarHandle | null>(null);
 
   // Use the library search hook
   const { results, allAssets, isLoading, search } = useLibrarySearch();
@@ -524,7 +527,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         />
 
         {/* Assets Tab */}
-        <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">
+        <TabsContent value="assets" className="flex-1 overflow-y-auto pb-6 mt-0">
+          {/* Sticky header: search + filters + chips + bulk bar pin while content scrolls */}
+          <div className="sticky top-0 z-20 bg-background pt-6">
           {/* Search Row with Utility Cluster */}
           <div className="flex items-center gap-4 mb-3 cq-search-row">
             <div className="flex-1 min-w-0 cq-search-input">
@@ -683,6 +688,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             />
           )}
 
+          </div>{/* End sticky header */}
+
           {/* Assets Grid/Table with Loading State */}
           <div className="min-h-[400px]">
             {assetsViewMode === "list" ? (
@@ -780,7 +787,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         </TabsContent>
 
         {/* Galleries Tab */}
-        <TabsContent value="galleries" className="flex-1 overflow-y-auto py-6 mt-0">
+        <TabsContent value="galleries" className="flex-1 overflow-y-auto pb-6 mt-0">
+          {/* Sticky header: search + filters + chips + bulk bar pin while content scrolls */}
+          <div className="sticky top-0 z-20 bg-background pt-6">
           {/* Search Row with Utility Cluster */}
           <div className="flex items-center gap-4 mb-3 cq-search-row">
             <div className="flex-1 min-w-0 cq-search-input">
@@ -855,34 +864,59 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               isFavoritesActive={favoriteGalleriesOnly}
               onFavoritesToggle={setFavoriteGalleriesOnly}
               onOpenFiltersSheet={() => setGalleriesFiltersSheetOpen(true)}
+              onActiveFiltersChange={setGalleryFilterChips}
+              handleRef={galleryFilterBarHandleRef}
             />
           </div>
 
           {/* Applied Filter Chips - reserved height to prevent layout shift */}
           <div className="min-h-[24px] mb-4">
-            {/* Filter chips would go here when filters are active */}
+            {galleryFilterChips.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {galleryFilterChips.map((chip, i) => (
+                  <Badge
+                    key={`${chip.filterId}-${chip.value}-${i}`}
+                    colorStyle="primary"
+                    theme="soft"
+                    shape="rounded"
+                    className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-primary/30 text-[13px] normal-case tracking-normal font-normal"
+                    onClick={() => galleryFilterBarHandleRef.current?.removeValue(chip.filterId, chip.value)}
+                  >
+                    {chip.label}
+                    <i className="bi bi-x text-sm ml-0.5" />
+                  </Badge>
+                ))}
+                <button
+                  onClick={() => galleryFilterBarHandleRef.current?.clearAll()}
+                  className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Bulk Action Bar */}
           {isAnyGallerySelected && galleriesViewMode === "grid" && (
-            <div className="flex items-center justify-between mb-4 px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg">
+            <div className="flex items-center justify-between mb-4 px-5 py-3.5 bg-[#12263f] rounded-lg">
               <div className="flex items-center gap-3">
                 <Checkbox
                   checked={allGalleriesSelected}
                   onCheckedChange={toggleSelectAllGalleries}
+                  className="border-white data-[state=checked]:bg-white data-[state=checked]:text-[#12263f]"
                 />
-                <span className="text-sm font-medium">{selectedGalleries.size} selected</span>
+                <span className="text-[15px] font-medium text-white">{selectedGalleries.size} {selectedGalleries.size === 1 ? "Gallery" : "Galleries"} Selected</span>
               </div>
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({ title: "Favorited", description: `${selectedGalleries.size} ${selectedGalleries.size === 1 ? "gallery" : "galleries"} favorited.` })}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white disabled:opacity-60" onClick={() => toast({ title: "Favorited", description: `${selectedGalleries.size} ${selectedGalleries.size === 1 ? "gallery" : "galleries"} favorited.` })}>
                   <i className="bi bi-heart w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({ title: "Archived", description: `${selectedGalleries.size} ${selectedGalleries.size === 1 ? "gallery" : "galleries"} archived.` })}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white disabled:opacity-60" onClick={() => toast({ title: "Archived", description: `${selectedGalleries.size} ${selectedGalleries.size === 1 ? "gallery" : "galleries"} archived.` })}>
                   <i className="bi bi-archive w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white disabled:opacity-60">
                       <i className="bi bi-three-dots w-4 h-4 inline-flex items-center justify-center leading-none" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -914,6 +948,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               </div>
             </div>
           )}
+
+          </div>{/* End sticky header */}
 
           {/* Table Controls - shown above table in list view */}
           {(() => {
@@ -1008,7 +1044,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         </TabsContent>
 
         {/* Folders Tab */}
-        <TabsContent value="folders" className="flex-1 overflow-y-auto py-6 mt-0">
+        <TabsContent value="folders" className="flex-1 overflow-y-auto pb-6 mt-0">
+          {/* Sticky header: search + filters + chips + bulk bar pin while content scrolls */}
+          <div className="sticky top-0 z-20 bg-background pt-6">
           {/* Search Row with Utility Cluster (matches Assets / Galleries tabs in this file) */}
           <div className="flex items-center gap-4 mb-3 cq-search-row">
             <div className="flex-1 min-w-0 cq-search-input">
@@ -1031,6 +1069,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           <div className="min-h-[24px] mb-4">
             {/* Filter chips would go here when filters are active */}
           </div>
+
+          </div>{/* End sticky header */}
 
           {/* Empty state or folder children */}
           {(() => {

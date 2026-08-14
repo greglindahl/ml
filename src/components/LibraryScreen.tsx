@@ -18,7 +18,7 @@ import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { GalleryTableView, DEFAULT_GALLERY_COLUMN_VISIBILITY, GALLERY_COLUMNS, type GalleryColumnVisibility } from "@/components/GalleryTableView";
 import { FolderTableView, DEFAULT_FOLDER_COLUMN_VISIBILITY, FOLDER_COLUMNS, type FolderColumnVisibility } from "@/components/FolderTableView";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
-import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
+import { getRelativeTime, LibraryAsset, mockLibraryAssets } from "@/lib/mockLibraryData";
 import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, findFolderAncestorIds, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor } from "@/lib/mockFolderData";
 import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
 import { FolderSidebar } from "@/components/FolderSidebar";
@@ -37,7 +37,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { GalleryFilterBar } from "@/components/GalleryFilterBar";
+import { GalleryFilterBar, type GalleryFilterBarHandle, type GalleryFilterChip } from "@/components/GalleryFilterBar";
 import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
 import { GalleryCard, GalleryCardState } from "@/components/GalleryCard";
 import { AssetCard, AssetCardState } from "@/components/AssetCard";
@@ -136,6 +136,35 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   const [selectedGalleries, setSelectedGalleries] = useState<Set<string>>(new Set());
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  // ── Favorites tab ──────────────────────────────────────────────────────
+  // Secondary tab nav (Galleries default, matching prod), independent view
+  // modes, filter state, and selection so it never cross-contaminates the
+  // main Assets/Galleries tabs.
+  const [favSubTab, setFavSubTab] = useState("galleries");
+  const [favGalleriesViewMode, setFavGalleriesViewMode] = useState<"grid" | "list">("grid");
+  const [favAssetsViewMode, setFavAssetsViewMode] = useState<"grid" | "list">("grid");
+  const [favArchivedOnly, setFavArchivedOnly] = useState(false);
+  const [favUnviewedActive, setFavUnviewedActive] = useState(false);
+  const [favBrandedActive, setFavBrandedActive] = useState(false);
+  const [favAssetFilters, setFavAssetFilters] = useState<Record<string, string[]>>({});
+  const [favAssetCustomDates, setFavAssetCustomDates] = useState<Record<string, CustomRange>>({});
+  const [favSelectedAssets, setFavSelectedAssets] = useState<Set<string>>(new Set());
+  const [favAssetSort, setFavAssetSort] = useState<"dateCreated" | "captureDate" | "name" | "creator">("dateCreated");
+  const [favGallerySearch, setFavGallerySearch] = useState("");
+  const [favAssetSearch, setFavAssetSearch] = useState("");
+  const [favGalleryChips, setFavGalleryChips] = useState<GalleryFilterChip[]>([]);
+  const favGalleryFilterBarHandleRef = useRef<GalleryFilterBarHandle | null>(null);
+  const [favSelectedGalleries, setFavSelectedGalleries] = useState<Set<string>>(new Set());
+  // Main Galleries tab chips (same new pattern)
+  const [galleryTabChips, setGalleryTabChips] = useState<GalleryFilterChip[]>([]);
+  const galleryTabFilterBarHandleRef = useRef<GalleryFilterBarHandle | null>(null);
+  const favAssetsFilterBarHandleRef = useRef<FilterBarHandle | null>(null);
+  // Session-local asset favorite state, seeded from the mock data flags.
+  // Gallery favorite state lives on galleryList (already stateful).
+  const [favoriteAssetIds, setFavoriteAssetIds] = useState<Set<string>>(
+    () => new Set(mockLibraryAssets.filter(a => a.isFavorite).map(a => a.id))
+  );
   const [archivedFoldersOnly, setArchivedFoldersOnly] = useState(false);
   const [folderViewMode, setFolderViewMode] = useState<"grid" | "table">("grid");
   // Front-end-only filter of the folders visible at this level (no recursive search)
@@ -956,6 +985,79 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     setActiveFolder(folderId);
   }, []);
 
+  // ── Favorites: toggle handlers + filtered/sorted data ──────────────────
+  const handleToggleFavoriteGallery = useCallback((galleryId: string) => {
+    const gallery = galleryList.find(g => g.id === galleryId);
+    const nowFavorite = !gallery?.isFavorite;
+    setGalleryList(prev => prev.map(g => g.id === galleryId ? { ...g, isFavorite: !g.isFavorite } : g));
+    toast({
+      title: nowFavorite ? "Added to Favorites" : "Removed from Favorites",
+      description: `"${gallery?.name ?? "Gallery"}" was ${nowFavorite ? "added to" : "removed from"} your favorites.`,
+    });
+  }, [galleryList, toast]);
+
+  const handleToggleFavoriteAsset = useCallback((assetId: string) => {
+    const asset = mockLibraryAssets.find(a => a.id === assetId);
+    setFavoriteAssetIds(prev => {
+      const next = new Set(prev);
+      const nowFavorite = !next.has(assetId);
+      if (nowFavorite) next.add(assetId); else next.delete(assetId);
+      toast({
+        title: nowFavorite ? "Added to Favorites" : "Removed from Favorites",
+        description: `"${asset?.name ?? "Asset"}" was ${nowFavorite ? "added to" : "removed from"} your favorites.`,
+      });
+      return next;
+    });
+  }, [toast]);
+
+  const favGalleries = useMemo(
+    () => galleryList.filter(g =>
+      g.isFavorite &&
+      (favArchivedOnly ? isGalleryArchivedById(g.id) : !isGalleryArchivedById(g.id)) &&
+      (favGallerySearch === "" || g.name.toLowerCase().includes(favGallerySearch.toLowerCase()))
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- isGalleryArchivedById derives from folderTree
+    [galleryList, favArchivedOnly, favGallerySearch, folderTree]
+  );
+
+  // Base list for the assets subview: drives both the grid and the search typeahead.
+  const favAssetsBase = useMemo(
+    () => mockLibraryAssets.filter(a => favoriteAssetIds.has(a.id)),
+    [favoriteAssetIds]
+  );
+
+  const favFilteredAssets = useMemo(() => {
+    let results = favAssetsBase;
+    if (favAssetSearch !== "") {
+      const q = favAssetSearch.toLowerCase();
+      results = results.filter(a =>
+        a.name.toLowerCase().includes(q) ||
+        a.creator.toLowerCase().includes(q) ||
+        a.tags.some(t => t.toLowerCase().includes(q))
+      );
+    }
+    if (favBrandedActive) results = results.filter(a => a.isBranded);
+    const f = favAssetFilters;
+    // AI tag sub-filters (people/scene/brand) and Tags all match against asset tags
+    const tagValues = [...(f["tags"] ?? []), ...(f["people"] ?? []), ...(f["scene"] ?? []), ...(f["brand"] ?? [])];
+    if (tagValues.length) results = results.filter(a => tagValues.some(t => a.tags.some(tag => tag.toLowerCase() === t.toLowerCase())));
+    if (f["creator"]?.length) results = results.filter(a => f["creator"].includes(a.creatorId));
+    if (f["content-type"]?.length) results = results.filter(a => f["content-type"].includes(a.type));
+    if (f["aspect-ratio"]?.length) results = results.filter(a => f["aspect-ratio"].includes(a.aspectRatio));
+    const added = f["added-date"]?.[0];
+    if (added) results = results.filter(a => matchesDateRange(a.dateCreated, added as DateRangeValue, favAssetCustomDates["added-date"]));
+    const captured = f["captured-date"]?.[0];
+    if (captured) results = results.filter(a => matchesDateRange(a.captureDate, captured as DateRangeValue, favAssetCustomDates["captured-date"]));
+    return [...results].sort((a, b) => {
+      switch (favAssetSort) {
+        case "name": return a.name.localeCompare(b.name);
+        case "creator": return a.creator.localeCompare(b.creator);
+        case "captureDate": return b.captureDate.getTime() - a.captureDate.getTime();
+        default: return b.dateCreated.getTime() - a.dateCreated.getTime();
+      }
+    });
+  }, [favAssetsBase, favAssetSearch, favBrandedActive, favAssetFilters, favAssetCustomDates, favAssetSort]);
+
   // Keep the address bar shareable: reflect the current Library location as
   // query params (?gallery=<id> / ?folder=<id> / ?tab=<tab>) so any view can be
   // deep-linked by copying the URL. replaceState avoids polluting history.
@@ -1063,7 +1165,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
           <SectionTabs tabs={LIBRARY_TABS} value={activeTab} onValueChange={setActiveTab} isMobile={isMobile} />
 
-          <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">
+          <TabsContent value="assets" className="flex-1 overflow-y-auto pb-6 mt-0">
+            {/* Sticky header: search + filters + chips + bulk bar pin while the grid scrolls */}
+            <div className="sticky top-0 z-20 bg-background pt-6">
             {/* Search Row with Utility Cluster */}
             <div className="flex items-center gap-4 mb-3 cq-search-row">
               <div className="flex-1 min-w-0 cq-search-input">
@@ -1259,6 +1363,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
               />
             )}
 
+            </div>{/* End sticky header */}
+
             {/* Assets Grid/Table with Loading State */}
             <div className="min-h-[400px]">
             {assetsViewMode === "list" ? (
@@ -1331,6 +1437,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                         timestamp={getRelativeTime(asset.dateCreated)}
                         thumbnailUrl={asset.thumbnailUrl}
                         isBranded={isBrandedActive && asset.isBranded}
+                        isFavorite={favoriteAssetIds.has(asset.id)}
                         state={cardState}
                         onSelect={() => {
                           const next = new Set(selectedAssets);
@@ -1341,9 +1448,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                           }
                           setSelectedAssets(next);
                         }}
-                        onFavorite={() => {
-                          // TODO: Implement favorite functionality
-                        }}
+                        onFavorite={() => handleToggleFavoriteAsset(asset.id)}
                       />
                     </div>
                   );
@@ -1353,7 +1458,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             </div>
           </TabsContent>
 
-          <TabsContent value="galleries" className="flex-1 overflow-y-auto py-6 mt-0">
+          <TabsContent value="galleries" className="flex-1 overflow-y-auto pb-6 mt-0">
+            {/* Sticky header: search + filters + chips + bulk bar pin while the grid scrolls */}
+            <div className="sticky top-0 z-20 bg-background pt-6">
             {/* Search Row with Utility Cluster */}
             <div className="flex items-center gap-4 mb-3 cq-search-row">
               <div className="flex-1 min-w-0 cq-search-input">
@@ -1430,28 +1537,53 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 isFavoritesActive={favoriteGalleriesOnly}
                 onFavoritesToggle={setFavoriteGalleriesOnly}
                 onOpenFiltersSheet={() => setGalleriesFiltersSheetOpen(true)}
+                onActiveFiltersChange={setGalleryTabChips}
+                handleRef={galleryTabFilterBarHandleRef}
               />
             </div>
 
             {/* Applied Filter Chips - reserved height to prevent layout shift */}
             <div className="min-h-[24px] mb-4">
-              {/* Filter chips would go here when filters are active */}
+              {galleryTabChips.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {galleryTabChips.map((chip, i) => (
+                    <Badge
+                      key={`${chip.filterId}-${chip.value}-${i}`}
+                      colorStyle="primary"
+                      theme="soft"
+                      shape="rounded"
+                      className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-primary/30 text-[13px] normal-case tracking-normal font-normal"
+                      onClick={() => galleryTabFilterBarHandleRef.current?.removeValue(chip.filterId, chip.value)}
+                    >
+                      {chip.label}
+                      <i className="bi bi-x text-sm ml-0.5" />
+                    </Badge>
+                  ))}
+                  <button
+                    onClick={() => galleryTabFilterBarHandleRef.current?.clearAll()}
+                    className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+                  >
+                    Clear all
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Bulk Action Bar */}
             {isAnyGallerySelected && galleriesViewMode === "grid" && (
-              <div className="flex items-center justify-between mb-4 px-3 py-2 bg-white border border-[#E6E6E6] rounded-lg">
+              <div className="flex items-center justify-between mb-4 px-5 py-3.5 bg-[#12263f] rounded-lg">
                 <div className="flex items-center gap-3">
                   <Checkbox
                     checked={allGalleriesSelected}
                     onCheckedChange={toggleSelectAllGalleries}
+                    className="border-white data-[state=checked]:bg-white data-[state=checked]:text-[#12263f]"
                   />
-                  <span className="text-sm font-medium">{selectedGalleries.size} selected</span>
+                  <span className="text-[15px] font-medium text-white">{selectedGalleries.size} {selectedGalleries.size === 1 ? "Gallery" : "Galleries"} Selected</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white disabled:opacity-60">
                         <i className="bi bi-heart w-4 h-4 inline-flex items-center justify-center leading-none" />
                       </Button>
                     </TooltipTrigger>
@@ -1465,7 +1597,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
+                            className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white disabled:opacity-60"
                             disabled={anySelectedBlocked}
                             onClick={() => {
                               const count = selectedGalleries.size;
@@ -1490,7 +1622,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                   ) : (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white disabled:opacity-60" onClick={() => {
                           const count = selectedGalleries.size;
                           setGalleriesArchived(Array.from(selectedGalleries), true);
                           setSelectedGalleries(new Set());
@@ -1507,7 +1639,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                   )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white disabled:opacity-60">
                       <i className="bi bi-three-dots w-4 h-4 inline-flex items-center justify-center leading-none" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -1539,6 +1671,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 </div>
               </div>
             )}
+
+            </div>{/* End sticky header */}
 
             {/* Galleries Grid/Table */}
             <div className="min-h-[400px]">
@@ -1604,9 +1738,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                             setActiveFolder(gallery.id);
                           }
                         }}
-                        onFavorite={() => {
-                          // TODO: Implement favorite functionality
-                        }}
+                        onFavorite={() => handleToggleFavoriteGallery(gallery.id)}
                         onMove={() => handleMoveGalleries([gallery.id])}
                         onArchive={() => handleArchiveGallery(gallery.id)}
                         onUnarchive={() => handleUnarchiveGallery(gallery.id)}
@@ -1618,7 +1750,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             </div>
           </TabsContent>
 
-          <TabsContent value="folders" className="flex-1 overflow-y-auto py-6 mt-0">
+          <TabsContent value="folders" className="flex-1 overflow-y-auto pb-6 mt-0">
+            {/* Sticky header: search + filters + chips + bulk bar pin while the grid scrolls */}
+            <div className="sticky top-0 z-20 bg-background pt-6">
             {/* Search Row with Utility Cluster */}
             <div className="flex items-center gap-4 mb-3 cq-search-row">
               <div className="flex-1 min-w-0 cq-search-input">
@@ -1641,6 +1775,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             <div className="min-h-[24px] mb-4">
               {/* Filter chips would go here when filters are active */}
             </div>
+
+            </div>{/* End sticky header */}
 
             {/* Folders Grid */}
             {(() => {
@@ -1694,10 +1830,435 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             })()}
           </TabsContent>
 
-          <TabsContent value="favorites" className="flex-1 overflow-y-auto py-6 mt-0">
-            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
-              <p>Favorites content placeholder</p>
-            </div>
+          <TabsContent value="favorites" className="flex-1 overflow-y-auto pb-6 mt-0">
+            {/* Secondary section nav: Galleries | Assets (Galleries default, matching prod) */}
+            <Tabs value={favSubTab} onValueChange={setFavSubTab} className="flex flex-col">
+              <div className="mb-6 sticky top-0 z-30 bg-background pt-6">
+                <SectionTabs
+                  tabs={[
+                    { value: "galleries", label: "Galleries" },
+                    { value: "assets", label: "Assets" },
+                  ]}
+                  value={favSubTab}
+                  onValueChange={setFavSubTab}
+                  isMobile={isMobile}
+                />
+              </div>
+
+              {/* ── Favorited Galleries ─────────────────────────────── */}
+              <TabsContent value="galleries" className="mt-0">
+                {/* Sticky header: pins below the sticky section tabs */}
+                <div className="sticky top-[65px] z-20 bg-background">
+                {/* Search Row with Utility Cluster */}
+                <div className="flex items-center gap-4 mb-3 cq-search-row">
+                  <div className="flex-1 min-w-0 cq-search-input">
+                    <FacetedSearchWithTypeahead onSearch={setFavGallerySearch} placeholder="Search" />
+                  </div>
+                  <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
+                  <div className="flex items-center border border-gray-300 rounded-md bg-white">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${favGalleriesViewMode === "grid" ? "bg-gray-100" : ""}`}
+                      onClick={() => setFavGalleriesViewMode("grid")}
+                    >
+                      <i className="bi bi-grid w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${favGalleriesViewMode === "list" ? "bg-gray-100" : ""}`}
+                      onClick={() => setFavGalleriesViewMode("list")}
+                    >
+                      <i className="bi bi-table w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${favSelectedGalleries.size > 0 ? "bg-gray-100" : ""}`}
+                      onClick={() => {
+                        if (favSelectedGalleries.size > 0) {
+                          setFavSelectedGalleries(new Set());
+                        } else {
+                          setFavSelectedGalleries(new Set(favGalleries.map(g => g.id)));
+                        }
+                      }}
+                    >
+                      <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    </Button>
+                  </div>
+                  </div>
+                </div>
+
+                {/* Filter row: no Unsorted (top-level-only) or Favorites (redundant here) pills */}
+                <div className="mb-3">
+                  <GalleryFilterBar
+                    isArchivedActive={favArchivedOnly}
+                    onArchivedToggle={setFavArchivedOnly}
+                    onActiveFiltersChange={setFavGalleryChips}
+                    handleRef={favGalleryFilterBarHandleRef}
+                  />
+                </div>
+
+                {/* Applied Filter Chips - reserved height to prevent layout shift */}
+                <div className="min-h-[24px] mb-4">
+                  {favGalleryChips.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {favGalleryChips.map((chip, i) => (
+                        <Badge
+                          key={`${chip.filterId}-${chip.value}-${i}`}
+                          colorStyle="primary"
+                          theme="soft"
+                          shape="rounded"
+                          className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-primary/30 text-[13px] normal-case tracking-normal font-normal"
+                          onClick={() => favGalleryFilterBarHandleRef.current?.removeValue(chip.filterId, chip.value)}
+                        >
+                          {chip.label}
+                          <i className="bi bi-x text-sm ml-0.5" />
+                        </Badge>
+                      ))}
+                      <button
+                        onClick={() => favGalleryFilterBarHandleRef.current?.clearAll()}
+                        className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+                      >
+                        Clear all
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bulk action bar — variation 4 demo: navy max-contrast tone */}
+                {favSelectedGalleries.size > 0 && (
+                  <div className="flex items-center justify-between mb-4 px-5 py-3.5 bg-[#12263f] rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        checked={favGalleries.length > 0 && favSelectedGalleries.size === favGalleries.length}
+                        onCheckedChange={(checked) => {
+                          setFavSelectedGalleries(checked ? new Set(favGalleries.map(g => g.id)) : new Set());
+                        }}
+                        className="border-white data-[state=checked]:bg-white data-[state=checked]:text-[#12263f]"
+                      />
+                      <span className="text-[15px] font-medium text-white">{favSelectedGalleries.size} {favSelectedGalleries.size === 1 ? "Gallery" : "Galleries"} Selected</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white"
+                            onClick={() => {
+                              const count = favSelectedGalleries.size;
+                              setGalleryList(prev => prev.map(g => favSelectedGalleries.has(g.id) ? { ...g, isFavorite: false } : g));
+                              setFavSelectedGalleries(new Set());
+                              toast({ title: "Removed from Favorites", description: `${count} ${count === 1 ? "gallery" : "galleries"} removed from your favorites.` });
+                            }}
+                          >
+                            <i className="bi bi-heart-fill w-4 h-4 inline-flex items-center justify-center leading-none" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Remove from Favorites</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white"
+                            onClick={() => {
+                              const count = favSelectedGalleries.size;
+                              setGalleriesArchived(Array.from(favSelectedGalleries), true);
+                              setFavSelectedGalleries(new Set());
+                              toast({ title: "Galleries archived", description: `${count} ${count === 1 ? "gallery" : "galleries"} archived.` });
+                            }}
+                          >
+                            <i className="bi bi-archive w-4 h-4 inline-flex items-center justify-center leading-none" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Archive</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
+                )}
+
+                </div>{/* End sticky header */}
+
+                {favGalleries.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <i className="bi bi-heart text-5xl text-muted-foreground/30 mb-4" />
+                    <h3 className="text-lg font-medium mb-1">No favorited galleries</h3>
+                    <p className="text-sm text-muted-foreground">Tap the heart on any gallery to add it to Favorites</p>
+                  </div>
+                ) : favGalleriesViewMode === "list" ? (
+                  <GalleryTableView
+                    galleries={favGalleries.map(g => ({ ...g, archived: isGalleryArchivedById(g.id) }))}
+                    onNavigate={handleNavigate}
+                    onMoveGalleries={handleMoveGalleries}
+                    onArchiveGallery={handleArchiveGallery}
+                    onUnarchiveGallery={handleUnarchiveGallery}
+                    perPage={galleryPerPage}
+                    columnVisibility={galleryColumnVisibility}
+                  />
+                ) : (
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+                    {favGalleries.map((gallery) => {
+                      const isSelected = favSelectedGalleries.has(gallery.id);
+                      let cardState: GalleryCardState = "default";
+                      if (favSelectedGalleries.size > 0 && !isSelected) {
+                        cardState = "bulk-select";
+                      } else if (isSelected) {
+                        cardState = "selected";
+                      }
+                      const toggleSelection = () => {
+                        setFavSelectedGalleries(prev => {
+                          const next = new Set(prev);
+                          if (next.has(gallery.id)) next.delete(gallery.id); else next.add(gallery.id);
+                          return next;
+                        });
+                      };
+                      return (
+                        <GalleryCard
+                          key={gallery.id}
+                          name={gallery.name}
+                          assetCount={gallery.assetCount}
+                          thumbnailUrl={gallery.thumbnailUrl}
+                          isArchived={isGalleryArchivedById(gallery.id)}
+                          isPublic={gallery.isPublic}
+                          isFavorite={gallery.isFavorite}
+                          isInFolder={findGalleryParentPath(gallery.id, folderTree) !== null}
+                          state={cardState}
+                          onSelect={toggleSelection}
+                          onOpen={() => {
+                            if (favSelectedGalleries.size > 0) toggleSelection();
+                            else setActiveFolder(gallery.id);
+                          }}
+                          onFavorite={() => handleToggleFavoriteGallery(gallery.id)}
+                          onMove={() => handleMoveGalleries([gallery.id])}
+                          onArchive={() => handleArchiveGallery(gallery.id)}
+                          onUnarchive={() => handleUnarchiveGallery(gallery.id)}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* ── Favorited Assets ────────────────────────────────── */}
+              <TabsContent value="assets" className="mt-0">
+                {/* Sticky header: pins below the sticky section tabs */}
+                <div className="sticky top-[65px] z-20 bg-background">
+                {/* Search Row with Utility Cluster */}
+                <div className="flex items-center gap-4 mb-3 cq-search-row">
+                  <div className="flex-1 min-w-0 cq-search-input">
+                    <FacetedSearchWithTypeahead onSearch={setFavAssetSearch} assets={favAssetsBase} placeholder="Search by people, tags, filenames…" />
+                  </div>
+                  <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
+                  <Tooltip delayDuration={700}>
+                    <DropdownMenu>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm" className="h-10 gap-2 px-3 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                            <i className="bi bi-arrow-down-up w-4 h-4 inline-flex items-center justify-center leading-none" />
+                            <span className="sort-label">{{ dateCreated: "Added", captureDate: "Captured", name: "Name", creator: "Creator" }[favAssetSort]}</span>
+                            <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <DropdownMenuContent className="bg-white w-48">
+                        {([["dateCreated", "Added"], ["captureDate", "Captured"], ["name", "Name"], ["creator", "Creator"]] as const).map(([value, label]) => (
+                          <DropdownMenuItem key={value} onClick={() => setFavAssetSort(value)} className="flex items-center justify-between">
+                            {label}
+                            {favAssetSort === value && <i className="bi bi-check text-sm ml-2" />}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <TooltipContent side="bottom">Sort by...</TooltipContent>
+                  </Tooltip>
+
+                  <div className="flex items-center border border-gray-300 rounded-md bg-white">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${favAssetsViewMode === "grid" ? "bg-gray-100" : ""}`}
+                      onClick={() => setFavAssetsViewMode("grid")}
+                    >
+                      <i className="bi bi-grid w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${favAssetsViewMode === "list" ? "bg-gray-100" : ""}`}
+                      onClick={() => setFavAssetsViewMode("list")}
+                    >
+                      <i className="bi bi-table w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${favSelectedAssets.size > 0 ? "bg-gray-100" : ""}`}
+                      onClick={() => {
+                        if (favSelectedAssets.size > 0) {
+                          setFavSelectedAssets(new Set());
+                        } else {
+                          setFavSelectedAssets(new Set(favFilteredAssets.map(a => a.id)));
+                        }
+                      }}
+                    >
+                      <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    </Button>
+                  </div>
+                  </div>
+                </div>
+
+                {/* Filter row: full assets filter set minus the Unsorted pill */}
+                <div className="mb-3">
+                  <FilterBar
+                    onFilterChange={(filterId, values) => {
+                      setFavAssetFilters(prev => {
+                        const next = { ...prev };
+                        if (values.length === 0) delete next[filterId]; else next[filterId] = values;
+                        return next;
+                      });
+                    }}
+                    onCustomDateChange={(filterId, range) => {
+                      setFavAssetCustomDates(prev => ({ ...prev, [filterId]: { from: range.from, to: range.to } }));
+                    }}
+                    compactMode={true}
+                    handleRef={favAssetsFilterBarHandleRef}
+                    isUnviewedActive={favUnviewedActive}
+                    onUnviewedToggle={setFavUnviewedActive}
+                    isBrandingActive={favBrandedActive}
+                    onBrandingToggle={setFavBrandedActive}
+                  />
+                </div>
+
+                {/* Applied filter chips */}
+                <div className="min-h-[24px] mb-4">
+                  {(() => {
+                    const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 days", "two-weeks": "Last 14 days", month: "Last 30 days", mtd: "Month to Date", quarter: "Last 90 days", year: "Last 12 months", custom: "Custom Date" };
+                    const chips = Object.entries(favAssetFilters).flatMap(([filterId, values]) =>
+                      values.map(value => ({
+                        filterId,
+                        value,
+                        label: filterId === "added-date" ? `Added: ${dateLabels[value] ?? value}`
+                          : filterId === "captured-date" ? `Captured: ${dateLabels[value] ?? value}`
+                          : filterId === "content-type" ? value.charAt(0).toUpperCase() + value.slice(1)
+                          : value,
+                      }))
+                    );
+                    if (chips.length === 0) return null;
+                    return (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {chips.map((chip, i) => (
+                          <Badge
+                            key={`${chip.filterId}-${chip.value}-${i}`}
+                            colorStyle="primary"
+                            theme="soft"
+                            shape="rounded"
+                            className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-primary/30 text-[13px] normal-case tracking-normal font-normal"
+                            onClick={() => favAssetsFilterBarHandleRef.current?.removeValue(chip.filterId, chip.value)}
+                          >
+                            {chip.label}
+                            <i className="bi bi-x text-sm ml-0.5" />
+                          </Badge>
+                        ))}
+                        <button
+                          onClick={() => favAssetsFilterBarHandleRef.current?.clearAll()}
+                          className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+                        >
+                          Clear all
+                        </button>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Bulk action bar (inside the sticky header block) */}
+                {favSelectedAssets.size > 0 && (
+                  <AssetBulkActionBar
+                    selectedCount={favSelectedAssets.size}
+                    allSelected={favFilteredAssets.length > 0 && favSelectedAssets.size === favFilteredAssets.length}
+                    someSelected={favSelectedAssets.size > 0 && favSelectedAssets.size < favFilteredAssets.length}
+                    onSelectAll={(checked) => {
+                      setFavSelectedAssets(checked ? new Set(favFilteredAssets.map(a => a.id)) : new Set());
+                    }}
+                  />
+                )}
+
+                </div>{/* End sticky header */}
+
+                {favFilteredAssets.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <i className="bi bi-heart text-5xl text-muted-foreground/30 mb-4" />
+                    <h3 className="text-lg font-medium mb-1">No favorited assets</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {Object.keys(favAssetFilters).length > 0 ? "Try adjusting your filters" : "Tap the heart on any asset to add it to Favorites"}
+                    </p>
+                  </div>
+                ) : favAssetsViewMode === "list" ? (
+                  <AssetTableView
+                    assets={favFilteredAssets}
+                    selectedAssets={favSelectedAssets}
+                    onSelectAsset={(id, checked) => {
+                      const next = new Set(favSelectedAssets);
+                      if (checked) next.add(id); else next.delete(id);
+                      setFavSelectedAssets(next);
+                    }}
+                    onSelectAll={(checked) => {
+                      setFavSelectedAssets(checked ? new Set(favFilteredAssets.map(a => a.id)) : new Set());
+                    }}
+                    onOpenAsset={handleViewAsset}
+                    perPage={assetPerPage}
+                    columnVisibility={assetColumnVisibility}
+                  />
+                ) : (
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
+                    {favFilteredAssets.map((asset) => {
+                      const isSelected = favSelectedAssets.has(asset.id);
+                      let cardState: AssetCardState = "default";
+                      if (favSelectedAssets.size > 0 && !isSelected) {
+                        cardState = "bulk-select";
+                      } else if (isSelected) {
+                        cardState = "selected";
+                      }
+                      return (
+                        <div
+                          key={asset.id}
+                          onClick={() => {
+                            if (favSelectedAssets.size > 0) {
+                              const next = new Set(favSelectedAssets);
+                              if (next.has(asset.id)) next.delete(asset.id); else next.add(asset.id);
+                              setFavSelectedAssets(next);
+                            } else {
+                              handleViewAsset(asset.id);
+                            }
+                          }}
+                        >
+                          <AssetCard
+                            creatorName={asset.creator}
+                            title={asset.name}
+                            displayLabel={displayLabel}
+                            duration={asset.duration}
+                            timestamp={getRelativeTime(asset.dateCreated)}
+                            thumbnailUrl={asset.thumbnailUrl}
+                            isBranded={favBrandedActive && asset.isBranded}
+                            isFavorite={favoriteAssetIds.has(asset.id)}
+                            state={cardState}
+                            onSelect={() => {
+                              const next = new Set(favSelectedAssets);
+                              if (next.has(asset.id)) next.delete(asset.id); else next.add(asset.id);
+                              setFavSelectedAssets(next);
+                            }}
+                            onFavorite={() => handleToggleFavoriteAsset(asset.id)}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="branding" className="flex-1 overflow-y-auto py-6 mt-0">
