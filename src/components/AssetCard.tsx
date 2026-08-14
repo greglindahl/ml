@@ -22,6 +22,7 @@ interface AssetCardProps {
   isNew?: boolean;
   isBranded?: boolean;
   isRequested?: boolean;
+  isFavorite?: boolean;
   hasComment?: boolean;
   state?: AssetCardState;
   onSelect?: () => void;
@@ -43,6 +44,7 @@ export function AssetCard({
   isNew = false,
   isBranded = false,
   isRequested = false,
+  isFavorite = false,
   hasComment = false,
   state = "default",
   onSelect,
@@ -127,7 +129,7 @@ export function AssetCard({
               }}
               className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full"
             >
-              <i className="bi bi-heart-fill text-white text-[8px]" />
+              <i className={`bi ${isFavorite ? "bi-heart-fill" : "bi-heart"} text-white text-[11px]`} />
             </button>
           )}
 
@@ -140,7 +142,7 @@ export function AssetCard({
               }}
               className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full"
             >
-              <i className="bi bi-heart-fill text-white text-[8px]" />
+              <i className={`bi ${isFavorite ? "bi-heart-fill" : "bi-heart"} text-white text-[11px]`} />
             </button>
           )}
 
@@ -154,7 +156,7 @@ export function AssetCard({
                 }}
                 className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full"
               >
-                <i className="bi bi-heart-fill text-white text-[8px]" />
+                <i className={`bi ${isFavorite ? "bi-heart-fill" : "bi-heart"} text-white text-[11px]`} />
               </button>
             </div>
           )}
@@ -174,7 +176,7 @@ export function AssetCard({
                 }}
                 className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full"
               >
-                <i className="bi bi-heart-fill text-white text-[8px]" />
+                <i className={`bi ${isFavorite ? "bi-heart-fill" : "bi-heart"} text-white text-[11px]`} />
               </button>
             </div>
           )}

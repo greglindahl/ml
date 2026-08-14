@@ -937,13 +937,16 @@ export function FilterBar({
       </div>{/* End filters-expanded */}
 
       {/* Toggle Pills (always visible) */}
-      <TogglePill
-        label="Unsorted"
-        iconClass="bi-inbox"
-        tooltip="Show only assets not in any gallery"
-        isActive={isUnsortedActive}
-        onClick={() => onUnsortedToggle?.(!isUnsortedActive)}
-      />
+      {/* Hidden when the parent doesn't wire it up (e.g. the Favorites tab) */}
+      {onUnsortedToggle && (
+        <TogglePill
+          label="Unsorted"
+          iconClass="bi-inbox"
+          tooltip="Show only assets not in any gallery"
+          isActive={isUnsortedActive}
+          onClick={() => onUnsortedToggle(!isUnsortedActive)}
+        />
+      )}
       <TogglePill
         label="Unviewed Only"
         iconClass="bi-eye-slash"

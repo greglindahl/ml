@@ -334,13 +334,16 @@ export function GalleryFilterBar({
         isActive={isArchivedActive}
         onClick={() => onArchivedToggle?.(!isArchivedActive)}
       />
-      <TogglePill
-        label="Favorites"
-        iconClass={isFavoritesActive ? "bi-heart-fill" : "bi-heart"}
-        tooltip="Show only favorited galleries"
-        isActive={isFavoritesActive}
-        onClick={() => onFavoritesToggle?.(!isFavoritesActive)}
-      />
+      {/* Hidden inside the Favorites tab, where everything shown is already a favorite */}
+      {onFavoritesToggle && (
+        <TogglePill
+          label="Favorites"
+          iconClass={isFavoritesActive ? "bi-heart-fill" : "bi-heart"}
+          tooltip="Show only favorited galleries"
+          isActive={isFavoritesActive}
+          onClick={() => onFavoritesToggle(!isFavoritesActive)}
+        />
+      )}
     </div>);
 
 }
