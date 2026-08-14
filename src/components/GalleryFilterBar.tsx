@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,6 +7,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger } from
 "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import { TogglePill } from "./TogglePill";
 
 interface FilterOption {
@@ -85,6 +86,18 @@ const galleryFilters: FilterConfig[] = [
 }];
 
 
+export interface GalleryFilterBarHandle {
+  removeValue: (filterId: string, value: string) => void;
+  clearAll: () => void;
+}
+
+export interface GalleryFilterChip {
+  filterId: string;
+  filterLabel: string;
+  value: string;
+  label: string;
+}
+
 interface GalleryFilterBarProps {
   isUnsortedActive?: boolean;
   onUnsortedToggle?: (active: boolean) => void;
@@ -93,6 +106,9 @@ interface GalleryFilterBarProps {
   isFavoritesActive?: boolean;
   onFavoritesToggle?: (active: boolean) => void;
   onOpenFiltersSheet?: () => void;
+  /** Reports applied filters as chips for the parent's chip row (new pattern, matching the assets bars). */
+  onActiveFiltersChange?: (chips: GalleryFilterChip[]) => void;
+  handleRef?: React.MutableRefObject<GalleryFilterBarHandle | null>;
 }
 
 export function GalleryFilterBar({
@@ -103,12 +119,36 @@ export function GalleryFilterBar({
   isFavoritesActive = false,
   onFavoritesToggle,
   onOpenFiltersSheet,
+  onActiveFiltersChange,
+  handleRef,
 }: GalleryFilterBarProps = {}) {
   const [activeFilters, setActiveFilters] = useState<
     Record<string, {value: string;label: string;}[]>>(
     {});
   // Search state for filter dropdowns
   const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
+
+  // Report applied filters up as chips (parent renders them in its chip row)
+  useEffect(() => {
+    const chips: GalleryFilterChip[] = [];
+    Object.entries(activeFilters).forEach(([filterId, items]) => {
+      const filterConfig = galleryFilters.find(f => f.id === filterId);
+      items.forEach(item => {
+        chips.push({ filterId, filterLabel: filterConfig?.label || filterId, value: item.value, label: item.label });
+      });
+    });
+    onActiveFiltersChange?.(chips);
+  }, [activeFilters, onActiveFiltersChange]);
+
+  // Imperative handle so the parent's chips can remove values / clear all
+  useEffect(() => {
+    if (handleRef) {
+      handleRef.current = {
+        removeValue: (filterId: string, value: string) => handleRemoveValue(filterId, value),
+        clearAll: () => setActiveFilters({}),
+      };
+    }
+  });
 
   const handleMultiSelect = (
   filterId: string,
@@ -196,56 +236,24 @@ export function GalleryFilterBar({
         return (
           <DropdownMenu key={filter.id}>
             <DropdownMenuTrigger asChild>
-              {isActive ?
-              <div className="inline-flex items-center gap-1 h-8 px-1.5 border border-input rounded-md bg-card min-w-[120px] max-w-[280px]">
-                  <div className="flex flex-wrap gap-1 flex-1">
-                    {selected.map((item) =>
-                  <span
-                    key={item.value}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted rounded text-xs">
-                    
-                        <button
-                      type="button"
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveValue(filter.id, item.value);
-                      }}
-                      className="text-muted-foreground hover:text-foreground"
-                      aria-label={`Remove ${filter.label} filter: ${item.label}`}>
-                      
-                          <i className="bi bi-x text-xs" />
-                        </button>
-                        {item.label}
-                      </span>
-                  )}
-                  </div>
-                  <div className="flex items-center gap-1 ml-auto pl-1">
-                    <button
-                    type="button"
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      clearFilter(filter.id);
-                    }}
-                    className="text-muted-foreground hover:text-foreground"
-                    aria-label={`Clear ${filter.label} filter`}>
-                    
-                      <i className="bi bi-x text-sm" />
-                    </button>
-                    <i className="bi bi-chevron-down w-3.5 h-3.5 inline-flex items-center justify-center leading-none text-muted-foreground" />
-                  </div>
-                </div> :
-
+              {/* New pattern (matching the assets bars): trigger stays a clean
+                  button; selections surface as chips in the parent's chip row */}
               <Button
                 variant="outline"
                 size="sm"
-                className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                className={cn(
+                  "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
+                  isActive && "bg-primary/10 border-primary text-primary"
+                )}>
 
                   {filter.icon}<span className="filter-label">{filter.label}</span>
+                  {isActive && (
+                    <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                      {selected.length}
+                    </span>
+                  )}
                   <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
-              }
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="start"

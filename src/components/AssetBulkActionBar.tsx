@@ -54,22 +54,23 @@ export function AssetBulkActionBar({
   const isOverLimit = selectedCount > ASSET_BULK_LIMIT;
 
   return (
-    // Default toolbar treatment: surface.elevated fill, border.subtle, radius md
-    <div className="flex items-center justify-between px-4 py-2 bg-white border border-[#E6E6E6] rounded-lg mb-4">
+    // Prod treatment: slate bar with light action chips so the toolbar doesn't get lost
+    <div className="flex items-center justify-between px-4 py-2.5 bg-[#6e84a3] rounded-lg mb-4">
       <div className="flex items-center gap-3">
         <Checkbox
           checked={allSelected}
           onCheckedChange={onSelectAll}
           {...(someSelected ? { "data-state": "indeterminate" } : {})}
           aria-label="Select all assets"
+          className="border-white data-[state=checked]:bg-white data-[state=checked]:text-[#12263f]"
         />
-        <span className="text-sm font-medium">{selectedCount} selected</span>
+        <span className="text-sm font-medium text-white">{selectedCount} {selectedCount === 1 ? "Asset" : "Assets"} Selected</span>
       </div>
       <div className="flex items-center gap-1">
         {/* Direct actions: Download, gallery action, Slack share */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onDownload}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white disabled:opacity-60" onClick={onDownload}>
               <i className="bi bi-download w-4 h-4 inline-flex items-center justify-center leading-none" />
             </Button>
           </TooltipTrigger>
@@ -79,7 +80,7 @@ export function AssetBulkActionBar({
           <TooltipTrigger asChild>
             {/* div wrapper: disabled buttons don't fire the pointer events the tooltip needs */}
             <div>
-              <Button variant="ghost" size="icon" className="h-8 w-8" disabled={isOverLimit} onClick={onGalleryAction}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white disabled:opacity-60" disabled={isOverLimit} onClick={onGalleryAction}>
                 <i className="bi bi-folder-plus w-4 h-4 inline-flex items-center justify-center leading-none" />
               </Button>
             </div>
@@ -89,7 +90,7 @@ export function AssetBulkActionBar({
         <Tooltip>
           <TooltipTrigger asChild>
             <div>
-              <Button variant="ghost" size="icon" className="h-8 w-8" disabled={isOverLimit} onClick={onShare}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white disabled:opacity-60" disabled={isOverLimit} onClick={onShare}>
                 <i className="bi bi-slack w-4 h-4 inline-flex items-center justify-center leading-none" />
               </Button>
             </div>
@@ -98,7 +99,7 @@ export function AssetBulkActionBar({
         </Tooltip>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white disabled:opacity-60">
               <i className="bi bi-three-dots-vertical w-4 h-4 inline-flex items-center justify-center leading-none" />
             </Button>
           </DropdownMenuTrigger>
