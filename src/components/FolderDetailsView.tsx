@@ -527,7 +527,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         />
 
         {/* Assets Tab */}
-        <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">
+        <TabsContent value="assets" className="flex-1 overflow-y-auto pb-6 mt-0">
+          {/* Sticky header: search + filters + chips + bulk bar pin while content scrolls */}
+          <div className="sticky top-0 z-20 bg-background pt-6">
           {/* Search Row with Utility Cluster */}
           <div className="flex items-center gap-4 mb-3 cq-search-row">
             <div className="flex-1 min-w-0 cq-search-input">
@@ -686,6 +688,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             />
           )}
 
+          </div>{/* End sticky header */}
+
           {/* Assets Grid/Table with Loading State */}
           <div className="min-h-[400px]">
             {assetsViewMode === "list" ? (
@@ -783,7 +787,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         </TabsContent>
 
         {/* Galleries Tab */}
-        <TabsContent value="galleries" className="flex-1 overflow-y-auto py-6 mt-0">
+        <TabsContent value="galleries" className="flex-1 overflow-y-auto pb-6 mt-0">
+          {/* Sticky header: search + filters + chips + bulk bar pin while content scrolls */}
+          <div className="sticky top-0 z-20 bg-background pt-6">
           {/* Search Row with Utility Cluster */}
           <div className="flex items-center gap-4 mb-3 cq-search-row">
             <div className="flex-1 min-w-0 cq-search-input">
@@ -892,14 +898,14 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
 
           {/* Bulk Action Bar */}
           {isAnyGallerySelected && galleriesViewMode === "grid" && (
-            <div className="flex items-center justify-between mb-4 px-4 py-2.5 bg-[#6e84a3] rounded-lg">
+            <div className="flex items-center justify-between mb-4 px-5 py-3.5 bg-[#12263f] rounded-lg">
               <div className="flex items-center gap-3">
                 <Checkbox
                   checked={allGalleriesSelected}
                   onCheckedChange={toggleSelectAllGalleries}
                   className="border-white data-[state=checked]:bg-white data-[state=checked]:text-[#12263f]"
                 />
-                <span className="text-sm font-medium text-white">{selectedGalleries.size} {selectedGalleries.size === 1 ? "Gallery" : "Galleries"} Selected</span>
+                <span className="text-[15px] font-medium text-white">{selectedGalleries.size} {selectedGalleries.size === 1 ? "Gallery" : "Galleries"} Selected</span>
               </div>
               <div className="flex items-center gap-1">
                 <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white disabled:opacity-60" onClick={() => toast({ title: "Favorited", description: `${selectedGalleries.size} ${selectedGalleries.size === 1 ? "gallery" : "galleries"} favorited.` })}>
@@ -942,6 +948,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               </div>
             </div>
           )}
+
+          </div>{/* End sticky header */}
 
           {/* Table Controls - shown above table in list view */}
           {(() => {
@@ -1036,7 +1044,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         </TabsContent>
 
         {/* Folders Tab */}
-        <TabsContent value="folders" className="flex-1 overflow-y-auto py-6 mt-0">
+        <TabsContent value="folders" className="flex-1 overflow-y-auto pb-6 mt-0">
+          {/* Sticky header: search + filters + chips + bulk bar pin while content scrolls */}
+          <div className="sticky top-0 z-20 bg-background pt-6">
           {/* Search Row with Utility Cluster (matches Assets / Galleries tabs in this file) */}
           <div className="flex items-center gap-4 mb-3 cq-search-row">
             <div className="flex-1 min-w-0 cq-search-input">
@@ -1059,6 +1069,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           <div className="min-h-[24px] mb-4">
             {/* Filter chips would go here when filters are active */}
           </div>
+
+          </div>{/* End sticky header */}
 
           {/* Empty state or folder children */}
           {(() => {

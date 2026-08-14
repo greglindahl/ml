@@ -155,6 +155,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   const [favAssetSearch, setFavAssetSearch] = useState("");
   const [favGalleryChips, setFavGalleryChips] = useState<GalleryFilterChip[]>([]);
   const favGalleryFilterBarHandleRef = useRef<GalleryFilterBarHandle | null>(null);
+  const [favSelectedGalleries, setFavSelectedGalleries] = useState<Set<string>>(new Set());
   // Main Galleries tab chips (same new pattern)
   const [galleryTabChips, setGalleryTabChips] = useState<GalleryFilterChip[]>([]);
   const galleryTabFilterBarHandleRef = useRef<GalleryFilterBarHandle | null>(null);
@@ -1164,7 +1165,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
           <SectionTabs tabs={LIBRARY_TABS} value={activeTab} onValueChange={setActiveTab} isMobile={isMobile} />
 
-          <TabsContent value="assets" className="flex-1 overflow-y-auto py-6 mt-0">
+          <TabsContent value="assets" className="flex-1 overflow-y-auto pb-6 mt-0">
+            {/* Sticky header: search + filters + chips + bulk bar pin while the grid scrolls */}
+            <div className="sticky top-0 z-20 bg-background pt-6">
             {/* Search Row with Utility Cluster */}
             <div className="flex items-center gap-4 mb-3 cq-search-row">
               <div className="flex-1 min-w-0 cq-search-input">
@@ -1360,6 +1363,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
               />
             )}
 
+            </div>{/* End sticky header */}
+
             {/* Assets Grid/Table with Loading State */}
             <div className="min-h-[400px]">
             {assetsViewMode === "list" ? (
@@ -1453,7 +1458,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             </div>
           </TabsContent>
 
-          <TabsContent value="galleries" className="flex-1 overflow-y-auto py-6 mt-0">
+          <TabsContent value="galleries" className="flex-1 overflow-y-auto pb-6 mt-0">
+            {/* Sticky header: search + filters + chips + bulk bar pin while the grid scrolls */}
+            <div className="sticky top-0 z-20 bg-background pt-6">
             {/* Search Row with Utility Cluster */}
             <div className="flex items-center gap-4 mb-3 cq-search-row">
               <div className="flex-1 min-w-0 cq-search-input">
@@ -1564,14 +1571,14 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
             {/* Bulk Action Bar */}
             {isAnyGallerySelected && galleriesViewMode === "grid" && (
-              <div className="flex items-center justify-between mb-4 px-4 py-2.5 bg-[#6e84a3] rounded-lg">
+              <div className="flex items-center justify-between mb-4 px-5 py-3.5 bg-[#12263f] rounded-lg">
                 <div className="flex items-center gap-3">
                   <Checkbox
                     checked={allGalleriesSelected}
                     onCheckedChange={toggleSelectAllGalleries}
                     className="border-white data-[state=checked]:bg-white data-[state=checked]:text-[#12263f]"
                   />
-                  <span className="text-sm font-medium text-white">{selectedGalleries.size} {selectedGalleries.size === 1 ? "Gallery" : "Galleries"} Selected</span>
+                  <span className="text-[15px] font-medium text-white">{selectedGalleries.size} {selectedGalleries.size === 1 ? "Gallery" : "Galleries"} Selected</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Tooltip>
@@ -1665,6 +1672,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
               </div>
             )}
 
+            </div>{/* End sticky header */}
+
             {/* Galleries Grid/Table */}
             <div className="min-h-[400px]">
               {galleriesViewMode === "list" ? (
@@ -1741,7 +1750,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             </div>
           </TabsContent>
 
-          <TabsContent value="folders" className="flex-1 overflow-y-auto py-6 mt-0">
+          <TabsContent value="folders" className="flex-1 overflow-y-auto pb-6 mt-0">
+            {/* Sticky header: search + filters + chips + bulk bar pin while the grid scrolls */}
+            <div className="sticky top-0 z-20 bg-background pt-6">
             {/* Search Row with Utility Cluster */}
             <div className="flex items-center gap-4 mb-3 cq-search-row">
               <div className="flex-1 min-w-0 cq-search-input">
@@ -1764,6 +1775,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             <div className="min-h-[24px] mb-4">
               {/* Filter chips would go here when filters are active */}
             </div>
+
+            </div>{/* End sticky header */}
 
             {/* Folders Grid */}
             {(() => {
@@ -1817,10 +1830,10 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             })()}
           </TabsContent>
 
-          <TabsContent value="favorites" className="flex-1 overflow-y-auto py-6 mt-0">
+          <TabsContent value="favorites" className="flex-1 overflow-y-auto pb-6 mt-0">
             {/* Secondary section nav: Galleries | Assets (Galleries default, matching prod) */}
             <Tabs value={favSubTab} onValueChange={setFavSubTab} className="flex flex-col">
-              <div className="mb-6">
+              <div className="mb-6 sticky top-0 z-30 bg-background pt-6">
                 <SectionTabs
                   tabs={[
                     { value: "galleries", label: "Galleries" },
@@ -1834,6 +1847,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
               {/* ── Favorited Galleries ─────────────────────────────── */}
               <TabsContent value="galleries" className="mt-0">
+                {/* Sticky header: pins below the sticky section tabs */}
+                <div className="sticky top-[65px] z-20 bg-background">
                 {/* Search Row with Utility Cluster */}
                 <div className="flex items-center gap-4 mb-3 cq-search-row">
                   <div className="flex-1 min-w-0 cq-search-input">
@@ -1852,10 +1867,24 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={`h-10 w-10 rounded-l-none border-l border-gray-300 text-[#6e84a3] ${favGalleriesViewMode === "list" ? "bg-gray-100" : ""}`}
+                      className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${favGalleriesViewMode === "list" ? "bg-gray-100" : ""}`}
                       onClick={() => setFavGalleriesViewMode("list")}
                     >
                       <i className="bi bi-table w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${favSelectedGalleries.size > 0 ? "bg-gray-100" : ""}`}
+                      onClick={() => {
+                        if (favSelectedGalleries.size > 0) {
+                          setFavSelectedGalleries(new Set());
+                        } else {
+                          setFavSelectedGalleries(new Set(favGalleries.map(g => g.id)));
+                        }
+                      }}
+                    >
+                      <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
                     </Button>
                   </div>
                   </div>
@@ -1898,6 +1927,62 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                   )}
                 </div>
 
+                {/* Bulk action bar — variation 4 demo: navy max-contrast tone */}
+                {favSelectedGalleries.size > 0 && (
+                  <div className="flex items-center justify-between mb-4 px-5 py-3.5 bg-[#12263f] rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        checked={favGalleries.length > 0 && favSelectedGalleries.size === favGalleries.length}
+                        onCheckedChange={(checked) => {
+                          setFavSelectedGalleries(checked ? new Set(favGalleries.map(g => g.id)) : new Set());
+                        }}
+                        className="border-white data-[state=checked]:bg-white data-[state=checked]:text-[#12263f]"
+                      />
+                      <span className="text-[15px] font-medium text-white">{favSelectedGalleries.size} {favSelectedGalleries.size === 1 ? "Gallery" : "Galleries"} Selected</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white"
+                            onClick={() => {
+                              const count = favSelectedGalleries.size;
+                              setGalleryList(prev => prev.map(g => favSelectedGalleries.has(g.id) ? { ...g, isFavorite: false } : g));
+                              setFavSelectedGalleries(new Set());
+                              toast({ title: "Removed from Favorites", description: `${count} ${count === 1 ? "gallery" : "galleries"} removed from your favorites.` });
+                            }}
+                          >
+                            <i className="bi bi-heart-fill w-4 h-4 inline-flex items-center justify-center leading-none" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Remove from Favorites</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white"
+                            onClick={() => {
+                              const count = favSelectedGalleries.size;
+                              setGalleriesArchived(Array.from(favSelectedGalleries), true);
+                              setFavSelectedGalleries(new Set());
+                              toast({ title: "Galleries archived", description: `${count} ${count === 1 ? "gallery" : "galleries"} archived.` });
+                            }}
+                          >
+                            <i className="bi bi-archive w-4 h-4 inline-flex items-center justify-center leading-none" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Archive</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
+                )}
+
+                </div>{/* End sticky header */}
+
                 {favGalleries.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center">
                     <i className="bi bi-heart text-5xl text-muted-foreground/30 mb-4" />
@@ -1916,29 +2001,52 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                   />
                 ) : (
                   <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
-                    {favGalleries.map((gallery) => (
-                      <GalleryCard
-                        key={gallery.id}
-                        name={gallery.name}
-                        assetCount={gallery.assetCount}
-                        thumbnailUrl={gallery.thumbnailUrl}
-                        isArchived={isGalleryArchivedById(gallery.id)}
-                        isPublic={gallery.isPublic}
-                        isFavorite={gallery.isFavorite}
-                        isInFolder={findGalleryParentPath(gallery.id, folderTree) !== null}
-                        onOpen={() => setActiveFolder(gallery.id)}
-                        onFavorite={() => handleToggleFavoriteGallery(gallery.id)}
-                        onMove={() => handleMoveGalleries([gallery.id])}
-                        onArchive={() => handleArchiveGallery(gallery.id)}
-                        onUnarchive={() => handleUnarchiveGallery(gallery.id)}
-                      />
-                    ))}
+                    {favGalleries.map((gallery) => {
+                      const isSelected = favSelectedGalleries.has(gallery.id);
+                      let cardState: GalleryCardState = "default";
+                      if (favSelectedGalleries.size > 0 && !isSelected) {
+                        cardState = "bulk-select";
+                      } else if (isSelected) {
+                        cardState = "selected";
+                      }
+                      const toggleSelection = () => {
+                        setFavSelectedGalleries(prev => {
+                          const next = new Set(prev);
+                          if (next.has(gallery.id)) next.delete(gallery.id); else next.add(gallery.id);
+                          return next;
+                        });
+                      };
+                      return (
+                        <GalleryCard
+                          key={gallery.id}
+                          name={gallery.name}
+                          assetCount={gallery.assetCount}
+                          thumbnailUrl={gallery.thumbnailUrl}
+                          isArchived={isGalleryArchivedById(gallery.id)}
+                          isPublic={gallery.isPublic}
+                          isFavorite={gallery.isFavorite}
+                          isInFolder={findGalleryParentPath(gallery.id, folderTree) !== null}
+                          state={cardState}
+                          onSelect={toggleSelection}
+                          onOpen={() => {
+                            if (favSelectedGalleries.size > 0) toggleSelection();
+                            else setActiveFolder(gallery.id);
+                          }}
+                          onFavorite={() => handleToggleFavoriteGallery(gallery.id)}
+                          onMove={() => handleMoveGalleries([gallery.id])}
+                          onArchive={() => handleArchiveGallery(gallery.id)}
+                          onUnarchive={() => handleUnarchiveGallery(gallery.id)}
+                        />
+                      );
+                    })}
                   </div>
                 )}
               </TabsContent>
 
               {/* ── Favorited Assets ────────────────────────────────── */}
               <TabsContent value="assets" className="mt-0">
+                {/* Sticky header: pins below the sticky section tabs */}
+                <div className="sticky top-[65px] z-20 bg-background">
                 {/* Search Row with Utility Cluster */}
                 <div className="flex items-center gap-4 mb-3 cq-search-row">
                   <div className="flex-1 min-w-0 cq-search-input">
@@ -2066,7 +2174,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                   })()}
                 </div>
 
-                {/* Bulk action bar */}
+                {/* Bulk action bar (inside the sticky header block) */}
                 {favSelectedAssets.size > 0 && (
                   <AssetBulkActionBar
                     selectedCount={favSelectedAssets.size}
@@ -2077,6 +2185,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     }}
                   />
                 )}
+
+                </div>{/* End sticky header */}
 
                 {favFilteredAssets.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center">

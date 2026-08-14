@@ -1,6 +1,7 @@
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
@@ -31,6 +32,8 @@ interface AssetBulkActionBarProps {
   /** Gallery-details-only overflow items — rendered above the standard set when provided. */
   onMoveToGallery?: () => void;
   onRemoveFromGallery?: () => void;
+  /** Extra classes for the bar container (e.g. sticky positioning). */
+  className?: string;
 }
 
 export function AssetBulkActionBar({
@@ -50,12 +53,13 @@ export function AssetBulkActionBar({
   onBranding,
   onMoveToGallery,
   onRemoveFromGallery,
+  className,
 }: AssetBulkActionBarProps) {
   const isOverLimit = selectedCount > ASSET_BULK_LIMIT;
 
   return (
     // Prod treatment: slate bar with light action chips so the toolbar doesn't get lost
-    <div className="flex items-center justify-between px-4 py-2.5 bg-[#6e84a3] rounded-lg mb-4">
+    <div className={cn("flex items-center justify-between px-5 py-3.5 bg-[#12263f] rounded-lg mb-4", className)}>
       <div className="flex items-center gap-3">
         <Checkbox
           checked={allSelected}
@@ -64,7 +68,7 @@ export function AssetBulkActionBar({
           aria-label="Select all assets"
           className="border-white data-[state=checked]:bg-white data-[state=checked]:text-[#12263f]"
         />
-        <span className="text-sm font-medium text-white">{selectedCount} {selectedCount === 1 ? "Asset" : "Assets"} Selected</span>
+        <span className="text-[15px] font-medium text-white">{selectedCount} {selectedCount === 1 ? "Asset" : "Assets"} Selected</span>
       </div>
       <div className="flex items-center gap-1">
         {/* Direct actions: Download, gallery action, Slack share */}

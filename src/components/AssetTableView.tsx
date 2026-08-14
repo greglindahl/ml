@@ -238,7 +238,7 @@ export function AssetTableView({
                 <TableHead className="min-w-[120px]">
                   <button
                     onClick={() => handleSort("creator")}
-                    className="flex items-center hover:text-foreground transition-colors"
+                    className="flex items-center hover:text-foreground transition-colors uppercase text-xs tracking-wider"
                   >
                     Creator
                     {getSortIcon("creator")}
@@ -249,7 +249,7 @@ export function AssetTableView({
                 <TableHead className="min-w-[100px]">
                   <button
                     onClick={() => handleSort("dateCreated")}
-                    className="flex items-center hover:text-foreground transition-colors"
+                    className="flex items-center hover:text-foreground transition-colors uppercase text-xs tracking-wider"
                   >
                     Added
                     {getSortIcon("dateCreated")}
@@ -260,7 +260,7 @@ export function AssetTableView({
                 <TableHead className="min-w-[100px]">
                   <button
                     onClick={() => handleSort("captureDate")}
-                    className="flex items-center hover:text-foreground transition-colors"
+                    className="flex items-center hover:text-foreground transition-colors uppercase text-xs tracking-wider"
                   >
                     Captured
                     {getSortIcon("captureDate")}
@@ -273,7 +273,7 @@ export function AssetTableView({
                 <TableHead className="text-right min-w-[90px]">
                   <button
                     onClick={() => handleSort("downloads")}
-                    className="flex items-center justify-end w-full hover:text-foreground transition-colors"
+                    className="flex items-center justify-end w-full hover:text-foreground transition-colors uppercase text-xs tracking-wider"
                   >
                     Downloads
                     {getSortIcon("downloads")}
