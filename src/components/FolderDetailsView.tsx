@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { AssetTableView } from "@/components/AssetTableView";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
@@ -6,6 +6,7 @@ import { GalleryTableView, GalleryTableItem } from "@/components/GalleryTableVie
 import { FolderTableView } from "@/components/FolderTableView";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { SectionTabs } from "@/components/SectionTabs";
+import { StickyHeaderBlock } from "@/components/StickyHeaderBlock";
 import { Button } from "@/components/ui/button";
 import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
 import { FilterBar, FilterBarHandle } from "@/components/FilterBar";
@@ -140,6 +141,10 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   
   // Asset selection state for bulk actions
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
+  // Multi-select MODE flags (PORTAL-12949): banner shows while mode is on, even at 0 selected
+  const [assetMultiSelectMode, setAssetMultiSelectMode] = useState(false);
+  const [galleryMultiSelectMode, setGalleryMultiSelectMode] = useState(false);
+  const inAssetMultiSelect = assetMultiSelectMode || selectedAssets.size > 0;
 
   // Display label preference (from localStorage)
   const [displayLabel] = useDisplayLabel();
@@ -226,6 +231,23 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
 
   // Use the library search hook
   const { results, allAssets, isLoading, search } = useLibrarySearch();
+
+  // PORTAL-12949: selection clears (mode stays) on facet change, new search, or
+  // page-size change; gallery selection clears on gallery facet/page changes.
+  useEffect(() => {
+    setSelectedAssets(new Set());
+  }, [results, contentTypeFilter, creatorFilter, aspectRatioFilter, peopleFilter, addedDateFilter, capturedDateFilter, customDateRanges, assetPerPage]);
+  useEffect(() => {
+    setSelectedGalleries(new Set());
+  }, [galleryFilterChips, archivedGalleriesOnly, favoriteGalleriesOnly, galleryPerPage]);
+
+  // Switching tabs within the folder exits multi-select entirely.
+  useEffect(() => {
+    setSelectedAssets(new Set());
+    setAssetMultiSelectMode(false);
+    setSelectedGalleries(new Set());
+    setGalleryMultiSelectMode(false);
+  }, [activeTab]);
 
   // Build breadcrumb path
   const breadcrumbPath = useMemo(() => {
@@ -397,7 +419,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   }, [childGalleries, folderTree]);
 
   // Gallery selection helpers
-  const isAnyGallerySelected = selectedGalleries.size > 0;
+  // Mode-aware: true while gallery multi-select is active, even with 0 selected
+  const isAnyGallerySelected = galleryMultiSelectMode || selectedGalleries.size > 0;
   const allGalleriesSelected = childGalleries.length > 0 && selectedGalleries.size === childGalleries.length;
 
   const toggleGallerySelection = useCallback((id: string) => {
@@ -529,7 +552,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         {/* Assets Tab */}
         <TabsContent value="assets" className="flex-1 overflow-y-auto pb-6 mt-0">
           {/* Sticky header: search + filters + chips + bulk bar pin while content scrolls */}
-          <div className="sticky top-0 z-20 bg-background pt-6">
+          <StickyHeaderBlock>
           {/* Search Row with Utility Cluster */}
           <div className="flex items-center gap-4 mb-3 cq-search-row">
             <div className="flex-1 min-w-0 cq-search-input">
@@ -582,13 +605,12 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${selectedAssets.size > 0 ? "bg-gray-100" : ""}`}
+                  className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${assetMultiSelectMode ? "bg-gray-100" : ""}`}
                   onClick={() => {
-                    if (selectedAssets.size > 0) {
+                    if (assetMultiSelectMode) {
                       setSelectedAssets(new Set());
-                    } else {
-                      setSelectedAssets(new Set(sortedResults.map(a => a.id)));
                     }
+                    setAssetMultiSelectMode(!assetMultiSelectMode);
                   }}
                 >
                   <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
@@ -672,7 +694,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           </div>
 
           {/* Asset Bulk Action Bar */}
-          {selectedAssets.size > 0 && (
+          {inAssetMultiSelect && (
             <AssetBulkActionBar
               selectedCount={selectedAssets.size}
               allSelected={sortedResults.length > 0 && selectedAssets.size === sortedResults.length}
@@ -688,7 +710,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             />
           )}
 
-          </div>{/* End sticky header */}
+          </StickyHeaderBlock>{/* End sticky header */}
 
           {/* Assets Grid/Table with Loading State */}
           <div className="min-h-[400px]">
@@ -730,7 +752,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
                 {sortedResults.map((asset) => {
                   const isSelected = selectedAssets.has(asset.id);
-                  const isAnySelected = selectedAssets.size > 0;
+                  const isAnySelected = inAssetMultiSelect;
 
                   let cardState: AssetCardState = "default";
                   if (isAnySelected && !isSelected) {
@@ -744,7 +766,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                       key={asset.id}
                       onClick={() => {
                         // If in bulk select mode, toggle selection instead of opening detail
-                        if (selectedAssets.size > 0) {
+                        if (inAssetMultiSelect) {
                           const next = new Set(selectedAssets);
                           if (next.has(asset.id)) {
                             next.delete(asset.id);
@@ -789,7 +811,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         {/* Galleries Tab */}
         <TabsContent value="galleries" className="flex-1 overflow-y-auto pb-6 mt-0">
           {/* Sticky header: search + filters + chips + bulk bar pin while content scrolls */}
-          <div className="sticky top-0 z-20 bg-background pt-6">
+          <StickyHeaderBlock>
           {/* Search Row with Utility Cluster */}
           <div className="flex items-center gap-4 mb-3 cq-search-row">
             <div className="flex-1 min-w-0 cq-search-input">
@@ -837,8 +859,13 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${isAnyGallerySelected ? "bg-gray-100" : ""}`}
-                  onClick={() => setSelectedGalleries(prev => (prev.size > 0 ? new Set() : new Set(childGalleries.map(g => g.id))))}
+                  className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${galleryMultiSelectMode ? "bg-gray-100" : ""}`}
+                  onClick={() => {
+                    if (galleryMultiSelectMode) {
+                      setSelectedGalleries(new Set());
+                    }
+                    setGalleryMultiSelectMode(!galleryMultiSelectMode);
+                  }}
                 >
                   <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
@@ -897,7 +924,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           </div>
 
           {/* Bulk Action Bar */}
-          {isAnyGallerySelected && galleriesViewMode === "grid" && (
+          {/* Banner shows in both grid AND table view (PORTAL-12949) */}
+          {isAnyGallerySelected && (
             <div className="flex items-center justify-between mb-4 px-5 py-3.5 bg-[#12263f] rounded-lg">
               <div className="flex items-center gap-3">
                 <Checkbox
@@ -949,7 +977,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             </div>
           )}
 
-          </div>{/* End sticky header */}
+          </StickyHeaderBlock>{/* End sticky header */}
 
           {/* Table Controls - shown above table in list view */}
           {(() => {
@@ -963,6 +991,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             if (galleriesViewMode === "list") {
               return (
                 <GalleryTableView
+                  selectedGalleries={selectedGalleries}
+                  onSelectionChange={setSelectedGalleries}
                   galleries={filteredGalleries.map(g => ({
                     id: g.id,
                     name: g.name,
@@ -1046,7 +1076,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         {/* Folders Tab */}
         <TabsContent value="folders" className="flex-1 overflow-y-auto pb-6 mt-0">
           {/* Sticky header: search + filters + chips + bulk bar pin while content scrolls */}
-          <div className="sticky top-0 z-20 bg-background pt-6">
+          <StickyHeaderBlock>
           {/* Search Row with Utility Cluster (matches Assets / Galleries tabs in this file) */}
           <div className="flex items-center gap-4 mb-3 cq-search-row">
             <div className="flex-1 min-w-0 cq-search-input">
@@ -1070,7 +1100,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             {/* Filter chips would go here when filters are active */}
           </div>
 
-          </div>{/* End sticky header */}
+          </StickyHeaderBlock>{/* End sticky header */}
 
           {/* Empty state or folder children */}
           {(() => {

@@ -23,6 +23,17 @@ interface FilterConfig {
   multiSelect?: boolean;
 }
 
+// Shared range options matching prod's Galleries page (and the assets date filters)
+const DATE_RANGE_OPTIONS: FilterOption[] = [
+  { label: "Last 7 days", value: "week" },
+  { label: "Last 14 days", value: "two-weeks" },
+  { label: "Last 30 days", value: "month" },
+  { label: "Month to Date", value: "mtd" },
+  { label: "Last 90 days", value: "quarter" },
+  { label: "Last 12 months", value: "year" },
+  { label: "Custom", value: "custom" },
+];
+
 const galleryFilters: FilterConfig[] = [
 {
   id: "gallery-options",
@@ -62,27 +73,13 @@ const galleryFilters: FilterConfig[] = [
   id: "created-date",
   label: "Created Date",
   icon: <i className="bi bi-calendar" />,
-  options: [
-  { label: "Today", value: "today" },
-  { label: "Last 7 Days", value: "week" },
-  { label: "Last 30 Days", value: "month" },
-  { label: "Last 90 Days", value: "quarter" },
-  { label: "Last Year", value: "year" },
-  { label: "Custom", value: "custom" }]
-
+  options: DATE_RANGE_OPTIONS
 },
 {
   id: "assets-last-added",
   label: "Assets Last Added Date",
   icon: <i className="bi bi-calendar" />,
-  options: [
-  { label: "Today", value: "today" },
-  { label: "Last 7 Days", value: "week" },
-  { label: "Last 30 Days", value: "month" },
-  { label: "Last 90 Days", value: "quarter" },
-  { label: "Last Year", value: "year" },
-  { label: "Custom", value: "custom" }]
-
+  options: DATE_RANGE_OPTIONS
 }];
 
 

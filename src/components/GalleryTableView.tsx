@@ -75,6 +75,10 @@ interface GalleryTableViewProps {
   perPage: number;
   /** Controlled column visibility */
   columnVisibility: GalleryColumnVisibility;
+  /** Controlled selection (PORTAL-12949): when provided with onSelectionChange,
+      the header checkbox syncs with the parent's bulk banner both ways. */
+  selectedGalleries?: Set<string>;
+  onSelectionChange?: (next: Set<string>) => void;
 }
 
 type SortField = "name" | "description" | "creator" | "created" | "lastAdded" | "sharing" | "downloads" | "totalAssets" | null;
@@ -127,8 +131,15 @@ export function GalleryTableView({
   onUnarchiveGallery,
   perPage,
   columnVisibility,
+  selectedGalleries: controlledSelection,
+  onSelectionChange,
 }: GalleryTableViewProps) {
-  const [selectedGalleries, setSelectedGalleries] = useState<Set<string>>(new Set());
+  // Selection is controlled by the parent when provided (PORTAL-12949: keeps the
+  // bulk banner's master checkbox and the header checkbox in two-way sync);
+  // falls back to internal state for older call sites.
+  const [internalSelection, setInternalSelection] = useState<Set<string>>(new Set());
+  const selectedGalleries = controlledSelection ?? internalSelection;
+  const setSelectedGalleries = onSelectionChange ?? setInternalSelection;
   const [sortField, setSortField] = useState<SortField>("created");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
@@ -232,8 +243,8 @@ export function GalleryTableView({
   if (isLoading) {
     return (
       <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
+        <Table wrapperClassName="overflow-visible">
+          <TableHeader className="sticky top-[var(--content-sticky-h,0px)] z-10">
             <TableRow>
               <TableHead className="w-12"><Checkbox disabled /></TableHead>
               <TableHead className="w-24"></TableHead>
@@ -273,7 +284,9 @@ export function GalleryTableView({
   return (
     <div className="border rounded-lg bg-card">
       {/* Bulk action bar */}
-      {selectedGalleries.size > 0 && onMoveGalleries && (
+      {/* Legacy inline actions row — hidden when the parent owns selection
+          (the bulk banner is the single control surface per PORTAL-12949) */}
+      {controlledSelection === undefined && selectedGalleries.size > 0 && onMoveGalleries && (
         <div className="flex items-center gap-3 px-4 py-2 bg-muted/50 border-b">
           <span className="text-sm text-muted-foreground">
             {selectedGalleries.size} selected
@@ -303,8 +316,8 @@ export function GalleryTableView({
           </TooltipProvider>
         </div>
       )}
-      <Table>
-        <TableHeader>
+      <Table wrapperClassName="overflow-visible">
+        <TableHeader className="sticky top-[var(--content-sticky-h,0px)] z-10">
           <TableRow>
             <TableHead className="w-12">
               <Checkbox 

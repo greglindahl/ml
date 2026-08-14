@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { SectionTabs } from "@/components/SectionTabs";
+import { StickyHeaderBlock } from "@/components/StickyHeaderBlock";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
@@ -173,6 +174,16 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   const [unsortedGalleriesOnly, setUnsortedGalleriesOnly] = useState(false);
   const [favoriteGalleriesOnly, setFavoriteGalleriesOnly] = useState(false);
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
+  // Multi-select MODE flags (PORTAL-12949): banner shows while mode is on, even at 0
+  // selected; selecting from a card's hover circle also implies multi-select.
+  const [assetMultiSelectMode, setAssetMultiSelectMode] = useState(false);
+  const [galleryMultiSelectMode, setGalleryMultiSelectMode] = useState(false);
+  const [favAssetMultiSelectMode, setFavAssetMultiSelectMode] = useState(false);
+  const [favGalleryMultiSelectMode, setFavGalleryMultiSelectMode] = useState(false);
+  const inAssetMultiSelect = assetMultiSelectMode || selectedAssets.size > 0;
+  const inGalleryMultiSelect = galleryMultiSelectMode || selectedGalleries.size > 0;
+  const inFavAssetMultiSelect = favAssetMultiSelectMode || favSelectedAssets.size > 0;
+  const inFavGalleryMultiSelect = favGalleryMultiSelectMode || favSelectedGalleries.size > 0;
   const [viewingAssetId, setViewingAssetId] = useState<string | null>(null);
 
   // Settings drawer state
@@ -483,7 +494,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     setAddGalleryDialogOpen(false);
   }, [galleryList, insertFolderAt]);
 
-  const isAnyGallerySelected = selectedGalleries.size > 0;
+  // Mode-aware: true while gallery multi-select is active, even with 0 selected
+  const isAnyGallerySelected = galleryMultiSelectMode || selectedGalleries.size > 0;
   const allGalleriesSelected = galleryList.length > 0 && selectedGalleries.size === galleryList.length;
 
   const toggleGallerySelection = useCallback((galleryId: string) => {
@@ -682,6 +694,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   const searchHandleRef = useRef<FacetedSearchWithTypeaheadHandle | null>(null);
   const filterBarHandleRef = useRef<FilterBarHandle | null>(null);
 
+
   // Sort state
   type SortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "favorites" | "lastDownloadDate" | null;
   type SortDir = "asc" | "desc";
@@ -714,6 +727,33 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
   // Use the library search hook
   const { results, allAssets, isLoading, totalCount, search } = useLibrarySearch();
+
+  // PORTAL-12949: selection clears (multi-select mode stays on) when a filter
+  // facet changes, a new search runs, or the page size changes.
+  useEffect(() => {
+    setSelectedAssets(new Set());
+  }, [results, searchSelectedFacets, contentTypeFilter, creatorFilter, aspectRatioFilter, peopleFilter, sceneFilter, brandFilter, tagsFilter, folderFilter, addedDateFilter, capturedDateFilter, customDateRanges, isBrandedActive, isUnviewedActive, isUnsortedActive, sourceFilter, orgStatusFilter, assetPerPage]);
+  useEffect(() => {
+    setSelectedGalleries(new Set());
+  }, [galleryTabChips, archivedGalleriesOnly, unsortedGalleriesOnly, favoriteGalleriesOnly, galleryPerPage]);
+  useEffect(() => {
+    setFavSelectedAssets(new Set());
+  }, [favAssetFilters, favAssetCustomDates, favAssetSearch, favBrandedActive, favUnviewedActive]);
+  useEffect(() => {
+    setFavSelectedGalleries(new Set());
+  }, [favGalleryChips, favGallerySearch, favArchivedOnly]);
+
+  // Navigating away (switching tabs/subtabs/folders) exits multi-select entirely.
+  useEffect(() => {
+    setSelectedAssets(new Set());
+    setAssetMultiSelectMode(false);
+    setSelectedGalleries(new Set());
+    setGalleryMultiSelectMode(false);
+    setFavSelectedAssets(new Set());
+    setFavAssetMultiSelectMode(false);
+    setFavSelectedGalleries(new Set());
+    setFavGalleryMultiSelectMode(false);
+  }, [activeTab, favSubTab, activeFolder]);
 
   // Get unique creators and people from all assets
   const uniqueCreators = useMemo(() => {
@@ -1167,7 +1207,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
           <TabsContent value="assets" className="flex-1 overflow-y-auto pb-6 mt-0">
             {/* Sticky header: search + filters + chips + bulk bar pin while the grid scrolls */}
-            <div className="sticky top-0 z-20 bg-background pt-6">
+            <StickyHeaderBlock>
             {/* Search Row with Utility Cluster */}
             <div className="flex items-center gap-4 mb-3 cq-search-row">
               <div className="flex-1 min-w-0 cq-search-input">
@@ -1217,16 +1257,17 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                   >
                     <i className="bi bi-table w-4 h-4 inline-flex items-center justify-center leading-none" />
                   </Button>
+                  {/* Multi-select MODE toggle (PORTAL-12949): entering starts with
+                      zero selected; the banner's master checkbox does select-all */}
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${selectedAssets.size > 0 ? "bg-gray-100" : ""}`}
+                    className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${assetMultiSelectMode ? "bg-gray-100" : ""}`}
                     onClick={() => {
-                      if (selectedAssets.size > 0) {
+                      if (assetMultiSelectMode) {
                         setSelectedAssets(new Set());
-                      } else {
-                        setSelectedAssets(new Set(sortedResults.map(a => a.id)));
                       }
+                      setAssetMultiSelectMode(!assetMultiSelectMode);
                     }}
                   >
                     <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
@@ -1347,8 +1388,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
               })()}
             </div>
 
-            {/* Asset Bulk Action Bar */}
-            {selectedAssets.size > 0 && (
+            {/* Asset Bulk Action Bar — visible whenever multi-select is active, even at 0 */}
+            {inAssetMultiSelect && (
               <AssetBulkActionBar
                 selectedCount={selectedAssets.size}
                 allSelected={sortedResults.length > 0 && selectedAssets.size === sortedResults.length}
@@ -1363,7 +1404,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
               />
             )}
 
-            </div>{/* End sticky header */}
+            </StickyHeaderBlock>{/* End sticky header */}
 
             {/* Assets Grid/Table with Loading State */}
             <div className="min-h-[400px]">
@@ -1405,7 +1446,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                   const isSelected = selectedAssets.has(asset.id);
                   // Determine card state based on selection mode and selection status
                   let cardState: AssetCardState = "default";
-                  if (selectedAssets.size > 0 && !isSelected) {
+                  if (inAssetMultiSelect && !isSelected) {
                     cardState = "bulk-select";
                   } else if (isSelected) {
                     cardState = "selected";
@@ -1416,7 +1457,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                       key={asset.id}
                       onClick={() => {
                         // If in bulk select mode, toggle selection instead of opening detail
-                        if (selectedAssets.size > 0) {
+                        if (inAssetMultiSelect) {
                           const next = new Set(selectedAssets);
                           if (next.has(asset.id)) {
                             next.delete(asset.id);
@@ -1460,7 +1501,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
           <TabsContent value="galleries" className="flex-1 overflow-y-auto pb-6 mt-0">
             {/* Sticky header: search + filters + chips + bulk bar pin while the grid scrolls */}
-            <div className="sticky top-0 z-20 bg-background pt-6">
+            <StickyHeaderBlock>
             {/* Search Row with Utility Cluster */}
             <div className="flex items-center gap-4 mb-3 cq-search-row">
               <div className="flex-1 min-w-0 cq-search-input">
@@ -1508,8 +1549,13 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${isAnyGallerySelected ? "bg-gray-100" : ""}`}
-                    onClick={() => setSelectedGalleries(prev => (prev.size > 0 ? new Set() : new Set(galleryList.map(g => g.id))))}
+                    className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${galleryMultiSelectMode ? "bg-gray-100" : ""}`}
+                    onClick={() => {
+                      if (galleryMultiSelectMode) {
+                        setSelectedGalleries(new Set());
+                      }
+                      setGalleryMultiSelectMode(!galleryMultiSelectMode);
+                    }}
                   >
                     <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
                   </Button>
@@ -1570,7 +1616,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             </div>
 
             {/* Bulk Action Bar */}
-            {isAnyGallerySelected && galleriesViewMode === "grid" && (
+            {/* Banner shows in both grid AND table view (PORTAL-12949) */}
+            {isAnyGallerySelected && (
               <div className="flex items-center justify-between mb-4 px-5 py-3.5 bg-[#12263f] rounded-lg">
                 <div className="flex items-center gap-3">
                   <Checkbox
@@ -1672,12 +1719,14 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
               </div>
             )}
 
-            </div>{/* End sticky header */}
+            </StickyHeaderBlock>{/* End sticky header */}
 
             {/* Galleries Grid/Table */}
             <div className="min-h-[400px]">
               {galleriesViewMode === "list" ? (
                 <GalleryTableView
+                  selectedGalleries={selectedGalleries}
+                  onSelectionChange={setSelectedGalleries}
                   galleries={galleryList.map(g => ({ ...g, archived: isGalleryArchivedById(g.id) }))}
                   onNavigate={handleNavigate}
                   onMoveGalleries={handleMoveGalleries}
@@ -1752,7 +1801,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
           <TabsContent value="folders" className="flex-1 overflow-y-auto pb-6 mt-0">
             {/* Sticky header: search + filters + chips + bulk bar pin while the grid scrolls */}
-            <div className="sticky top-0 z-20 bg-background pt-6">
+            <StickyHeaderBlock>
             {/* Search Row with Utility Cluster */}
             <div className="flex items-center gap-4 mb-3 cq-search-row">
               <div className="flex-1 min-w-0 cq-search-input">
@@ -1776,7 +1825,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
               {/* Filter chips would go here when filters are active */}
             </div>
 
-            </div>{/* End sticky header */}
+            </StickyHeaderBlock>{/* End sticky header */}
 
             {/* Folders Grid */}
             {(() => {
@@ -1848,7 +1897,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
               {/* ── Favorited Galleries ─────────────────────────────── */}
               <TabsContent value="galleries" className="mt-0">
                 {/* Sticky header: pins below the sticky section tabs */}
-                <div className="sticky top-[65px] z-20 bg-background">
+                <StickyHeaderBlock className="top-[65px] pt-0">
                 {/* Search Row with Utility Cluster */}
                 <div className="flex items-center gap-4 mb-3 cq-search-row">
                   <div className="flex-1 min-w-0 cq-search-input">
@@ -1875,13 +1924,12 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${favSelectedGalleries.size > 0 ? "bg-gray-100" : ""}`}
+                      className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${favGalleryMultiSelectMode ? "bg-gray-100" : ""}`}
                       onClick={() => {
-                        if (favSelectedGalleries.size > 0) {
+                        if (favGalleryMultiSelectMode) {
                           setFavSelectedGalleries(new Set());
-                        } else {
-                          setFavSelectedGalleries(new Set(favGalleries.map(g => g.id)));
                         }
+                        setFavGalleryMultiSelectMode(!favGalleryMultiSelectMode);
                       }}
                     >
                       <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
@@ -1928,7 +1976,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 </div>
 
                 {/* Bulk action bar — variation 4 demo: navy max-contrast tone */}
-                {favSelectedGalleries.size > 0 && (
+                {inFavGalleryMultiSelect && (
                   <div className="flex items-center justify-between mb-4 px-5 py-3.5 bg-[#12263f] rounded-lg">
                     <div className="flex items-center gap-3">
                       <Checkbox
@@ -1981,7 +2029,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                   </div>
                 )}
 
-                </div>{/* End sticky header */}
+                </StickyHeaderBlock>{/* End sticky header */}
 
                 {favGalleries.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -1991,6 +2039,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                   </div>
                 ) : favGalleriesViewMode === "list" ? (
                   <GalleryTableView
+                    selectedGalleries={favSelectedGalleries}
+                    onSelectionChange={setFavSelectedGalleries}
                     galleries={favGalleries.map(g => ({ ...g, archived: isGalleryArchivedById(g.id) }))}
                     onNavigate={handleNavigate}
                     onMoveGalleries={handleMoveGalleries}
@@ -2004,7 +2054,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     {favGalleries.map((gallery) => {
                       const isSelected = favSelectedGalleries.has(gallery.id);
                       let cardState: GalleryCardState = "default";
-                      if (favSelectedGalleries.size > 0 && !isSelected) {
+                      if (inFavGalleryMultiSelect && !isSelected) {
                         cardState = "bulk-select";
                       } else if (isSelected) {
                         cardState = "selected";
@@ -2029,7 +2079,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                           state={cardState}
                           onSelect={toggleSelection}
                           onOpen={() => {
-                            if (favSelectedGalleries.size > 0) toggleSelection();
+                            if (inFavGalleryMultiSelect) toggleSelection();
                             else setActiveFolder(gallery.id);
                           }}
                           onFavorite={() => handleToggleFavoriteGallery(gallery.id)}
@@ -2046,7 +2096,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
               {/* ── Favorited Assets ────────────────────────────────── */}
               <TabsContent value="assets" className="mt-0">
                 {/* Sticky header: pins below the sticky section tabs */}
-                <div className="sticky top-[65px] z-20 bg-background">
+                <StickyHeaderBlock className="top-[65px] pt-0">
                 {/* Search Row with Utility Cluster */}
                 <div className="flex items-center gap-4 mb-3 cq-search-row">
                   <div className="flex-1 min-w-0 cq-search-input">
@@ -2096,13 +2146,12 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${favSelectedAssets.size > 0 ? "bg-gray-100" : ""}`}
+                      className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${favAssetMultiSelectMode ? "bg-gray-100" : ""}`}
                       onClick={() => {
-                        if (favSelectedAssets.size > 0) {
+                        if (favAssetMultiSelectMode) {
                           setFavSelectedAssets(new Set());
-                        } else {
-                          setFavSelectedAssets(new Set(favFilteredAssets.map(a => a.id)));
                         }
+                        setFavAssetMultiSelectMode(!favAssetMultiSelectMode);
                       }}
                     >
                       <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
@@ -2175,7 +2224,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 </div>
 
                 {/* Bulk action bar (inside the sticky header block) */}
-                {favSelectedAssets.size > 0 && (
+                {inFavAssetMultiSelect && (
                   <AssetBulkActionBar
                     selectedCount={favSelectedAssets.size}
                     allSelected={favFilteredAssets.length > 0 && favSelectedAssets.size === favFilteredAssets.length}
@@ -2186,7 +2235,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                   />
                 )}
 
-                </div>{/* End sticky header */}
+                </StickyHeaderBlock>{/* End sticky header */}
 
                 {favFilteredAssets.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -2217,7 +2266,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     {favFilteredAssets.map((asset) => {
                       const isSelected = favSelectedAssets.has(asset.id);
                       let cardState: AssetCardState = "default";
-                      if (favSelectedAssets.size > 0 && !isSelected) {
+                      if (inFavAssetMultiSelect && !isSelected) {
                         cardState = "bulk-select";
                       } else if (isSelected) {
                         cardState = "selected";

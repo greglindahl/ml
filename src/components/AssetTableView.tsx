@@ -186,8 +186,8 @@ export function AssetTableView({
   if (isLoading) {
     return (
       <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
+        <Table wrapperClassName="overflow-visible">
+          <TableHeader className="sticky top-[var(--content-sticky-h,0px)] z-10">
             <TableRow>
               <TableHead className="w-12"><Checkbox disabled /></TableHead>
               <TableHead className="w-20"></TableHead>
@@ -222,8 +222,8 @@ export function AssetTableView({
 
   return (
     <div className="border rounded-lg bg-card">
-      <Table>
-          <TableHeader>
+      <Table wrapperClassName="overflow-visible">
+          <TableHeader className="sticky top-[var(--content-sticky-h,0px)] z-10">
             <TableRow>
               <TableHead className="w-12">
                 <Checkbox
