@@ -19,13 +19,15 @@ interface ContentScreenProps {
   initialLibraryBulkSelect?: boolean;
   /** Tab Insights should open on mount (e.g. "activity" via Home's View All). */
   initialStatsTab?: string;
+  /** Section tab for a ?screen=X&tab=Y deep link (non-Library screens). */
+  initialScreenTab?: string;
   /** Remount key for Library — bumped when the Library nav item is clicked so it resets to All Assets. */
   libraryResetKey?: number;
   onOpenStarterGallery?: () => void;
   onViewAll?: (target: HomeViewAllTarget) => void;
 }
 
-export function ContentScreen({ screen, isMobile = false, initialLibraryFolderId, initialLibraryTab, initialLibraryBulkSelect, initialStatsTab, libraryResetKey, onOpenStarterGallery, onViewAll }: ContentScreenProps) {
+export function ContentScreen({ screen, isMobile = false, initialLibraryFolderId, initialLibraryTab, initialLibraryBulkSelect, initialStatsTab, initialScreenTab, libraryResetKey, onOpenStarterGallery, onViewAll }: ContentScreenProps) {
   // Home has its own dedicated screen
   if (screen === "home") {
     return <HomeScreen isMobile={isMobile} onOpenStarterGallery={onOpenStarterGallery} onViewAll={onViewAll} />;
@@ -38,27 +40,27 @@ export function ContentScreen({ screen, isMobile = false, initialLibraryFolderId
 
   // Engage has its own dedicated screen with tabs
   if (screen === "engage") {
-    return <EngageScreen isMobile={isMobile} />;
+    return <EngageScreen isMobile={isMobile} initialTab={initialScreenTab} />;
   }
 
   // Connect has its own dedicated screen with tabs
   if (screen === "connect") {
-    return <ConnectScreen isMobile={isMobile} />;
+    return <ConnectScreen isMobile={isMobile} initialTab={initialScreenTab} />;
   }
 
   // Requests has its own dedicated screen with tabs
   if (screen === "requests") {
-    return <RequestsScreen isMobile={isMobile} />;
+    return <RequestsScreen isMobile={isMobile} initialTab={initialScreenTab} />;
   }
 
   // Stats has its own dedicated screen with tabs
   if (screen === "stats") {
-    return <StatsScreen isMobile={isMobile} initialTab={initialStatsTab} />;
+    return <StatsScreen isMobile={isMobile} initialTab={initialStatsTab ?? initialScreenTab} />;
   }
 
   // Network has its own dedicated screen with tabs
   if (screen === "network") {
-    return <AdminScreen isMobile={isMobile} />;
+    return <AdminScreen isMobile={isMobile} initialTab={initialScreenTab} />;
   }
 
   const exhaustiveCheck: never = screen;

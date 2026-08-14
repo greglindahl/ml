@@ -196,8 +196,8 @@ export function FolderTableView({
   if (isLoading) {
     return (
       <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
+        <Table wrapperClassName="overflow-visible">
+          <TableHeader className="sticky top-[var(--content-sticky-h,0px)] z-10">
             <TableRow>
               <TableHead className="w-12"></TableHead>
               <TableHead>Name</TableHead>
@@ -228,8 +228,8 @@ export function FolderTableView({
 
   return (
     <div className="border rounded-lg bg-card">
-      <Table>
-          <TableHeader>
+      <Table wrapperClassName="overflow-visible">
+          <TableHeader className="sticky top-[var(--content-sticky-h,0px)] z-10">
             <TableRow>
               {columnVisibility.icon && <TableHead className="w-12"></TableHead>}
               {columnVisibility.name && (

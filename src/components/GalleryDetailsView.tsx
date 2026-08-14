@@ -7,6 +7,7 @@ import { SettingsDrawer, useDisplayLabel, usePerPagePreference, useColumnVisibil
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { SectionTabs } from "@/components/SectionTabs";
+import { StickyHeaderBlock } from "@/components/StickyHeaderBlock";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
@@ -91,6 +92,9 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
 
   // Asset selection state for bulk actions
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
+  // Multi-select MODE flag (PORTAL-12949): banner shows while mode is on, even at 0 selected
+  const [multiSelectMode, setMultiSelectMode] = useState(false);
+  const inMultiSelect = multiSelectMode || selectedAssets.size > 0;
 
   // Asset detail modal state
   const [viewingAssetId, setViewingAssetId] = useState<string | null>(null);
@@ -199,6 +203,18 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
       setSelectedAssets(new Set(filteredResults.map(a => a.id)));
     }
   }, [initialSelectAll, filteredResults]);
+
+  // PORTAL-12949: selection clears (mode stays) on facet change, new search, or
+  // page-size change. First results change is the initial load - skipping it keeps
+  // the &bulk=1 deep-link selection applied above intact.
+  const skipFirstClearRef = useRef(true);
+  useEffect(() => {
+    if (skipFirstClearRef.current) {
+      skipFirstClearRef.current = false;
+      return;
+    }
+    setSelectedAssets(new Set());
+  }, [results, contentTypeFilter, creatorFilter, aspectRatioFilter, peopleFilter, addedDateFilter, capturedDateFilter, customDateRanges, assetPerPage]);
 
   const viewingAsset = useMemo(() => {
     if (!viewingAssetId) return null;
@@ -399,7 +415,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
 
         <TabsContent value="assets" className="flex-1 overflow-y-auto pb-6 mt-0">
           {/* Sticky header: search + filters + chips + bulk bar pin while content scrolls */}
-          <div className="sticky top-0 z-20 bg-background pt-6">
+          <StickyHeaderBlock>
           {/* Search Row with Utility Cluster */}
           <div className="flex items-center gap-4 mb-3 cq-search-row">
             <div className="flex-1 min-w-0 cq-search-input">
@@ -447,13 +463,12 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${selectedAssets.size > 0 ? "bg-gray-100" : ""}`}
+                  className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${multiSelectMode ? "bg-gray-100" : ""}`}
                   onClick={() => {
-                    if (selectedAssets.size > 0) {
+                    if (multiSelectMode) {
                       setSelectedAssets(new Set());
-                    } else {
-                      setSelectedAssets(new Set(filteredResults.map(a => a.id)));
                     }
+                    setMultiSelectMode(!multiSelectMode);
                   }}
                 >
                   <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
@@ -511,7 +526,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           </div>
 
           {/* Asset Bulk Action Bar */}
-          {selectedAssets.size > 0 && (
+          {inMultiSelect && (
             <AssetBulkActionBar
               selectedCount={selectedAssets.size}
               allSelected={filteredResults.length > 0 && selectedAssets.size === filteredResults.length}
@@ -532,7 +547,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             />
           )}
 
-          </div>{/* End sticky header */}
+          </StickyHeaderBlock>{/* End sticky header */}
 
           {/* Assets Grid/Table with Loading State */}
           <div className="min-h-[400px]">
@@ -574,7 +589,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
               <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
                 {filteredResults.map((asset) => {
                   const isSelected = selectedAssets.has(asset.id);
-                  const isAnySelected = selectedAssets.size > 0;
+                  const isAnySelected = inMultiSelect;
 
                   let cardState: AssetCardState = "default";
                   if (isAnySelected && !isSelected) {
@@ -588,7 +603,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                       key={asset.id}
                       onClick={() => {
                         // If in bulk select mode, toggle selection instead of opening detail
-                        if (selectedAssets.size > 0) {
+                        if (inMultiSelect) {
                           const next = new Set(selectedAssets);
                           if (next.has(asset.id)) {
                             next.delete(asset.id);

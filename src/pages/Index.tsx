@@ -8,14 +8,22 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const LEFT_NAV_EXPANDED_KEY = "leftNavExpanded";
 
-// Deep-link support: ?gallery=<id> or ?folder=<id> opens Library at that item,
-// ?tab=<assets|galleries|folders> picks the Library tab, &bulk=1 preselects all
-// assets on a gallery details view. Read once at module init so the very first
-// render mounts the right screen (e.g. /?gallery=scoring-highlights&bulk=1).
+// Screens addressable via ?screen= (Library also answers to its own params;
+// Home is bare "/"). Every page in the proto has a slug so tickets can link it.
+const SLUG_SCREENS: Screen[] = ["home", "library", "network", "connect", "engage", "requests", "stats"];
+
+// Deep-link support: ?screen=<name> opens any top-level screen (&tab= its
+// section tab). Library keeps its richer params: ?gallery=<id> / ?folder=<id>
+// opens details views, ?tab= picks the Library tab (with no ?screen=, ?tab=
+// implies Library for back-compat with previously shared links), and &bulk=1
+// preselects all assets on a gallery details view. Read once at module init so
+// the very first render mounts the right screen.
 const initialDeepLink = (() => {
-  if (typeof window === "undefined") return { folderId: null, tab: null, bulk: false };
+  if (typeof window === "undefined") return { screen: null as Screen | null, folderId: null, tab: null, bulk: false };
   const params = new URLSearchParams(window.location.search);
+  const rawScreen = params.get("screen");
   return {
+    screen: SLUG_SCREENS.includes(rawScreen as Screen) ? (rawScreen as Screen) : null,
     folderId: params.get("gallery") ?? params.get("folder"),
     tab: params.get("tab"),
     bulk: params.get("bulk") === "1",
@@ -31,14 +39,24 @@ const Index = () => {
     return window.localStorage.getItem(LEFT_NAV_EXPANDED_KEY) === "true";
   });
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-  const [activeScreen, setActiveScreen] = useState<Screen>(
-    initialDeepLink.folderId || initialDeepLink.tab ? "library" : "home"
+  const [activeScreen, setActiveScreen] = useState<Screen>(() => {
+    if (initialDeepLink.screen && initialDeepLink.screen !== "library") return initialDeepLink.screen;
+    if (initialDeepLink.screen === "library" || initialDeepLink.folderId || initialDeepLink.tab) return "library";
+    return "home";
+  });
+  // Section tab for a ?screen=X&tab=Y deep link (consume-once, like the Library ones)
+  const [pendingScreenTab, setPendingScreenTab] = useState<string | null>(
+    initialDeepLink.screen && initialDeepLink.screen !== "library" ? initialDeepLink.tab : null
   );
   // Folder/gallery id for Library to open on its next mount (e.g. deep-linked from Home).
   // Cleared right after Library mounts — LibraryScreen only reads it once, as a useState initializer.
-  const [pendingLibraryFolderId, setPendingLibraryFolderId] = useState<string | null>(initialDeepLink.folderId);
+  const [pendingLibraryFolderId, setPendingLibraryFolderId] = useState<string | null>(
+    initialDeepLink.screen && initialDeepLink.screen !== "library" ? null : initialDeepLink.folderId
+  );
   // Same consume-once pattern for tab deep-links from Home's View All buttons.
-  const [pendingLibraryTab, setPendingLibraryTab] = useState<string | null>(initialDeepLink.tab);
+  const [pendingLibraryTab, setPendingLibraryTab] = useState<string | null>(
+    initialDeepLink.screen && initialDeepLink.screen !== "library" ? null : initialDeepLink.tab
+  );
   // URL-only deep link (&bulk=1): preselect all assets on the linked gallery's details view.
   const [pendingLibraryBulk, setPendingLibraryBulk] = useState(initialDeepLink.bulk);
   const [pendingStatsTab, setPendingStatsTab] = useState<string | null>(null);
@@ -127,6 +145,19 @@ const Index = () => {
     }
   }, [pendingLibraryBulk]);
   useEffect(() => {
+    if (pendingScreenTab) {
+      setPendingScreenTab(null);
+    }
+  }, [pendingScreenTab]);
+
+  // Home's slug is the bare path. Library and the other screens write their own
+  // richer params (LibraryScreen effect / useScreenSlug) after they mount.
+  useEffect(() => {
+    if (activeScreen === "home") {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, [activeScreen]);
+  useEffect(() => {
     if (pendingStatsTab) {
       setPendingStatsTab(null);
     }
@@ -171,6 +202,7 @@ const Index = () => {
         initialLibraryFolderId={pendingLibraryFolderId ?? undefined}
         initialLibraryTab={pendingLibraryTab ?? undefined}
         initialLibraryBulkSelect={pendingLibraryBulk || undefined}
+        initialScreenTab={pendingScreenTab ?? undefined}
         initialStatsTab={pendingStatsTab ?? undefined}
         onOpenStarterGallery={handleOpenStarterGallery}
         onViewAll={handleViewAll}

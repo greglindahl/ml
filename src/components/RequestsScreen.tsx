@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { SectionTabs } from "@/components/SectionTabs";
+import { useScreenSlug, validTab } from "@/hooks/useScreenSlug";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -36,11 +37,14 @@ interface FilterValue {
 
 interface RequestsScreenProps {
   isMobile?: boolean;
+  /** ?screen=requests&tab=... deep link */
+  initialTab?: string;
 }
 
-export function RequestsScreen({ isMobile = false }: RequestsScreenProps) {
+export function RequestsScreen({ isMobile = false, initialTab }: RequestsScreenProps) {
   // Active tab — controlled so the header CTA can swap its label
-  const [activeTab, setActiveTab] = useState<"campaigns" | "requests">("campaigns");
+  const [activeTab, setActiveTab] = useState<"campaigns" | "requests">(validTab(initialTab, ["campaigns", "requests"] as const) ?? "campaigns");
+  useScreenSlug("requests", activeTab);
 
   // Search state
   const [campaignsSearchQuery, setCampaignsSearchQuery] = useState("");
