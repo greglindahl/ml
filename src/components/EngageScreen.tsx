@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { SectionTabs } from "@/components/SectionTabs";
+import { useScreenSlug, validTab } from "@/hooks/useScreenSlug";
 
 const ENGAGE_TABS = [
   { value: "campaigns", label: "Campaigns" },
@@ -10,10 +11,13 @@ const ENGAGE_TABS = [
 
 interface EngageScreenProps {
   isMobile?: boolean;
+  /** ?screen=engage&tab=... deep link */
+  initialTab?: string;
 }
 
-export function EngageScreen({ isMobile = false }: EngageScreenProps) {
-  const [activeTab, setActiveTab] = useState("campaigns");
+export function EngageScreen({ isMobile = false, initialTab }: EngageScreenProps) {
+  const [activeTab, setActiveTab] = useState(validTab(initialTab, ENGAGE_TABS.map(t => t.value)) ?? "campaigns");
+  useScreenSlug("engage", activeTab);
 
   return (
     <div className={`flex-1 flex flex-col pb-12 ${isMobile ? "pt-[72px]" : ""}`}>

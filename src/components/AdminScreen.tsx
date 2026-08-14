@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { SectionTabs } from "@/components/SectionTabs";
+import { useScreenSlug, validTab } from "@/hooks/useScreenSlug";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -190,11 +191,14 @@ function MobileFilterDropdown({
 
 interface AdminScreenProps {
   isMobile?: boolean;
+  /** ?screen=network&tab=... deep link */
+  initialTab?: string;
 }
 
-export function AdminScreen({ isMobile = false }: AdminScreenProps) {
+export function AdminScreen({ isMobile = false, initialTab }: AdminScreenProps) {
   // Active tab — controlled so the header CTA can swap its label
-  const [activeTab, setActiveTab] = useState<NetworkTab>("groups");
+  const [activeTab, setActiveTab] = useState<NetworkTab>(validTab(initialTab, ["groups", "invite-codes", "manage-users"] as const) ?? "groups");
+  useScreenSlug("network", activeTab);
 
   // Groups tab state
   const [groupsSearchQuery, setGroupsSearchQuery] = useState("");

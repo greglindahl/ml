@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SectionTabs } from "@/components/SectionTabs";
+import { useScreenSlug, validTab } from "@/hooks/useScreenSlug";
 
 const STATS_TABS = [
   { value: "overview", label: "Overview" },
@@ -16,7 +17,8 @@ interface StatsScreenProps {
 }
 
 export function StatsScreen({ isMobile = false, initialTab }: StatsScreenProps) {
-  const [activeTab, setActiveTab] = useState(initialTab ?? "overview");
+  const [activeTab, setActiveTab] = useState(validTab(initialTab, STATS_TABS.map(t => t.value)) ?? "overview");
+  useScreenSlug("stats", activeTab);
 
   return (
     <div className={`flex-1 flex flex-col pb-12 ${isMobile ? "pt-[72px]" : ""}`}>

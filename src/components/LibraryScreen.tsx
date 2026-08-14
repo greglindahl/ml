@@ -1106,11 +1106,11 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     if (activeFolder !== "all") {
       const node = findFolderById(folderTree, activeFolder);
       params.set(node?.type === "gallery" ? "gallery" : "folder", activeFolder);
-    } else if (activeTab !== "assets") {
+    } else {
+      // Always write the tab (assets included) so bare "/" stays Home's slug
       params.set("tab", activeTab);
     }
-    const query = params.toString();
-    window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
+    window.history.replaceState(null, "", `?${params.toString()}`);
   }, [activeFolder, activeTab, folderTree]);
 
   return (

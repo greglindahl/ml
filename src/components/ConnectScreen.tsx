@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { SectionTabs } from "@/components/SectionTabs";
+import { useScreenSlug, validTab } from "@/hooks/useScreenSlug";
 
 const CONNECT_TABS = [
   { value: "imports", label: "Imports" },
@@ -11,10 +12,13 @@ const CONNECT_TABS = [
 
 interface ConnectScreenProps {
   isMobile?: boolean;
+  /** ?screen=connect&tab=... deep link */
+  initialTab?: string;
 }
 
-export function ConnectScreen({ isMobile = false }: ConnectScreenProps) {
-  const [activeTab, setActiveTab] = useState("imports");
+export function ConnectScreen({ isMobile = false, initialTab }: ConnectScreenProps) {
+  const [activeTab, setActiveTab] = useState(validTab(initialTab, CONNECT_TABS.map(t => t.value)) ?? "imports");
+  useScreenSlug("connect", activeTab);
 
   return (
     <div className={`flex-1 flex flex-col pb-12 ${isMobile ? "pt-[72px]" : ""}`}>
