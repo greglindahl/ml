@@ -17,6 +17,7 @@ import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
 import { FolderItem, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay } from "@/lib/mockFolderData";
 import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
+import { relevanceScore } from "@/lib/relevance";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -67,7 +68,7 @@ interface GalleryDetailsViewProps {
 }
 
 // Sort options for gallery assets
-type SortField = "dateCreated" | "captureDate" | "name" | "creator" | null;
+type SortField = "relevance" | "dateCreated" | "captureDate" | "name" | "creator" | null;
 type SortDir = "asc" | "desc";
 
 const SORT_OPTIONS: { value: NonNullable<SortField>; label: string }[] = [
@@ -78,6 +79,7 @@ const SORT_OPTIONS: { value: NonNullable<SortField>; label: string }[] = [
 ];
 
 const SORT_LABELS: Record<NonNullable<SortField>, string> = {
+  relevance: "Relevance",
   dateCreated: "Added",
   captureDate: "Captured",
   name: "Name",
@@ -117,15 +119,37 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
   // Sort state
   const [sortField, setSortField] = useState<SortField>("dateCreated");
   const [sortDirection, setSortDirection] = useState<SortDir>("desc");
+  // PORTAL-12776: current text query + whether the user pinned a sort during it
+  const [activeQuery, setActiveQuery] = useState("");
+  const sortPinnedByUserRef = useRef(false);
 
   const handleSortChange = useCallback((field: NonNullable<SortField>) => {
+    if (activeQuery) sortPinnedByUserRef.current = true;
     if (sortField === field) {
       setSortDirection(prev => prev === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
       setSortDirection("desc");
     }
-  }, [sortField]);
+  }, [sortField, activeQuery]);
+
+  // Relevance is only offered while a text query is present
+  const visibleSortOptions = activeQuery
+    ? [{ value: "relevance" as const, label: "Relevance" }, ...SORT_OPTIONS]
+    : SORT_OPTIONS;
+
+  // Query present → Relevance unless pinned; query cleared → unpin + retire
+  useEffect(() => {
+    if (activeQuery) {
+      if (!sortPinnedByUserRef.current) {
+        setSortField("relevance");
+        setSortDirection("desc");
+      }
+    } else {
+      sortPinnedByUserRef.current = false;
+      setSortField(f => (f === "relevance" ? "dateCreated" : f));
+    }
+  }, [activeQuery]);
 
   // Filter state (driven by FilterBar)
   const [contentTypeFilter, setContentTypeFilter] = useState<Array<LibraryAsset["type"]>>([]);
@@ -194,13 +218,37 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
     customDateRanges,
   ]);
 
+  // Apply the active sort — including Relevance while a text query is present
+  // (PORTAL-12776). The dropdown previously rendered a sort that never applied.
+  const sortedResults = useMemo(() => {
+    if (!sortField) return filteredResults;
+    if (sortField === "relevance") {
+      const q = activeQuery.toLowerCase();
+      return [...filteredResults].sort((a, b) => {
+        const cmp = relevanceScore(a, q) - relevanceScore(b, q);
+        if (cmp !== 0) return sortDirection === "asc" ? cmp : -cmp;
+        return b.dateCreated.getTime() - a.dateCreated.getTime();
+      });
+    }
+    return [...filteredResults].sort((a, b) => {
+      let cmp = 0;
+      switch (sortField) {
+        case "dateCreated": cmp = a.dateCreated.getTime() - b.dateCreated.getTime(); break;
+        case "captureDate": cmp = a.captureDate.getTime() - b.captureDate.getTime(); break;
+        case "name": cmp = a.name.localeCompare(b.name); break;
+        case "creator": cmp = a.creator.localeCompare(b.creator); break;
+      }
+      return sortDirection === "asc" ? cmp : -cmp;
+    });
+  }, [filteredResults, sortField, sortDirection, activeQuery]);
+
   // Apply the deep-linked select-all once assets have loaded (consume-once, so
   // clearing the selection afterwards doesn't re-trigger it).
   const bulkAppliedRef = useRef(false);
   useEffect(() => {
     if (initialSelectAll && !bulkAppliedRef.current && filteredResults.length > 0) {
       bulkAppliedRef.current = true;
-      setSelectedAssets(new Set(filteredResults.map(a => a.id)));
+      setSelectedAssets(new Set(sortedResults.map(a => a.id)));
     }
   }, [initialSelectAll, filteredResults]);
 
@@ -218,13 +266,13 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
 
   const viewingAsset = useMemo(() => {
     if (!viewingAssetId) return null;
-    return filteredResults.find((a) => a.id === viewingAssetId) || null;
-  }, [viewingAssetId, filteredResults]);
+    return sortedResults.find((a) => a.id === viewingAssetId) || null;
+  }, [viewingAssetId, sortedResults]);
 
   const viewingAssetIndex = useMemo(() => {
     if (!viewingAssetId) return -1;
-    return filteredResults.findIndex((a) => a.id === viewingAssetId);
-  }, [viewingAssetId, filteredResults]);
+    return sortedResults.findIndex((a) => a.id === viewingAssetId);
+  }, [viewingAssetId, sortedResults]);
 
   const handleViewAsset = useCallback((assetId: string) => {
     setViewingAssetId(assetId);
@@ -232,15 +280,15 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
 
   const handlePreviousAsset = useCallback(() => {
     if (viewingAssetIndex > 0) {
-      setViewingAssetId(filteredResults[viewingAssetIndex - 1].id);
+      setViewingAssetId(sortedResults[viewingAssetIndex - 1].id);
     }
-  }, [viewingAssetIndex, filteredResults]);
+  }, [viewingAssetIndex, sortedResults]);
 
   const handleNextAsset = useCallback(() => {
-    if (viewingAssetIndex < filteredResults.length - 1) {
-      setViewingAssetId(filteredResults[viewingAssetIndex + 1].id);
+    if (viewingAssetIndex < sortedResults.length - 1) {
+      setViewingAssetId(sortedResults[viewingAssetIndex + 1].id);
     }
-  }, [viewingAssetIndex, filteredResults]);
+  }, [viewingAssetIndex, sortedResults]);
 
   // Handle search from FacetedSearch component
   const handleSearch = useCallback(
@@ -251,6 +299,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
         label: facet,
       }));
       search(query, facets);
+      setActiveQuery(query.trim());
     },
     [search]
   );
@@ -433,7 +482,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-white w-48">
-                    {SORT_OPTIONS.map(opt => (
+                    {visibleSortOptions.map(opt => (
                       <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
                         {opt.label}
                         {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
@@ -529,11 +578,11 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           {inMultiSelect && (
             <AssetBulkActionBar
               selectedCount={selectedAssets.size}
-              allSelected={filteredResults.length > 0 && selectedAssets.size === filteredResults.length}
-              someSelected={selectedAssets.size > 0 && selectedAssets.size < filteredResults.length}
+              allSelected={sortedResults.length > 0 && selectedAssets.size === sortedResults.length}
+              someSelected={selectedAssets.size > 0 && selectedAssets.size < sortedResults.length}
               onSelectAll={(checked) => {
                 if (checked) {
-                  setSelectedAssets(new Set(filteredResults.map(a => a.id)));
+                  setSelectedAssets(new Set(sortedResults.map(a => a.id)));
                 } else {
                   setSelectedAssets(new Set());
                 }
@@ -553,7 +602,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           <div className="min-h-[400px]">
             {assetsViewMode === "list" ? (
               <AssetTableView
-                assets={filteredResults}
+                assets={sortedResults}
                 isLoading={isLoading}
                 selectedAssets={selectedAssets}
                 onSelectAsset={(id, checked) => {
@@ -562,7 +611,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   setSelectedAssets(next);
                 }}
                 onSelectAll={(checked) => {
-                  if (checked) setSelectedAssets(new Set(filteredResults.map(a => a.id)));
+                  if (checked) setSelectedAssets(new Set(sortedResults.map(a => a.id)));
                   else setSelectedAssets(new Set());
                 }}
                 onOpenAsset={handleViewAsset}
@@ -579,7 +628,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   </div>
                 ))}
               </div>
-            ) : filteredResults.length === 0 ? (
+            ) : sortedResults.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <i className="bi bi-image text-5xl text-muted-foreground/30 mb-4" />
                 <h3 className="text-lg font-medium mb-1">No assets found</h3>
@@ -587,7 +636,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
               </div>
             ) : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
-                {filteredResults.map((asset) => {
+                {sortedResults.map((asset) => {
                   const isSelected = selectedAssets.has(asset.id);
                   const isAnySelected = inMultiSelect;
 
@@ -811,7 +860,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
         }}
         asset={viewingAsset}
         currentIndex={viewingAssetIndex}
-        totalAssets={filteredResults.length}
+        totalAssets={sortedResults.length}
         onPrevious={handlePreviousAsset}
         onNext={handleNextAsset}
       />
