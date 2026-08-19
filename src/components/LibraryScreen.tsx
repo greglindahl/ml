@@ -20,8 +20,27 @@ import { GalleryTableView, DEFAULT_GALLERY_COLUMN_VISIBILITY, GALLERY_COLUMNS, t
 import { FolderTableView, DEFAULT_FOLDER_COLUMN_VISIBILITY, FOLDER_COLUMNS, type FolderColumnVisibility } from "@/components/FolderTableView";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset, mockLibraryAssets } from "@/lib/mockLibraryData";
+
+// Chip display names for the Creator facet (id → display name) and the
+// Orientation facet's hint labels (PORTAL-12778)
+const PEOPLE_NAME_LOOKUP: Record<string, string> = (() => {
+  const lookup: Record<string, string> = {};
+  mockLibraryAssets.forEach(a => {
+    lookup[a.creatorId] = a.creator;
+  });
+  return lookup;
+})();
+const ORIENTATION_LABELS: Record<string, string> = {
+  panoramic: "Panoramic",
+  landscape: "Landscape",
+  square: "Square",
+  portrait: "Portrait",
+  tall: "Tall",
+  unknown: "Unknown",
+};
 import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, findFolderAncestorIds, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor } from "@/lib/mockFolderData";
 import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
+import { relevanceScore } from "@/lib/relevance";
 import { FolderSidebar } from "@/components/FolderSidebar";
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
@@ -151,7 +170,10 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   const [favAssetFilters, setFavAssetFilters] = useState<Record<string, string[]>>({});
   const [favAssetCustomDates, setFavAssetCustomDates] = useState<Record<string, CustomRange>>({});
   const [favSelectedAssets, setFavSelectedAssets] = useState<Set<string>>(new Set());
-  const [favAssetSort, setFavAssetSort] = useState<"dateCreated" | "captureDate" | "name" | "creator">("dateCreated");
+  const [favAssetSort, setFavAssetSort] = useState<"relevance" | "dateCreated" | "captureDate" | "name" | "creator">("dateCreated");
+  // PORTAL-12776: same relevance-defaulting contract as the All Assets tab
+  const favSortPinnedRef = useRef(false);
+  const favLastChosenSortRef = useRef<"dateCreated" | "captureDate" | "name" | "creator">("dateCreated");
   const [favGallerySearch, setFavGallerySearch] = useState("");
   const [favAssetSearch, setFavAssetSearch] = useState("");
   const [favGalleryChips, setFavGalleryChips] = useState<GalleryFilterChip[]>([]);
@@ -677,7 +699,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   // Filter state (driven by FilterBar)
   const [contentTypeFilter, setContentTypeFilter] = useState<Array<LibraryAsset["type"]>>([]);
   const [creatorFilter, setCreatorFilter] = useState<string[]>([]);
-  const [aspectRatioFilter, setAspectRatioFilter] = useState<LibraryAsset["aspectRatio"][]>([]);
+  const [orientationFilter, setOrientationFilter] = useState<LibraryAsset["orientation"][]>([]);
   const [peopleFilter, setPeopleFilter] = useState<string[]>([]);
   const [sceneFilter, setSceneFilter] = useState<string[]>([]);
   const [brandFilter, setBrandFilter] = useState<string[]>([]);
@@ -696,10 +718,19 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
 
   // Sort state
-  type SortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "favorites" | "lastDownloadDate" | null;
+  type SortField = "relevance" | "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "favorites" | "lastDownloadDate" | null;
   type SortDir = "asc" | "desc";
   const [sortField, setSortField] = useState<SortField>("dateCreated");
   const [sortDirection, setSortDirection] = useState<SortDir>("desc");
+  // PORTAL-12776: the text query currently applied (facet-only searches don't count —
+  // relevance only exists when there's text to rank against).
+  const [activeQuery, setActiveQuery] = useState("");
+  // Set when the user explicitly picks a sort while a query is active; while true,
+  // query refinements must not snap the sort back to Relevance (AC3).
+  const sortPinnedByUserRef = useRef(false);
+  // The user's last explicitly chosen (non-relevance) sort — restored when a
+  // query clears, mirroring how sort choice persists in-app elsewhere.
+  const lastChosenSortRef = useRef<{ field: NonNullable<SortField>; dir: SortDir }>({ field: "dateCreated", dir: "desc" });
 
   const SORT_OPTIONS: { value: NonNullable<SortField>; label: string }[] = [
     { value: "creator", label: "Creator" },
@@ -714,16 +745,30 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     { value: "lastDownloadDate", label: "Last Download Date" },
   ];
 
-  const SORT_LABELS: Record<string, string> = Object.fromEntries(SORT_OPTIONS.map(o => [o.value, o.label]));
+  // Relevance is only offered (and only meaningful) while a text query is present.
+  const visibleSortOptions = useMemo(
+    () => activeQuery ? [{ value: "relevance" as const, label: "Relevance" }, ...SORT_OPTIONS] : SORT_OPTIONS,
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- SORT_OPTIONS is a stable literal
+    [activeQuery]
+  );
+
+  const SORT_LABELS: Record<string, string> = { relevance: "Relevance", ...Object.fromEntries(SORT_OPTIONS.map(o => [o.value, o.label])) };
 
   const handleSortChange = useCallback((field: NonNullable<SortField>) => {
+    // An explicit pick while searching is honored until the query is cleared (AC3)
+    if (activeQuery) sortPinnedByUserRef.current = true;
     if (sortField === field) {
-      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+      setSortDirection(prev => {
+        const next = prev === "asc" ? "desc" : "asc";
+        if (field !== "relevance") lastChosenSortRef.current = { field, dir: next };
+        return next;
+      });
     } else {
       setSortField(field);
       setSortDirection("desc");
+      if (field !== "relevance") lastChosenSortRef.current = { field, dir: "desc" };
     }
-  }, [sortField]);
+  }, [sortField, activeQuery]);
 
   // Use the library search hook
   const { results, allAssets, isLoading, totalCount, search } = useLibrarySearch();
@@ -732,7 +777,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   // facet changes, a new search runs, or the page size changes.
   useEffect(() => {
     setSelectedAssets(new Set());
-  }, [results, searchSelectedFacets, contentTypeFilter, creatorFilter, aspectRatioFilter, peopleFilter, sceneFilter, brandFilter, tagsFilter, folderFilter, addedDateFilter, capturedDateFilter, customDateRanges, isBrandedActive, isUnviewedActive, isUnsortedActive, sourceFilter, orgStatusFilter, assetPerPage]);
+  }, [results, searchSelectedFacets, contentTypeFilter, creatorFilter, orientationFilter, peopleFilter, sceneFilter, brandFilter, tagsFilter, folderFilter, addedDateFilter, capturedDateFilter, customDateRanges, isBrandedActive, isUnviewedActive, isUnsortedActive, sourceFilter, orgStatusFilter, assetPerPage]);
   useEffect(() => {
     setSelectedGalleries(new Set());
   }, [galleryTabChips, archivedGalleriesOnly, unsortedGalleriesOnly, favoriteGalleriesOnly, galleryPerPage]);
@@ -804,7 +849,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
       if (creatorFilter.length && !creatorFilter.includes(asset.creatorId)) return false;
 
       // Aspect ratio filter (multi-select)
-      if (aspectRatioFilter.length && !aspectRatioFilter.includes(asset.aspectRatio)) return false;
+      if (orientationFilter.length && !orientationFilter.includes(asset.orientation)) return false;
 
       // People filter (check tags) - match any selected person
       if (peopleFilter.length) {
@@ -863,7 +908,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     allowedFolderIds,
     contentTypeFilter,
     creatorFilter,
-    aspectRatioFilter,
+    orientationFilter,
     peopleFilter,
     sceneFilter,
     brandFilter,
@@ -878,6 +923,14 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   // Sort filtered results
   const sortedResults = useMemo(() => {
     if (!sortField) return filteredResults;
+    if (sortField === "relevance") {
+      const q = activeQuery.toLowerCase();
+      return [...filteredResults].sort((a, b) => {
+        const cmp = relevanceScore(a, q) - relevanceScore(b, q);
+        if (cmp !== 0) return sortDirection === "asc" ? cmp : -cmp;
+        return b.dateCreated.getTime() - a.dateCreated.getTime();
+      });
+    }
     return [...filteredResults].sort((a, b) => {
       let cmp = 0;
       switch (sortField) {
@@ -898,7 +951,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
       }
       return sortDirection === "asc" ? cmp : -cmp;
     });
-  }, [filteredResults, sortField, sortDirection]);
+  }, [filteredResults, sortField, sortDirection, activeQuery]);
 
   // Compute dynamic filter counts based on current results
   const filterCounts = useMemo(() => computeFilterCounts(filteredResults), [filteredResults]);
@@ -940,9 +993,32 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
         label: facet,
       }));
       search(query, facets);
+
+      // PORTAL-12776 sort defaulting: a text query pre-selects Relevance unless
+      // the user pinned a sort (AC2/AC3). Clearing the query unpins.
+      const trimmed = query.trim();
+      if (trimmed && !sortPinnedByUserRef.current) {
+        setSortField("relevance");
+        setSortDirection("desc");
+      }
+      if (!trimmed) {
+        sortPinnedByUserRef.current = false;
+      }
+      setActiveQuery(trimmed);
     },
     [search]
   );
+
+  // With no query left, Relevance has nothing to rank against — retire it and
+  // restore the user's last selected sort (their choice persists in-app until
+  // changed; Added is only the never-chose-anything fallback). Per the sync
+  // call — pending Amber's confirmation. A pinned non-relevance sort is left alone.
+  useEffect(() => {
+    if (!activeQuery && sortField === "relevance") {
+      setSortField(lastChosenSortRef.current.field);
+      setSortDirection(lastChosenSortRef.current.dir);
+    }
+  }, [activeQuery, sortField]);
 
   const handleFilterChange = useCallback((filterId: string, values: string[]) => {
     switch (filterId) {
@@ -952,8 +1028,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
       case "content-type":
         setContentTypeFilter(values as Array<LibraryAsset["type"]>);
         break;
-      case "aspect-ratio":
-        setAspectRatioFilter(values as LibraryAsset["aspectRatio"][]);
+      case "orientation":
+        setOrientationFilter(values as LibraryAsset["orientation"][]);
         break;
       case "people":
         setPeopleFilter(values);
@@ -1083,13 +1159,18 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     if (tagValues.length) results = results.filter(a => tagValues.some(t => a.tags.some(tag => tag.toLowerCase() === t.toLowerCase())));
     if (f["creator"]?.length) results = results.filter(a => f["creator"].includes(a.creatorId));
     if (f["content-type"]?.length) results = results.filter(a => f["content-type"].includes(a.type));
-    if (f["aspect-ratio"]?.length) results = results.filter(a => f["aspect-ratio"].includes(a.aspectRatio));
+    if (f["orientation"]?.length) results = results.filter(a => f["orientation"].includes(a.orientation));
     const added = f["added-date"]?.[0];
     if (added) results = results.filter(a => matchesDateRange(a.dateCreated, added as DateRangeValue, favAssetCustomDates["added-date"]));
     const captured = f["captured-date"]?.[0];
     if (captured) results = results.filter(a => matchesDateRange(a.captureDate, captured as DateRangeValue, favAssetCustomDates["captured-date"]));
     return [...results].sort((a, b) => {
       switch (favAssetSort) {
+        case "relevance": {
+          const q = favAssetSearch.toLowerCase();
+          const cmp = relevanceScore(b, q) - relevanceScore(a, q);
+          return cmp !== 0 ? cmp : b.dateCreated.getTime() - a.dateCreated.getTime();
+        }
         case "name": return a.name.localeCompare(b.name);
         case "creator": return a.creator.localeCompare(b.creator);
         case "captureDate": return b.captureDate.getTime() - a.captureDate.getTime();
@@ -1097,6 +1178,17 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
       }
     });
   }, [favAssetsBase, favAssetSearch, favBrandedActive, favAssetFilters, favAssetCustomDates, favAssetSort]);
+
+  // PORTAL-12776 for the Favorites assets subview: query present → Relevance
+  // unless pinned; query cleared → unpin and retire Relevance.
+  useEffect(() => {
+    if (favAssetSearch.trim()) {
+      if (!favSortPinnedRef.current) setFavAssetSort("relevance");
+    } else {
+      favSortPinnedRef.current = false;
+      setFavAssetSort(s => (s === "relevance" ? favLastChosenSortRef.current : s));
+    }
+  }, [favAssetSearch]);
 
   // Keep the address bar shareable: reflect the current Library location as
   // query params (?gallery=<id> / ?folder=<id> / ?tab=<tab>) so any view can be
@@ -1228,7 +1320,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                         </DropdownMenuTrigger>
                       </TooltipTrigger>
                       <DropdownMenuContent className="bg-white w-48">
-                        {SORT_OPTIONS.map(opt => (
+                        {visibleSortOptions.map(opt => (
                           <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
                             {opt.label}
                             {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
@@ -1330,9 +1422,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 sceneFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "scene", icon: <i className="bi bi-stars text-sm" /> }));
                 brandFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "brand", icon: <i className="bi bi-badge-tm text-sm" /> }));
                 tagsFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "tags", icon: <i className="bi bi-tag text-sm" /> }));
-                creatorFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "creator", icon: <i className="bi bi-person text-sm" /> }));
+                creatorFilter.forEach(v => chips.push({ label: PEOPLE_NAME_LOOKUP[v] || v, value: v, sourceId: "creator", icon: <i className="bi bi-person text-sm" /> }));
                 contentTypeFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "content-type", icon: <i className="bi bi-image text-sm" /> }));
-                aspectRatioFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "aspect-ratio", icon: <i className="bi bi-tag text-sm" /> }));
+                orientationFilter.forEach(v => chips.push({ label: ORIENTATION_LABELS[v] || v, value: v, sourceId: "orientation", icon: <i className="bi bi-crop text-sm" /> }));
                 {
                   const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 days", "two-weeks": "Last 14 days", month: "Last 30 days", mtd: "Month to Date", quarter: "Last 90 days", year: "Last 12 months", custom: "Custom Date" };
                   if (addedDateFilter) {
@@ -1519,7 +1611,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="bg-white w-48">
-                      {SORT_OPTIONS.map(opt => (
+                      {visibleSortOptions.map(opt => (
                         <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
                           {opt.label}
                           {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
@@ -2109,14 +2201,17 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                         <DropdownMenuTrigger asChild>
                           <Button variant="outline" size="sm" className="h-10 gap-2 px-3 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                             <i className="bi bi-arrow-down-up w-4 h-4 inline-flex items-center justify-center leading-none" />
-                            <span className="sort-label">{{ dateCreated: "Added", captureDate: "Captured", name: "Name", creator: "Creator" }[favAssetSort]}</span>
+                            <span className="sort-label">{{ relevance: "Relevance", dateCreated: "Added", captureDate: "Captured", name: "Name", creator: "Creator" }[favAssetSort]}</span>
                             <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                           </Button>
                         </DropdownMenuTrigger>
                       </TooltipTrigger>
                       <DropdownMenuContent className="bg-white w-48">
-                        {([["dateCreated", "Added"], ["captureDate", "Captured"], ["name", "Name"], ["creator", "Creator"]] as const).map(([value, label]) => (
-                          <DropdownMenuItem key={value} onClick={() => setFavAssetSort(value)} className="flex items-center justify-between">
+                        {([
+                          ...(favAssetSearch.trim() ? [["relevance", "Relevance"]] as const : []),
+                          ["dateCreated", "Added"], ["captureDate", "Captured"], ["name", "Name"], ["creator", "Creator"],
+                        ] as const).map(([value, label]) => (
+                          <DropdownMenuItem key={value} onClick={() => { favSortPinnedRef.current = true; setFavAssetSort(value); if (value !== "relevance") favLastChosenSortRef.current = value; }} className="flex items-center justify-between">
                             {label}
                             {favAssetSort === value && <i className="bi bi-check text-sm ml-2" />}
                           </DropdownMenuItem>

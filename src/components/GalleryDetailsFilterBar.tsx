@@ -182,19 +182,23 @@ const filters: FilterConfig[] = [{
       .map(([type, count]) => ({ label: type.charAt(0).toUpperCase() + type.slice(1), value: type, count, iconClass: typeIcons[type] }));
   })(),
 }, {
-  id: "aspect-ratio",
-  label: "Ratio",
+  id: "orientation",
+  label: "Orientation",
   icon: <i className="bi bi-crop" />,
   multiSelect: true,
+  // PORTAL-12778: index stores orientation buckets, not true ratios; hint labels
+  // carry example ratios and "unknown" is selectable, pinned last.
   options: (() => {
     const counts: Record<string, number> = {};
     mockLibraryAssets.forEach(asset => {
-      counts[asset.aspectRatio] = (counts[asset.aspectRatio] || 0) + 1;
+      counts[asset.orientation] = (counts[asset.orientation] || 0) + 1;
     });
-    const ratioIcons: Record<string, string> = { "16:9": "bi-aspect-ratio", "1:1": "bi-square", "9:16": "bi-aspect-ratio", "4:3": "bi-aspect-ratio-fill" };
+    const labels: Record<string, string> = { panoramic: "Panoramic", landscape: "Landscape", square: "Square", portrait: "Portrait", tall: "Tall", unknown: "Unknown" };
+    const orientationIcons: Record<string, string> = { panoramic: "bi-aspect-ratio", landscape: "bi-aspect-ratio", square: "bi-square", portrait: "bi-aspect-ratio-fill", tall: "bi-aspect-ratio-fill", unknown: "bi-question-circle" };
     return Object.entries(counts)
-      .sort(([, a], [, b]) => b - a)
-      .map(([ratio, count]) => ({ label: ratio, value: ratio, count, iconClass: ratioIcons[ratio] }));
+      .filter(([, c]) => c > 0)
+      .sort(([va, a], [vb, b]) => (va === "unknown" ? 1 : vb === "unknown" ? -1 : b - a))
+      .map(([value, count]) => ({ label: labels[value] || value, value, count, iconClass: orientationIcons[value] }));
   })(),
 }, {
   id: "folders",
@@ -393,6 +397,7 @@ export function GalleryDetailsFilterBar({
     }
     setCustomDateOpenFor(null);
   };
+
 
   return (
     <div className="filter-bar-container cq-filterbar-hide-label-xwide flex flex-wrap items-center gap-1.5">
