@@ -154,7 +154,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
   // Filter state (driven by FilterBar)
   const [contentTypeFilter, setContentTypeFilter] = useState<Array<LibraryAsset["type"]>>([]);
   const [creatorFilter, setCreatorFilter] = useState<string[]>([]);
-  const [aspectRatioFilter, setAspectRatioFilter] = useState<LibraryAsset["aspectRatio"][]>([]);
+  const [orientationFilter, setOrientationFilter] = useState<LibraryAsset["orientation"][]>([]);
   const [peopleFilter, setPeopleFilter] = useState<string[]>([]);
   const [addedDateFilter, setAddedDateFilter] = useState<DateRangeValue | null>(null);
   const [capturedDateFilter, setCapturedDateFilter] = useState<DateRangeValue | null>(null);
@@ -189,7 +189,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
       if (creatorFilter.length && !creatorFilter.includes(asset.creatorId)) return false;
 
       // Aspect ratio filter
-      if (aspectRatioFilter.length && !aspectRatioFilter.includes(asset.aspectRatio)) return false;
+      if (orientationFilter.length && !orientationFilter.includes(asset.orientation)) return false;
 
       // People filter
       if (peopleFilter.length) {
@@ -211,7 +211,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
     allowedFolderIds,
     contentTypeFilter,
     creatorFilter,
-    aspectRatioFilter,
+    orientationFilter,
     peopleFilter,
     addedDateFilter,
     capturedDateFilter,
@@ -262,7 +262,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
       return;
     }
     setSelectedAssets(new Set());
-  }, [results, contentTypeFilter, creatorFilter, aspectRatioFilter, peopleFilter, addedDateFilter, capturedDateFilter, customDateRanges, assetPerPage]);
+  }, [results, contentTypeFilter, creatorFilter, orientationFilter, peopleFilter, addedDateFilter, capturedDateFilter, customDateRanges, assetPerPage]);
 
   const viewingAsset = useMemo(() => {
     if (!viewingAssetId) return null;
@@ -312,8 +312,8 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
       case "content-type":
         setContentTypeFilter(values as Array<LibraryAsset["type"]>);
         break;
-      case "aspect-ratio":
-        setAspectRatioFilter(values as LibraryAsset["aspectRatio"][]);
+      case "orientation":
+        setOrientationFilter(values as LibraryAsset["orientation"][]);
         break;
       case "people":
         setPeopleFilter(values);

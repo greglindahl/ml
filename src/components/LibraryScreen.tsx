@@ -20,6 +20,24 @@ import { GalleryTableView, DEFAULT_GALLERY_COLUMN_VISIBILITY, GALLERY_COLUMNS, t
 import { FolderTableView, DEFAULT_FOLDER_COLUMN_VISIBILITY, FOLDER_COLUMNS, type FolderColumnVisibility } from "@/components/FolderTableView";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset, mockLibraryAssets } from "@/lib/mockLibraryData";
+
+// Chip display names for the Creator facet (id → display name) and the
+// Orientation facet's hint labels (PORTAL-12778)
+const PEOPLE_NAME_LOOKUP: Record<string, string> = (() => {
+  const lookup: Record<string, string> = {};
+  mockLibraryAssets.forEach(a => {
+    lookup[a.creatorId] = a.creator;
+  });
+  return lookup;
+})();
+const ORIENTATION_LABELS: Record<string, string> = {
+  panoramic: "Panoramic",
+  landscape: "Landscape (16:9, 4:3)",
+  square: "Square (1:1)",
+  portrait: "Portrait (4:5)",
+  tall: "Tall (9:16)",
+  unknown: "Unknown",
+};
 import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, findFolderAncestorIds, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor } from "@/lib/mockFolderData";
 import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
 import { relevanceScore } from "@/lib/relevance";
@@ -680,7 +698,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   // Filter state (driven by FilterBar)
   const [contentTypeFilter, setContentTypeFilter] = useState<Array<LibraryAsset["type"]>>([]);
   const [creatorFilter, setCreatorFilter] = useState<string[]>([]);
-  const [aspectRatioFilter, setAspectRatioFilter] = useState<LibraryAsset["aspectRatio"][]>([]);
+  const [orientationFilter, setOrientationFilter] = useState<LibraryAsset["orientation"][]>([]);
   const [peopleFilter, setPeopleFilter] = useState<string[]>([]);
   const [sceneFilter, setSceneFilter] = useState<string[]>([]);
   const [brandFilter, setBrandFilter] = useState<string[]>([]);
@@ -750,7 +768,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   // facet changes, a new search runs, or the page size changes.
   useEffect(() => {
     setSelectedAssets(new Set());
-  }, [results, searchSelectedFacets, contentTypeFilter, creatorFilter, aspectRatioFilter, peopleFilter, sceneFilter, brandFilter, tagsFilter, folderFilter, addedDateFilter, capturedDateFilter, customDateRanges, isBrandedActive, isUnviewedActive, isUnsortedActive, sourceFilter, orgStatusFilter, assetPerPage]);
+  }, [results, searchSelectedFacets, contentTypeFilter, creatorFilter, orientationFilter, peopleFilter, sceneFilter, brandFilter, tagsFilter, folderFilter, addedDateFilter, capturedDateFilter, customDateRanges, isBrandedActive, isUnviewedActive, isUnsortedActive, sourceFilter, orgStatusFilter, assetPerPage]);
   useEffect(() => {
     setSelectedGalleries(new Set());
   }, [galleryTabChips, archivedGalleriesOnly, unsortedGalleriesOnly, favoriteGalleriesOnly, galleryPerPage]);
@@ -822,7 +840,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
       if (creatorFilter.length && !creatorFilter.includes(asset.creatorId)) return false;
 
       // Aspect ratio filter (multi-select)
-      if (aspectRatioFilter.length && !aspectRatioFilter.includes(asset.aspectRatio)) return false;
+      if (orientationFilter.length && !orientationFilter.includes(asset.orientation)) return false;
 
       // People filter (check tags) - match any selected person
       if (peopleFilter.length) {
@@ -881,7 +899,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     allowedFolderIds,
     contentTypeFilter,
     creatorFilter,
-    aspectRatioFilter,
+    orientationFilter,
     peopleFilter,
     sceneFilter,
     brandFilter,
@@ -999,8 +1017,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
       case "content-type":
         setContentTypeFilter(values as Array<LibraryAsset["type"]>);
         break;
-      case "aspect-ratio":
-        setAspectRatioFilter(values as LibraryAsset["aspectRatio"][]);
+      case "orientation":
+        setOrientationFilter(values as LibraryAsset["orientation"][]);
         break;
       case "people":
         setPeopleFilter(values);
@@ -1130,7 +1148,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     if (tagValues.length) results = results.filter(a => tagValues.some(t => a.tags.some(tag => tag.toLowerCase() === t.toLowerCase())));
     if (f["creator"]?.length) results = results.filter(a => f["creator"].includes(a.creatorId));
     if (f["content-type"]?.length) results = results.filter(a => f["content-type"].includes(a.type));
-    if (f["aspect-ratio"]?.length) results = results.filter(a => f["aspect-ratio"].includes(a.aspectRatio));
+    if (f["orientation"]?.length) results = results.filter(a => f["orientation"].includes(a.orientation));
     const added = f["added-date"]?.[0];
     if (added) results = results.filter(a => matchesDateRange(a.dateCreated, added as DateRangeValue, favAssetCustomDates["added-date"]));
     const captured = f["captured-date"]?.[0];
@@ -1393,9 +1411,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 sceneFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "scene", icon: <i className="bi bi-stars text-sm" /> }));
                 brandFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "brand", icon: <i className="bi bi-badge-tm text-sm" /> }));
                 tagsFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "tags", icon: <i className="bi bi-tag text-sm" /> }));
-                creatorFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "creator", icon: <i className="bi bi-person text-sm" /> }));
+                creatorFilter.forEach(v => chips.push({ label: PEOPLE_NAME_LOOKUP[v] || v, value: v, sourceId: "creator", icon: <i className="bi bi-person text-sm" /> }));
                 contentTypeFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "content-type", icon: <i className="bi bi-image text-sm" /> }));
-                aspectRatioFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "aspect-ratio", icon: <i className="bi bi-tag text-sm" /> }));
+                orientationFilter.forEach(v => chips.push({ label: ORIENTATION_LABELS[v] || v, value: v, sourceId: "orientation", icon: <i className="bi bi-crop text-sm" /> }));
                 {
                   const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 days", "two-weeks": "Last 14 days", month: "Last 30 days", mtd: "Month to Date", quarter: "Last 90 days", year: "Last 12 months", custom: "Custom Date" };
                   if (addedDateFilter) {

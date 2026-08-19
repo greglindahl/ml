@@ -218,7 +218,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   // Filter state (driven by FilterBar)
   const [contentTypeFilter, setContentTypeFilter] = useState<Array<LibraryAsset["type"]>>([]);
   const [creatorFilter, setCreatorFilter] = useState<string[]>([]);
-  const [aspectRatioFilter, setAspectRatioFilter] = useState<LibraryAsset["aspectRatio"][]>([]);
+  const [orientationFilter, setOrientationFilter] = useState<LibraryAsset["orientation"][]>([]);
   const [peopleFilter, setPeopleFilter] = useState<string[]>([]);
   const [addedDateFilter, setAddedDateFilter] = useState<DateRangeValue | null>(null);
   const [capturedDateFilter, setCapturedDateFilter] = useState<DateRangeValue | null>(null);
@@ -236,7 +236,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   // page-size change; gallery selection clears on gallery facet/page changes.
   useEffect(() => {
     setSelectedAssets(new Set());
-  }, [results, contentTypeFilter, creatorFilter, aspectRatioFilter, peopleFilter, addedDateFilter, capturedDateFilter, customDateRanges, assetPerPage]);
+  }, [results, contentTypeFilter, creatorFilter, orientationFilter, peopleFilter, addedDateFilter, capturedDateFilter, customDateRanges, assetPerPage]);
   useEffect(() => {
     setSelectedGalleries(new Set());
   }, [galleryFilterChips, archivedGalleriesOnly, favoriteGalleriesOnly, galleryPerPage]);
@@ -282,7 +282,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
       if (creatorFilter.length && !creatorFilter.includes(asset.creatorId)) return false;
 
       // Aspect ratio filter
-      if (aspectRatioFilter.length && !aspectRatioFilter.includes(asset.aspectRatio)) return false;
+      if (orientationFilter.length && !orientationFilter.includes(asset.orientation)) return false;
 
       // People filter
       if (peopleFilter.length) {
@@ -304,7 +304,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
     allowedFolderIds,
     contentTypeFilter,
     creatorFilter,
-    aspectRatioFilter,
+    orientationFilter,
     peopleFilter,
     addedDateFilter,
     capturedDateFilter,
@@ -385,8 +385,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
       case "content-type":
         setContentTypeFilter(values as Array<LibraryAsset["type"]>);
         break;
-      case "aspect-ratio":
-        setAspectRatioFilter(values as LibraryAsset["aspectRatio"][]);
+      case "orientation":
+        setOrientationFilter(values as LibraryAsset["orientation"][]);
         break;
       case "people":
         setPeopleFilter(values);
@@ -654,7 +654,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               peopleFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "people" }));
               creatorFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "creator" }));
               contentTypeFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "content-type" }));
-              aspectRatioFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "aspect-ratio" }));
+              orientationFilter.forEach(v => chips.push({ label: ({ panoramic: "Panoramic", landscape: "Landscape (16:9, 4:3)", square: "Square (1:1)", portrait: "Portrait (4:5)", tall: "Tall (9:16)", unknown: "Unknown" } as Record<string, string>)[v] || v, value: v, sourceId: "orientation" }));
               {
                 const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 days", "two-weeks": "Last 14 days", month: "Last 30 days", mtd: "Month to Date", quarter: "Last 90 days", year: "Last 12 months", custom: "Custom Date" };
                 if (addedDateFilter) {

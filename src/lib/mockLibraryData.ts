@@ -33,6 +33,8 @@ export interface LibraryAsset {
   dateCreated: Date;
   captureDate: Date;
   aspectRatio: "1:1" | "16:9" | "9:16" | "4:3";
+  /** Search-index orientation bucket (PORTAL-12778) — what the Orientation facet filters on. */
+  orientation: "panoramic" | "landscape" | "square" | "portrait" | "tall" | "unknown";
   status: "approved" | "pending" | "draft";
   tags: string[];
   tagInfo?: TagInfo[]; // Detailed tag info with AI-generated flag
@@ -218,7 +220,7 @@ function randomFromArray<T>(arr: T[]): T {
 }
 
 // Fixed assets for user testing scenarios
-const fixedAssets: Omit<LibraryAsset, 'downloads' | 'shares' | 'galleries' | 'viewers' | 'publicViews' | 'publicDownloads' | 'favorites' | 'lastDownloadDate' | 'captureDate'>[] = [
+const fixedAssets: Omit<LibraryAsset, 'downloads' | 'shares' | 'galleries' | 'viewers' | 'publicViews' | 'publicDownloads' | 'favorites' | 'lastDownloadDate' | 'captureDate' | 'orientation'>[] = [
   // Task A1: Known-Item, Time-Sensitive - Lebron from last night
   {
     id: "asset-hero-1",
@@ -746,8 +748,19 @@ const generatedLibraryAssets: LibraryAsset[] = (() => {
       : null;
     // captureDate is always before dateCreated
     const captureDate = new Date(asset.dateCreated.getTime() - Math.floor(favRandom() * 30 + 1) * 86400000);
+    // Orientation bucket: mostly derived from aspectRatio, with occasional
+    // panoramic/portrait/unknown overrides so every index bucket has demo data
+    const derivedOrientation: LibraryAsset["orientation"] =
+      asset.aspectRatio === "1:1" ? "square" : asset.aspectRatio === "9:16" ? "tall" : "landscape";
+    const orientationRoll = favRandom();
+    const orientation: LibraryAsset["orientation"] =
+      orientationRoll < 0.06 ? "panoramic" :
+      orientationRoll < 0.13 ? "portrait" :
+      orientationRoll < 0.17 ? "unknown" :
+      derivedOrientation;
     return {
       ...asset,
+      orientation,
       isFavorite: favRandom() < 0.35,
       isBranded: favRandom() < 0.35,
       downloads,
@@ -779,6 +792,7 @@ const starterGalleryAssets: LibraryAsset[] = [
   dateCreated: new Date(2026, 0, 1),
   captureDate: new Date(2026, 0, 1),
   aspectRatio: "1:1",
+  orientation: "square",
   status: "approved",
   tags: ["Starter Gallery"],
   fileSize: "1.2 MB",
