@@ -654,7 +654,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               peopleFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "people" }));
               creatorFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "creator" }));
               contentTypeFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "content-type" }));
-              orientationFilter.forEach(v => chips.push({ label: ({ panoramic: "Panoramic", landscape: "Landscape (16:9, 4:3)", square: "Square (1:1)", portrait: "Portrait (4:5)", tall: "Tall (9:16)", unknown: "Unknown" } as Record<string, string>)[v] || v, value: v, sourceId: "orientation" }));
+              orientationFilter.forEach(v => chips.push({ label: ({ panoramic: "Panoramic", landscape: "Landscape", square: "Square", portrait: "Portrait", tall: "Tall", unknown: "Unknown" } as Record<string, string>)[v] || v, value: v, sourceId: "orientation" }));
               {
                 const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 days", "two-weeks": "Last 14 days", month: "Last 30 days", mtd: "Month to Date", quarter: "Last 90 days", year: "Last 12 months", custom: "Custom Date" };
                 if (addedDateFilter) {

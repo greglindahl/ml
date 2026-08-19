@@ -193,7 +193,7 @@ const filters: FilterConfig[] = [{
     mockLibraryAssets.forEach(asset => {
       counts[asset.orientation] = (counts[asset.orientation] || 0) + 1;
     });
-    const labels: Record<string, string> = { panoramic: "Panoramic", landscape: "Landscape (16:9, 4:3)", square: "Square (1:1)", portrait: "Portrait (4:5)", tall: "Tall (9:16)", unknown: "Unknown" };
+    const labels: Record<string, string> = { panoramic: "Panoramic", landscape: "Landscape", square: "Square", portrait: "Portrait", tall: "Tall", unknown: "Unknown" };
     const orientationIcons: Record<string, string> = { panoramic: "bi-aspect-ratio", landscape: "bi-aspect-ratio", square: "bi-square", portrait: "bi-aspect-ratio-fill", tall: "bi-aspect-ratio-fill", unknown: "bi-question-circle" };
     return Object.entries(counts)
       .filter(([, c]) => c > 0)

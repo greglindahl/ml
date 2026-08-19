@@ -32,10 +32,10 @@ const PEOPLE_NAME_LOOKUP: Record<string, string> = (() => {
 })();
 const ORIENTATION_LABELS: Record<string, string> = {
   panoramic: "Panoramic",
-  landscape: "Landscape (16:9, 4:3)",
-  square: "Square (1:1)",
-  portrait: "Portrait (4:5)",
-  tall: "Tall (9:16)",
+  landscape: "Landscape",
+  square: "Square",
+  portrait: "Portrait",
+  tall: "Tall",
   unknown: "Unknown",
 };
 import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, findFolderAncestorIds, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor } from "@/lib/mockFolderData";
@@ -173,6 +173,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   const [favAssetSort, setFavAssetSort] = useState<"relevance" | "dateCreated" | "captureDate" | "name" | "creator">("dateCreated");
   // PORTAL-12776: same relevance-defaulting contract as the All Assets tab
   const favSortPinnedRef = useRef(false);
+  const favLastChosenSortRef = useRef<"dateCreated" | "captureDate" | "name" | "creator">("dateCreated");
   const [favGallerySearch, setFavGallerySearch] = useState("");
   const [favAssetSearch, setFavAssetSearch] = useState("");
   const [favGalleryChips, setFavGalleryChips] = useState<GalleryFilterChip[]>([]);
@@ -727,6 +728,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   // Set when the user explicitly picks a sort while a query is active; while true,
   // query refinements must not snap the sort back to Relevance (AC3).
   const sortPinnedByUserRef = useRef(false);
+  // The user's last explicitly chosen (non-relevance) sort — restored when a
+  // query clears, mirroring how sort choice persists in-app elsewhere.
+  const lastChosenSortRef = useRef<{ field: NonNullable<SortField>; dir: SortDir }>({ field: "dateCreated", dir: "desc" });
 
   const SORT_OPTIONS: { value: NonNullable<SortField>; label: string }[] = [
     { value: "creator", label: "Creator" },
@@ -754,10 +758,15 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     // An explicit pick while searching is honored until the query is cleared (AC3)
     if (activeQuery) sortPinnedByUserRef.current = true;
     if (sortField === field) {
-      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+      setSortDirection(prev => {
+        const next = prev === "asc" ? "desc" : "asc";
+        if (field !== "relevance") lastChosenSortRef.current = { field, dir: next };
+        return next;
+      });
     } else {
       setSortField(field);
       setSortDirection("desc");
+      if (field !== "relevance") lastChosenSortRef.current = { field, dir: "desc" };
     }
   }, [sortField, activeQuery]);
 
@@ -1001,11 +1010,13 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   );
 
   // With no query left, Relevance has nothing to rank against — retire it and
-  // fall back to the default sort. A pinned non-relevance sort is left alone.
+  // restore the user's last selected sort (their choice persists in-app until
+  // changed; Added is only the never-chose-anything fallback). Per the sync
+  // call — pending Amber's confirmation. A pinned non-relevance sort is left alone.
   useEffect(() => {
     if (!activeQuery && sortField === "relevance") {
-      setSortField("dateCreated");
-      setSortDirection("desc");
+      setSortField(lastChosenSortRef.current.field);
+      setSortDirection(lastChosenSortRef.current.dir);
     }
   }, [activeQuery, sortField]);
 
@@ -1175,7 +1186,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
       if (!favSortPinnedRef.current) setFavAssetSort("relevance");
     } else {
       favSortPinnedRef.current = false;
-      setFavAssetSort(s => (s === "relevance" ? "dateCreated" : s));
+      setFavAssetSort(s => (s === "relevance" ? favLastChosenSortRef.current : s));
     }
   }, [favAssetSearch]);
 
@@ -2200,7 +2211,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                           ...(favAssetSearch.trim() ? [["relevance", "Relevance"]] as const : []),
                           ["dateCreated", "Added"], ["captureDate", "Captured"], ["name", "Name"], ["creator", "Creator"],
                         ] as const).map(([value, label]) => (
-                          <DropdownMenuItem key={value} onClick={() => { favSortPinnedRef.current = true; setFavAssetSort(value); }} className="flex items-center justify-between">
+                          <DropdownMenuItem key={value} onClick={() => { favSortPinnedRef.current = true; setFavAssetSort(value); if (value !== "relevance") favLastChosenSortRef.current = value; }} className="flex items-center justify-between">
                             {label}
                             {favAssetSort === value && <i className="bi bi-check text-sm ml-2" />}
                           </DropdownMenuItem>

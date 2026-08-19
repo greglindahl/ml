@@ -122,14 +122,21 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
   // PORTAL-12776: current text query + whether the user pinned a sort during it
   const [activeQuery, setActiveQuery] = useState("");
   const sortPinnedByUserRef = useRef(false);
+  // Last explicitly chosen (non-relevance) sort — restored when the query clears
+  const lastChosenSortRef = useRef<{ field: NonNullable<SortField>; dir: SortDir }>({ field: "dateCreated", dir: "desc" });
 
   const handleSortChange = useCallback((field: NonNullable<SortField>) => {
     if (activeQuery) sortPinnedByUserRef.current = true;
     if (sortField === field) {
-      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+      setSortDirection(prev => {
+        const next = prev === "asc" ? "desc" : "asc";
+        if (field !== "relevance") lastChosenSortRef.current = { field, dir: next };
+        return next;
+      });
     } else {
       setSortField(field);
       setSortDirection("desc");
+      if (field !== "relevance") lastChosenSortRef.current = { field, dir: "desc" };
     }
   }, [sortField, activeQuery]);
 
@@ -138,7 +145,8 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
     ? [{ value: "relevance" as const, label: "Relevance" }, ...SORT_OPTIONS]
     : SORT_OPTIONS;
 
-  // Query present → Relevance unless pinned; query cleared → unpin + retire
+  // Query present → Relevance unless pinned; query cleared → unpin + restore the
+  // user's last selected sort (their choice persists in-app until changed)
   useEffect(() => {
     if (activeQuery) {
       if (!sortPinnedByUserRef.current) {
@@ -147,9 +155,12 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
       }
     } else {
       sortPinnedByUserRef.current = false;
-      setSortField(f => (f === "relevance" ? "dateCreated" : f));
+      if (sortField === "relevance") {
+        setSortField(lastChosenSortRef.current.field);
+        setSortDirection(lastChosenSortRef.current.dir);
+      }
     }
-  }, [activeQuery]);
+  }, [activeQuery, sortField]);
 
   // Filter state (driven by FilterBar)
   const [contentTypeFilter, setContentTypeFilter] = useState<Array<LibraryAsset["type"]>>([]);
