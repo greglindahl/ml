@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
-import { Gallery } from "@/lib/mockFolderData";
+import { Gallery, GalleryTableItem, enrichGallery, sortGalleries, GallerySortField } from "@/lib/mockFolderData";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,18 +48,8 @@ export const DEFAULT_GALLERY_COLUMN_VISIBILITY: GalleryColumnVisibility = {
   totalAssets: true,
 };
 
-// Extended gallery type for table view
-export interface GalleryTableItem extends Gallery {
-  description?: string;
-  creator?: string;
-  createdDate?: Date;
-  lastAdded?: Date | string;
-  sharingCount?: number;
-  downloads?: number;
-  hasVideo?: boolean;
-  isNew?: boolean;
-  archived?: boolean;
-}
+// Re-exported for existing importers; the type lives with the data now
+export type { GalleryTableItem };
 
 const GALLERY_MOVE_LIMIT = 5;
 const MOVE_LIMIT_MESSAGE = "Too many galleries selected. You may only move up to 5 at a time.";
@@ -81,46 +71,8 @@ interface GalleryTableViewProps {
   onSelectionChange?: (next: Set<string>) => void;
 }
 
-type SortField = "name" | "description" | "creator" | "created" | "lastAdded" | "sharing" | "downloads" | "totalAssets" | null;
+type SortField = GallerySortField | null;
 type SortDirection = "asc" | "desc";
-
-// Mock data generator for richer gallery info
-function enrichGallery(gallery: Gallery, index: number): GalleryTableItem {
-  const creators = ["Sarah Mitchell", "David Chen", "Emma Rodriguez", "Marcus Thompson", "Olivia Park", "James Wilson", "Priya Sharma", "Lucas Adams"];
-  const descriptions = [
-    "Game night highlights and key plays",
-    "Practice session footage - team drills",
-    "Pregame warmup and player arrivals",
-    "Court-side fan reactions and crowd moments",
-    "Post-game interviews and locker room",
-    "Slam dunk compilation - best of season",
-    "Three-point shooting practice clips",
-    "Team huddle and timeout moments",
-    "Player close-ups and action shots",
-    "Arena atmosphere and halftime show",
-    "Championship celebration footage",
-    "Rookie spotlight and debut games",
-  ];
-  
-  const now = new Date();
-  const daysAgo = (days: number) => {
-    const d = new Date(now);
-    d.setDate(d.getDate() - days);
-    return d;
-  };
-  
-  return {
-    ...gallery,
-    description: descriptions[index % descriptions.length] || undefined,
-    creator: creators[index % creators.length],
-    createdDate: daysAgo(index * 3 + 1),
-    lastAdded: index === 0 ? "13 hours ago" : daysAgo(index * 2),
-    sharingCount: index % 3 === 0 ? Math.floor(Math.random() * 40) : 0,
-    downloads: Math.floor(Math.random() * 100),
-    hasVideo: index % 2 === 0,
-    isNew: index < 4,
-  };
-}
 
 export function GalleryTableView({
   galleries,
@@ -143,8 +95,10 @@ export function GalleryTableView({
   const [sortField, setSortField] = useState<SortField>("created");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
-  // Enrich galleries with additional data for display
-  const enrichedGalleries = galleries.map((g, i) => enrichGallery(g, i));
+  // Enrich galleries with additional data for display. Items the parent already
+  // enriched (stable index basis) pass through untouched — re-enriching by
+  // received order would reshuffle values whenever the parent reorders the list.
+  const enrichedGalleries = galleries.map((g, i) => (g.createdDate ? g : enrichGallery(g, i)));
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -182,42 +136,9 @@ export function GalleryTableView({
       : <i className="bi bi-arrow-down w-3 h-3 ml-1 inline-flex items-center justify-center leading-none" />;
   };
 
-  // Sort galleries
-  const sortedGalleries = [...enrichedGalleries].sort((a, b) => {
-    if (!sortField) return 0;
-    
-    let comparison = 0;
-    switch (sortField) {
-      case "name":
-        comparison = a.name.localeCompare(b.name);
-        break;
-      case "description":
-        comparison = (a.description || "").localeCompare(b.description || "");
-        break;
-      case "creator":
-        comparison = (a.creator || "").localeCompare(b.creator || "");
-        break;
-      case "created":
-        comparison = (a.createdDate?.getTime() || 0) - (b.createdDate?.getTime() || 0);
-        break;
-      case "lastAdded":
-        const aTime = typeof a.lastAdded === "string" ? 0 : (a.lastAdded?.getTime() || 0);
-        const bTime = typeof b.lastAdded === "string" ? 0 : (b.lastAdded?.getTime() || 0);
-        comparison = aTime - bTime;
-        break;
-      case "sharing":
-        comparison = (a.sharingCount || 0) - (b.sharingCount || 0);
-        break;
-      case "downloads":
-        comparison = (a.downloads || 0) - (b.downloads || 0);
-        break;
-      case "totalAssets":
-        comparison = a.assetCount - b.assetCount;
-        break;
-    }
-    
-    return sortDirection === "asc" ? comparison : -comparison;
-  });
+  // Sort via the shared comparator so the grid dropdown and table headers agree
+  // (also fixes "13 hours ago" sorting as oldest instead of newest)
+  const sortedGalleries = sortField ? sortGalleries(enrichedGalleries, sortField, sortDirection) : enrichedGalleries;
 
   // Apply pagination
   const paginatedGalleries = sortedGalleries.slice(0, perPage);
