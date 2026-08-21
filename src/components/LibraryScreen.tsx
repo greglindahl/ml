@@ -38,7 +38,7 @@ const ORIENTATION_LABELS: Record<string, string> = {
   tall: "Tall",
   unknown: "Unknown",
 };
-import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, findFolderAncestorIds, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor } from "@/lib/mockFolderData";
+import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, findFolderAncestorIds, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor, enrichGallery, sortGalleries, GALLERY_SORT_OPTIONS, GallerySortField } from "@/lib/mockFolderData";
 import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
 import { relevanceScore } from "@/lib/relevance";
 import { FolderSidebar } from "@/components/FolderSidebar";
@@ -147,12 +147,31 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [assetsViewMode, setAssetsViewMode] = useState<"grid" | "list">("grid");
   const [galleriesViewMode, setGalleriesViewMode] = useState<"grid" | "list">("grid");
+  // Galleries tab grid sort — prod field set, Created desc default (matches prod).
+  // Independent from the assets sort; the table view sorts via its own headers.
+  const [gallerySortField, setGallerySortField] = useState<GallerySortField>("created");
+  const [gallerySortDirection, setGallerySortDirection] = useState<"asc" | "desc">("desc");
+  const handleGallerySortChange = useCallback((field: GallerySortField) => {
+    if (gallerySortField === field) {
+      setGallerySortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setGallerySortField(field);
+      setGallerySortDirection("desc");
+    }
+  }, [gallerySortField]);
   const [folderTree, setFolderTree] = useState<FolderItem[]>(initialFolders);
   const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
   const [addGalleryDialogOpen, setAddGalleryDialogOpen] = useState(false);
   const [newGalleryDialogOpen, setNewGalleryDialogOpen] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [galleryList, setGalleryList] = useState(mockGalleries);
+  // Enriched + sorted list for the galleries GRID. Enrichment is index-seeded on
+  // galleryList order — the same order the table receives — so grid and table
+  // show identical values for creator/downloads/etc.
+  const sortedGalleryList = useMemo(
+    () => sortGalleries(galleryList.map(enrichGallery), gallerySortField, gallerySortDirection),
+    [galleryList, gallerySortField, gallerySortDirection]
+  );
   const [selectedGalleries, setSelectedGalleries] = useState<Set<string>>(new Set());
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
   const { toast } = useToast();
@@ -1126,14 +1145,25 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     });
   }, [toast]);
 
+  const [favGallerySortField, setFavGallerySortField] = useState<GallerySortField>("created");
+  const [favGallerySortDirection, setFavGallerySortDirection] = useState<"asc" | "desc">("desc");
+  const handleFavGallerySortChange = useCallback((field: GallerySortField) => {
+    if (favGallerySortField === field) {
+      setFavGallerySortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setFavGallerySortField(field);
+      setFavGallerySortDirection("desc");
+    }
+  }, [favGallerySortField]);
+
   const favGalleries = useMemo(
-    () => galleryList.filter(g =>
+    () => sortGalleries(galleryList.map(enrichGallery), favGallerySortField, favGallerySortDirection).filter(g =>
       g.isFavorite &&
       (favArchivedOnly ? isGalleryArchivedById(g.id) : !isGalleryArchivedById(g.id)) &&
       (favGallerySearch === "" || g.name.toLowerCase().includes(favGallerySearch.toLowerCase()))
     ),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- isGalleryArchivedById derives from folderTree
-    [galleryList, favArchivedOnly, favGallerySearch, folderTree]
+    [galleryList, favArchivedOnly, favGallerySearch, favGallerySortField, favGallerySortDirection, folderTree]
   );
 
   // Base list for the assets subview: drives both the grid and the search typeahead.
@@ -1604,17 +1634,17 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 {galleriesViewMode === "grid" && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-10 gap-2 px-3 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]" title={`Sort: ${sortField ? SORT_LABELS[sortField] : "Default"}`}>
+                      <Button variant="outline" size="sm" className="h-10 gap-2 px-3 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]" title={`Sort: ${GALLERY_SORT_OPTIONS.find(o => o.value === gallerySortField)?.label}`}>
                         <i className="bi bi-arrow-down-up w-4 h-4 inline-flex items-center justify-center leading-none" />
-                        <span className="sort-label">{sortField ? SORT_LABELS[sortField] : "Default"}</span>
+                        <span className="sort-label">{GALLERY_SORT_OPTIONS.find(o => o.value === gallerySortField)?.label}</span>
                         <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="bg-white w-48">
-                      {visibleSortOptions.map(opt => (
-                        <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
+                      {GALLERY_SORT_OPTIONS.map(opt => (
+                        <DropdownMenuItem key={opt.value} onClick={() => handleGallerySortChange(opt.value)} className="flex items-center justify-between">
                           {opt.label}
-                          {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
+                          {gallerySortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{gallerySortDirection === "desc" ? "↓" : "↑"}</span>}
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
@@ -1829,7 +1859,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 />
               ) : (
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
-                  {galleryList.filter(g => {
+                  {sortedGalleryList.filter(g => {
                     const isArchived = isGalleryArchivedById(g.id);
                     if (archivedGalleriesOnly ? !isArchived : isArchived) return false;
                     if (favoriteGalleriesOnly && !g.isFavorite) return false;
@@ -1996,6 +2026,25 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     <FacetedSearchWithTypeahead onSearch={setFavGallerySearch} placeholder="Search" />
                   </div>
                   <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
+                  {favGalleriesViewMode === "grid" && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-10 gap-2 px-3 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]" title={`Sort: ${GALLERY_SORT_OPTIONS.find(o => o.value === favGallerySortField)?.label}`}>
+                          <i className="bi bi-arrow-down-up w-4 h-4 inline-flex items-center justify-center leading-none" />
+                          <span className="sort-label">{GALLERY_SORT_OPTIONS.find(o => o.value === favGallerySortField)?.label}</span>
+                          <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="bg-white w-48">
+                        {GALLERY_SORT_OPTIONS.map(opt => (
+                          <DropdownMenuItem key={opt.value} onClick={() => handleFavGallerySortChange(opt.value)} className="flex items-center justify-between">
+                            {opt.label}
+                            {favGallerySortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{favGallerySortDirection === "desc" ? "↓" : "↑"}</span>}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                   <div className="flex items-center border border-gray-300 rounded-md bg-white">
                     <Button
                       variant="ghost"

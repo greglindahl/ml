@@ -75,6 +75,95 @@ export interface Gallery {
   isFavorite?: boolean;
 }
 
+// ── Gallery display enrichment + sorting ─────────────────────────────────────
+// Shared by the gallery grids and GalleryTableView so both views sort by the
+// same values. Enrichment is deterministic (index-seeded, no Math.random) —
+// re-renders and grid/table switches must not reshuffle numbers.
+
+export interface GalleryTableItem extends Gallery {
+  description?: string;
+  creator?: string;
+  createdDate?: Date;
+  lastAdded?: Date | string;
+  sharingCount?: number;
+  downloads?: number;
+  hasVideo?: boolean;
+  isNew?: boolean;
+  archived?: boolean;
+}
+
+export function enrichGallery(gallery: Gallery, index: number): GalleryTableItem {
+  const creators = ["Sarah Mitchell", "David Chen", "Emma Rodriguez", "Marcus Thompson", "Olivia Park", "James Wilson", "Priya Sharma", "Lucas Adams"];
+  const descriptions = [
+    "Game night highlights and key plays",
+    "Practice session footage - team drills",
+    "Pregame warmup and player arrivals",
+    "Court-side fan reactions and crowd moments",
+    "Post-game interviews and locker room",
+    "Slam dunk compilation - best of season",
+    "Three-point shooting practice clips",
+    "Team huddle and timeout moments",
+    "Player close-ups and action shots",
+    "Arena atmosphere and halftime show",
+    "Championship celebration footage",
+    "Rookie spotlight and debut games",
+  ];
+
+  const now = new Date();
+  const daysAgo = (days: number) => {
+    const d = new Date(now);
+    d.setDate(d.getDate() - days);
+    return d;
+  };
+
+  return {
+    ...gallery,
+    description: descriptions[index % descriptions.length] || undefined,
+    creator: creators[index % creators.length],
+    createdDate: daysAgo(index * 3 + 1),
+    lastAdded: index === 0 ? "13 hours ago" : daysAgo(index * 2),
+    sharingCount: index % 3 === 0 ? (index * 7 + 4) % 40 : 0,
+    downloads: (index * 37 + 11) % 100,
+    hasVideo: index % 2 === 0,
+    isNew: index < 4,
+  };
+}
+
+export type GallerySortField = "name" | "description" | "creator" | "created" | "lastAdded" | "sharing" | "downloads" | "totalAssets";
+
+/** Prod's Galleries sort field set, in prod's menu order. */
+export const GALLERY_SORT_OPTIONS: { value: GallerySortField; label: string }[] = [
+  { value: "name", label: "Gallery Name" },
+  { value: "description", label: "Description" },
+  { value: "creator", label: "Creator" },
+  { value: "created", label: "Created" },
+  { value: "lastAdded", label: "Last Added" },
+  { value: "sharing", label: "Sharing" },
+  { value: "downloads", label: "Downloads" },
+  { value: "totalAssets", label: "Total Assets" },
+];
+
+// A string lastAdded ("13 hours ago") means fresher than any Date we generate
+const lastAddedTime = (v: Date | string | undefined) =>
+  v instanceof Date ? v.getTime() : v ? Date.now() : 0;
+
+export function sortGalleries<T extends GalleryTableItem>(galleries: T[], field: GallerySortField, direction: "asc" | "desc"): T[] {
+  return [...galleries].sort((a, b) => {
+    let cmp = 0;
+    switch (field) {
+      case "name": cmp = a.name.localeCompare(b.name); break;
+      case "description": cmp = (a.description ?? "").localeCompare(b.description ?? ""); break;
+      case "creator": cmp = (a.creator ?? "").localeCompare(b.creator ?? ""); break;
+      case "created": cmp = (a.createdDate?.getTime() ?? 0) - (b.createdDate?.getTime() ?? 0); break;
+      case "lastAdded": cmp = lastAddedTime(a.lastAdded) - lastAddedTime(b.lastAdded); break;
+      case "sharing": cmp = (a.sharingCount ?? 0) - (b.sharingCount ?? 0); break;
+      case "downloads": cmp = (a.downloads ?? 0) - (b.downloads ?? 0); break;
+      case "totalAssets": cmp = a.assetCount - b.assetCount; break;
+    }
+    return direction === "asc" ? cmp : -cmp;
+  });
+}
+
 export interface FolderCard {
   id: string;
   name: string;

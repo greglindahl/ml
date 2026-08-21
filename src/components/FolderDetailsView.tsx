@@ -15,7 +15,7 @@ import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
 import { Badge } from "@/components/ui/badge";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
-import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries, Gallery, FlattenedFolder, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor } from "@/lib/mockFolderData";
+import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries, Gallery, FlattenedFolder, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor, enrichGallery, sortGalleries, GALLERY_SORT_OPTIONS, GallerySortField } from "@/lib/mockFolderData";
 import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -206,6 +206,18 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   // View mode state (grid vs list) - independent for assets and galleries
   const [assetsViewMode, setAssetsViewMode] = useState<"grid" | "list">("grid");
   const [galleriesViewMode, setGalleriesViewMode] = useState<"grid" | "list">("grid");
+  // Galleries tab grid sort — prod field set, Created desc default. Independent
+  // of the assets sort state above; the table sorts via its own headers.
+  const [gallerySortField, setGallerySortField] = useState<GallerySortField>("created");
+  const [gallerySortDirection, setGallerySortDirection] = useState<"asc" | "desc">("desc");
+  const handleGallerySortChange = useCallback((field: GallerySortField) => {
+    if (gallerySortField === field) {
+      setGallerySortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setGallerySortField(field);
+      setGallerySortDirection("desc");
+    }
+  }, [gallerySortField]);
   
   // Archive toggle states
   const [archivedFoldersOnly, setArchivedFoldersOnly] = useState(false);
@@ -822,17 +834,17 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               {galleriesViewMode === "grid" && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-10 gap-2 px-3 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]" title={`Sort: ${sortField ? SORT_LABELS[sortField] : "Default"}`}>
+                    <Button variant="outline" size="sm" className="h-10 gap-2 px-3 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]" title={`Sort: ${GALLERY_SORT_OPTIONS.find(o => o.value === gallerySortField)?.label}`}>
                       <i className="bi bi-arrow-down-up w-4 h-4 inline-flex items-center justify-center leading-none" />
-                      <span className="sort-label">{sortField ? SORT_LABELS[sortField] : "Default"}</span>
+                      <span className="sort-label">{GALLERY_SORT_OPTIONS.find(o => o.value === gallerySortField)?.label}</span>
                       <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-white w-48">
-                    {SORT_OPTIONS.map(opt => (
-                      <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
+                    {GALLERY_SORT_OPTIONS.map(opt => (
+                      <DropdownMenuItem key={opt.value} onClick={() => handleGallerySortChange(opt.value)} className="flex items-center justify-between">
                         {opt.label}
-                        {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
+                        {gallerySortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{gallerySortDirection === "desc" ? "↓" : "↑"}</span>}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
@@ -988,19 +1000,31 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               return true;
             });
 
+            // Enrichment is index-seeded on the STABLE childGalleries order so
+            // neither sorting nor filtering reshuffles which creator/downloads a
+            // gallery shows; the table receives these pre-enriched rows.
+            const stableEnriched = childGalleries.map((g, i) => enrichGallery({
+              id: g.id,
+              name: g.name,
+              assetCount: g.count || 0,
+              timeAgo: "2 days ago",
+              archived: g.archived === true,
+              isPublic: mockGalleries.find(mg => mg.id === g.id)?.isPublic,
+            }, i));
+            const enrichedById = new Map(stableEnriched.map(g => [g.id, g]));
+            const enrichedRank = new Map(
+              sortGalleries(stableEnriched, gallerySortField, gallerySortDirection).map((g, i) => [g.id, i])
+            );
+            const sortedFilteredGalleries = [...filteredGalleries].sort(
+              (a, b) => (enrichedRank.get(a.id) ?? 0) - (enrichedRank.get(b.id) ?? 0)
+            );
+
             if (galleriesViewMode === "list") {
               return (
                 <GalleryTableView
                   selectedGalleries={selectedGalleries}
                   onSelectionChange={setSelectedGalleries}
-                  galleries={filteredGalleries.map(g => ({
-                    id: g.id,
-                    name: g.name,
-                    assetCount: g.count || 0,
-                    timeAgo: "2 days ago",
-                    archived: g.archived === true,
-                    isPublic: mockGalleries.find(mg => mg.id === g.id)?.isPublic,
-                  }))}
+                  galleries={filteredGalleries.map(g => enrichedById.get(g.id)!)}
                   onNavigate={onNavigate}
                   onMoveGalleries={handleMoveGalleries}
                   onArchiveGallery={onArchiveGallery}
@@ -1028,7 +1052,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             
             return (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
-                {filteredGalleries.map((gallery) => {
+                {sortedFilteredGalleries.map((gallery) => {
                   const isSelected = selectedGalleries.has(gallery.id);
 
                   let cardState: GalleryCardState = "default";
