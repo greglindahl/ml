@@ -1607,6 +1607,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             {assetsViewMode === "list" ? (
               <AssetTableView
                 assets={sortedResults}
+                sortField={sortField ?? undefined}
+                sortDirection={sortDirection}
+                onSortChange={(f) => handleSortChange(f as NonNullable<SortField>)}
                 isLoading={isLoading}
                 selectedAssets={selectedAssets}
                 onSelectAsset={(id, checked) => {
@@ -2516,6 +2519,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 ) : favAssetsViewMode === "list" ? (
                   <AssetTableView
                     assets={favFilteredAssets}
+                    sortField={favAssetSort}
+                    sortDirection={favAssetSortDir}
+                    onSortChange={(f) => handleFavAssetSortChange(f as NonNullable<SortField>)}
                     isLoading={isLoading}
                     selectedAssets={favSelectedAssets}
                     onSelectAsset={(id, checked) => {

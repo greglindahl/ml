@@ -67,24 +67,25 @@ interface GalleryDetailsViewProps {
   initialSelectAll?: boolean;
 }
 
-// Sort options for gallery assets
-type SortField = "relevance" | "dateCreated" | "captureDate" | "name" | "creator" | null;
+// Sort options for gallery assets — the authoritative All Assets field list
+// (PORTAL-12776 AC1): Creator first, no "Name", no "Created" vocabulary.
+type SortField = "relevance" | "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "favorites" | "lastDownloadDate" | null;
 type SortDir = "asc" | "desc";
 
 const SORT_OPTIONS: { value: NonNullable<SortField>; label: string }[] = [
+  { value: "creator", label: "Creator" },
   { value: "dateCreated", label: "Added" },
   { value: "captureDate", label: "Captured" },
-  { value: "name", label: "Name" },
-  { value: "creator", label: "Creator" },
+  { value: "downloads", label: "Downloads" },
+  { value: "shares", label: "Shares" },
+  { value: "galleries", label: "Galleries" },
+  { value: "tags", label: "Tags" },
+  { value: "viewers", label: "Viewers" },
+  { value: "favorites", label: "Favorites" },
+  { value: "lastDownloadDate", label: "Last Download Date" },
 ];
 
-const SORT_LABELS: Record<NonNullable<SortField>, string> = {
-  relevance: "Relevance",
-  dateCreated: "Added",
-  captureDate: "Captured",
-  name: "Name",
-  creator: "Creator",
-};
+const SORT_LABELS: Record<string, string> = { relevance: "Relevance", ...Object.fromEntries(SORT_OPTIONS.map(o => [o.value, o.label])) };
 
 export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = false, folderTree, onArchiveGallery, onUnarchiveGallery, initialSelectAll = false }: GalleryDetailsViewProps) {
   const [activeTab, setActiveTab] = useState("assets");
@@ -253,10 +254,16 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
     return [...filteredResults].sort((a, b) => {
       let cmp = 0;
       switch (sortField) {
+        case "creator": cmp = a.creator.localeCompare(b.creator); break;
         case "dateCreated": cmp = a.dateCreated.getTime() - b.dateCreated.getTime(); break;
         case "captureDate": cmp = a.captureDate.getTime() - b.captureDate.getTime(); break;
-        case "name": cmp = a.name.localeCompare(b.name); break;
-        case "creator": cmp = a.creator.localeCompare(b.creator); break;
+        case "downloads": cmp = a.downloads - b.downloads; break;
+        case "shares": cmp = a.shares - b.shares; break;
+        case "galleries": cmp = a.galleries - b.galleries; break;
+        case "tags": cmp = a.tags.length - b.tags.length; break;
+        case "viewers": cmp = a.viewers - b.viewers; break;
+        case "favorites": cmp = a.favorites - b.favorites; break;
+        case "lastDownloadDate": cmp = (a.lastDownloadDate?.getTime() ?? 0) - (b.lastDownloadDate?.getTime() ?? 0); break;
       }
       return sortDirection === "asc" ? cmp : -cmp;
     });
@@ -627,6 +634,9 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             {assetsViewMode === "list" ? (
               <AssetTableView
                 assets={sortedResults}
+                sortField={sortField ?? undefined}
+                sortDirection={sortDirection}
+                onSortChange={(f) => handleSortChange(f as NonNullable<SortField>)}
                 isLoading={isLoading}
                 selectedAssets={selectedAssets}
                 onSelectAsset={(id, checked) => {

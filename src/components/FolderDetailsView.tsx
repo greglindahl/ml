@@ -801,6 +801,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             {assetsViewMode === "list" ? (
               <AssetTableView
                 assets={sortedResults}
+                sortField={sortField ?? undefined}
+                sortDirection={sortDirection}
+                onSortChange={(f) => handleSortChange(f as NonNullable<SortField>)}
                 isLoading={isLoading}
                 selectedAssets={selectedAssets}
                 onSelectAsset={(id, checked) => {
