@@ -16,8 +16,10 @@ interface UseLibrarySearchResult {
 }
 
 // Simulated API delay (200-600ms)
-const SIMULATED_DELAY_MIN = 200;
-const SIMULATED_DELAY_MAX = 600;
+// PORTAL-12776 scope 7: search-as-you-type with ~250ms debounce, no submit step.
+// The timeout doubles as the debounce — each keystroke cancels the pending run.
+const SIMULATED_DELAY_MIN = 250;
+const SIMULATED_DELAY_MAX = 250;
 
 function getRandomDelay(): number {
   return Math.floor(Math.random() * (SIMULATED_DELAY_MAX - SIMULATED_DELAY_MIN + 1)) + SIMULATED_DELAY_MIN;

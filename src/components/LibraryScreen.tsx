@@ -172,6 +172,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     () => sortGalleries(galleryList.map(enrichGallery), gallerySortField, gallerySortDirection),
     [galleryList, gallerySortField, gallerySortDirection]
   );
+  const [gallerySearchQuery, setGallerySearchQuery] = useState("");
   const [selectedGalleries, setSelectedGalleries] = useState<Set<string>>(new Set());
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
   const { toast } = useToast();
@@ -189,10 +190,13 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   const [favAssetFilters, setFavAssetFilters] = useState<Record<string, string[]>>({});
   const [favAssetCustomDates, setFavAssetCustomDates] = useState<Record<string, CustomRange>>({});
   const [favSelectedAssets, setFavSelectedAssets] = useState<Set<string>>(new Set());
-  const [favAssetSort, setFavAssetSort] = useState<"relevance" | "dateCreated" | "captureDate" | "name" | "creator">("dateCreated");
-  // PORTAL-12776: same relevance-defaulting contract as the All Assets tab
+  // Favorites assets sort — full parity with the All Assets tab: same field set
+  // (SORT_OPTIONS below), direction toggling, and the PORTAL-12776 relevance
+  // contract with {field, dir} restore.
+  const [favAssetSort, setFavAssetSort] = useState<NonNullable<SortField>>("dateCreated");
+  const [favAssetSortDir, setFavAssetSortDir] = useState<"asc" | "desc">("desc");
   const favSortPinnedRef = useRef(false);
-  const favLastChosenSortRef = useRef<"dateCreated" | "captureDate" | "name" | "creator">("dateCreated");
+  const favLastChosenSortRef = useRef<{ field: NonNullable<SortField>; dir: "asc" | "desc" }>({ field: "dateCreated", dir: "desc" });
   const [favGallerySearch, setFavGallerySearch] = useState("");
   const [favAssetSearch, setFavAssetSearch] = useState("");
   const [favGalleryChips, setFavGalleryChips] = useState<GalleryFilterChip[]>([]);
@@ -652,6 +656,27 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     [selectedGalleries, folderTree]
   );
 
+  // One visible list for the Galleries tab — sorted, then filtered by the pills
+  // and search. Grid AND table both consume this, so table mode honors the same
+  // pills/search as the grid (it previously received the raw unfiltered list).
+  const visibleGalleries = useMemo(() => {
+    const q = gallerySearchQuery.trim().toLowerCase();
+    return sortedGalleryList.filter(g => {
+      const isArchived = isGalleryArchivedById(g.id);
+      if (archivedGalleriesOnly ? !isArchived : isArchived) return false;
+      if (favoriteGalleriesOnly && !g.isFavorite) return false;
+      if (unsortedGalleriesOnly) {
+        // Unsorted = not inside any real folder ("All Media" doesn't count,
+        // matching getGalleryLocationDisplay's semantics)
+        const path = findGalleryParentPath(g.id, folderTree);
+        const inFolder = path !== null && path.some(p => p !== "All Media");
+        if (inFolder) return false;
+      }
+      if (q && !g.name.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [sortedGalleryList, gallerySearchQuery, archivedGalleriesOnly, favoriteGalleriesOnly, unsortedGalleriesOnly, folderTree, isGalleryArchivedById]);
+
   const handleArchiveGallery = useCallback((galleryId: string) => {
     setGalleriesArchived([galleryId], true);
     const name = galleryList.find(g => g.id === galleryId)?.name ?? findFolderById(folderTree, galleryId)?.name;
@@ -799,13 +824,13 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   }, [results, searchSelectedFacets, contentTypeFilter, creatorFilter, orientationFilter, peopleFilter, sceneFilter, brandFilter, tagsFilter, folderFilter, addedDateFilter, capturedDateFilter, customDateRanges, isBrandedActive, isUnviewedActive, isUnsortedActive, sourceFilter, orgStatusFilter, assetPerPage]);
   useEffect(() => {
     setSelectedGalleries(new Set());
-  }, [galleryTabChips, archivedGalleriesOnly, unsortedGalleriesOnly, favoriteGalleriesOnly, galleryPerPage]);
+  }, [galleryTabChips, gallerySearchQuery, archivedGalleriesOnly, unsortedGalleriesOnly, favoriteGalleriesOnly, galleryPerPage]);
   useEffect(() => {
     setFavSelectedAssets(new Set());
-  }, [favAssetFilters, favAssetCustomDates, favAssetSearch, favBrandedActive, favUnviewedActive]);
+  }, [favAssetFilters, favAssetCustomDates, favAssetSearch, favBrandedActive, favUnviewedActive, assetPerPage]);
   useEffect(() => {
     setFavSelectedGalleries(new Set());
-  }, [favGalleryChips, favGallerySearch, favArchivedOnly]);
+  }, [favGalleryChips, favGallerySearch, favArchivedOnly, galleryPerPage]);
 
   // Navigating away (switching tabs/subtabs/folders) exits multi-select entirely.
   useEffect(() => {
@@ -920,6 +945,12 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
       // Branded filter
       if (isBrandedActive && !asset.isBranded) return false;
 
+      // Unviewed Only pill — assets the current user hasn't viewed yet
+      if (isUnviewedActive && !asset.isUnviewed) return false;
+
+      // Unsorted pill — assets not in any gallery
+      if (isUnsortedActive && asset.galleries > 0) return false;
+
       return true;
     });
   }, [
@@ -937,6 +968,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     capturedDateFilter,
     customDateRanges,
     isBrandedActive,
+    isUnviewedActive,
+    isUnsortedActive,
   ]);
 
   // Sort filtered results
@@ -1183,6 +1216,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
       );
     }
     if (favBrandedActive) results = results.filter(a => a.isBranded);
+    if (favUnviewedActive) results = results.filter(a => a.isUnviewed);
     const f = favAssetFilters;
     // AI tag sub-filters (people/scene/brand) and Tags all match against asset tags
     const tagValues = [...(f["tags"] ?? []), ...(f["people"] ?? []), ...(f["scene"] ?? []), ...(f["brand"] ?? [])];
@@ -1194,31 +1228,65 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     if (added) results = results.filter(a => matchesDateRange(a.dateCreated, added as DateRangeValue, favAssetCustomDates["added-date"]));
     const captured = f["captured-date"]?.[0];
     if (captured) results = results.filter(a => matchesDateRange(a.captureDate, captured as DateRangeValue, favAssetCustomDates["captured-date"]));
+    if (favAssetSort === "relevance") {
+      const q = favAssetSearch.toLowerCase();
+      return [...results].sort((a, b) => {
+        const cmp = relevanceScore(a, q) - relevanceScore(b, q);
+        if (cmp !== 0) return favAssetSortDir === "asc" ? cmp : -cmp;
+        return b.dateCreated.getTime() - a.dateCreated.getTime();
+      });
+    }
     return [...results].sort((a, b) => {
+      let cmp = 0;
       switch (favAssetSort) {
-        case "relevance": {
-          const q = favAssetSearch.toLowerCase();
-          const cmp = relevanceScore(b, q) - relevanceScore(a, q);
-          return cmp !== 0 ? cmp : b.dateCreated.getTime() - a.dateCreated.getTime();
-        }
-        case "name": return a.name.localeCompare(b.name);
-        case "creator": return a.creator.localeCompare(b.creator);
-        case "captureDate": return b.captureDate.getTime() - a.captureDate.getTime();
-        default: return b.dateCreated.getTime() - a.dateCreated.getTime();
+        case "creator": cmp = a.creator.localeCompare(b.creator); break;
+        case "dateCreated": cmp = a.dateCreated.getTime() - b.dateCreated.getTime(); break;
+        case "captureDate": cmp = a.captureDate.getTime() - b.captureDate.getTime(); break;
+        case "downloads": cmp = a.downloads - b.downloads; break;
+        case "shares": cmp = a.shares - b.shares; break;
+        case "galleries": cmp = a.galleries - b.galleries; break;
+        case "tags": cmp = a.tags.length - b.tags.length; break;
+        case "viewers": cmp = a.viewers - b.viewers; break;
+        case "favorites": cmp = a.favorites - b.favorites; break;
+        case "lastDownloadDate": cmp = (a.lastDownloadDate?.getTime() ?? 0) - (b.lastDownloadDate?.getTime() ?? 0); break;
       }
+      return favAssetSortDir === "asc" ? cmp : -cmp;
     });
-  }, [favAssetsBase, favAssetSearch, favBrandedActive, favAssetFilters, favAssetCustomDates, favAssetSort]);
+  }, [favAssetsBase, favAssetSearch, favBrandedActive, favUnviewedActive, favAssetFilters, favAssetCustomDates, favAssetSort, favAssetSortDir]);
 
   // PORTAL-12776 for the Favorites assets subview: query present → Relevance
   // unless pinned; query cleared → unpin and retire Relevance.
   useEffect(() => {
     if (favAssetSearch.trim()) {
-      if (!favSortPinnedRef.current) setFavAssetSort("relevance");
+      if (!favSortPinnedRef.current) {
+        setFavAssetSort("relevance");
+        setFavAssetSortDir("desc");
+      }
     } else {
       favSortPinnedRef.current = false;
-      setFavAssetSort(s => (s === "relevance" ? favLastChosenSortRef.current : s));
+      if (favAssetSort === "relevance") {
+        setFavAssetSort(favLastChosenSortRef.current.field);
+        setFavAssetSortDir(favLastChosenSortRef.current.dir);
+      }
     }
-  }, [favAssetSearch]);
+  }, [favAssetSearch, favAssetSort]);
+
+  // Explicit pick in the Favorites assets sort dropdown — same pin/toggle/record
+  // contract as the All Assets handleSortChange.
+  const handleFavAssetSortChange = useCallback((field: NonNullable<SortField>) => {
+    if (favAssetSearch.trim()) favSortPinnedRef.current = true;
+    if (favAssetSort === field) {
+      setFavAssetSortDir(prev => {
+        const next = prev === "asc" ? "desc" : "asc";
+        if (field !== "relevance") favLastChosenSortRef.current = { field, dir: next };
+        return next;
+      });
+    } else {
+      if (field !== "relevance") favLastChosenSortRef.current = { field, dir: "desc" };
+      setFavAssetSort(field);
+      setFavAssetSortDir("desc");
+    }
+  }, [favAssetSort, favAssetSearch]);
 
   // Keep the address bar shareable: reflect the current Library location as
   // query params (?gallery=<id> / ?folder=<id> / ?tab=<tab>) so any view can be
@@ -1282,6 +1350,12 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
           onMoveGalleries={applyGalleryMoves}
           onArchiveGallery={handleArchiveGallery}
           onUnarchiveGallery={handleUnarchiveGallery}
+          onToggleFavoriteGallery={handleToggleFavoriteGallery}
+          onSetGalleriesFavorite={(ids, favorite) => {
+            setGalleryList(prev => prev.map(g => ids.includes(g.id) ? { ...g, isFavorite: favorite } : g));
+          }}
+          onSetGalleriesArchived={setGalleriesArchived}
+          showArchivedFolders={archivedFoldersOnly}
           galleryList={galleryList}
           flattenedFolders={flatFolders}
         />
@@ -1533,6 +1607,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             {assetsViewMode === "list" ? (
               <AssetTableView
                 assets={sortedResults}
+                sortField={sortField ?? undefined}
+                sortDirection={sortDirection}
+                onSortChange={(f) => handleSortChange(f as NonNullable<SortField>)}
                 isLoading={isLoading}
                 selectedAssets={selectedAssets}
                 onSelectAsset={(id, checked) => {
@@ -1627,7 +1704,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             {/* Search Row with Utility Cluster */}
             <div className="flex items-center gap-4 mb-3 cq-search-row">
               <div className="flex-1 min-w-0 cq-search-input">
-                <FacetedSearchWithTypeahead placeholder="Search" />
+                <FacetedSearchWithTypeahead onSearch={setGallerySearchQuery} placeholder="Search" />
               </div>
 
               <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
@@ -1752,11 +1829,16 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 <div className="flex items-center gap-1">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white disabled:opacity-60">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white disabled:opacity-60" onClick={() => {
+                        const count = selectedGalleries.size;
+                        setGalleryList(prev => prev.map(g => selectedGalleries.has(g.id) ? { ...g, isFavorite: true } : g));
+                        setSelectedGalleries(new Set());
+                        toast({ title: "Added to Favorites", description: `${count} ${count === 1 ? "gallery" : "galleries"} added to your favorites.` });
+                      }}>
                         <i className="bi bi-heart w-4 h-4 inline-flex items-center justify-center leading-none" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Favorite</TooltipContent>
+                    <TooltipContent>Add to Favorites</TooltipContent>
                   </Tooltip>
                   {archivedGalleriesOnly ? (
                     <Tooltip>
@@ -1845,11 +1927,19 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
             {/* Galleries Grid/Table */}
             <div className="min-h-[400px]">
-              {galleriesViewMode === "list" ? (
+              {visibleGalleries.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center min-h-[400px]">
+                  <i className="bi bi-images text-5xl text-muted-foreground/30 mb-4" />
+                  <h3 className="text-lg font-medium mb-1">No galleries found</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {gallerySearchQuery ? "Try adjusting your search terms" : archivedGalleriesOnly ? "No archived galleries" : "Try adjusting your filters"}
+                  </p>
+                </div>
+              ) : galleriesViewMode === "list" ? (
                 <GalleryTableView
                   selectedGalleries={selectedGalleries}
                   onSelectionChange={setSelectedGalleries}
-                  galleries={galleryList.map(g => ({ ...g, archived: isGalleryArchivedById(g.id) }))}
+                  galleries={visibleGalleries.map(g => ({ ...g, archived: isGalleryArchivedById(g.id) }))}
                   onNavigate={handleNavigate}
                   onMoveGalleries={handleMoveGalleries}
                   onArchiveGallery={handleArchiveGallery}
@@ -1859,19 +1949,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 />
               ) : (
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
-                  {sortedGalleryList.filter(g => {
-                    const isArchived = isGalleryArchivedById(g.id);
-                    if (archivedGalleriesOnly ? !isArchived : isArchived) return false;
-                    if (favoriteGalleriesOnly && !g.isFavorite) return false;
-                    if (unsortedGalleriesOnly) {
-                      // Unsorted = not inside any real folder ("All Media" doesn't
-                      // count, matching getGalleryLocationDisplay's semantics)
-                      const path = findGalleryParentPath(g.id, folderTree);
-                      const inFolder = path !== null && path.some(p => p !== "All Media");
-                      if (inFolder) return false;
-                    }
-                    return true;
-                  }).map((gallery) => {
+                  {visibleGalleries.map((gallery) => {
                     const isSelected = selectedGalleries.has(gallery.id);
                     const isGalleryArchived = isGalleryArchivedById(gallery.id);
                     const isGalleryInFolder = findGalleryParentPath(gallery.id, folderTree) !== null;
@@ -1939,6 +2017,16 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     <i className="bi bi-table w-4 h-4 inline-flex items-center justify-center leading-none" />
                   </Button>
                 </div>
+
+                {/* Settings button — the folder SettingsDrawer was previously unreachable */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
+                  onClick={() => setSettingsDrawerOpen(true)}
+                >
+                  <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
+                </Button>
               </div>
             </div>
 
@@ -2076,6 +2164,16 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                       <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
                     </Button>
                   </div>
+
+                  {/* Settings button */}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
+                    onClick={() => setGallerySettingsDrawerOpen(true)}
+                  >
+                    <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  </Button>
                   </div>
                 </div>
 
@@ -2086,6 +2184,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     onArchivedToggle={setFavArchivedOnly}
                     onActiveFiltersChange={setFavGalleryChips}
                     handleRef={favGalleryFilterBarHandleRef}
+                    onOpenFiltersSheet={() => setGalleriesFiltersSheetOpen(true)}
                   />
                 </div>
 
@@ -2156,16 +2255,34 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                             className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white"
                             onClick={() => {
                               const count = favSelectedGalleries.size;
-                              setGalleriesArchived(Array.from(favSelectedGalleries), true);
+                              setGalleriesArchived(Array.from(favSelectedGalleries), !favArchivedOnly);
                               setFavSelectedGalleries(new Set());
-                              toast({ title: "Galleries archived", description: `${count} ${count === 1 ? "gallery" : "galleries"} archived.` });
+                              toast({
+                                title: favArchivedOnly ? "Galleries unarchived" : "Galleries archived",
+                                description: `${count} ${count === 1 ? "gallery" : "galleries"} ${favArchivedOnly ? "unarchived" : "archived"}.`,
+                              });
                             }}
                           >
                             <i className="bi bi-archive w-4 h-4 inline-flex items-center justify-center leading-none" />
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent>Archive</TooltipContent>
+                        <TooltipContent>{favArchivedOnly ? "Unarchive" : "Archive"}</TooltipContent>
                       </Tooltip>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white">
+                            <i className="bi bi-three-dots w-4 h-4 inline-flex items-center justify-center leading-none" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleMoveGalleries(Array.from(favSelectedGalleries))}>
+                            <i className="bi bi-folder-symlink w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Move
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive focus:text-destructive">
+                            <i className="bi bi-trash w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 )}
@@ -2244,31 +2361,30 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     <FacetedSearchWithTypeahead onSearch={setFavAssetSearch} assets={favAssetsBase} placeholder="Search by people, tags, filenames…" />
                   </div>
                   <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
-                  <Tooltip delayDuration={700}>
-                    <DropdownMenu>
-                      <TooltipTrigger asChild>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm" className="h-10 gap-2 px-3 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
-                            <i className="bi bi-arrow-down-up w-4 h-4 inline-flex items-center justify-center leading-none" />
-                            <span className="sort-label">{{ relevance: "Relevance", dateCreated: "Added", captureDate: "Captured", name: "Name", creator: "Creator" }[favAssetSort]}</span>
-                            <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                      </TooltipTrigger>
-                      <DropdownMenuContent className="bg-white w-48">
-                        {([
-                          ...(favAssetSearch.trim() ? [["relevance", "Relevance"]] as const : []),
-                          ["dateCreated", "Added"], ["captureDate", "Captured"], ["name", "Name"], ["creator", "Creator"],
-                        ] as const).map(([value, label]) => (
-                          <DropdownMenuItem key={value} onClick={() => { favSortPinnedRef.current = true; setFavAssetSort(value); if (value !== "relevance") favLastChosenSortRef.current = value; }} className="flex items-center justify-between">
-                            {label}
-                            {favAssetSort === value && <i className="bi bi-check text-sm ml-2" />}
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                    <TooltipContent side="bottom">Sort by...</TooltipContent>
-                  </Tooltip>
+                  {favAssetsViewMode === "grid" && (
+                    <Tooltip delayDuration={700}>
+                      <DropdownMenu>
+                        <TooltipTrigger asChild>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-10 gap-2 px-3 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]" title={`Sort: ${SORT_LABELS[favAssetSort]}`}>
+                              <i className="bi bi-arrow-down-up w-4 h-4 inline-flex items-center justify-center leading-none" />
+                              <span className="sort-label">{SORT_LABELS[favAssetSort]}</span>
+                              <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                        </TooltipTrigger>
+                        <DropdownMenuContent className="bg-white w-48">
+                          {(favAssetSearch.trim() ? [{ value: "relevance" as const, label: "Relevance" }, ...SORT_OPTIONS] : SORT_OPTIONS).map(opt => (
+                            <DropdownMenuItem key={opt.value} onClick={() => handleFavAssetSortChange(opt.value)} className="flex items-center justify-between">
+                              {opt.label}
+                              {favAssetSort === opt.value && <span className="text-xs text-muted-foreground ml-2">{favAssetSortDir === "desc" ? "↓" : "↑"}</span>}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      <TooltipContent side="bottom">Sort by...</TooltipContent>
+                    </Tooltip>
+                  )}
 
                   <div className="flex items-center border border-gray-300 rounded-md bg-white">
                     <Button
@@ -2301,6 +2417,16 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                       <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
                     </Button>
                   </div>
+
+                  {/* Settings button */}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
+                    onClick={() => setAssetSettingsDrawerOpen(true)}
+                  >
+                    <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  </Button>
                   </div>
                 </div>
 
@@ -2323,6 +2449,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     onUnviewedToggle={setFavUnviewedActive}
                     isBrandingActive={favBrandedActive}
                     onBrandingToggle={setFavBrandedActive}
+                    onOpenFiltersSheet={() => setAssetsFiltersSheetOpen(true)}
                   />
                 </div>
 
@@ -2392,6 +2519,10 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 ) : favAssetsViewMode === "list" ? (
                   <AssetTableView
                     assets={favFilteredAssets}
+                    sortField={favAssetSort}
+                    sortDirection={favAssetSortDir}
+                    onSortChange={(f) => handleFavAssetSortChange(f as NonNullable<SortField>)}
+                    isLoading={isLoading}
                     selectedAssets={favSelectedAssets}
                     onSelectAsset={(id, checked) => {
                       const next = new Set(favSelectedAssets);
@@ -2419,7 +2550,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                         <div
                           key={asset.id}
                           onClick={() => {
-                            if (favSelectedAssets.size > 0) {
+                            if (inFavAssetMultiSelect) {
                               const next = new Set(favSelectedAssets);
                               if (next.has(asset.id)) next.delete(asset.id); else next.add(asset.id);
                               setFavSelectedAssets(next);

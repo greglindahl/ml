@@ -3,7 +3,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import { AssetTableView } from "@/components/AssetTableView";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { GalleryTableView, GalleryTableItem } from "@/components/GalleryTableView";
-import { FolderTableView } from "@/components/FolderTableView";
+import { FolderTableView, DEFAULT_FOLDER_COLUMN_VISIBILITY, type FolderColumnVisibility } from "@/components/FolderTableView";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { SectionTabs } from "@/components/SectionTabs";
 import { StickyHeaderBlock } from "@/components/StickyHeaderBlock";
@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
 import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries, Gallery, FlattenedFolder, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor, enrichGallery, sortGalleries, GALLERY_SORT_OPTIONS, GallerySortField } from "@/lib/mockFolderData";
+import { relevanceScore } from "@/lib/relevance";
 import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -40,7 +41,7 @@ import { toast as sonnerToast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AssetCard, AssetCardState } from "@/components/AssetCard";
 import { AssetDetailModal } from "@/components/AssetDetailModal";
-import { useDisplayLabel } from "@/components/SettingsDrawer";
+import { useDisplayLabel, usePerPagePreference, useColumnVisibility } from "@/components/SettingsDrawer";
 import { GalleryCard, GalleryCardState } from "@/components/GalleryCard";
 import { FolderCard, FolderCardState } from "@/components/FolderCard";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
@@ -117,11 +118,18 @@ interface FolderDetailsViewProps {
   onMoveGalleries?: (galleryIds: string[], locationId: string | null) => void;
   onArchiveGallery?: (galleryId: string) => void;
   onUnarchiveGallery?: (galleryId: string) => void;
+  /** Toggles a single gallery's favorite state (live, with toast) — parity with All Media */
+  onToggleFavoriteGallery?: (galleryId: string) => void;
+  /** Bulk favorite/archive writes for the galleries bulk bar */
+  onSetGalleriesFavorite?: (galleryIds: string[], favorite: boolean) => void;
+  onSetGalleriesArchived?: (galleryIds: string[], archived: boolean) => void;
+  /** Sidebar "View Archived Folders" state — controls archived subfolder visibility */
+  showArchivedFolders?: boolean;
   galleryList?: Gallery[];
   flattenedFolders?: FlattenedFolder[];
 }
 
-export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = false, folderTree, onEditFolder, onMoveFolder, onArchiveFolder, onUnarchiveFolder, onDeleteFolder, onCreateGallery, onAddGalleriesToFolder, onCreateFolder, onMoveGalleries, onArchiveGallery, onUnarchiveGallery, galleryList, flattenedFolders }: FolderDetailsViewProps) {
+export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = false, folderTree, onEditFolder, onMoveFolder, onArchiveFolder, onUnarchiveFolder, onDeleteFolder, onCreateGallery, onAddGalleriesToFolder, onCreateFolder, onMoveGalleries, onArchiveGallery, onUnarchiveGallery, onToggleFavoriteGallery, onSetGalleriesFavorite, onSetGalleriesArchived, showArchivedFolders = false, galleryList, flattenedFolders }: FolderDetailsViewProps) {
   const [activeTab, setActiveTab] = useState("assets");
   
   // Dialog states
@@ -148,6 +156,10 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
 
   // Display label preference (from localStorage)
   const [displayLabel] = useDisplayLabel();
+  // Shared "folders" prefs — same keys as the Library Folders tab so saved
+  // per-page/column choices apply here too (they previously silently reset)
+  const [folderPerPage] = usePerPagePreference("folders", 40);
+  const [folderColumnVisibility] = useColumnVisibility<FolderColumnVisibility>("folders", DEFAULT_FOLDER_COLUMN_VISIBILITY);
 
   // Asset settings - using new tabbed drawer hooks
   const [assetDisplayLabel, setAssetDisplayLabel] = useAssetDisplayLabel();
@@ -170,14 +182,24 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
 
   // Toggle pill states for FilterBar
   const [isUnsortedActive, setIsUnsortedActive] = useState(false);
+  const [gallerySearchQuery, setGallerySearchQuery] = useState("");
   const [isUnviewedActive, setIsUnviewedActive] = useState(false);
   const [isBrandedActive, setIsBrandedActive] = useState(false);
 
   // Sort state
-  type SortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "favorites" | "lastDownloadDate" | null;
+  type SortField = "relevance" | "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "favorites" | "lastDownloadDate" | null;
   type SortDir = "asc" | "desc";
   const [sortField, setSortField] = useState<SortField>("dateCreated");
   const [sortDirection, setSortDirection] = useState<SortDir>("desc");
+  // PORTAL-12776: the text query currently applied (facet-only searches don't count —
+  // relevance only exists when there's text to rank against).
+  const [activeQuery, setActiveQuery] = useState("");
+  // Set when the user explicitly picks a sort while a query is active; while true,
+  // query refinements must not snap the sort back to Relevance (AC3).
+  const sortPinnedByUserRef = useRef(false);
+  // The user's last explicitly chosen (non-relevance) sort — restored when a
+  // query clears, mirroring how sort choice persists in-app elsewhere.
+  const lastChosenSortRef = useRef<{ field: NonNullable<SortField>; dir: SortDir }>({ field: "dateCreated", dir: "desc" });
 
   const SORT_OPTIONS: { value: NonNullable<SortField>; label: string }[] = [
     { value: "creator", label: "Creator" },
@@ -192,16 +214,30 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
     { value: "lastDownloadDate", label: "Last Download Date" },
   ];
 
-  const SORT_LABELS: Record<string, string> = Object.fromEntries(SORT_OPTIONS.map(o => [o.value, o.label]));
+  // Relevance is only offered (and only meaningful) while a text query is present.
+  const visibleSortOptions = useMemo(
+    () => activeQuery ? [{ value: "relevance" as const, label: "Relevance" }, ...SORT_OPTIONS] : SORT_OPTIONS,
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- SORT_OPTIONS is a stable literal
+    [activeQuery]
+  );
+
+  const SORT_LABELS: Record<string, string> = { relevance: "Relevance", ...Object.fromEntries(SORT_OPTIONS.map(o => [o.value, o.label])) };
 
   const handleSortChange = useCallback((field: NonNullable<SortField>) => {
+    // An explicit pick while searching is honored until the query is cleared (AC3)
+    if (activeQuery) sortPinnedByUserRef.current = true;
     if (sortField === field) {
-      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+      setSortDirection(prev => {
+        const next = prev === "asc" ? "desc" : "asc";
+        if (field !== "relevance") lastChosenSortRef.current = { field, dir: next };
+        return next;
+      });
     } else {
+      if (field !== "relevance") lastChosenSortRef.current = { field, dir: "desc" };
       setSortField(field);
       setSortDirection("desc");
     }
-  }, [sortField]);
+  }, [sortField, activeQuery]);
 
   // View mode state (grid vs list) - independent for assets and galleries
   const [assetsViewMode, setAssetsViewMode] = useState<"grid" | "list">("grid");
@@ -220,7 +256,6 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   }, [gallerySortField]);
   
   // Archive toggle states
-  const [archivedFoldersOnly, setArchivedFoldersOnly] = useState(false);
   const [archivedGalleriesOnly, setArchivedGalleriesOnly] = useState(false);
   const [favoriteGalleriesOnly, setFavoriteGalleriesOnly] = useState(false);
   const [folderSearchQuery, setFolderSearchQuery] = useState("");
@@ -251,7 +286,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   }, [results, contentTypeFilter, creatorFilter, orientationFilter, peopleFilter, addedDateFilter, capturedDateFilter, customDateRanges, assetPerPage]);
   useEffect(() => {
     setSelectedGalleries(new Set());
-  }, [galleryFilterChips, archivedGalleriesOnly, favoriteGalleriesOnly, galleryPerPage]);
+  }, [galleryFilterChips, gallerySearchQuery, archivedGalleriesOnly, favoriteGalleriesOnly, galleryPerPage]);
 
   // Switching tabs within the folder exits multi-select entirely.
   useEffect(() => {
@@ -309,6 +344,11 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
       // Captured Date filter (when the media was originally shot)
       if (capturedDateFilter && !matchesDateRange(asset.captureDate, capturedDateFilter, customDateRanges["captured-date"])) return false;
 
+      // Toggle pills — parity with All Assets
+      if (isBrandedActive && !asset.isBranded) return false;
+      if (isUnviewedActive && !asset.isUnviewed) return false;
+      if (isUnsortedActive && asset.galleries > 0) return false;
+
       return true;
     });
   }, [
@@ -321,11 +361,22 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
     addedDateFilter,
     capturedDateFilter,
     customDateRanges,
+    isBrandedActive,
+    isUnviewedActive,
+    isUnsortedActive,
   ]);
 
   // Sort filtered results
   const sortedResults = useMemo(() => {
     if (!sortField) return filteredResults;
+    if (sortField === "relevance") {
+      const q = activeQuery.toLowerCase();
+      return [...filteredResults].sort((a, b) => {
+        const cmp = relevanceScore(a, q) - relevanceScore(b, q);
+        if (cmp !== 0) return sortDirection === "asc" ? cmp : -cmp;
+        return b.dateCreated.getTime() - a.dateCreated.getTime();
+      });
+    }
     return [...filteredResults].sort((a, b) => {
       let cmp = 0;
       switch (sortField) {
@@ -345,7 +396,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
       }
       return sortDirection === "asc" ? cmp : -cmp;
     });
-  }, [filteredResults, sortField, sortDirection]);
+  }, [filteredResults, sortField, sortDirection, activeQuery]);
 
   // Asset detail modal state
   const [viewingAssetId, setViewingAssetId] = useState<string | null>(null);
@@ -385,9 +436,30 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         label: facet,
       }));
       search(query, facets);
+
+      // PORTAL-12776 sort defaulting: a text query pre-selects Relevance unless
+      // the user pinned a sort (AC2/AC3). Clearing the query unpins.
+      const trimmed = query.trim();
+      if (trimmed && !sortPinnedByUserRef.current) {
+        setSortField("relevance");
+        setSortDirection("desc");
+      }
+      if (!trimmed) {
+        sortPinnedByUserRef.current = false;
+      }
+      setActiveQuery(trimmed);
     },
     [search]
   );
+
+  // With no query left, Relevance has nothing to rank against — retire it and
+  // restore the user's last explicitly chosen sort (pending Amber's confirmation).
+  useEffect(() => {
+    if (!activeQuery && sortField === "relevance") {
+      setSortField(lastChosenSortRef.current.field);
+      setSortDirection(lastChosenSortRef.current.dir);
+    }
+  }, [activeQuery, sortField]);
 
   const handleFilterChange = useCallback((filterId: string, values: string[]) => {
     switch (filterId) {
@@ -585,7 +657,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                       </DropdownMenuTrigger>
                     </TooltipTrigger>
                     <DropdownMenuContent className="bg-white w-48">
-                      {SORT_OPTIONS.map(opt => (
+                      {visibleSortOptions.map(opt => (
                         <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
                           {opt.label}
                           {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
@@ -729,6 +801,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             {assetsViewMode === "list" ? (
               <AssetTableView
                 assets={sortedResults}
+                sortField={sortField ?? undefined}
+                sortDirection={sortDirection}
+                onSortChange={(f) => handleSortChange(f as NonNullable<SortField>)}
                 isLoading={isLoading}
                 selectedAssets={selectedAssets}
                 onSelectAsset={(id, checked) => {
@@ -827,7 +902,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           {/* Search Row with Utility Cluster */}
           <div className="flex items-center gap-4 mb-3 cq-search-row">
             <div className="flex-1 min-w-0 cq-search-input">
-              <FacetedSearchWithTypeahead placeholder="Search" />
+              <FacetedSearchWithTypeahead onSearch={setGallerySearchQuery} placeholder="Search" />
             </div>
 
             <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
@@ -948,12 +1023,35 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 <span className="text-[15px] font-medium text-white">{selectedGalleries.size} {selectedGalleries.size === 1 ? "Gallery" : "Galleries"} Selected</span>
               </div>
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white disabled:opacity-60" onClick={() => toast({ title: "Favorited", description: `${selectedGalleries.size} ${selectedGalleries.size === 1 ? "gallery" : "galleries"} favorited.` })}>
-                  <i className="bi bi-heart w-4 h-4 inline-flex items-center justify-center leading-none" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white disabled:opacity-60" onClick={() => toast({ title: "Archived", description: `${selectedGalleries.size} ${selectedGalleries.size === 1 ? "gallery" : "galleries"} archived.` })}>
-                  <i className="bi bi-archive w-4 h-4 inline-flex items-center justify-center leading-none" />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white disabled:opacity-60" onClick={() => {
+                      const count = selectedGalleries.size;
+                      onSetGalleriesFavorite?.(Array.from(selectedGalleries), true);
+                      setSelectedGalleries(new Set());
+                      toast({ title: "Added to Favorites", description: `${count} ${count === 1 ? "gallery" : "galleries"} added to your favorites.` });
+                    }}>
+                      <i className="bi bi-heart w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Add to Favorites</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white disabled:opacity-60" onClick={() => {
+                      const count = selectedGalleries.size;
+                      onSetGalleriesArchived?.(Array.from(selectedGalleries), !archivedGalleriesOnly);
+                      setSelectedGalleries(new Set());
+                      toast({
+                        title: archivedGalleriesOnly ? "Galleries unarchived" : "Galleries archived",
+                        description: `${count} ${count === 1 ? "gallery" : "galleries"} ${archivedGalleriesOnly ? "unarchived" : "archived"}.`,
+                      });
+                    }}>
+                      <i className="bi bi-archive w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{archivedGalleriesOnly ? "Unarchive" : "Archive"}</TooltipContent>
+                </Tooltip>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md bg-[#edf2f9] text-[#12263f] hover:bg-white disabled:opacity-60">
@@ -993,10 +1091,12 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
 
           {/* Table Controls - shown above table in list view */}
           {(() => {
+            const gq = gallerySearchQuery.trim().toLowerCase();
             const filteredGalleries = childGalleries.filter(g => {
               if (archivedGalleriesOnly ? g.archived !== true : g.archived === true) return false;
-              // Favorite status lives on the mockGalleries entry (single source of truth)
-              if (favoriteGalleriesOnly && !mockGalleries.find(mg => mg.id === g.id)?.isFavorite) return false;
+              // Favorite status lives on the live galleryList (falls back to mock seed)
+              if (favoriteGalleriesOnly && !(galleryList ?? mockGalleries).find(mg => mg.id === g.id)?.isFavorite) return false;
+              if (gq && !g.name.toLowerCase().includes(gq)) return false;
               return true;
             });
 
@@ -1063,7 +1163,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   }
 
                   // Find matching gallery from mockGalleries for thumbnailUrl
-                  const galleryData = mockGalleries.find(g => g.id === gallery.id);
+                  const galleryData = (galleryList ?? mockGalleries).find(g => g.id === gallery.id);
 
                   return (
                     <GalleryCard
@@ -1076,16 +1176,15 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                       isFavorite={galleryData?.isFavorite}
                       isInFolder={findGalleryParentPath(gallery.id, folderTree) !== null}
                       state={cardState}
-                      onSelect={() => {
+                      onSelect={() => toggleGallerySelection(gallery.id)}
+                      onOpen={() => {
                         if (isAnyGallerySelected) {
                           toggleGallerySelection(gallery.id);
                         } else {
                           onNavigate(gallery.id);
                         }
                       }}
-                      onFavorite={() => {
-                        // TODO: Implement favorite functionality
-                      }}
+                      onFavorite={() => onToggleFavoriteGallery?.(gallery.id)}
                       onMove={() => handleMoveGalleries([gallery.id])}
                       onArchive={() => onArchiveGallery?.(gallery.id)}
                       onUnarchive={() => onUnarchiveGallery?.(gallery.id)}
@@ -1132,7 +1231,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             const searchFiltered = folderSearchQuery
               ? childFolders.filter(c => c.name.toLowerCase().includes(folderSearchQuery.toLowerCase()))
               : childFolders;
-            const filteredChildFolders = searchFiltered.filter(c => archivedFoldersOnly || c.archived !== true);
+            const filteredChildFolders = searchFiltered.filter(c => showArchivedFolders || c.archived !== true);
 
             if (childFolders.length === 0) {
               return (
@@ -1180,7 +1279,12 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               <FolderTableView
                 folders={filteredChildFolders}
                 onNavigate={onNavigate}
-                onUnarchiveFolder={onUnarchiveFolder}
+                onUnarchiveFolder={(id) => {
+                  onUnarchiveFolder?.(id);
+                  toast({ title: "Folder unarchived", description: "The folder and its contents are active again." });
+                }}
+                perPage={folderPerPage}
+                columnVisibility={folderColumnVisibility}
               />
             ) : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">

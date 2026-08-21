@@ -55,9 +55,18 @@ interface AssetTableViewProps {
   perPage: number;
   /** Controlled column visibility */
   columnVisibility: AssetColumnVisibility;
+  /** Controlled sort (PORTAL-12776 table rules): when provided with onSortChange,
+      the column headers display and drive the view's shared sort state — the same
+      one behind the grid's sort dropdown. "relevance" lights no column (relevance
+      is an ordering, not a column) and the table renders rows in the given order
+      without re-sorting. Uncontrolled callers keep the internal sort. */
+  sortField?: ControlledSortField;
+  sortDirection?: SortDirection;
+  onSortChange?: (field: NonNullable<SortField>) => void;
 }
 
 type SortField = "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "status" | "favorites" | "lastDownloadDate" | null;
+type ControlledSortField = NonNullable<SortField> | "relevance";
 type SortDirection = "asc" | "desc";
 
 // Icon component for asset types
@@ -96,10 +105,16 @@ export function AssetTableView({
   onOpenAsset,
   perPage,
   columnVisibility,
+  sortField: controlledSortField,
+  sortDirection: controlledSortDirection,
+  onSortChange,
 }: AssetTableViewProps) {
   const [internalSelected, setInternalSelected] = useState<Set<string>>(new Set());
-  const [sortField, setSortField] = useState<SortField>("dateCreated");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [internalSortField, setInternalSortField] = useState<SortField>("dateCreated");
+  const [internalSortDirection, setInternalSortDirection] = useState<SortDirection>("desc");
+  const isSortControlled = onSortChange !== undefined;
+  const sortField = isSortControlled ? (controlledSortField ?? null) : internalSortField;
+  const sortDirection = (isSortControlled ? controlledSortDirection : internalSortDirection) ?? "desc";
 
   // Use external selection state when provided, otherwise internal
   const selectedAssets = externalSelected ?? internalSelected;
@@ -129,11 +144,17 @@ export function AssetTableView({
   };
 
   const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+    if (!field) return;
+    if (isSortControlled) {
+      // Parent owns the state: same pick/toggle contract as the grid dropdown
+      onSortChange(field);
+      return;
+    }
+    if (internalSortField === field) {
+      setInternalSortDirection(prev => prev === "asc" ? "desc" : "asc");
     } else {
-      setSortField(field);
-      setSortDirection("desc");
+      setInternalSortField(field);
+      setInternalSortDirection("desc");
     }
   };
 
@@ -146,10 +167,11 @@ export function AssetTableView({
       : <i className="bi bi-arrow-down w-3 h-3 ml-1 inline-flex items-center justify-center leading-none" />;
   };
 
-  // Sort assets
-  const sortedAssets = [...assets].sort((a, b) => {
-    if (!sortField) return 0;
-    
+  // Sort assets. In controlled mode the parent already sorted (incl. relevance
+  // ordering) — render the given order as-is; re-sorting here would fight it.
+  const sortedAssets = isSortControlled ? assets : [...assets].sort((a, b) => {
+    if (!sortField || sortField === "relevance") return 0;
+
     let comparison = 0;
     switch (sortField) {
       case "creator":
