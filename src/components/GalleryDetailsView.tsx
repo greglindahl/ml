@@ -115,6 +115,9 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
 
   // Filters sheet state for narrow widths
   const [filtersSheetOpen, setFiltersSheetOpen] = useState(false);
+  // Toggle pill states — previously the bar rendered these pills unwired (decorative)
+  const [isUnviewedActive, setIsUnviewedActive] = useState(false);
+  const [isBrandedActive, setIsBrandedActive] = useState(false);
 
   // Sort state
   const [sortField, setSortField] = useState<SortField>("dateCreated");
@@ -215,6 +218,10 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
       // Captured Date filter (when the media was originally shot)
       if (capturedDateFilter && !matchesDateRange(asset.captureDate, capturedDateFilter, customDateRanges["captured-date"])) return false;
 
+      // Toggle pills — parity with All Assets
+      if (isBrandedActive && !asset.isBranded) return false;
+      if (isUnviewedActive && !asset.isUnviewed) return false;
+
       return true;
     });
   }, [
@@ -227,6 +234,8 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
     addedDateFilter,
     capturedDateFilter,
     customDateRanges,
+    isBrandedActive,
+    isUnviewedActive,
   ]);
 
   // Apply the active sort — including Relevance while a text query is present
@@ -273,7 +282,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
       return;
     }
     setSelectedAssets(new Set());
-  }, [results, contentTypeFilter, creatorFilter, orientationFilter, peopleFilter, addedDateFilter, capturedDateFilter, customDateRanges, assetPerPage]);
+  }, [results, contentTypeFilter, creatorFilter, orientationFilter, peopleFilter, addedDateFilter, capturedDateFilter, customDateRanges, isBrandedActive, isUnviewedActive, assetPerPage]);
 
   const viewingAsset = useMemo(() => {
     if (!viewingAssetId) return null;
@@ -554,6 +563,10 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
               onCustomDateChange={handleCustomDateChange}
               onActiveFiltersChange={setFilterChips}
               handleRef={filterBarHandleRef}
+              isUnviewedActive={isUnviewedActive}
+              onUnviewedToggle={setIsUnviewedActive}
+              isBrandingActive={isBrandedActive}
+              onBrandingToggle={setIsBrandedActive}
               onOpenFiltersSheet={() => setFiltersSheetOpen(true)}
             />
           </div>

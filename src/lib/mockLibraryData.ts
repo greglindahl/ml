@@ -43,6 +43,7 @@ export interface LibraryAsset {
   duration?: string;
   folderId?: string; // Which folder/gallery this asset belongs to
   isFavorite?: boolean;
+  isUnviewed?: boolean;
   isBranded?: boolean;
   thumbnailUrl?: string;
   downloads: number;
@@ -762,6 +763,8 @@ const generatedLibraryAssets: LibraryAsset[] = (() => {
       ...asset,
       orientation,
       isFavorite: favRandom() < 0.35,
+      // "Unviewed by me" — seeded so the Unviewed Only pill has real matches
+      isUnviewed: favRandom() < 0.25,
       isBranded: favRandom() < 0.35,
       downloads,
       shares,
