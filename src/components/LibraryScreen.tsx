@@ -46,6 +46,7 @@ import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialo
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
 import { NewGalleryDialog, type NewGalleryData } from "@/components/NewGalleryDialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/EmptyState";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleriesDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -1604,7 +1605,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
             {/* Assets Grid/Table with Loading State */}
             <div className="min-h-[400px]">
-            {assetsViewMode === "list" ? (
+            {/* Table renders its own skeleton while loading, but falls through to the shared
+                empty state at zero results so the no-results case is not a headers-only table. */}
+            {assetsViewMode === "list" && (isLoading || sortedResults.length > 0) ? (
               <AssetTableView
                 assets={sortedResults}
                 sortField={sortField ?? undefined}
@@ -1634,11 +1637,11 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 ))}
               </div>
             ) : sortedResults.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <i className="bi bi-image text-5xl text-muted-foreground/30 mb-4" />
-                <h3 className="text-lg font-medium mb-1">No assets found</h3>
-                <p className="text-sm text-muted-foreground">Try adjusting your filters or search terms</p>
-              </div>
+              <EmptyState
+                icon="bi-image"
+                title="No assets found"
+                description="Try adjusting your filters or search terms"
+              />
             ) : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
                 {sortedResults.map((asset) => {
@@ -1928,13 +1931,12 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             {/* Galleries Grid/Table */}
             <div className="min-h-[400px]">
               {visibleGalleries.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-center min-h-[400px]">
-                  <i className="bi bi-images text-5xl text-muted-foreground/30 mb-4" />
-                  <h3 className="text-lg font-medium mb-1">No galleries found</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {gallerySearchQuery ? "Try adjusting your search terms" : archivedGalleriesOnly ? "No archived galleries" : "Try adjusting your filters"}
-                  </p>
-                </div>
+                <EmptyState
+                  icon="bi-images"
+                  title="No galleries found"
+                  description={gallerySearchQuery ? "Try adjusting your search terms" : archivedGalleriesOnly ? "No archived galleries" : "Try adjusting your filters"}
+                  className="min-h-[400px]"
+                />
               ) : galleriesViewMode === "list" ? (
                 <GalleryTableView
                   selectedGalleries={selectedGalleries}
@@ -2047,11 +2049,11 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
               const filteredFolderCards = visibleFolders
                 .map(f => ({ id: f.id, name: f.name, galleryCount: countAllGalleries(f), timeAgo: "—", archived: f.archived === true }));
               return filteredFolderCards.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <i className="bi bi-folder text-5xl text-muted-foreground/30 mb-4" />
-                  <h3 className="text-lg font-medium mb-1">No folders</h3>
-                  <p className="text-sm text-muted-foreground">{folderSearchQuery ? "No folders match your search." : "Create a folder to get started."}</p>
-                </div>
+                <EmptyState
+                  icon="bi-folder"
+                  title="No folders"
+                  description={folderSearchQuery ? "No folders match your search." : "Create a folder to get started."}
+                />
               ) : folderViewMode === "table" ? (
                 <FolderTableView
                   folders={visibleFolders}
@@ -2290,11 +2292,11 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 </StickyHeaderBlock>{/* End sticky header */}
 
                 {favGalleries.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <i className="bi bi-heart text-5xl text-muted-foreground/30 mb-4" />
-                    <h3 className="text-lg font-medium mb-1">No favorited galleries</h3>
-                    <p className="text-sm text-muted-foreground">Tap the heart on any gallery to add it to Favorites</p>
-                  </div>
+                  <EmptyState
+                    icon="bi-heart"
+                    title="No favorited galleries"
+                    description="Tap the heart on any gallery to add it to Favorites"
+                  />
                 ) : favGalleriesViewMode === "list" ? (
                   <GalleryTableView
                     selectedGalleries={favSelectedGalleries}
@@ -2509,13 +2511,11 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 </StickyHeaderBlock>{/* End sticky header */}
 
                 {favFilteredAssets.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <i className="bi bi-heart text-5xl text-muted-foreground/30 mb-4" />
-                    <h3 className="text-lg font-medium mb-1">No favorited assets</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {Object.keys(favAssetFilters).length > 0 ? "Try adjusting your filters" : "Tap the heart on any asset to add it to Favorites"}
-                    </p>
-                  </div>
+                  <EmptyState
+                    icon="bi-heart"
+                    title="No favorited assets"
+                    description={Object.keys(favAssetFilters).length > 0 ? "Try adjusting your filters" : "Tap the heart on any asset to add it to Favorites"}
+                  />
                 ) : favAssetsViewMode === "list" ? (
                   <AssetTableView
                     assets={favFilteredAssets}

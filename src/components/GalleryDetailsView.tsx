@@ -19,6 +19,7 @@ import { FolderItem, getAllDescendantIds, flattenFolders, getGalleryLocationDisp
 import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
 import { relevanceScore } from "@/lib/relevance";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/EmptyState";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
@@ -631,7 +632,9 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
 
           {/* Assets Grid/Table with Loading State */}
           <div className="min-h-[400px]">
-            {assetsViewMode === "list" ? (
+            {/* Table renders its own skeleton while loading, but falls through to the shared
+                empty state at zero results so the no-results case is not a headers-only table. */}
+            {assetsViewMode === "list" && (isLoading || sortedResults.length > 0) ? (
               <AssetTableView
                 assets={sortedResults}
                 sortField={sortField ?? undefined}
@@ -663,11 +666,11 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                 ))}
               </div>
             ) : sortedResults.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <i className="bi bi-image text-5xl text-muted-foreground/30 mb-4" />
-                <h3 className="text-lg font-medium mb-1">No assets found</h3>
-                <p className="text-sm text-muted-foreground">Try adjusting your filters or search terms</p>
-              </div>
+              <EmptyState
+                icon="bi-image"
+                title="No assets found"
+                description="Try adjusting your filters or search terms"
+              />
             ) : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
                 {sortedResults.map((asset) => {
