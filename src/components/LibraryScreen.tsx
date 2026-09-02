@@ -206,6 +206,11 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   // Main Galleries tab chips (same new pattern)
   const [galleryTabChips, setGalleryTabChips] = useState<GalleryFilterChip[]>([]);
   const galleryTabFilterBarHandleRef = useRef<GalleryFilterBarHandle | null>(null);
+  // Search handles so the empty state's "clear all" can reset the input text,
+  // not just the query state the parent holds.
+  const gallerySearchHandleRef = useRef<FacetedSearchWithTypeaheadHandle | null>(null);
+  const folderSearchHandleRef = useRef<FacetedSearchWithTypeaheadHandle | null>(null);
+  const favGallerySearchHandleRef = useRef<FacetedSearchWithTypeaheadHandle | null>(null);
   const favAssetsFilterBarHandleRef = useRef<FilterBarHandle | null>(null);
   // Session-local asset favorite state, seeded from the mock data flags.
   // Gallery favorite state lives on galleryList (already stateful).
@@ -1553,8 +1558,11 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                   }
                 };
 
+                // Clear Filters means filters, nothing else. Search terms live in this
+                // same chip row but belong to the search input, so they survive: the X
+                // in the input clears those, and the empty state's "start over" clears
+                // both. Every other tab's chip row was already filters-only.
                 const handleClearAllChips = () => {
-                  searchHandleRef.current?.clearFacetsOnly();
                   filterBarHandleRef.current?.clearAll();
                 };
 
@@ -1578,7 +1586,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                       onClick={handleClearAllChips}
                       className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                     >
-                      Clear all
+                      Clear Filters
                     </button>
                   </div>
                 );
@@ -1641,8 +1649,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 icon="bi-image"
                 title="No assets found"
                 onClearAll={() => {
-                  // Unlike the chip row's Clear all (which keeps the typed query),
-                  // the empty state resets everything so the user starts over.
+                  // Unlike the chip row's Clear Filters, the empty state resets the
+                  // search too, so the user genuinely starts over.
                   searchHandleRef.current?.clearAll();
                   filterBarHandleRef.current?.clearAll();
                 }}
@@ -1712,7 +1720,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             {/* Search Row with Utility Cluster */}
             <div className="flex items-center gap-4 mb-3 cq-search-row">
               <div className="flex-1 min-w-0 cq-search-input">
-                <FacetedSearchWithTypeahead onSearch={setGallerySearchQuery} placeholder="Search" />
+                <FacetedSearchWithTypeahead handleRef={gallerySearchHandleRef} onSearch={setGallerySearchQuery} placeholder="Search" />
               </div>
 
               <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
@@ -1816,7 +1824,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     onClick={() => galleryTabFilterBarHandleRef.current?.clearAll()}
                     className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                   >
-                    Clear all
+                    Clear Filters
                   </button>
                 </div>
               )}
@@ -1939,7 +1947,16 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 <EmptyState
                   icon="bi-images"
                   title="No galleries found"
-                  description={gallerySearchQuery ? "Try adjusting your search terms" : archivedGalleriesOnly ? "No archived galleries" : "Try adjusting your filters"}
+                  onClearAll={() => {
+                    // Archived is cleared along with the rest: it reads as a pill in the
+                    // filter row, and leaving it on would make "clear all" a no-op
+                    // whenever it is the reason nothing came back.
+                    gallerySearchHandleRef.current?.clearAll();
+                    galleryTabFilterBarHandleRef.current?.clearAll();
+                    setUnsortedGalleriesOnly(false);
+                    setFavoriteGalleriesOnly(false);
+                    setArchivedGalleriesOnly(false);
+                  }}
                   className="min-h-[400px]"
                 />
               ) : galleriesViewMode === "list" ? (
@@ -2012,7 +2029,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             {/* Search Row with Utility Cluster */}
             <div className="flex items-center gap-4 mb-3 cq-search-row">
               <div className="flex-1 min-w-0 cq-search-input">
-                <FacetedSearchWithTypeahead onSearch={(query) => setFolderSearchQuery(query)} placeholder="Search" />
+                <FacetedSearchWithTypeahead handleRef={folderSearchHandleRef} onSearch={(query) => setFolderSearchQuery(query)} placeholder="Search" />
               </div>
 
               <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
@@ -2053,11 +2070,16 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
               const visibleFolders = searchFiltered.filter(f => archivedFoldersOnly || f.archived !== true);
               const filteredFolderCards = visibleFolders
                 .map(f => ({ id: f.id, name: f.name, galleryCount: countAllGalleries(f), timeAgo: "—", archived: f.archived === true }));
+              const folderNarrowed = folderSearchQuery.trim() !== "" || archivedFoldersOnly;
               return filteredFolderCards.length === 0 ? (
                 <EmptyState
                   icon="bi-folder"
                   title="No folders"
-                  description={folderSearchQuery ? "No folders match your search." : "Create a folder to get started."}
+                  description={folderNarrowed ? undefined : "Create a folder to get started."}
+                  onClearAll={folderNarrowed ? () => {
+                    folderSearchHandleRef.current?.clearAll();
+                    setArchivedFoldersOnly(false);
+                  } : undefined}
                 />
               ) : folderViewMode === "table" ? (
                 <FolderTableView
@@ -2118,7 +2140,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 {/* Search Row with Utility Cluster */}
                 <div className="flex items-center gap-4 mb-3 cq-search-row">
                   <div className="flex-1 min-w-0 cq-search-input">
-                    <FacetedSearchWithTypeahead onSearch={setFavGallerySearch} placeholder="Search" />
+                    <FacetedSearchWithTypeahead handleRef={favGallerySearchHandleRef} onSearch={setFavGallerySearch} placeholder="Search" />
                   </div>
                   <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
                   {favGalleriesViewMode === "grid" && (
@@ -2216,7 +2238,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                         onClick={() => favGalleryFilterBarHandleRef.current?.clearAll()}
                         className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                       >
-                        Clear all
+                        Clear Filters
                       </button>
                     </div>
                   )}
@@ -2296,13 +2318,25 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
                 </StickyHeaderBlock>{/* End sticky header */}
 
-                {favGalleries.length === 0 ? (
-                  <EmptyState
-                    icon="bi-heart"
-                    title="No favorited galleries"
-                    description="Tap the heart on any gallery to add it to Favorites"
-                  />
-                ) : favGalleriesViewMode === "list" ? (
+                {favGalleries.length === 0 ? (() => {
+                  // Only offer the reset link when something is narrowing the list.
+                  // With nothing applied, Favorites is empty because nothing is favorited.
+                  const favGalleryNarrowed =
+                    favGallerySearch.trim() !== "" || favGalleryChips.length > 0 || favArchivedOnly;
+
+                  return (
+                    <EmptyState
+                      icon="bi-heart"
+                      title="No favorited galleries"
+                      description={favGalleryNarrowed ? undefined : "Tap the heart on any gallery to add it to Favorites"}
+                      onClearAll={favGalleryNarrowed ? () => {
+                        favGallerySearchHandleRef.current?.clearAll();
+                        favGalleryFilterBarHandleRef.current?.clearAll();
+                        setFavArchivedOnly(false);
+                      } : undefined}
+                    />
+                  );
+                })() : favGalleriesViewMode === "list" ? (
                   <GalleryTableView
                     selectedGalleries={favSelectedGalleries}
                     onSelectionChange={setFavSelectedGalleries}
@@ -2494,7 +2528,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                           onClick={() => favAssetsFilterBarHandleRef.current?.clearAll()}
                           className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                         >
-                          Clear all
+                          Clear Filters
                         </button>
                       </div>
                     );

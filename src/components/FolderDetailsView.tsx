@@ -772,7 +772,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                     onClick={() => filterBarHandleRef.current?.clearAll()}
                     className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                   >
-                    Clear all
+                    Clear Filters
                   </button>
                 </div>
               );
@@ -1011,7 +1011,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   onClick={() => galleryFilterBarHandleRef.current?.clearAll()}
                   className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                 >
-                  Clear all
+                  Clear Filters
                 </button>
               </div>
             )}

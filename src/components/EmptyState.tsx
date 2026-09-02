@@ -10,6 +10,11 @@ interface EmptyStateProps {
    * Wire this up on a no-results state to offer the user a way out. Renders the
    * standard reset sentence with an inline link and should clear every filter
    * AND the search, dropping the user back to an unfiltered view.
+   *
+   * This is deliberately a bigger hammer than the filter chip row's "Clear
+   * Filters", which leaves the search alone. Hence "start over" rather than
+   * another "clear" label: two clears with different blast radii on one screen
+   * read as the same action.
    */
   onClearAll?: () => void;
   /** Link text at the end of the reset sentence. Keep it a verb phrase. */
@@ -29,19 +34,20 @@ export function EmptyState({
   title,
   description,
   onClearAll,
-  clearLabel = "clear all",
+  clearLabel = "start over",
   variant = "no-results",
   children,
   className,
 }: EmptyStateProps) {
   const isEmpty = variant === "empty";
+  const bodyClass = cn("text-sm text-muted-foreground", isEmpty && "max-w-sm mb-8");
 
   return (
     <div className={cn("flex flex-col items-center justify-center py-16 text-center", className)}>
       <i className={cn("bi text-5xl text-muted-foreground/30 mb-4", icon)} />
       <h3 className={cn("mb-1", isEmpty ? "text-xl font-semibold mb-2" : "text-lg font-medium")}>{title}</h3>
       {onClearAll ? (
-        <p className={cn("text-sm text-muted-foreground", isEmpty && "max-w-sm mb-8")}>
+        <p className={bodyClass}>
           Try adjusting your search or filters, or{" "}
           <button
             type="button"
@@ -52,9 +58,7 @@ export function EmptyState({
           </button>
         </p>
       ) : (
-        description && (
-          <p className={cn("text-sm text-muted-foreground", isEmpty && "max-w-sm mb-8")}>{description}</p>
-        )
+        description && <p className={bodyClass}>{description}</p>
       )}
       {children}
     </div>
