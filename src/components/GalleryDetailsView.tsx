@@ -20,6 +20,7 @@ import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFi
 import { relevanceScore } from "@/lib/relevance";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { ErrorState } from "@/components/ErrorState";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
@@ -179,7 +180,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
   const [customDateRanges, setCustomDateRanges] = useState<Record<string, CustomRange>>({});
 
   // Use the library search hook
-  const { results, allAssets, isLoading, search } = useLibrarySearch();
+  const { results, allAssets, isLoading, isError, search, retry } = useLibrarySearch();
 
   // Build breadcrumb path
   const breadcrumbPath = useMemo(() => {
@@ -635,7 +636,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           <div className="min-h-[400px]">
             {/* Table renders its own skeleton while loading, but falls through to the shared
                 empty state at zero results so the no-results case is not a headers-only table. */}
-            {assetsViewMode === "list" && (isLoading || sortedResults.length > 0) ? (
+            {assetsViewMode === "list" && !isError && (isLoading || sortedResults.length > 0) ? (
               <AssetTableView
                 assets={sortedResults}
                 sortField={sortField ?? undefined}
@@ -666,6 +667,8 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   </div>
                 ))}
               </div>
+            ) : isError ? (
+              <ErrorState onRetry={retry} />
             ) : sortedResults.length === 0 ? (
               <EmptyState
                 icon="bi-image"
