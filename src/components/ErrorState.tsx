@@ -3,7 +3,13 @@ import { Button } from "@/components/ui/button";
 
 interface ErrorStateProps {
   title?: string;
+  /** What failed. Rendered on its own line. */
   description?: React.ReactNode;
+  /**
+   * Reassurance that the user's work survived, kept on a separate line so it
+   * never wraps up against the sentence above it.
+   */
+  reassurance?: React.ReactNode;
   /**
    * Re-runs the request that failed, with the user's query and filters intact.
    * Leaving this off produces a dead end, so only do that where there is
@@ -27,7 +33,8 @@ interface ErrorStateProps {
  */
 export function ErrorState({
   title = "Something went wrong",
-  description = "We couldn't run your search. Your search and filters have been kept.",
+  description = "We couldn't run your search.",
+  reassurance = "Your search and filters have been kept.",
   onRetry,
   retryLabel = "Try again",
   className,
@@ -39,9 +46,10 @@ export function ErrorState({
     >
       <i className="bi bi-exclamation-triangle text-5xl text-muted-foreground/40 mb-4" />
       <h3 className="text-lg font-medium mb-1">{title}</h3>
-      {description && <p className="text-sm text-muted-foreground max-w-sm mb-6">{description}</p>}
+      {description && <p className="text-sm text-muted-foreground max-w-sm">{description}</p>}
+      {reassurance && <p className="text-sm text-muted-foreground max-w-sm">{reassurance}</p>}
       {onRetry && (
-        <Button variant="outline" onClick={onRetry}>
+        <Button variant="primary-outline" className="mt-6" onClick={onRetry}>
           <i className="bi bi-arrow-clockwise mr-2" />
           {retryLabel}
         </Button>
