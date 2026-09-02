@@ -1640,7 +1640,12 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
               <EmptyState
                 icon="bi-image"
                 title="No assets found"
-                description="Try adjusting your filters or search terms"
+                onClearAll={() => {
+                  // Unlike the chip row's Clear all (which keeps the typed query),
+                  // the empty state resets everything so the user starts over.
+                  searchHandleRef.current?.clearAll();
+                  filterBarHandleRef.current?.clearAll();
+                }}
               />
             ) : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
@@ -2510,13 +2515,29 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
                 </StickyHeaderBlock>{/* End sticky header */}
 
-                {favFilteredAssets.length === 0 ? (
-                  <EmptyState
-                    icon="bi-heart"
-                    title="No favorited assets"
-                    description={Object.keys(favAssetFilters).length > 0 ? "Try adjusting your filters" : "Tap the heart on any asset to add it to Favorites"}
-                  />
-                ) : favAssetsViewMode === "list" ? (
+                {favFilteredAssets.length === 0 ? (() => {
+                  // Only offer the reset link when something is actually narrowing the list.
+                  // With nothing applied, Favorites is empty because nothing is favorited yet.
+                  const favNarrowed =
+                    Object.keys(favAssetFilters).length > 0 ||
+                    favAssetSearch.trim() !== "" ||
+                    favBrandedActive ||
+                    favUnviewedActive;
+
+                  return (
+                    <EmptyState
+                      icon="bi-heart"
+                      title="No favorited assets"
+                      description={favNarrowed ? undefined : "Tap the heart on any asset to add it to Favorites"}
+                      onClearAll={favNarrowed ? () => {
+                        setFavAssetSearch("");
+                        setFavBrandedActive(false);
+                        setFavUnviewedActive(false);
+                        favAssetsFilterBarHandleRef.current?.clearAll();
+                      } : undefined}
+                    />
+                  );
+                })() : favAssetsViewMode === "list" ? (
                   <AssetTableView
                     assets={favFilteredAssets}
                     sortField={favAssetSort}

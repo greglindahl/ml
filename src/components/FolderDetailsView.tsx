@@ -8,7 +8,7 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { SectionTabs } from "@/components/SectionTabs";
 import { StickyHeaderBlock } from "@/components/StickyHeaderBlock";
 import { Button } from "@/components/ui/button";
-import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
+import { FacetedSearchWithTypeahead, FacetedSearchWithTypeaheadHandle } from "@/components/FacetedSearchWithTypeahead";
 import { FilterBar, FilterBarHandle } from "@/components/FilterBar";
 import { GalleryFilterBar, type GalleryFilterBarHandle, type GalleryFilterChip } from "@/components/GalleryFilterBar";
 import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
@@ -273,6 +273,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   // Custom ranges keyed by date filter id ("added-date" / "captured-date")
   const [customDateRanges, setCustomDateRanges] = useState<Record<string, CustomRange>>({});
   const filterBarHandleRef = useRef<FilterBarHandle | null>(null);
+  const searchHandleRef = useRef<FacetedSearchWithTypeaheadHandle | null>(null);
   // Galleries tab filter chips (new pattern, matching the assets bars)
   const [galleryFilterChips, setGalleryFilterChips] = useState<GalleryFilterChip[]>([]);
   const galleryFilterBarHandleRef = useRef<GalleryFilterBarHandle | null>(null);
@@ -641,7 +642,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           {/* Search Row with Utility Cluster */}
           <div className="flex items-center gap-4 mb-3 cq-search-row">
             <div className="flex-1 min-w-0 cq-search-input">
-              <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
+              <FacetedSearchWithTypeahead handleRef={searchHandleRef} onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
             </div>
 
             <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
@@ -836,7 +837,10 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               <EmptyState
                 icon="bi-image"
                 title="No assets found"
-                description="Try adjusting your filters or search terms"
+                onClearAll={() => {
+                  searchHandleRef.current?.clearAll();
+                  filterBarHandleRef.current?.clearAll();
+                }}
               />
             ) : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">

@@ -10,7 +10,7 @@ import { SectionTabs } from "@/components/SectionTabs";
 import { StickyHeaderBlock } from "@/components/StickyHeaderBlock";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
+import { FacetedSearchWithTypeahead, FacetedSearchWithTypeaheadHandle } from "@/components/FacetedSearchWithTypeahead";
 import { GalleryDetailsFilterBar, GalleryDetailsFilterBarHandle, ActiveFilterChip } from "@/components/GalleryDetailsFilterBar";
 import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
@@ -114,6 +114,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
   // Filter chips state and ref
   const [filterChips, setFilterChips] = useState<ActiveFilterChip[]>([]);
   const filterBarHandleRef = useRef<GalleryDetailsFilterBarHandle | null>(null);
+  const searchHandleRef = useRef<FacetedSearchWithTypeaheadHandle | null>(null);
 
   // Filters sheet state for narrow widths
   const [filtersSheetOpen, setFiltersSheetOpen] = useState(false);
@@ -496,7 +497,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           {/* Search Row with Utility Cluster */}
           <div className="flex items-center gap-4 mb-3 cq-search-row">
             <div className="flex-1 min-w-0 cq-search-input">
-              <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
+              <FacetedSearchWithTypeahead handleRef={searchHandleRef} onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
             </div>
 
             <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
@@ -669,7 +670,10 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
               <EmptyState
                 icon="bi-image"
                 title="No assets found"
-                description="Try adjusting your filters or search terms"
+                onClearAll={() => {
+                  searchHandleRef.current?.clearAll();
+                  filterBarHandleRef.current?.clearAll();
+                }}
               />
             ) : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
