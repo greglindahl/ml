@@ -226,7 +226,7 @@ export function RequestsScreen({ isMobile = false, initialTab }: RequestsScreenP
                   onClick={handleClearAllCampaignsChips}
                   className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                 >
-                  Clear all
+                  Clear Filters
                 </button>
               </div>
             )}
@@ -322,7 +322,7 @@ export function RequestsScreen({ isMobile = false, initialTab }: RequestsScreenP
                   onClick={handleClearAllRequestsChips}
                   className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                 >
-                  Clear all
+                  Clear Filters
                 </button>
               </div>
             )}

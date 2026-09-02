@@ -470,7 +470,7 @@ export function AdminScreen({ isMobile = false, initialTab }: AdminScreenProps) 
                   onClick={handleClearAllUsersChips}
                   className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                 >
-                  Clear all
+                  Clear Filters
                 </button>
               </div>
             )}
