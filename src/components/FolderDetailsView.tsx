@@ -25,6 +25,7 @@ import { NewGalleryDialog, type NewGalleryData } from "@/components/NewGalleryDi
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { ErrorState } from "@/components/ErrorState";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -279,7 +280,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   const galleryFilterBarHandleRef = useRef<GalleryFilterBarHandle | null>(null);
 
   // Use the library search hook
-  const { results, allAssets, isLoading, search } = useLibrarySearch();
+  const { results, allAssets, isLoading, isError, search, retry } = useLibrarySearch();
 
   // PORTAL-12949: selection clears (mode stays) on facet change, new search, or
   // page-size change; gallery selection clears on gallery facet/page changes.
@@ -802,7 +803,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           <div className="min-h-[400px]">
             {/* Table renders its own skeleton while loading, but falls through to the shared
                 empty state at zero results so the no-results case is not a headers-only table. */}
-            {assetsViewMode === "list" && (isLoading || sortedResults.length > 0) ? (
+            {assetsViewMode === "list" && !isError && (isLoading || sortedResults.length > 0) ? (
               <AssetTableView
                 assets={sortedResults}
                 sortField={sortField ?? undefined}
@@ -833,6 +834,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   </div>
                 ))}
               </div>
+            ) : isError ? (
+              <ErrorState onRetry={retry} />
             ) : sortedResults.length === 0 ? (
               <EmptyState
                 icon="bi-image"

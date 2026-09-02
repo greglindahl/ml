@@ -47,6 +47,7 @@ import { AddGalleryDialog } from "@/components/AddGalleryDialog";
 import { NewGalleryDialog, type NewGalleryData } from "@/components/NewGalleryDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { ErrorState } from "@/components/ErrorState";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleriesDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -821,7 +822,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   }, [sortField, activeQuery]);
 
   // Use the library search hook
-  const { results, allAssets, isLoading, totalCount, search } = useLibrarySearch();
+  const { results, allAssets, isLoading, isError, totalCount, search, retry } = useLibrarySearch();
 
   // PORTAL-12949: selection clears (multi-select mode stays on) when a filter
   // facet changes, a new search runs, or the page size changes.
@@ -1615,7 +1616,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             <div className="min-h-[400px]">
             {/* Table renders its own skeleton while loading, but falls through to the shared
                 empty state at zero results so the no-results case is not a headers-only table. */}
-            {assetsViewMode === "list" && (isLoading || sortedResults.length > 0) ? (
+            {assetsViewMode === "list" && !isError && (isLoading || sortedResults.length > 0) ? (
               <AssetTableView
                 assets={sortedResults}
                 sortField={sortField ?? undefined}
@@ -1644,6 +1645,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                   </div>
                 ))}
               </div>
+            ) : isError ? (
+              <ErrorState onRetry={retry} />
             ) : sortedResults.length === 0 ? (
               <EmptyState
                 icon="bi-image"
