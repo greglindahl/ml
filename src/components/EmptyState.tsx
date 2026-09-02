@@ -12,7 +12,7 @@ interface EmptyStateProps {
    * AND the search, dropping the user back to an unfiltered view.
    */
   onClearAll?: () => void;
-  /** Link text inside the reset sentence. Keep it a verb phrase. */
+  /** Link text at the end of the reset sentence. Keep it a verb phrase. */
   clearLabel?: string;
   /**
    * "no-results" — a query or filter excluded everything. Terse.
@@ -29,7 +29,7 @@ export function EmptyState({
   title,
   description,
   onClearAll,
-  clearLabel = "clearing filters and search",
+  clearLabel = "clear all",
   variant = "no-results",
   children,
   className,
@@ -42,15 +42,14 @@ export function EmptyState({
       <h3 className={cn("mb-1", isEmpty ? "text-xl font-semibold mb-2" : "text-lg font-medium")}>{title}</h3>
       {onClearAll ? (
         <p className={cn("text-sm text-muted-foreground", isEmpty && "max-w-sm mb-8")}>
-          Try{" "}
+          Try adjusting your search or filters, or{" "}
           <button
             type="button"
             onClick={onClearAll}
             className="text-primary hover:underline focus-visible:outline-none focus-visible:underline"
           >
             {clearLabel}
-          </button>{" "}
-          to start over.
+          </button>
         </p>
       ) : (
         description && (
