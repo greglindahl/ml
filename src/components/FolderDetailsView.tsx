@@ -8,7 +8,7 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { SectionTabs } from "@/components/SectionTabs";
 import { StickyHeaderBlock } from "@/components/StickyHeaderBlock";
 import { Button } from "@/components/ui/button";
-import { FacetedSearchWithTypeahead } from "@/components/FacetedSearchWithTypeahead";
+import { FacetedSearchWithTypeahead, FacetedSearchWithTypeaheadHandle } from "@/components/FacetedSearchWithTypeahead";
 import { FilterBar, FilterBarHandle } from "@/components/FilterBar";
 import { GalleryFilterBar, type GalleryFilterBarHandle, type GalleryFilterChip } from "@/components/GalleryFilterBar";
 import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
@@ -24,6 +24,7 @@ import { AddGalleryDialog } from "@/components/AddGalleryDialog";
 import { NewGalleryDialog, type NewGalleryData } from "@/components/NewGalleryDialog";
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/EmptyState";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -272,6 +273,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   // Custom ranges keyed by date filter id ("added-date" / "captured-date")
   const [customDateRanges, setCustomDateRanges] = useState<Record<string, CustomRange>>({});
   const filterBarHandleRef = useRef<FilterBarHandle | null>(null);
+  const searchHandleRef = useRef<FacetedSearchWithTypeaheadHandle | null>(null);
   // Galleries tab filter chips (new pattern, matching the assets bars)
   const [galleryFilterChips, setGalleryFilterChips] = useState<GalleryFilterChip[]>([]);
   const galleryFilterBarHandleRef = useRef<GalleryFilterBarHandle | null>(null);
@@ -640,7 +642,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           {/* Search Row with Utility Cluster */}
           <div className="flex items-center gap-4 mb-3 cq-search-row">
             <div className="flex-1 min-w-0 cq-search-input">
-              <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
+              <FacetedSearchWithTypeahead handleRef={searchHandleRef} onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
             </div>
 
             <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
@@ -770,7 +772,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                     onClick={() => filterBarHandleRef.current?.clearAll()}
                     className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                   >
-                    Clear all
+                    Clear Filters
                   </button>
                 </div>
               );
@@ -798,7 +800,9 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
 
           {/* Assets Grid/Table with Loading State */}
           <div className="min-h-[400px]">
-            {assetsViewMode === "list" ? (
+            {/* Table renders its own skeleton while loading, but falls through to the shared
+                empty state at zero results so the no-results case is not a headers-only table. */}
+            {assetsViewMode === "list" && (isLoading || sortedResults.length > 0) ? (
               <AssetTableView
                 assets={sortedResults}
                 sortField={sortField ?? undefined}
@@ -830,11 +834,14 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 ))}
               </div>
             ) : sortedResults.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <i className="bi bi-image text-5xl text-muted-foreground/30 mb-4" />
-                <h3 className="text-lg font-medium mb-1">No assets found</h3>
-                <p className="text-sm text-muted-foreground">Try adjusting your filters or search terms</p>
-              </div>
+              <EmptyState
+                icon="bi-image"
+                title="No assets found"
+                onClearAll={() => {
+                  searchHandleRef.current?.clearAll();
+                  filterBarHandleRef.current?.clearAll();
+                }}
+              />
             ) : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
                 {sortedResults.map((asset) => {
@@ -1004,7 +1011,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                   onClick={() => galleryFilterBarHandleRef.current?.clearAll()}
                   className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                 >
-                  Clear all
+                  Clear Filters
                 </button>
               </div>
             )}
@@ -1137,16 +1144,16 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             
             if (filteredGalleries.length === 0) {
               return (
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <i className="bi bi-images text-5xl text-muted-foreground/30 mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">{archivedGalleriesOnly ? "No archived galleries" : favoriteGalleriesOnly ? "No favorited galleries" : "No galleries yet"}</h3>
-                  <p className="text-sm text-muted-foreground max-w-sm mb-8">
-                    {archivedGalleriesOnly ? "Archive a gallery to see it here." : favoriteGalleriesOnly ? "Favorite a gallery to see it here." : "Add existing galleries to this folder or create a new one."}
-                  </p>
+                <EmptyState
+                  variant="empty"
+                  icon="bi-images"
+                  title={archivedGalleriesOnly ? "No archived galleries" : favoriteGalleriesOnly ? "No favorited galleries" : "No galleries yet"}
+                  description={archivedGalleriesOnly ? "Archive a gallery to see it here." : favoriteGalleriesOnly ? "Favorite a gallery to see it here." : "Add existing galleries to this folder or create a new one."}
+                >
                   {!archivedGalleriesOnly && !favoriteGalleriesOnly && (
                     <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setAddGalleryDialogOpen(true)}>Add Galleries</Button>
                   )}
-                </div>
+                </EmptyState>
               );
             }
             
@@ -1267,11 +1274,11 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             
             if (filteredChildFolders.length === 0) {
               return (
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <i className="bi bi-folder text-5xl text-muted-foreground/30 mb-4" />
-                  <h3 className="text-lg font-medium mb-1">No folders</h3>
-                  <p className="text-sm text-muted-foreground">No sub-folders in this folder.</p>
-                </div>
+                <EmptyState
+                  icon="bi-folder"
+                  title="No folders"
+                  description="No sub-folders in this folder."
+                />
               );
             }
             
