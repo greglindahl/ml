@@ -40,7 +40,7 @@ const ORIENTATION_LABELS: Record<string, string> = {
 };
 import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, findFolderAncestorIds, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor, enrichGallery, sortGalleries, GALLERY_SORT_OPTIONS, GallerySortField } from "@/lib/mockFolderData";
 import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
-import { relevanceScore } from "@/lib/relevance";
+import { relevanceScore, capRelevanceResults, isRelevanceCapped } from "@/lib/relevance";
 import { FolderSidebar } from "@/components/FolderSidebar";
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
@@ -48,6 +48,7 @@ import { NewGalleryDialog, type NewGalleryData } from "@/components/NewGalleryDi
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
+import { RelevanceLimitNotice } from "@/components/RelevanceLimitNotice";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleriesDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -984,11 +985,12 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     if (!sortField) return filteredResults;
     if (sortField === "relevance") {
       const q = activeQuery.toLowerCase();
-      return [...filteredResults].sort((a, b) => {
+      // Relevance-sorted search is capped; every other sort pages through everything.
+      return capRelevanceResults([...filteredResults].sort((a, b) => {
         const cmp = relevanceScore(a, q) - relevanceScore(b, q);
         if (cmp !== 0) return sortDirection === "asc" ? cmp : -cmp;
         return b.dateCreated.getTime() - a.dateCreated.getTime();
-      });
+      }), sortField);
     }
     return [...filteredResults].sort((a, b) => {
       let cmp = 0;
@@ -1713,6 +1715,12 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                   );
                 })}
               </div>
+            )}
+
+            {/* Sits below both grid and table: relevance search stops at the cap,
+                and with no total count on this view nothing else says so. */}
+            {!isLoading && !isError && isRelevanceCapped(filteredResults.length, sortField) && (
+              <RelevanceLimitNotice />
             )}
             </div>
           </TabsContent>
