@@ -23,7 +23,7 @@ export const RELEVANCE_RESULT_LIMIT = 1000;
  * Set this to RELEVANCE_RESULT_LIMIT (or delete the cap) once there is a real
  * backend behind the search.
  */
-export const PROTOTYPE_RELEVANCE_LIMIT = 40;
+export const PROTOTYPE_RELEVANCE_LIMIT = 20;
 
 /**
  * Applies the relevance cap. Returns the list untouched for every other sort,
