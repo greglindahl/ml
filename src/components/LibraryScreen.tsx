@@ -1420,7 +1420,10 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
               </div>
 
               <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
-                {assetsViewMode === "grid" && (
+                {/* Sort control renders in BOTH grid and table. Relevance has no column
+                    header, so without this the table can neither show that results are
+                    relevance-ranked nor offer a way back to it after a column sort. */}
+                {(
                   <Tooltip delayDuration={700}>
                     <DropdownMenu>
                       <TooltipTrigger asChild>
@@ -2413,7 +2416,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     <FacetedSearchWithTypeahead onSearch={setFavAssetSearch} assets={favAssetsBase} placeholder="Search by people, tags, filenames…" />
                   </div>
                   <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
-                  {favAssetsViewMode === "grid" && (
+                  {/* Sort control renders in BOTH grid and table — see All Assets. */}
+                  {(
                     <Tooltip delayDuration={700}>
                       <DropdownMenu>
                         <TooltipTrigger asChild>
