@@ -211,7 +211,8 @@ export function FacetedSearchWithDropdown({ onSearch, assets = [] }: FacetedSear
                       return (
                         <Badge
                           key={facet}
-                          variant={selectedFacets.includes(facet) ? "default" : "outline"}
+                          colorStyle={selectedFacets.includes(facet) ? "primary" : "light"}
+                          theme={selectedFacets.includes(facet) ? "default" : "subtle"}
                           className={`cursor-pointer hover:bg-accent transition-colors text-xs ${count === 0 ? "opacity-50" : ""}`}
                           onClick={() => handleFacetToggle(facet)}
                         >
