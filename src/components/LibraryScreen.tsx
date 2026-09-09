@@ -40,7 +40,7 @@ const ORIENTATION_LABELS: Record<string, string> = {
 };
 import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, findFolderAncestorIds, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor, enrichGallery, sortGalleries, GALLERY_SORT_OPTIONS, GallerySortField } from "@/lib/mockFolderData";
 import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
-import { relevanceScore, capRelevanceResults, isRelevanceCapped } from "@/lib/relevance";
+import { relevanceScore, capRelevanceResults, isRelevanceCapped, RELEVANCE_RESULT_LIMIT } from "@/lib/relevance";
 import { FolderSidebar } from "@/components/FolderSidebar";
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
@@ -49,6 +49,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
 import { RelevanceLimitNotice } from "@/components/RelevanceLimitNotice";
+import { RelevanceIndicator } from "@/components/RelevanceIndicator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleriesDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -1419,6 +1420,11 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} onSelectedFacetsChange={setSearchSelectedFacets} handleRef={searchHandleRef} placeholder="Search by people, tags, filenames…" />
               </div>
 
+              {/* Table view only: the grid says "Relevance" in its sort dropdown, so a
+                  second statement there would be redundant. The search input above is
+                  flex-1 min-w-0, so it shrinks to make room rather than this wrapping. */}
+              {assetsViewMode === "list" && sortField === "relevance" && <RelevanceIndicator />}
+
               <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
                 {assetsViewMode === "grid" && (
                   <Tooltip delayDuration={700}>
@@ -1435,7 +1441,16 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                       <DropdownMenuContent className="bg-white w-48">
                         {visibleSortOptions.map(opt => (
                           <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
-                            {opt.label}
+                            <span className="flex flex-col">
+                              {opt.label}
+                              {/* Relevance is the only capped sort, so it is the only one
+                                  whose result set differs. Saying so here sets the
+                                  expectation before the list changes size, rather than
+                                  explaining the jump after it happens. */}
+                              {opt.value === "relevance" && (
+                                <span className="text-xs text-muted-foreground">Top {RELEVANCE_RESULT_LIMIT.toLocaleString()} only</span>
+                              )}
+                            </span>
                             {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
                           </DropdownMenuItem>
                         ))}
@@ -1954,11 +1969,24 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
             {/* Galleries Grid/Table */}
             <div className="min-h-[400px]">
-              {visibleGalleries.length === 0 ? (
+              {(() => {
+              // True only when the archived toggle is the sole thing narrowing the list.
+              // With a search or any other filter also on, one of those may be the real
+              // cause, so the generic reset is the honest message.
+              const archivedOnlyNarrowing = archivedGalleriesOnly
+                && !gallerySearchQuery.trim()
+                && galleryTabChips.length === 0
+                && !unsortedGalleriesOnly
+                && !favoriteGalleriesOnly;
+              return visibleGalleries.length === 0 ? (
                 <EmptyState
                   icon="bi-images"
-                  title="No galleries found"
-                  onClearAll={() => {
+                  // Viewing archived with none to show is its own state, not a filtering
+                  // accident. Telling the user to adjust something would be wrong: there
+                  // is nothing to adjust, there simply are no archived galleries.
+                  title={archivedOnlyNarrowing ? "No archived galleries" : "No galleries found"}
+                  description={archivedOnlyNarrowing ? "Archive a gallery to see it here." : undefined}
+                  onClearAll={archivedOnlyNarrowing ? undefined : () => {
                     // Archived is cleared along with the rest: it reads as a pill in the
                     // filter row, and leaving it on would make "clear all" a no-op
                     // whenever it is the reason nothing came back.
@@ -2030,7 +2058,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     );
                   })}
                 </div>
-              )}
+              );
+              })()}
             </div>
           </TabsContent>
 
@@ -2086,7 +2115,11 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 <EmptyState
                   icon="bi-folder"
                   title="No folders"
-                  description={folderNarrowed ? undefined : "Create a folder to get started."}
+                  description={
+                    folderSearchQuery.trim() ? "No folders match your search."
+                      : folderNarrowed ? undefined
+                      : "Create a folder to get started."
+                  }
                   onClearAll={folderNarrowed ? () => {
                     folderSearchHandleRef.current?.clearAll();
                     setArchivedFoldersOnly(false);

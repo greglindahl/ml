@@ -649,7 +649,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             </div>
 
             <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
-              {assetsViewMode === "grid" && (
+                {assetsViewMode === "grid" && (
                 <Tooltip delayDuration={700}>
                   <DropdownMenu>
                     <TooltipTrigger asChild>
