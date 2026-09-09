@@ -25,7 +25,6 @@ export function RelevanceIndicator({ className }: RelevanceIndicatorProps) {
       className={cn("flex items-center gap-1.5 flex-shrink-0 text-[13px] text-muted-foreground", className)}
       aria-live="polite"
     >
-      <i className="bi bi-sort-down w-4 h-4 inline-flex items-center justify-center leading-none" aria-hidden="true" />
       {/* Below 1200px the label shortens rather than the row rewrapping. */}
       <span className="cq-relevance-full whitespace-nowrap">Ranked by relevance</span>
       <span className="cq-relevance-short whitespace-nowrap">Relevance</span>
