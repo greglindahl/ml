@@ -504,10 +504,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             </div>
 
             <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
-              {/* Sort control renders in BOTH grid and table. Relevance has no column
-                  header, so without this the table can neither show that results are
-                  relevance-ranked nor offer a way back to it after a column sort. */}
-              {(
+              {assetsViewMode === "grid" && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-10 gap-2 px-3 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]" title={`Sort: ${sortField ? SORT_LABELS[sortField] : "Default"}`}>

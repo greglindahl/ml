@@ -442,6 +442,26 @@
   }
 }
 
+/* Relevance indicator label.
+   Stays on the search row at every supported width. Shortening to "Relevance"
+   is a last resort before the layout changes, so it kicks in at the md/lg
+   boundary rather than earlier: at a 1200px viewport this container measures
+   1080px and the full label fits with room to spare. Full label is the default
+   so the short one never shows without container query support. */
+.cq-relevance-short {
+  display: none;
+}
+
+@container content (max-width: 899px) {
+  .cq-relevance-full {
+    display: none;
+  }
+
+  .cq-relevance-short {
+    display: inline;
+  }
+}
+
 /* Compact filter pills on medium containers */
 @container content (min-width: 640px) and (max-width: 899px) {
   .cq-compact-md {

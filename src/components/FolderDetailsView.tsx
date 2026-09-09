@@ -649,10 +649,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             </div>
 
             <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
-              {/* Sort control renders in BOTH grid and table. Relevance has no column
-                    header, so without this the table can neither show that results are
-                    relevance-ranked nor offer a way back to it after a column sort. */}
-                {(
+                {assetsViewMode === "grid" && (
                 <Tooltip delayDuration={700}>
                   <DropdownMenu>
                     <TooltipTrigger asChild>

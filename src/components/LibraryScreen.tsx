@@ -49,6 +49,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
 import { RelevanceLimitNotice } from "@/components/RelevanceLimitNotice";
+import { RelevanceIndicator } from "@/components/RelevanceIndicator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleriesDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -1070,16 +1071,27 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     [search]
   );
 
-  // With no query left, Relevance has nothing to rank against — retire it and
-  // restore the user's last selected sort (their choice persists in-app until
-  // changed; Added is only the never-chose-anything fallback). Per the sync
-  // call — pending Amber's confirmation. A pinned non-relevance sort is left alone.
+  // Clearing the query returns the view to its default Added descending sort.
+  //
+  // NOTE: this replaces the earlier behaviour of restoring the user's last
+  // selected sort (Added being only the never-chose-anything fallback), which
+  // came out of the sync call and was pending Amber's confirmation. The
+  // relevance spec calls for Added unconditionally, so a sort the user chose
+  // WHILE searching is also discarded when the search clears. Swap the body
+  // back to lastChosenSortRef if that turns out to be too aggressive.
+  // Fires on the clearing TRANSITION only. Keying off "no query and not Added"
+  // would snap the sort back on every render with no query, making it
+  // impossible to sort the unsearched library by anything but Added.
+  const hadQueryRef = useRef(false);
   useEffect(() => {
-    if (!activeQuery && sortField === "relevance") {
-      setSortField(lastChosenSortRef.current.field);
-      setSortDirection(lastChosenSortRef.current.dir);
+    const hasQuery = Boolean(activeQuery);
+    if (hadQueryRef.current && !hasQuery) {
+      setSortField("dateCreated");
+      setSortDirection("desc");
+      lastChosenSortRef.current = { field: "dateCreated", dir: "desc" };
     }
-  }, [activeQuery, sortField]);
+    hadQueryRef.current = hasQuery;
+  }, [activeQuery]);
 
   const handleFilterChange = useCallback((filterId: string, values: string[]) => {
     switch (filterId) {
@@ -1419,11 +1431,13 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} onSelectedFacetsChange={setSearchSelectedFacets} handleRef={searchHandleRef} placeholder="Search by people, tags, filenames…" />
               </div>
 
+              {/* Table view only: the grid says "Relevance" in its sort dropdown, so a
+                  second statement there would be redundant. The search input above is
+                  flex-1 min-w-0, so it shrinks to make room rather than this wrapping. */}
+              {assetsViewMode === "list" && sortField === "relevance" && <RelevanceIndicator />}
+
               <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
-                {/* Sort control renders in BOTH grid and table. Relevance has no column
-                    header, so without this the table can neither show that results are
-                    relevance-ranked nor offer a way back to it after a column sort. */}
-                {(
+                {assetsViewMode === "grid" && (
                   <Tooltip delayDuration={700}>
                     <DropdownMenu>
                       <TooltipTrigger asChild>
@@ -2425,8 +2439,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     <FacetedSearchWithTypeahead onSearch={setFavAssetSearch} assets={favAssetsBase} placeholder="Search by people, tags, filenames…" />
                   </div>
                   <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
-                  {/* Sort control renders in BOTH grid and table — see All Assets. */}
-                  {(
+                  {favAssetsViewMode === "grid" && (
                     <Tooltip delayDuration={700}>
                       <DropdownMenu>
                         <TooltipTrigger asChild>
