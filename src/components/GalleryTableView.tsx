@@ -395,7 +395,7 @@ export function GalleryTableView({
                       </div>
                     )}
                     {gallery.isNew && (
-                      <Badge variant="default" className="w-fit text-[10px] px-1.5 py-0 h-5">
+                      <Badge colorStyle="primary" className="w-fit text-[10px] px-1.5 py-0 h-5">
                         NEW
                       </Badge>
                     )}

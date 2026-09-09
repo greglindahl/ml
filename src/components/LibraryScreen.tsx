@@ -771,7 +771,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
 
   // Sort state
-  type SortField = "relevance" | "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "favorites" | "lastDownloadDate" | null;
+  type SortField = "relevance" | "creator" | "dateCreated" | "captureDate" | "downloads" | "shares" | "galleries" | "tags" | "viewers" | "publicViews" | "status" | "favorites" | "lastDownloadDate" | null;
   type SortDir = "asc" | "desc";
   const [sortField, setSortField] = useState<SortField>("dateCreated");
   const [sortDirection, setSortDirection] = useState<SortDir>("desc");
@@ -1116,9 +1116,6 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
         break;
       case "source":
         setSourceFilter(values);
-        break;
-      case "status":
-        setApprovalStatusFilter(values);
         break;
       case "organization-status":
         setOrgStatusFilter(values);

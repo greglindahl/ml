@@ -168,7 +168,8 @@ export function FacetedSearchWithDropdown({ onSearch, assets = [] }: FacetedSear
           {selectedFacets.map((facet) => (
             <Badge
               key={facet}
-              variant="secondary"
+              colorStyle="secondary"
+              theme="subtle"
               className="gap-1 pr-1 cursor-pointer hover:bg-secondary/80"
               onClick={() => handleRemoveFacet(facet)}
             >
