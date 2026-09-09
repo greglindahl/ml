@@ -1071,27 +1071,16 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     [search]
   );
 
-  // Clearing the query returns the view to its default Added descending sort.
-  //
-  // NOTE: this replaces the earlier behaviour of restoring the user's last
-  // selected sort (Added being only the never-chose-anything fallback), which
-  // came out of the sync call and was pending Amber's confirmation. The
-  // relevance spec calls for Added unconditionally, so a sort the user chose
-  // WHILE searching is also discarded when the search clears. Swap the body
-  // back to lastChosenSortRef if that turns out to be too aggressive.
-  // Fires on the clearing TRANSITION only. Keying off "no query and not Added"
-  // would snap the sort back on every render with no query, making it
-  // impossible to sort the unsearched library by anything but Added.
-  const hadQueryRef = useRef(false);
+  // With no query left, Relevance has nothing to rank against — retire it and
+  // restore the user's last selected sort (their choice persists in-app until
+  // changed; Added is only the never-chose-anything fallback). Per the sync
+  // call — pending Amber's confirmation. A pinned non-relevance sort is left alone.
   useEffect(() => {
-    const hasQuery = Boolean(activeQuery);
-    if (hadQueryRef.current && !hasQuery) {
-      setSortField("dateCreated");
-      setSortDirection("desc");
-      lastChosenSortRef.current = { field: "dateCreated", dir: "desc" };
+    if (!activeQuery && sortField === "relevance") {
+      setSortField(lastChosenSortRef.current.field);
+      setSortDirection(lastChosenSortRef.current.dir);
     }
-    hadQueryRef.current = hasQuery;
-  }, [activeQuery]);
+  }, [activeQuery, sortField]);
 
   const handleFilterChange = useCallback((filterId: string, values: string[]) => {
     switch (filterId) {
@@ -1980,11 +1969,24 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
             {/* Galleries Grid/Table */}
             <div className="min-h-[400px]">
-              {visibleGalleries.length === 0 ? (
+              {(() => {
+              // True only when the archived toggle is the sole thing narrowing the list.
+              // With a search or any other filter also on, one of those may be the real
+              // cause, so the generic reset is the honest message.
+              const archivedOnlyNarrowing = archivedGalleriesOnly
+                && !gallerySearchQuery.trim()
+                && galleryTabChips.length === 0
+                && !unsortedGalleriesOnly
+                && !favoriteGalleriesOnly;
+              return visibleGalleries.length === 0 ? (
                 <EmptyState
                   icon="bi-images"
-                  title="No galleries found"
-                  onClearAll={() => {
+                  // Viewing archived with none to show is its own state, not a filtering
+                  // accident. Telling the user to adjust something would be wrong: there
+                  // is nothing to adjust, there simply are no archived galleries.
+                  title={archivedOnlyNarrowing ? "No archived galleries" : "No galleries found"}
+                  description={archivedOnlyNarrowing ? "Archive a gallery to see it here." : undefined}
+                  onClearAll={archivedOnlyNarrowing ? undefined : () => {
                     // Archived is cleared along with the rest: it reads as a pill in the
                     // filter row, and leaving it on would make "clear all" a no-op
                     // whenever it is the reason nothing came back.
@@ -2056,7 +2058,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     );
                   })}
                 </div>
-              )}
+              );
+              })()}
             </div>
           </TabsContent>
 
@@ -2112,7 +2115,11 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 <EmptyState
                   icon="bi-folder"
                   title="No folders"
-                  description={folderNarrowed ? undefined : "Create a folder to get started."}
+                  description={
+                    folderSearchQuery.trim() ? "No folders match your search."
+                      : folderNarrowed ? undefined
+                      : "Create a folder to get started."
+                  }
                   onClearAll={folderNarrowed ? () => {
                     folderSearchHandleRef.current?.clearAll();
                     setArchivedFoldersOnly(false);
