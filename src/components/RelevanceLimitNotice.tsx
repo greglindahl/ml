@@ -21,6 +21,7 @@ export function RelevanceLimitNotice({ className }: RelevanceLimitNoticeProps) {
   return (
     <p className={cn("py-8 text-center text-sm text-muted-foreground", className)}>
       Showing the top {RELEVANCE_RESULT_LIMIT.toLocaleString()} assets by relevance.
+      {" "}Sort by any other field to see all results.
     </p>
   );
 }

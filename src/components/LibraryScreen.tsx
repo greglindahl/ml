@@ -40,7 +40,7 @@ const ORIENTATION_LABELS: Record<string, string> = {
 };
 import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, findFolderAncestorIds, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor, enrichGallery, sortGalleries, GALLERY_SORT_OPTIONS, GallerySortField } from "@/lib/mockFolderData";
 import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
-import { relevanceScore, capRelevanceResults, isRelevanceCapped } from "@/lib/relevance";
+import { relevanceScore, capRelevanceResults, isRelevanceCapped, RELEVANCE_RESULT_LIMIT } from "@/lib/relevance";
 import { FolderSidebar } from "@/components/FolderSidebar";
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
@@ -1438,7 +1438,16 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                       <DropdownMenuContent className="bg-white w-48">
                         {visibleSortOptions.map(opt => (
                           <DropdownMenuItem key={opt.value} onClick={() => handleSortChange(opt.value)} className="flex items-center justify-between">
-                            {opt.label}
+                            <span className="flex flex-col">
+                              {opt.label}
+                              {/* Relevance is the only capped sort, so it is the only one
+                                  whose result set differs. Saying so here sets the
+                                  expectation before the list changes size, rather than
+                                  explaining the jump after it happens. */}
+                              {opt.value === "relevance" && (
+                                <span className="text-xs text-muted-foreground">Top {RELEVANCE_RESULT_LIMIT.toLocaleString()} only</span>
+                              )}
+                            </span>
                             {sortField === opt.value && <span className="text-xs text-muted-foreground ml-2">{sortDirection === "desc" ? "↓" : "↑"}</span>}
                           </DropdownMenuItem>
                         ))}
