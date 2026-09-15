@@ -23,6 +23,7 @@ interface ScrollToTopButtonProps {
  */
 export function ScrollToTopButton({ scrollRef, threshold = 600, className }: ScrollToTopButtonProps) {
   const [visible, setVisible] = useState(false);
+  const [centerX, setCenterX] = useState<number | null>(null);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -35,14 +36,45 @@ export function ScrollToTopButton({ scrollRef, threshold = 600, className }: Scr
     return () => el.removeEventListener("scroll", onScroll);
   }, [scrollRef, threshold]);
 
-  if (!visible) return null;
+  /**
+   * Centre on the CONTENT AREA, not the viewport.
+   *
+   * This button is `fixed`, so a plain `left-1/2` centres it on the window —
+   * but the arrival pill centres inside the content column, which the left nav
+   * and folder sidebar push to the right. The two controls then sit ~60px apart
+   * on a nominally centred axis. Measuring the scroll container puts both on the
+   * same line, and the ResizeObserver keeps it true when the nav collapses or
+   * the folder sidebar opens.
+   */
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      const rect = el.getBoundingClientRect();
+      setCenterX(rect.left + rect.width / 2);
+    };
+    measure();
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    window.addEventListener("resize", measure);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [scrollRef]);
+
+  if (!visible || centerX === null) return null;
 
   return (
     <button
       type="button"
       onClick={() => scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" })}
+      style={{ left: centerX }}
       className={cn(
-        "fixed bottom-6 left-1/2 -translate-x-1/2 z-30",
+        "fixed bottom-6 -translate-x-1/2 z-30",
         "inline-flex items-center gap-2 h-9 pl-3 pr-4 rounded-full",
         "bg-[#12263f] text-white text-[13px] font-medium shadow-lg",
         "hover:bg-[#1c3a5e] transition-colors",
