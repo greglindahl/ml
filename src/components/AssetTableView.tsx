@@ -309,6 +309,10 @@ export function AssetTableView({
             {paginatedAssets.map((asset) => (
             <TableRow
               key={asset.id}
+              // Same anchor the grid cards carry, so arrival scroll-preservation
+              // works in table view too — without it the anchor lookup finds
+              // nothing here and the user loses their place.
+              data-asset-id={asset.id}
               data-state={selectedAssets.has(asset.id) ? "selected" : undefined}
               className={onOpenAsset ? "cursor-pointer" : undefined}
               onClick={() => {

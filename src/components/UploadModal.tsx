@@ -8,6 +8,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useUploadQueue } from "@/hooks/useUploadQueue";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 interface UploadModalProps {
@@ -17,6 +18,7 @@ interface UploadModalProps {
 
 export function UploadModal({ open, onOpenChange }: UploadModalProps) {
   const [isDragOver, setIsDragOver] = useState(false);
+  const { startUploads, startUploadsForFiles } = useUploadQueue();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -30,27 +32,43 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
     setIsDragOver(false);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(false);
-    // TODO: Handle dropped files
-    const files = Array.from(e.dataTransfer.files);
-    console.log("Dropped files:", files);
-  }, []);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragOver(false);
+
+      const files = Array.from(e.dataTransfer.files);
+      if (files.length === 0) return;
+
+      startUploadsForFiles(files);
+      onOpenChange(false);
+    },
+    [startUploadsForFiles, onOpenChange],
+  );
 
   const handleClick = useCallback(() => {
-    // TODO: Trigger file input click
     const input = document.createElement("input");
     input.type = "file";
     input.multiple = true;
     input.accept = ".jpg,.jpeg,.png,.gif,.mp4,.mov";
     input.onchange = (e) => {
       const files = Array.from((e.target as HTMLInputElement).files || []);
-      console.log("Selected files:", files);
+      if (files.length === 0) return;
+      startUploadsForFiles(files);
+      onOpenChange(false);
     };
     input.click();
-  }, []);
+  }, [startUploadsForFiles, onOpenChange]);
+
+  /**
+   * Queue a mixed batch without touching the file system — the fast path for
+   * exercising the tray's states while designing the refresh / new-assets flow.
+   */
+  const handleSimulate = useCallback(() => {
+    startUploads(6);
+    onOpenChange(false);
+  }, [startUploads, onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -107,7 +125,10 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
           </p>
         </div>
 
-        <DialogFooter className="px-6 py-4 border-t">
+        <DialogFooter className="px-6 py-4 border-t sm:justify-between">
+          <Button variant="secondary" onClick={handleSimulate}>
+            Simulate upload batch
+          </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
