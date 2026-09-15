@@ -5,6 +5,8 @@ import { HomeViewAllTarget } from "@/components/HomeScreen";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu, User } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { UploadQueueProvider } from "@/hooks/useUploadQueue";
+import { UploadProgressWindow } from "@/components/UploadProgressWindow";
 
 const LEFT_NAV_EXPANDED_KEY = "leftNavExpanded";
 
@@ -164,6 +166,7 @@ const Index = () => {
   }, [pendingStatsTab]);
 
   return (
+    <UploadQueueProvider>
     <div className="flex min-h-screen w-full">
       {/* Mobile header */}
       {isMobile && (
@@ -207,7 +210,11 @@ const Index = () => {
         onOpenStarterGallery={handleOpenStarterGallery}
         onViewAll={handleViewAll}
       />
+
+      {/* Floating upload tray — app-wide, survives screen/tab navigation like prod. */}
+      <UploadProgressWindow />
     </div>
+    </UploadQueueProvider>
   );
 };
 

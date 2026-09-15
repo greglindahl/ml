@@ -55,7 +55,6 @@ export function AssetCard({
   onMoreOptions,
   className,
 }: AssetCardProps) {
-  const isDefault = state === "default";
   const isHover = state === "hover";
   const isBulkSelect = state === "bulk-select";
   const isSelected = state === "selected";
@@ -120,8 +119,25 @@ export function AssetCard({
             </button>
           )}
 
-          {/* Default state - just favorite button on right */}
-          {isDefault && (
+          {/* Right cluster — New badge, duration, favorite, in that order.
+              All three sit inline rather than absolutely positioned: the New
+              badge used to be pinned `top-4 left-4`, which is the checkbox's
+              slot, so on a new asset in multi-select it covered the checkbox and
+              swallowed the click that should have selected it. */}
+          <div className="flex items-center gap-2">
+            {isNew && (
+              <span className="text-[10px] font-medium text-[#0d7333] bg-[#d9f7e5] px-1.5 py-1 rounded-full tracking-tight">
+                New
+              </span>
+            )}
+
+            {duration && (
+              <div className="flex items-center gap-1 text-white text-xs">
+                <i className="bi bi-play-fill text-[10px]" />
+                <span>{duration}</span>
+              </div>
+            )}
+
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -131,73 +147,8 @@ export function AssetCard({
             >
               <i className={`bi ${isFavorite ? "bi-heart-fill" : "bi-heart"} text-white text-[11px]`} />
             </button>
-          )}
-
-          {/* Hover state - checkbox on left, favorite on right */}
-          {isHover && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onFavorite?.();
-              }}
-              className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full"
-            >
-              <i className={`bi ${isFavorite ? "bi-heart-fill" : "bi-heart"} text-white text-[11px]`} />
-            </button>
-          )}
-
-          {/* Bulk Select / Selected - checkbox on left, favorite on right */}
-          {(isBulkSelect || isSelected) && (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onFavorite?.();
-                }}
-                className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full"
-              >
-                <i className={`bi ${isFavorite ? "bi-heart-fill" : "bi-heart"} text-white text-[11px]`} />
-              </button>
-            </div>
-          )}
-
-          {/* Review states - New badge + favorite if applicable */}
-          {isReviewState && (
-            <div className="flex items-center gap-2">
-              {isNew && (
-                <span className="text-[10px] font-medium text-[#0d7333] bg-[#d9f7e5] px-1.5 py-1 rounded-full tracking-tight">
-                  New
-                </span>
-              )}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onFavorite?.();
-                }}
-                className="w-6 h-6 flex items-center justify-center bg-black/20 rounded-full"
-              >
-                <i className={`bi ${isFavorite ? "bi-heart-fill" : "bi-heart"} text-white text-[11px]`} />
-              </button>
-            </div>
-          )}
+          </div>
         </div>
-
-        {/* Video Duration Badge - Top Right Area */}
-        {duration && (
-          <div className="absolute top-4 right-12 flex items-center gap-1 text-white text-xs">
-            <i className="bi bi-play-fill text-[10px]" />
-            <span>{duration}</span>
-          </div>
-        )}
-
-        {/* New Badge - for non-review states */}
-        {isNew && !isReviewState && (
-          <div className="absolute top-4 left-4">
-            <span className="text-[10px] font-medium text-[#0d7333] bg-[#d9f7e5] px-1.5 py-1 rounded-full tracking-tight">
-              New
-            </span>
-          </div>
-        )}
 
         {/* Bottom Content */}
         <div className="flex flex-col gap-1.5">

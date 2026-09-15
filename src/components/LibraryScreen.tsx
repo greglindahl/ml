@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useState, useCallback, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
@@ -20,6 +20,10 @@ import { GalleryTableView, DEFAULT_GALLERY_COLUMN_VISIBILITY, GALLERY_COLUMNS, t
 import { FolderTableView, DEFAULT_FOLDER_COLUMN_VISIBILITY, FOLDER_COLUMNS, type FolderColumnVisibility } from "@/components/FolderTableView";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset, mockLibraryAssets } from "@/lib/mockLibraryData";
+import { useUploadQueue } from "@/hooks/useUploadQueue";
+import { uploadToLibraryAsset } from "@/lib/newAssets";
+import { NewAssetsPill } from "@/components/NewAssetsPill";
+import { ScrollToTopButton } from "@/components/ScrollToTopButton";
 
 // Chip display names for the Creator facet (id → display name) and the
 // Orientation facet's hint labels (PORTAL-12778)
@@ -824,13 +828,121 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   }, [sortField, activeQuery]);
 
   // Use the library search hook
-  const { results, allAssets, isLoading, isError, totalCount, search, retry } = useLibrarySearch();
+  const { results: baseResults, allAssets, isLoading, isError, totalCount, search, retry } = useLibrarySearch();
+
+  // ---------------------------------------------------------------------------
+  // Live arrivals (refresh pill)
+  //
+  // Completed uploads do NOT splice themselves into the feed. They wait in
+  // `pendingArrivals` until the user presses the pill, so the list only ever
+  // changes at a moment the user chose. That's what makes preserving scroll
+  // position tractable — see ScrollToTopButton's note.
+  // ---------------------------------------------------------------------------
+  const { completedUploads } = useUploadQueue();
+
+  /** Arrived, admitted into the feed. */
+  const [admittedAssets, setAdmittedAssets] = useState<LibraryAsset[]>([]);
+  /** Arrived, waiting behind the pill. */
+  const [pendingArrivals, setPendingArrivals] = useState<LibraryAsset[]>([]);
+  /** Assets currently wearing the "New" badge. */
+  const [newAssetIds, setNewAssetIds] = useState<Set<string>>(new Set());
+
+  const seenUploadIds = useRef<Set<string>>(new Set());
+  const assetsScrollRef = useRef<HTMLDivElement>(null);
+
+  // Park each newly-completed upload behind the pill exactly once.
+  useEffect(() => {
+    const fresh = completedUploads.filter((u) => !seenUploadIds.current.has(u.queueId));
+    if (fresh.length === 0) return;
+
+    fresh.forEach((u) => seenUploadIds.current.add(u.queueId));
+    setPendingArrivals((prev) => [...fresh.map(uploadToLibraryAsset), ...prev]);
+  }, [completedUploads]);
+
+  /**
+   * The card the user was looking at when they pressed the pill, plus where it
+   * sat on screen. Anchoring to real content rather than to scrollHeight is what
+   * makes this survive the sticky header changing size at the same moment.
+   */
+  const scrollAnchor = useRef<{ assetId: string; viewportTop: number } | null>(null);
+
+  /**
+   * Admit everything waiting.
+   *
+   * The badge set is REPLACED, not extended: this batch gets the "New" mark and
+   * the previous batch loses it. Each press means "show me what arrived, and
+   * retire what I saw last time" — so the marks survive long enough to actually
+   * sweep, which clearing on press would not allow. Flip to `new Set()` here to
+   * try the clear-immediately model instead.
+   *
+   * Note what this does NOT do: no filter reset, no sort change, no jump to top.
+   */
+  const handleAdmitArrivals = useCallback(() => {
+    const el = assetsScrollRef.current;
+    if (el) {
+      // First card fully inside the viewport — that's what the user is reading.
+      const containerTop = el.getBoundingClientRect().top;
+      const anchorEl = Array.from(el.querySelectorAll<HTMLElement>("[data-asset-id]")).find(
+        (card) => card.getBoundingClientRect().top >= containerTop,
+      );
+      scrollAnchor.current = anchorEl
+        ? {
+            assetId: anchorEl.dataset.assetId!,
+            viewportTop: anchorEl.getBoundingClientRect().top,
+          }
+        : null;
+    }
+
+    setPendingArrivals((pending) => {
+      if (pending.length === 0) return pending;
+      setAdmittedAssets((prev) => [...pending, ...prev]);
+      setNewAssetIds(new Set(pending.map((a) => a.id)));
+      return [];
+    });
+  }, []);
+
+  /**
+   * Hold the user's visual position when arrivals land above the viewport.
+   *
+   * Not scrolling to top isn't enough on its own: inserting rows above where
+   * someone is reading pushes their content down by exactly the height of what
+   * was inserted. That IS the ScorePlay failure Megan described (1/29) — "it'd
+   * shift down where we were looking… we would lose our place." Adding the
+   * height delta back to scrollTop pins the viewport to the same content.
+   *
+   * Runs in a layout effect so the correction paints in the same frame as the
+   * insertion; in an effect the user sees a visible jump first.
+   */
+  useLayoutEffect(() => {
+    const anchor = scrollAnchor.current;
+    const el = assetsScrollRef.current;
+    if (!anchor || !el) return;
+
+    scrollAnchor.current = null;
+
+    const anchorEl = el.querySelector<HTMLElement>(`[data-asset-id="${CSS.escape(anchor.assetId)}"]`);
+    if (!anchorEl) return;
+
+    // Measuring the live position absorbs whatever the browser's own scroll
+    // anchoring already did, so the two don't fight or double-correct.
+    const drift = anchorEl.getBoundingClientRect().top - anchor.viewportTop;
+    if (Math.abs(drift) > 0.5) el.scrollTop += drift;
+  }, [admittedAssets]);
+
+  // Admitted arrivals ride along with search results from here on.
+  const results = useMemo(
+    () => (admittedAssets.length ? [...admittedAssets, ...baseResults] : baseResults),
+    [admittedAssets, baseResults],
+  );
 
   // PORTAL-12949: selection clears (multi-select mode stays on) when a filter
   // facet changes, a new search runs, or the page size changes.
+  // Depends on `baseResults`, not `results`: admitting arrivals must not wipe an
+  // in-progress bulk selection. Andrew Cafiero (9/25) raised exactly this —
+  // content landing mid-select and costing him his place.
   useEffect(() => {
     setSelectedAssets(new Set());
-  }, [results, searchSelectedFacets, contentTypeFilter, creatorFilter, orientationFilter, peopleFilter, sceneFilter, brandFilter, tagsFilter, folderFilter, addedDateFilter, capturedDateFilter, customDateRanges, isBrandedActive, isUnviewedActive, isUnsortedActive, sourceFilter, orgStatusFilter, assetPerPage]);
+  }, [baseResults, searchSelectedFacets, contentTypeFilter, creatorFilter, orientationFilter, peopleFilter, sceneFilter, brandFilter, tagsFilter, folderFilter, addedDateFilter, capturedDateFilter, customDateRanges, isBrandedActive, isUnviewedActive, isUnsortedActive, sourceFilter, orgStatusFilter, assetPerPage]);
   useEffect(() => {
     setSelectedGalleries(new Set());
   }, [galleryTabChips, gallerySearchQuery, archivedGalleriesOnly, unsortedGalleriesOnly, favoriteGalleriesOnly, galleryPerPage]);
@@ -1406,9 +1518,30 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+          {/* Arrival pill rides on the tabs' bottom rule.
+              Zero-height wrapper + absolutely positioned pill, so it takes NO
+              layout space and nothing below it moves when it appears or is
+              consumed — matching prod's `.new-media-badge-anchor { height: 0 }`
+              + `position-absolute` treatment. Sitting it in the flow, as the
+              first pass did, shoved the whole grid down on arrival, which is the
+              opposite of what this control is for. */}
           <SectionTabs tabs={LIBRARY_TABS} value={activeTab} onValueChange={setActiveTab} isMobile={isMobile} />
 
-          <TabsContent value="assets" className="flex-1 overflow-y-auto pb-6 mt-0">
+          {/* Zero-height anchor sitting exactly on the tabs' bottom rule; the
+              pill hangs off it with `bottom-0` so it rests just above the line. */}
+          <div className="relative h-0 z-30 pointer-events-none">
+            {activeTab === "assets" && pendingArrivals.length > 0 && (
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 pointer-events-auto">
+                <NewAssetsPill
+                  count={pendingArrivals.length}
+                  onClick={handleAdmitArrivals}
+                  className="shadow-sm"
+                />
+              </div>
+            )}
+          </div>
+
+          <TabsContent value="assets" className="flex-1 overflow-y-auto pb-6 mt-0" ref={assetsScrollRef}>
             {/* Sticky header: search + filters + chips + bulk bar pin while the grid scrolls */}
             <StickyHeaderBlock>
             {/* Search Row with Utility Cluster */}
@@ -1687,6 +1820,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                   return (
                     <div
                       key={asset.id}
+                      // Lets the arrival anchoring re-find this card after the list changes.
+                      data-asset-id={asset.id}
                       onClick={() => {
                         // If in bulk select mode, toggle selection instead of opening detail
                         if (inAssetMultiSelect) {
@@ -1711,6 +1846,10 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                         thumbnailUrl={asset.thumbnailUrl}
                         isBranded={isBrandedActive && asset.isBranded}
                         isFavorite={favoriteAssetIds.has(asset.id)}
+                        // Per-asset marking rather than a positional divider: a
+                        // Slack-style line only reads in one sort order, and this
+                        // feed has ten (plus filters, plus upload-order skew).
+                        isNew={newAssetIds.has(asset.id)}
                         state={cardState}
                         onSelect={() => {
                           const next = new Set(selectedAssets);
@@ -1735,6 +1874,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
               <RelevanceLimitNotice />
             )}
             </div>
+
+            {/* Separate from the pill on purpose — the pill never moves you. */}
+            <ScrollToTopButton scrollRef={assetsScrollRef} />
           </TabsContent>
 
           <TabsContent value="galleries" className="flex-1 overflow-y-auto pb-6 mt-0">
