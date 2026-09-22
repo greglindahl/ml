@@ -1,6 +1,6 @@
-// Shared matcher for the Added Date / Captured Date filters. Both filters use
+// Shared matcher for the Uploaded Date / Captured Date filters. Both filters use
 // the same range options; callers pass the asset date they apply to
-// (dateCreated for Added, captureDate for Captured).
+// (dateCreated for Uploaded, captureDate for Captured).
 
 export type DateRangeValue =
   | "today"

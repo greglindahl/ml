@@ -22,7 +22,7 @@ import {
 export const ASSET_COLUMNS = [
   { key: "thumbnail", label: "Thumbnail" },
   { key: "creator", label: "Creator" },
-  { key: "added", label: "Added" },
+  { key: "added", label: "Uploaded" },
   { key: "captured", label: "Captured" },
   { key: "details", label: "Details" },
   { key: "metadata", label: "Metadata" },
@@ -214,7 +214,7 @@ export function AssetTableView({
               <TableHead className="w-12"><Checkbox disabled /></TableHead>
               <TableHead className="w-20"></TableHead>
               <TableHead className="text-xs tracking-wider">Creator</TableHead>
-              <TableHead className="text-xs tracking-wider">Added</TableHead>
+              <TableHead className="text-xs tracking-wider">Uploaded</TableHead>
               <TableHead className="text-xs tracking-wider">Captured</TableHead>
               <TableHead className="text-xs tracking-wider">Details</TableHead>
               <TableHead className="text-xs tracking-wider">Metadata</TableHead>
@@ -273,7 +273,7 @@ export function AssetTableView({
                     onClick={() => handleSort("dateCreated")}
                     className="flex items-center hover:text-foreground transition-colors uppercase text-xs tracking-wider"
                   >
-                    Added
+                    Uploaded
                     {getSortIcon("dateCreated")}
                   </button>
                 </TableHead>
@@ -367,7 +367,7 @@ export function AssetTableView({
                 </TableCell>
               )}
 
-              {/* Added Date */}
+              {/* Uploaded Date */}
               {columnVisibility.added && (
                 <TableCell>
                   <span className="text-sm">{getRelativeTime(asset.dateCreated)}</span>

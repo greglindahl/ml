@@ -107,8 +107,9 @@ const sourceOptions: FilterOption[] = [
   { label: "Requested Content", value: "requested-content", count: 3 },
 ];
 
-// Added Date and Captured Date share the same range options. "Added" = when the
-// media entered Greenfly (back-end "created"); "Captured" = when it was originally shot.
+// Uploaded Date and Captured Date share the same range options. "Uploaded" = when
+// the media entered Greenfly (back-end "created"); "Captured" = when it was
+// originally shot. The filter id stays added-date.
 const DATE_RANGE_OPTIONS: FilterOption[] = [
   { label: "Last 7 days", value: "week" },
   { label: "Last 14 days", value: "two-weeks" },
@@ -143,7 +144,7 @@ const filters: FilterConfig[] = [{
   })(),
 }, {
   id: "added-date",
-  label: "Added",
+  label: "Uploaded",
   icon: <i className="bi bi-calendar-plus" />,
   options: DATE_RANGE_OPTIONS,
 }, {

@@ -791,7 +791,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
   const SORT_OPTIONS: { value: NonNullable<SortField>; label: string }[] = [
     { value: "creator", label: "Creator" },
-    { value: "dateCreated", label: "Added" },
+    { value: "dateCreated", label: "Uploaded" },
     { value: "captureDate", label: "Captured" },
     { value: "downloads", label: "Downloads" },
     { value: "shares", label: "Shares" },
@@ -1044,7 +1044,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
         if (!matchesAny) return false;
       }
 
-      // Added Date filter (when the asset entered Greenfly)
+      // Uploaded Date filter (when the asset entered Greenfly)
       if (addedDateFilter && !matchesDateRange(asset.dateCreated, addedDateFilter, customDateRanges["added-date"])) return false;
 
       // Captured Date filter (when the media was originally shot)
@@ -1185,7 +1185,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
   // With no query left, Relevance has nothing to rank against — retire it and
   // restore the user's last selected sort (their choice persists in-app until
-  // changed; Added is only the never-chose-anything fallback). Per the sync
+  // changed; Uploaded is only the never-chose-anything fallback). Per the sync
   // call — pending Amber's confirmation. A pinned non-relevance sort is left alone.
   useEffect(() => {
     if (!activeQuery && sortField === "relevance") {
@@ -1686,7 +1686,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 {
                   const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 days", "two-weeks": "Last 14 days", month: "Last 30 days", mtd: "Month to Date", quarter: "Last 90 days", year: "Last 12 months", custom: "Custom Date" };
                   if (addedDateFilter) {
-                    chips.push({ label: `Added: ${dateLabels[addedDateFilter] || addedDateFilter}`, value: addedDateFilter, sourceId: "added-date", icon: <i className="bi bi-calendar-plus text-sm" /> });
+                    chips.push({ label: `Uploaded: ${dateLabels[addedDateFilter] || addedDateFilter}`, value: addedDateFilter, sourceId: "added-date", icon: <i className="bi bi-calendar-plus text-sm" /> });
                   }
                   if (capturedDateFilter) {
                     chips.push({ label: `Captured: ${dateLabels[capturedDateFilter] || capturedDateFilter}`, value: capturedDateFilter, sourceId: "captured-date", icon: <i className="bi bi-calendar text-sm" /> });
@@ -2685,7 +2685,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                       values.map(value => ({
                         filterId,
                         value,
-                        label: filterId === "added-date" ? `Added: ${dateLabels[value] ?? value}`
+                        label: filterId === "added-date" ? `Uploaded: ${dateLabels[value] ?? value}`
                           : filterId === "captured-date" ? `Captured: ${dateLabels[value] ?? value}`
                           : filterId === "content-type" ? value.charAt(0).toUpperCase() + value.slice(1)
                           : value,
@@ -2983,8 +2983,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
         <FilterSection label="Creator" icon="bi-person">
           <div className="text-sm text-muted-foreground">Creator filters will go here</div>
         </FilterSection>
-        <FilterSection label="Added Date" icon="bi-calendar-plus">
-          <div className="text-sm text-muted-foreground">Added date filters will go here</div>
+        <FilterSection label="Uploaded Date" icon="bi-calendar-plus">
+          <div className="text-sm text-muted-foreground">Uploaded date filters will go here</div>
         </FilterSection>
         <FilterSection label="Captured Date" icon="bi-calendar">
           <div className="text-sm text-muted-foreground">Captured date filters will go here</div>
