@@ -26,7 +26,7 @@ export type SettingsTab = "grid" | "table" | "filters";
 export const ASSET_TABLE_COLUMNS = [
   { key: "thumbnail", label: "Asset Thumbnail" },
   { key: "creator", label: "Creator" },
-  { key: "added", label: "Added Date" },
+  { key: "added", label: "Uploaded Date" },
   { key: "captured", label: "Capture Date" },
   { key: "details", label: "Details" },
   { key: "metadata", label: "Metadata" },

@@ -206,7 +206,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
 
   const SORT_OPTIONS: { value: NonNullable<SortField>; label: string }[] = [
     { value: "creator", label: "Creator" },
-    { value: "dateCreated", label: "Added" },
+    { value: "dateCreated", label: "Uploaded" },
     { value: "captureDate", label: "Captured" },
     { value: "downloads", label: "Downloads" },
     { value: "shares", label: "Shares" },
@@ -342,7 +342,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         if (!matchesAny) return false;
       }
 
-      // Added Date filter (when the asset entered Greenfly)
+      // Uploaded Date filter (when the asset entered Greenfly)
       if (addedDateFilter && !matchesDateRange(asset.dateCreated, addedDateFilter, customDateRanges["added-date"])) return false;
 
       // Captured Date filter (when the media was originally shot)
@@ -747,7 +747,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               {
                 const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 days", "two-weeks": "Last 14 days", month: "Last 30 days", mtd: "Month to Date", quarter: "Last 90 days", year: "Last 12 months", custom: "Custom Date" };
                 if (addedDateFilter) {
-                  chips.push({ label: `Added: ${dateLabels[addedDateFilter] || addedDateFilter}`, value: addedDateFilter, sourceId: "added-date" });
+                  chips.push({ label: `Uploaded: ${dateLabels[addedDateFilter] || addedDateFilter}`, value: addedDateFilter, sourceId: "added-date" });
                 }
                 if (capturedDateFilter) {
                   chips.push({ label: `Captured: ${dateLabels[capturedDateFilter] || capturedDateFilter}`, value: capturedDateFilter, sourceId: "captured-date" });

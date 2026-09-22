@@ -77,7 +77,7 @@ type SortDir = "asc" | "desc";
 
 const SORT_OPTIONS: { value: NonNullable<SortField>; label: string }[] = [
   { value: "creator", label: "Creator" },
-  { value: "dateCreated", label: "Added" },
+  { value: "dateCreated", label: "Uploaded" },
   { value: "captureDate", label: "Captured" },
   { value: "downloads", label: "Downloads" },
   { value: "shares", label: "Shares" },
@@ -217,7 +217,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
         if (!matchesAny) return false;
       }
 
-      // Added Date filter (when the asset entered Greenfly)
+      // Uploaded Date filter (when the asset entered Greenfly)
       if (addedDateFilter && !matchesDateRange(asset.dateCreated, addedDateFilter, customDateRanges["added-date"])) return false;
 
       // Captured Date filter (when the media was originally shot)
