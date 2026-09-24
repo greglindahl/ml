@@ -3,7 +3,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import { cn } from "@/lib/utils";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { AssetTableView, DEFAULT_ASSET_COLUMN_VISIBILITY, ASSET_COLUMNS, type AssetColumnVisibility } from "@/components/AssetTableView";
-import { SettingsDrawer, useDisplayLabel, usePerPagePreference, useColumnVisibility } from "@/components/SettingsDrawer";
+import { AssetSettingsDrawer, useAssetDisplayLabel, useAssetPerPage, useAssetColumnVisibility, useAssetFilterVisibility } from "@/components/AssetSettingsDrawer";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { SectionTabs } from "@/components/SectionTabs";
@@ -107,11 +107,12 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
 
   // Settings drawer state
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
-  const [displayLabel, setDisplayLabel] = useDisplayLabel();
+  const [displayLabel, setDisplayLabel] = useAssetDisplayLabel();
 
   // Table preferences - persistent across sessions
-  const [assetPerPage, setAssetPerPage] = usePerPagePreference("gallery-assets", 40);
-  const [assetColumnVisibility, setAssetColumnVisibility] = useColumnVisibility<AssetColumnVisibility>("gallery-assets", DEFAULT_ASSET_COLUMN_VISIBILITY);
+  const [assetPerPage, setAssetPerPage] = useAssetPerPage(40);
+  const [assetColumnVisibility, setAssetColumnVisibility] = useAssetColumnVisibility();
+  const [assetFilterVisibility, setAssetFilterVisibility] = useAssetFilterVisibility();
 
   // Filter chips state and ref
   const [filterChips, setFilterChips] = useState<ActiveFilterChip[]>([]);
@@ -842,67 +843,20 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
         </FilterSection>
       </FiltersSheet>
 
-      {/* Settings Drawer */}
-      <SettingsDrawer
+      {/* View Settings Drawer - tabbed interface */}
+      <AssetSettingsDrawer
         open={settingsDrawerOpen}
         onOpenChange={setSettingsDrawerOpen}
         displayLabel={displayLabel}
         onDisplayLabelChange={setDisplayLabel}
-      >
-        {/* Table preferences - always shown, disabled when not in table view */}
-        {(() => {
-          const isTableView = assetsViewMode === "list";
-          return (
-            <div className="space-y-4">
-              {/* Per page dropdown */}
-              <div className={cn("space-y-2", !isTableView && "opacity-50")}>
-                <Label className="text-sm font-medium">Results per page</Label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild disabled={!isTableView}>
-                    <Button variant="outline" className="w-full justify-between" disabled={!isTableView}>
-                      {assetPerPage} per page
-                      <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-full bg-white">
-                    {[10, 20, 40, 80].map(option => (
-                      <DropdownMenuItem key={option} onClick={() => setAssetPerPage(option)}>
-                        {option} per page
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              {/* Column visibility */}
-              <div className={cn("space-y-2", !isTableView && "opacity-50")}>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Manage Columns</Label>
-                  <button
-                    type="button"
-                    className="text-sm text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={!isTableView}
-                    onClick={() => setAssetColumnVisibility(DEFAULT_ASSET_COLUMN_VISIBILITY)}
-                  >
-                    Default
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {ASSET_COLUMNS.map(col => (
-                    <label key={col.key} className={cn("flex items-center gap-2", isTableView ? "cursor-pointer" : "cursor-not-allowed")}>
-                      <Checkbox
-                        checked={assetColumnVisibility[col.key]}
-                        onCheckedChange={() => isTableView && setAssetColumnVisibility(prev => ({ ...prev, [col.key]: !prev[col.key] }))}
-                        disabled={!isTableView}
-                      />
-                      <span className="text-sm">{col.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-          );
-        })()}
-      </SettingsDrawer>
+        perPage={assetPerPage}
+        onPerPageChange={setAssetPerPage}
+        columnVisibility={assetColumnVisibility}
+        onColumnVisibilityChange={setAssetColumnVisibility}
+        filterVisibility={assetFilterVisibility}
+        onFilterVisibilityChange={setAssetFilterVisibility}
+        defaultTab={assetsViewMode === "list" ? "table" : "grid"}
+      />
 
       {/* Asset Detail Modal */}
       <AssetDetailModal
