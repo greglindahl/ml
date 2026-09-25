@@ -639,7 +639,10 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         />
 
         {/* Assets Tab */}
-        <TabsContent value="assets" className="flex-1 overflow-y-auto pb-6 mt-0">
+        {/* forceMount on all three tabs: they're views of the same folder, so switching
+            between them keeps each tab's search (Radix would otherwise unmount the
+            inactive tab and the search input would come back blank). */}
+        <TabsContent value="assets" forceMount className="flex-1 overflow-y-auto pb-6 mt-0 data-[state=inactive]:hidden">
           {/* Sticky header: search + filters + chips + bulk bar pin while content scrolls */}
           <StickyHeaderBlock>
           {/* Search Row with Utility Cluster */}
@@ -914,7 +917,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         </TabsContent>
 
         {/* Galleries Tab */}
-        <TabsContent value="galleries" className="flex-1 overflow-y-auto pb-6 mt-0">
+        <TabsContent value="galleries" forceMount className="flex-1 overflow-y-auto pb-6 mt-0 data-[state=inactive]:hidden">
           {/* Sticky header: search + filters + chips + bulk bar pin while content scrolls */}
           <StickyHeaderBlock>
           {/* Search Row with Utility Cluster */}
@@ -1215,7 +1218,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         </TabsContent>
 
         {/* Folders Tab */}
-        <TabsContent value="folders" className="flex-1 overflow-y-auto pb-6 mt-0">
+        <TabsContent value="folders" forceMount className="flex-1 overflow-y-auto pb-6 mt-0 data-[state=inactive]:hidden">
           {/* Sticky header: search + filters + chips + bulk bar pin while content scrolls */}
           <StickyHeaderBlock>
           {/* Search Row with Utility Cluster (matches Assets / Galleries tabs in this file) */}

@@ -1194,6 +1194,36 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     }
   }, [activeQuery, sortField]);
 
+  // Going to a different place starts fresh; looking at the same place a different
+  // way doesn't. The Library tabs are different places, so leaving All Assets drops
+  // its search and filters (matching prod). The search input and FilterBar unmount
+  // with the tab and come back blank anyway — this clears the state they fed, which
+  // would otherwise keep filtering the grid (and pin Relevance) with nothing shown.
+  // Sort is a preference, not part of the search: restored by the effect above.
+  useEffect(() => {
+    if (activeTab === "assets") return;
+    search("", []);
+    setActiveQuery("");
+    sortPinnedByUserRef.current = false;
+    setSearchSelectedFacets([]);
+    setContentTypeFilter([]);
+    setCreatorFilter([]);
+    setOrientationFilter([]);
+    setPeopleFilter([]);
+    setSceneFilter([]);
+    setBrandFilter([]);
+    setTagsFilter([]);
+    setFolderFilter([]);
+    setAddedDateFilter(null);
+    setCapturedDateFilter(null);
+    setCustomDateRanges({});
+    setSourceFilter([]);
+    setOrgStatusFilter([]);
+    setIsBrandedActive(false);
+    setIsUnviewedActive(false);
+    setIsUnsortedActive(false);
+  }, [activeTab, search]);
+
   const handleFilterChange = useCallback((filterId: string, values: string[]) => {
     switch (filterId) {
       case "creator":
@@ -1452,8 +1482,11 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
           initialSelectAll={pendingBulkSelectFor === activeGallery.id}
         />
       ) : activeFolderItem ? (
-        <FolderDetailsView 
-          folderId={activeFolderItem.id} 
+        <FolderDetailsView
+          // Keyed per folder: moving to another folder starts fresh, while its
+          // Assets/Galleries tabs (same folder) keep their search.
+          key={activeFolderItem.id}
+          folderId={activeFolderItem.id}
           folder={activeFolderItem} 
           onNavigate={handleNavigate}
           isMobile={isMobile}
