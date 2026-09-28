@@ -415,8 +415,9 @@ export const mockSocialShares: SocialShare[] = Array.from({ length: 96 }, (_, i)
   const shared = new Date();
   shared.setHours(shared.getHours() - Math.round(Math.pow(i, 1.5) * 9 + r("jitter") * 6));
   const handle = user.name.toLowerCase().replace(/[^a-z]+/g, "");
-  const hasLink = status === "SHARED" || r("link") < 0.3;
-  const engaged = status === "SHARED" || hasLink;
+  // A share is verified exactly when it has a social link; initiated shares have none.
+  const hasLink = status === "SHARED";
+  const engaged = hasLink;
   return {
     id: `share-${i}`,
     status,

@@ -226,14 +226,12 @@ function InitiatedTable({
   rows,
   perPage,
   columnVisibility,
-  onEditLink,
-  onDeleteLink,
+  onAddLink,
 }: {
   rows: SocialShare[];
   perPage: number;
   columnVisibility: VisibilityMap;
-  onEditLink: (s: SocialShare) => void;
-  onDeleteLink: (s: SocialShare) => void;
+  onAddLink: (s: SocialShare) => void;
 }) {
   const show = (k: string) => columnVisibility[k] !== false;
   const sort = useSort<InitiatedSort>("date");
@@ -274,16 +272,11 @@ function InitiatedTable({
             {show("platform") && <TableCell><PlatformCell platform={s.platform} /></TableCell>}
             {show("socialLink") && (
               <TableCell className="max-w-[220px]">
-                {s.socialLink ? (
-                  <a href={s.socialLink} target="_blank" rel="noreferrer" className="text-primary hover:underline truncate block">
-                    {s.socialLink.replace(/^https:\/\//, "")}
-                  </a>
-                ) : (
-                  <button className="inline-flex items-center gap-1 text-primary hover:underline" onClick={() => onEditLink(s)}>
-                    <i className="bi bi-plus-circle" aria-hidden="true" />
-                    Add Link
-                  </button>
-                )}
+                {/* Initiated shares never have a link — adding one makes it a verified share. */}
+                <button className="inline-flex items-center gap-1 text-primary hover:underline" onClick={() => onAddLink(s)}>
+                  <i className="bi bi-plus-circle" aria-hidden="true" />
+                  Add Link
+                </button>
               </TableCell>
             )}
             <TableCell>
@@ -291,12 +284,7 @@ function InitiatedTable({
                 actions={[
                   { label: "View Asset", icon: "bi-image", onSelect: () => {} },
                   ...(s.requested ? [{ label: "View Share Request", icon: "bi-megaphone", onSelect: () => {} }] : []),
-                  ...(s.socialLink
-                    ? [
-                        { label: "Edit Social Link", icon: "bi-pencil", onSelect: () => onEditLink(s) },
-                        { label: "Delete Social Link", icon: "bi-trash", onSelect: () => onDeleteLink(s), destructive: true },
-                      ]
-                    : []),
+                  { label: "Add Social Link", icon: "bi-link-45deg", onSelect: () => onAddLink(s) },
                 ]}
               />
             </TableCell>
@@ -322,7 +310,7 @@ function SocialLinkDialog({
   // Re-seed whenever a different share opens the dialog.
   if (share && share.id !== lastShareId) {
     setLastShareId(share.id);
-    setValue(share.socialLink ?? "");
+    setValue("");
     setSubmitted(false);
   }
 
@@ -338,8 +326,8 @@ function SocialLinkDialog({
     <Dialog open={!!share} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{share?.socialLink ? "Edit Social Link" : "Add Social Link"}</DialogTitle>
-          <DialogDescription>Add the link to the published post.</DialogDescription>
+          <DialogTitle>Add Social Link</DialogTitle>
+          <DialogDescription>Add the link to the published post. The share moves to Verified Shares.</DialogDescription>
         </DialogHeader>
         <FormField label="Post link" htmlFor="social-link" required error={submitted ? error : undefined}>
           <Input
@@ -372,7 +360,7 @@ function SocialLinkDialog({
 
 export function VerifiedSharesTab({ shares }: { shares: SocialShare[] }) {
   const controls = useListControls("insights.verifiedShares", { columns: VERIFIED_COLUMNS, filters: SHARE_FILTER_SETTINGS });
-  const verified = useMemo(() => shares.filter((s) => s.status === "SHARED"), [shares]);
+  const verified = useMemo(() => shares.filter((s) => s.socialLink !== null), [shares]);
   const rows = useMemo(() => filterShares(verified, controls.search, controls.filters), [verified, controls.search, controls.filters]);
 
   return (
@@ -391,12 +379,12 @@ export function VerifiedSharesTab({ shares }: { shares: SocialShare[] }) {
 
 export function InitiatedSharesTab({ shares, onChange }: { shares: SocialShare[]; onChange: (next: SocialShare[]) => void }) {
   const controls = useListControls("insights.initiatedShares", { columns: INITIATED_COLUMNS, filters: SHARE_FILTER_SETTINGS });
-  const initiated = useMemo(() => shares.filter((s) => s.status === "INITIATED"), [shares]);
+  const initiated = useMemo(() => shares.filter((s) => s.socialLink === null), [shares]);
   const rows = useMemo(() => filterShares(initiated, controls.search, controls.filters), [initiated, controls.search, controls.filters]);
   const [editing, setEditing] = useState<SocialShare | null>(null);
 
-  const setLink = (target: SocialShare, socialLink: string | null) =>
-    onChange(shares.map((s) => (s.id === target.id ? { ...s, socialLink } : s)));
+  const addLink = (target: SocialShare, socialLink: string) =>
+    onChange(shares.map((s) => (s.id === target.id ? { ...s, socialLink, status: "SHARED" } : s)));
 
   return (
     <>
@@ -409,11 +397,7 @@ export function InitiatedSharesTab({ shares, onChange }: { shares: SocialShare[]
             rows={rows}
             perPage={controls.perPage}
             columnVisibility={controls.columnVisibility}
-            onEditLink={setEditing}
-            onDeleteLink={(s) => {
-              setLink(s, null);
-              toast({ title: "Social link deleted" });
-            }}
+            onAddLink={setEditing}
           />
         )}
       </div>
@@ -421,8 +405,8 @@ export function InitiatedSharesTab({ shares, onChange }: { shares: SocialShare[]
         share={editing}
         onOpenChange={(open) => !open && setEditing(null)}
         onSave={(link) => {
-          if (editing) setLink(editing, link);
-          toast({ title: editing?.socialLink ? "Social link updated" : "Social link added" });
+          if (editing) addLink(editing, link);
+          toast({ title: "Social link added", description: "The share moved to Verified Shares." });
           setEditing(null);
         }}
       />
