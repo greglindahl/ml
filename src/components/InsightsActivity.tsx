@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { format, formatDistanceToNowStrict, isSameDay, isToday, isYesterday } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/EmptyState";
 import { ListToolbar, useListControls } from "./ListToolbar";
@@ -43,6 +44,13 @@ const ACTIVITY_FILTERS: ListFilterDef[] = [
   { id: "date", label: "Date Range", icon: "bi-calendar", multi: false, options: ACTIVITY_DATE_OPTIONS },
 ];
 const ACTIVITY_FILTER_SETTINGS = ACTIVITY_FILTERS.map((f) => ({ key: f.id, label: f.label }));
+
+/** Prod abbreviates past a thousand: 16,240 → "16.2k". */
+function formatEventCount(n: number) {
+  if (n < 1000) return String(n);
+  const k = n / 1000;
+  return `${k >= 100 ? Math.round(k) : Number(k.toFixed(1))}k`;
+}
 
 function withinRange(date: Date, value: string | undefined) {
   if (!value) return true;
@@ -140,8 +148,18 @@ export function InsightsActivity() {
       <ListToolbar controls={controls} filterDefs={ACTIVITY_FILTERS} searchPlaceholder="Search activity" sheetTitle="Activity Filters" />
 
       <div className="min-h-[400px] flex flex-col gap-3">
-        <p className="text-[13px] text-muted-foreground" aria-live="polite">
-          Viewing {rows.length.toLocaleString("en-US")} {rows.length === 1 ? "Event" : "Events"}
+        {/* Prod's count treatment: muted label + success pill, right-aligned over the feed. */}
+        <p className="flex items-center justify-end gap-2 text-[15px] font-medium text-muted-foreground" aria-live="polite">
+          Viewing
+          <Badge
+            colorStyle="success"
+            theme="default"
+            shape="square"
+            className="rounded-md px-2 py-1 text-[13px] normal-case tracking-normal font-medium tabular-nums"
+            title={`${rows.length.toLocaleString("en-US")} ${rows.length === 1 ? "event" : "events"}`}
+          >
+            {formatEventCount(rows.length)} {rows.length === 1 ? "Event" : "Events"}
+          </Badge>
         </p>
 
         {rows.length === 0 ? (
