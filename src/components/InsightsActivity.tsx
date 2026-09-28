@@ -145,7 +145,7 @@ export function InsightsActivity() {
 
   return (
     <>
-      <ListToolbar controls={controls} filterDefs={ACTIVITY_FILTERS} searchPlaceholder="Search activity" sheetTitle="Activity Filters" />
+      <ListToolbar controls={controls} filterDefs={ACTIVITY_FILTERS} searchPlaceholder="Search activity" sheetTitle="Activity Filters" searchProposed />
 
       <div className="min-h-[400px] flex flex-col gap-3">
         {/* Prod's count treatment: muted label + success pill, right-aligned over the feed. */}

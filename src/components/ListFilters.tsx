@@ -138,23 +138,30 @@ export function ListSearchRow({ value, onChange, placeholder = "Search", onOpenS
 
       {onOpenSettings && (
         <div className="flex items-center gap-2 ml-auto">
-          <Tooltip delayDuration={700}>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
-                onClick={onOpenSettings}
-                aria-label="Settings"
-              >
-                <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">Settings</TooltipContent>
-          </Tooltip>
+          <SettingsButton onClick={onOpenSettings} />
         </div>
       )}
     </div>
+  );
+}
+
+/** The gear that opens View Settings. */
+export function SettingsButton({ onClick }: { onClick: () => void }) {
+  return (
+    <Tooltip delayDuration={700}>
+      <TooltipTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
+          onClick={onClick}
+          aria-label="Settings"
+        >
+          <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">Settings</TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -248,6 +255,8 @@ interface ListFilterBarProps {
   pillState?: ListPillState;
   onPillToggle?: (id: string, active: boolean) => void;
   onOpenFiltersSheet: () => void;
+  /** Right-aligned at the end of the row, e.g. the gear when there's no search row. */
+  trailing?: React.ReactNode;
 }
 
 export function ListFilterBar({
@@ -258,6 +267,7 @@ export function ListFilterBar({
   pillState = {},
   onPillToggle,
   onOpenFiltersSheet,
+  trailing,
 }: ListFilterBarProps) {
   const totalActive = countActiveFilters(value) + pills.filter((p) => pillState[p.id]).length;
 
@@ -290,6 +300,7 @@ export function ListFilterBar({
           />
         ))}
       </div>
+      {trailing && <div className="ml-auto flex items-center gap-2">{trailing}</div>}
     </div>
   );
 }

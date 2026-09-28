@@ -4,6 +4,8 @@ import {
   ListFilterBar,
   ListFiltersSheet,
   ListSearchRow,
+  SHOW_PROPOSED_FILTERS,
+  SettingsButton,
   isFilterAvailable,
   type ListFilterDef,
   type ListFilterState,
@@ -108,6 +110,8 @@ interface ListToolbarProps {
   columns?: SettingsOption[];
   searchPlaceholder?: string;
   sheetTitle?: string;
+  /** Prod has no search on this list — hidden unless SHOW_PROPOSED_FILTERS. */
+  searchProposed?: boolean;
 }
 
 export function ListToolbar({
@@ -117,6 +121,7 @@ export function ListToolbar({
   columns,
   searchPlaceholder,
   sheetTitle,
+  searchProposed = false,
 }: ListToolbarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -124,16 +129,22 @@ export function ListToolbar({
   const filterDefs = useMemo(() => allFilterDefs.filter(isFilterAvailable), [allFilterDefs]);
   const visibleFilters = filterDefs.filter((f) => controls.filterVisibility[f.id] !== false);
   const hasFilterRow = visibleFilters.length > 0 || pillDefs.length > 0;
+  const showSearch = !searchProposed || SHOW_PROPOSED_FILTERS;
+  const openSettings = columns ? () => setSettingsOpen(true) : undefined;
   const filterOptions = useMemo(() => filterDefs.map((f) => ({ key: f.id, label: f.label })), [filterDefs]);
 
   return (
     <>
-      <ListSearchRow
-        value={controls.search}
-        onChange={controls.setSearch}
-        placeholder={searchPlaceholder}
-        onOpenSettings={columns ? () => setSettingsOpen(true) : undefined}
-      />
+      {showSearch ? (
+        <ListSearchRow value={controls.search} onChange={controls.setSearch} placeholder={searchPlaceholder} onOpenSettings={openSettings} />
+      ) : (
+        // No search row: the gear rides at the end of the filter row instead.
+        openSettings && !hasFilterRow && (
+          <div className="flex justify-end">
+            <SettingsButton onClick={openSettings} />
+          </div>
+        )
+      )}
 
       {hasFilterRow && (
         <div>
@@ -145,6 +156,7 @@ export function ListToolbar({
             pillState={controls.pills}
             onPillToggle={controls.setPill}
             onOpenFiltersSheet={() => setSheetOpen(true)}
+            trailing={!showSearch && openSettings ? <SettingsButton onClick={openSettings} /> : undefined}
           />
         </div>
       )}

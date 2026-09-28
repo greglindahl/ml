@@ -235,6 +235,7 @@ function ExportsTab({ exports, onChange }: { exports: ConnectExport[]; onChange:
         pillDefs={EXPORT_PILLS}
         columns={EXPORT_COLUMNS}
         searchPlaceholder="Search exports"
+        searchProposed
         sheetTitle="Export Filters"
       />
       <div className="min-h-[400px]">
@@ -359,7 +360,7 @@ function IntegrationsTab({ integrations, onChange }: { integrations: Integration
   return (
     <>
       {/* No gear: prod's integrations list has no pagination or column manager. */}
-      <ListToolbar controls={controls} filterDefs={INTEGRATION_FILTERS} searchPlaceholder="Search integrations" sheetTitle="Integration Filters" />
+      <ListToolbar controls={controls} filterDefs={INTEGRATION_FILTERS} searchPlaceholder="Search integrations" sheetTitle="Integration Filters" searchProposed />
       <div className="min-h-[400px]">
         {rows.length === 0 ? (
           <EmptyState icon="bi-plug" title="No integrations found." onClearAll={controls.clearAll} />

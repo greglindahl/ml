@@ -128,6 +128,7 @@ export function InsightsUsers({ range, controls }: { range: InsightsRange; contr
         filterDefs={USERS_FILTERS}
         columns={USERS_COLUMN_SETTINGS}
         searchPlaceholder="Search users"
+        searchProposed
         sheetTitle="User Filters"
       />
 
