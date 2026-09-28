@@ -53,10 +53,13 @@ export function SortableHeadCell<F extends string>({
   label,
   field,
   sort,
+  className,
 }: {
   label: string;
   field: F;
   sort: { field: F; direction: SortDirection; toggle: (f: F) => void };
+  /** Applied to the label row, e.g. whitespace-nowrap for dense numeric tables. */
+  className?: string;
 }) {
   const active = sort.field === field;
   return (
@@ -65,7 +68,7 @@ export function SortableHeadCell<F extends string>({
       onClick={() => sort.toggle(field)}
       aria-sort={active ? (sort.direction === "asc" ? "ascending" : "descending") : "none"}
     >
-      <div className={HEAD_TEXT}>
+      <div className={cn(HEAD_TEXT, className)}>
         {label}
         {active ? (
           <i className={cn("bi text-[10px]", sort.direction === "asc" ? "bi-chevron-up" : "bi-chevron-down")} />
