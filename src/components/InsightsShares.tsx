@@ -216,13 +216,11 @@ export const INITIATED_COLUMNS = [
   { key: "date", label: "Date" },
   { key: "platform", label: "Platform" },
   { key: "socialLink", label: "Social Link" },
-  { key: "likes", label: "Likes" },
-  { key: "comments", label: "Comments" },
-  { key: "reshares", label: "Retweets/Shares" },
-  { key: "views", label: "Views" },
 ];
 
-type InitiatedSort = "user" | "date" | "platform" | "likes" | "comments" | "reshares" | "views";
+// No engagement columns here: prod shows Likes/Comments/Retweets/Views on
+// Initiated Shares, but that's a known bug — initiated shares aren't tracked.
+type InitiatedSort = "user" | "date" | "platform";
 
 function InitiatedTable({
   rows,
@@ -242,7 +240,7 @@ function InitiatedTable({
   const sorted = useMemo(
     () =>
       sortRows(rows, sort.field, sort.direction, (r, f) =>
-        f === "date" ? r.shared.getTime() : f === "user" ? r.user.name : f === "platform" ? r.platform : r[f],
+        f === "date" ? r.shared.getTime() : f === "user" ? r.user.name : r.platform,
       ),
     [rows, sort.field, sort.direction],
   );
@@ -257,10 +255,6 @@ function InitiatedTable({
           {show("date") && <SortableHeadCell label="Date" field="date" sort={sort} />}
           {show("platform") && <SortableHeadCell label="Platform" field="platform" sort={sort} />}
           {show("socialLink") && <HeadCell label="Social Link" />}
-          {show("likes") && <SortableHeadCell label="Likes" field="likes" sort={sort} />}
-          {show("comments") && <SortableHeadCell label="Comments" field="comments" sort={sort} />}
-          {show("reshares") && <SortableHeadCell label="Retweets/Shares" field="reshares" sort={sort} />}
-          {show("views") && <SortableHeadCell label="Views" field="views" sort={sort} />}
           <TableHead className="w-[40px]" />
         </TableRow>
       </TableHeader>
@@ -292,10 +286,6 @@ function InitiatedTable({
                 )}
               </TableCell>
             )}
-            {show("likes") && <TableCell className="tabular-nums">{s.socialLink ? num(s.likes) : "—"}</TableCell>}
-            {show("comments") && <TableCell className="tabular-nums">{s.socialLink ? num(s.comments) : "—"}</TableCell>}
-            {show("reshares") && <TableCell className="tabular-nums">{s.socialLink ? num(s.reshares) : "—"}</TableCell>}
-            {show("views") && <TableCell className="tabular-nums">{s.socialLink ? num(s.views) : "—"}</TableCell>}
             <TableCell>
               <RowActions
                 actions={[
@@ -349,7 +339,7 @@ function SocialLinkDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{share?.socialLink ? "Edit Social Link" : "Add Social Link"}</DialogTitle>
-          <DialogDescription>Linking the post lets Greenfly track its likes, comments and views.</DialogDescription>
+          <DialogDescription>Add the link to the published post.</DialogDescription>
         </DialogHeader>
         <FormField label="Post link" htmlFor="social-link" required error={submitted ? error : undefined}>
           <Input
