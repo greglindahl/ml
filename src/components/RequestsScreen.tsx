@@ -43,7 +43,7 @@ interface RequestsScreenProps {
 
 export function RequestsScreen({ isMobile = false, initialTab }: RequestsScreenProps) {
   // Active tab — controlled so the header CTA can swap its label
-  const [activeTab, setActiveTab] = useState<"campaigns" | "requests">(validTab(initialTab, ["campaigns", "requests"] as const) ?? "campaigns");
+  const [activeTab, setActiveTab] = useState<"campaigns" | "requests">(validTab(initialTab, ["requests", "campaigns"] as const) ?? "requests");
   useScreenSlug("requests", activeTab);
 
   // Search state
@@ -141,8 +141,8 @@ export function RequestsScreen({ isMobile = false, initialTab }: RequestsScreenP
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "campaigns" | "requests")} className="flex flex-col px-6 md:px-9">
         <SectionTabs
           tabs={[
-            { value: "campaigns", label: "Campaigns" },
             { value: "requests", label: "Requests" },
+            { value: "campaigns", label: "Campaigns" },
           ]}
           value={activeTab}
           onValueChange={(v) => setActiveTab(v as "campaigns" | "requests")}
