@@ -84,9 +84,12 @@ const archivedPill = (noun: string): ListPillDef => ({
 const allImportGalleries = uniqueBy(mockImports.flatMap((i) => i.galleries), (g) => g.id);
 const allImportRules = uniqueBy(mockImports.flatMap((i) => i.routingRules), (r) => r.id);
 
+// Prod's only Connect filters are the "View only archived" toggles on Imports and
+// Exports. Every dropdown below is a design proposal, marked `proposed` so it stays
+// hidden until prod supports it (see SHOW_PROPOSED_FILTERS in ListFilters).
 const IMPORT_FILTERS: ListFilterDef[] = [
   {
-    id: "service",
+    id: "service", proposed: true,
     label: "Service",
     icon: "bi-plug",
     searchable: true,
@@ -95,11 +98,11 @@ const IMPORT_FILTERS: ListFilterDef[] = [
       label: getDamTypeLabel(i.credential.damType),
     })),
   },
-  { id: "status", label: "Status", icon: "bi-activity", options: options({ active: IMPORT_STATUS_LABELS.active, paused: IMPORT_STATUS_LABELS.paused }) },
-  { id: "lastRun", label: "Last Run", icon: "bi-clock-history", options: options(IMPORT_RUN_STATE_LABELS) },
-  { id: "type", label: "Import Type", icon: "bi-arrow-repeat", options: options(IMPORT_TYPE_LABELS) },
+  { id: "status", proposed: true, label: "Status", icon: "bi-activity", options: options({ active: IMPORT_STATUS_LABELS.active, paused: IMPORT_STATUS_LABELS.paused }) },
+  { id: "lastRun", proposed: true, label: "Last Run", icon: "bi-clock-history", options: options(IMPORT_RUN_STATE_LABELS) },
+  { id: "type", proposed: true, label: "Import Type", icon: "bi-arrow-repeat", options: options(IMPORT_TYPE_LABELS) },
   {
-    id: "destination",
+    id: "destination", proposed: true,
     label: "Destination",
     icon: "bi-signpost-split",
     searchable: true,
@@ -108,7 +111,7 @@ const IMPORT_FILTERS: ListFilterDef[] = [
       ...allImportRules.map((r) => ({ value: `rule:${r.id}`, label: `Rule: ${r.name}` })),
     ],
   },
-  { id: "created", label: "Created Date", icon: "bi-calendar", multi: false, options: CREATED_DATE_OPTIONS },
+  { id: "created", proposed: true, label: "Created Date", icon: "bi-calendar", multi: false, options: CREATED_DATE_OPTIONS },
 ];
 const IMPORT_FILTER_SETTINGS = toSettings(IMPORT_FILTERS);
 const IMPORT_PILLS = [archivedPill("imports")];
@@ -186,20 +189,20 @@ function ImportsTab({ imports, onChange }: { imports: DamImport[]; onChange: (ne
 
 const EXPORT_FILTERS: ListFilterDef[] = [
   {
-    id: "integration",
+    id: "integration", proposed: true,
     label: "Integration",
     icon: "bi-plug",
     options: uniqueBy(mockExports, (e) => e.damType).map((e) => ({ value: e.damType, label: getDamTypeLabel(e.damType) })),
   },
-  { id: "status", label: "Status", icon: "bi-activity", options: options({ active: EXPORT_STATUS_LABELS.active, invalid: EXPORT_STATUS_LABELS.invalid }) },
+  { id: "status", proposed: true, label: "Status", icon: "bi-activity", options: options({ active: EXPORT_STATUS_LABELS.active, invalid: EXPORT_STATUS_LABELS.invalid }) },
   {
-    id: "sourceGallery",
+    id: "sourceGallery", proposed: true,
     label: "Source Gallery",
     icon: "bi-images",
     searchable: true,
     options: uniqueBy(mockExports.map((e) => e.sourceGallery), (g) => g.id).map((g) => ({ value: g.id, label: g.name })),
   },
-  { id: "created", label: "Created Date", icon: "bi-calendar", multi: false, options: CREATED_DATE_OPTIONS },
+  { id: "created", proposed: true, label: "Created Date", icon: "bi-calendar", multi: false, options: CREATED_DATE_OPTIONS },
 ];
 const EXPORT_FILTER_SETTINGS = toSettings(EXPORT_FILTERS);
 const EXPORT_PILLS = [archivedPill("exports")];
@@ -264,20 +267,20 @@ function ExportsTab({ exports, onChange }: { exports: ConnectExport[]; onChange:
 
 const RULE_FILTERS: ListFilterDef[] = [
   {
-    id: "tag",
+    id: "tag", proposed: true,
     label: "Tag",
     icon: "bi-tag",
     searchable: true,
     options: uniqueBy(mockRoutingRules.flatMap((r) => r.tagMappings.map((m) => m.tag)), (t) => t.toLowerCase()).map((t) => ({ value: t, label: t })),
   },
   {
-    id: "gallery",
+    id: "gallery", proposed: true,
     label: "Gallery",
     icon: "bi-images",
     searchable: true,
     options: uniqueBy(mockRoutingRules.flatMap((r) => r.tagMappings.flatMap((m) => m.galleries)), (g) => g.id).map((g) => ({ value: g.id, label: g.name })),
   },
-  { id: "created", label: "Created Date", icon: "bi-calendar", multi: false, options: CREATED_DATE_OPTIONS },
+  { id: "created", proposed: true, label: "Created Date", icon: "bi-calendar", multi: false, options: CREATED_DATE_OPTIONS },
 ];
 const RULE_FILTER_SETTINGS = toSettings(RULE_FILTERS);
 
@@ -334,7 +337,7 @@ function RoutingRulesTab({ rules, onChange }: { rules: RoutingRule[]; onChange: 
 // ---------------------------------------------------------------------------
 
 const INTEGRATION_FILTERS: ListFilterDef[] = [
-  { id: "status", label: "Status", icon: "bi-activity", options: options(INTEGRATION_STATUS_LABELS) },
+  { id: "status", proposed: true, label: "Status", icon: "bi-activity", options: options(INTEGRATION_STATUS_LABELS) },
 ];
 const INTEGRATION_FILTER_SETTINGS = toSettings(INTEGRATION_FILTERS);
 

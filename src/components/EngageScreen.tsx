@@ -52,22 +52,24 @@ type EngageTab = (typeof ENGAGE_TABS)[number]["value"];
 
 const unique = (values: string[]) => [...new Set(values)].sort((a, b) => a.localeCompare(b));
 
+// Prod's only campaign filter is Status (Active / Expired) — the Expired pill below.
+// These dropdowns are proposals, hidden until prod supports them.
 const CAMPAIGN_FILTERS: ListFilterDef[] = [
   {
-    id: "creator",
+    id: "creator", proposed: true,
     label: "Creator",
     icon: "bi-person",
     searchable: true,
     options: unique(mockEngageCampaigns.map((c) => c.createdBy)).map((name) => ({ value: name, label: name })),
   },
   {
-    id: "mediaRequested",
+    id: "mediaRequested", proposed: true,
     label: "Media Requested",
     icon: "bi-camera",
     options: Object.entries(MEDIA_REQUESTED_LABELS).map(([value, label]) => ({ value, label })),
   },
   {
-    id: "gallery",
+    id: "gallery", proposed: true,
     label: "Gallery",
     icon: "bi-images",
     searchable: true,
@@ -75,7 +77,7 @@ const CAMPAIGN_FILTERS: ListFilterDef[] = [
       ...new Map(mockEngageCampaigns.filter((c) => c.gallery).map((c) => [c.gallery!.id, c.gallery!.name])).entries(),
     ].map(([value, label]) => ({ value, label })),
   },
-  { id: "created", label: "Created Date", icon: "bi-calendar", multi: false, options: CREATED_DATE_OPTIONS },
+  { id: "created", proposed: true, label: "Created Date", icon: "bi-calendar", multi: false, options: CREATED_DATE_OPTIONS },
 ];
 const CAMPAIGN_FILTER_SETTINGS = CAMPAIGN_FILTERS.map((f) => ({ key: f.id, label: f.label }));
 

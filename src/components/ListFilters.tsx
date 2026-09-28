@@ -42,7 +42,20 @@ export interface ListFilterDef {
   multi?: boolean;
   /** Adds a search input to the dropdown — use for long option lists. */
   searchable?: boolean;
+  /**
+   * A filter prod doesn't have yet (a design proposal). Hidden everywhere —
+   * filter row, chips, sheet and View Settings — unless SHOW_PROPOSED_FILTERS.
+   */
+  proposed?: boolean;
 }
+
+/**
+ * Flip to preview proposed filters. Off by default: the prototype should only
+ * show filters prod actually supports.
+ */
+export const SHOW_PROPOSED_FILTERS = false;
+
+export const isFilterAvailable = (def: ListFilterDef) => SHOW_PROPOSED_FILTERS || !def.proposed;
 
 export interface ListPillDef {
   id: string;

@@ -4,6 +4,7 @@ import {
   ListFilterBar,
   ListFiltersSheet,
   ListSearchRow,
+  isFilterAvailable,
   type ListFilterDef,
   type ListFilterState,
   type ListPillDef,
@@ -111,7 +112,7 @@ interface ListToolbarProps {
 
 export function ListToolbar({
   controls,
-  filterDefs = [],
+  filterDefs: allFilterDefs = [],
   pillDefs = [],
   columns,
   searchPlaceholder,
@@ -120,6 +121,7 @@ export function ListToolbar({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
 
+  const filterDefs = useMemo(() => allFilterDefs.filter(isFilterAvailable), [allFilterDefs]);
   const visibleFilters = filterDefs.filter((f) => controls.filterVisibility[f.id] !== false);
   const hasFilterRow = visibleFilters.length > 0 || pillDefs.length > 0;
   const filterOptions = useMemo(() => filterDefs.map((f) => ({ key: f.id, label: f.label })), [filterDefs]);
