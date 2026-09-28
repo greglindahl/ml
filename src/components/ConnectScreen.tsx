@@ -413,7 +413,8 @@ export function ConnectScreen({ isMobile = false, initialTab }: ConnectScreenPro
       {/* Spacer for consistent header position - matches LibraryScreen */}
       {!isMobile && <div className="mb-2 h-[44px] flex-shrink-0" />}
       {/* Header */}
-      <div className="px-6 md:px-9 pb-4 flex items-center justify-between gap-3 min-h-10">
+      <div className="px-6 md:px-9 pb-4 flex items-center justify-between gap-3 min-h-[56px]">
+        {/* min-h = 40px CTA + pb-4, so tabs without a CTA don't shift the title. */}
         <h1 className="text-[26px] font-semibold text-foreground">Connect</h1>
         {cta && (
           <Button onClick={() => {}}>

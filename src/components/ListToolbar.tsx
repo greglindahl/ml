@@ -147,7 +147,10 @@ export function ListToolbar({
         </div>
       )}
 
-      <AppliedFilterChips filters={visibleFilters} value={controls.filters} onChange={controls.setFilters} />
+      {/* Reserved chip row only where dropdown filters exist to produce chips. */}
+      {visibleFilters.length > 0 && (
+        <AppliedFilterChips filters={visibleFilters} value={controls.filters} onChange={controls.setFilters} />
+      )}
 
       {hasFilterRow && (
         <ListFiltersSheet
