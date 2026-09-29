@@ -2,7 +2,7 @@
 
 **Branch:** `multipart-updates`
 **Ticket:** [PORTAL-13077](https://greenfly.atlassian.net/browse/PORTAL-13077) — Resume interrupted uploads by reselecting files in bulk
-**Status:** Banner + batch actions built (build plan steps 1, 2, 4, and an interim exact-match version of 3/6). Summary surface still open.
+**Status:** Simplified flow from the 2026-09-29 call is built (see §5a). Edge cases (changed / extra / expired / ambiguous) to cover when the team reconvenes.
 
 ---
 
@@ -56,14 +56,28 @@ Goal: one multi-select (files, or a folder where supported) → automatic re-mat
 - **Batch action = banner pinned above the row list** (chosen 2026-09-28). It shows whenever anything is resumable, e.g. "ⓘ 3 uploads were interrupted — [Reselect files]". Per-row ↻ stays for single reselect.
 - **Summary surface: OPEN.** The recommendation is a **modal dialog** (grouped sections, a choice per unclear file, one "Resume N uploads" confirm; progress then continues in the tray). The alternative is inline in the tray, which gets cramped with many files. Greg hasn't confirmed yet.
 
-### Built so far (2026-09-29)
+## 5a. Call decisions (2026-09-29) and what's built
 
-- `ChunkedUpload.lastModified` (real files keep theirs). `__uploadDemo.interrupt()` turns in-flight rows into prod's restored state, with progress kept at confirmed parts and prod's two messages.
-- The tray banner, pinned above the rows, has two lines:
-  - "N uploads were interrupted… **Reselect files**" opens one multi-select picker.
-  - "N uploads failed. **Retry all**" retries every failure whose file is still in memory.
-- `matchReselectedFiles` in `mockUploadData.ts`: 1:1 on name + size + lastModified, order-independent. Exact matches resume from prior progress; everything else stays waiting. The result is reported in a toast **as a stand-in for the summary**.
-- Not yet: the grouped summary, changed/extra/expired/ambiguous handling (duplicate keys currently pair first-come), folder picking and `reselectScenario()`.
+This came out of a call about CS feedback via Lucy: bulk retry is missing, so users handle failures row by row. The call **narrowed the ticket**. The ticket's grouped summary dialog is dropped in favor of the lighter flow below.
+
+| Call decision | Prototype |
+|---|---|
+| Bulk retry is a **banner**, not in the header. Its single CTA is **"Retry All"**. | One banner line ("N uploads failed.", with a sub-line when some need reselecting) and one **Retry All** button. It restarts in-memory failures immediately, and if any were interrupted, the same click opens one multi-select picker. |
+| Match on name + last modified + size, via a key-value map. | `matchReselectedFiles` in `mockUploadData.ts` uses a Map keyed `name\|size\|lastModified`. It's 1:1 and order-independent. |
+| A confident match auto-resumes. | It resumes from confirmed parts (the bar keeps prior %). No confirm step. |
+| A file with no match is flagged "no matching file found", with a prompt to reselect individually. | Interrupted rows no pick matched get "No matching file found. Click the refresh icon to reselect this file." Picked files that matched nothing are counted in the toast. The row ↻ opens a real single-file picker using prod's rules: a name/size mismatch shows prod's error, and a changed lastModified restarts from 0. |
+| Failures persist in local storage across refreshes until cleared or X'd. | `src/lib/uploadPersistence.ts`, keyed `gf-resumable-uploads-<userId>` with a 12h TTL, as in prod. A reload brings rows back as interrupted, with progress kept. X, close and success all remove the entry. |
+| A short-lived **success history** avoids duplicates, with the warning "already uploaded, add again or skip?" | `gf-upload-history-<userId>` (metadata only, 12h). A picked file that matches no failure but is in history opens an "already uploaded" dialog with **Skip / Upload Again**. **New in prod: it only stores failures today.** |
+| A file that still fails after retry is left as-is and bulk retry stays available. | It goes back to FAILED and the banner returns. No special casing. |
+| No failed/succeeded filter in the tray; the view stays mixed. | Unchanged. Failures sort to the top, as in prod. |
+
+**Where the call and the ticket still disagree (for the next sync):**
+- **Changed files** (same name/size, new lastModified). The ticket wants "upload fresh or leave it". Under the call's flow they're simply unmatched. Prod's single-row reselect still silently restarts them, which the ticket says must ask first.
+- **Extra files** (picked, matching nothing). The ticket wants "upload as new or ignore". The call only flags them, so the prototype counts them in a toast and doesn't upload them.
+- **Expired sessions and ambiguous matches** weren't discussed. Today, duplicate keys pair first-come, and expired entries are just pruned on load.
+- The tooltip bug on the Library multi-select banner, from the same call, is a separate prod patch and isn't on this branch.
+
+**Demo:** Upload files, then run `__uploadDemo.interrupt()` in the console and reload the page. Click **Retry All** and re-pick the same files.
 
 ## 6. Build plan (prototype)
 

@@ -4,7 +4,17 @@ import { useUploadQueue } from "@/hooks/useUploadQueue";
 import { UploadProgressWindowItem } from "@/components/UploadProgressWindowItem";
 import { CancelUploadsDialog } from "@/components/CancelUploadsDialog";
 import { toast } from "@/hooks/use-toast";
-import { isRetryable, needsReselection, sortUploadsForDisplay } from "@/lib/mockUploadData";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { needsReselection, sortUploadsForDisplay } from "@/lib/mockUploadData";
 import { cn } from "@/lib/utils";
 
 /**
@@ -28,8 +38,9 @@ export function UploadProgressWindow() {
     abortUpload,
     dismissUpload,
     retryUpload,
-    retryAllFailed,
-    resumeWithFiles,
+    retryAll,
+    reselectFile,
+    startUploadsForFiles,
   } = useUploadQueue();
 
   const isMobile = useIsMobile();
@@ -41,27 +52,34 @@ export function UploadProgressWindow() {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const sorted = sortUploadsForDisplay(uploads);
-  const retryableCount = uploads.filter(isRetryable).length;
   const reselectCount = uploads.filter(needsReselection).length;
   const reselectInputRef = useRef<HTMLInputElement>(null);
+  const [duplicates, setDuplicates] = useState<File[]>([]);
 
+  // One CTA for every failure (call notes): in-memory ones restart now; if any
+  // were interrupted, the same click opens one picker to reselect them all.
   const handleRetryAll = () => {
-    const count = retryAllFailed();
-    toast({ title: `Retrying ${count} ${count === 1 ? "upload" : "uploads"}` });
+    const { retried } = retryAll();
+    if (reselectCount > 0) {
+      reselectInputRef.current?.click();
+    } else {
+      toast({ title: `Retrying ${retried} ${retried === 1 ? "upload" : "uploads"}` });
+    }
   };
 
   const handleFilesReselected = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
     event.target.value = ""; // so picking the same files again still fires
     if (files.length === 0) return;
-    const { resumed, unmatchedFiles, stillWaiting } = resumeWithFiles(files);
-    // Interim report until the grouped summary lands (PORTAL-13077 §5).
+    const { resumed, alreadyUploaded, unmatchedFiles, stillWaiting } = retryAll(files);
+    if (alreadyUploaded.length > 0) setDuplicates(alreadyUploaded);
     const notes = [
-      unmatchedFiles > 0 && `${unmatchedFiles} selected ${unmatchedFiles === 1 ? "file didn't" : "files didn't"} match an interrupted upload.`,
-      stillWaiting > 0 && `${stillWaiting} ${stillWaiting === 1 ? "upload is" : "uploads are"} still waiting for ${stillWaiting === 1 ? "its file" : "their files"}.`,
+      unmatchedFiles > 0 && `${unmatchedFiles} selected ${unmatchedFiles === 1 ? "file didn't" : "files didn't"} match a failed upload.`,
+      stillWaiting > 0 && `${stillWaiting} ${stillWaiting === 1 ? "upload still needs its file" : "uploads still need their files"}; reselect ${stillWaiting === 1 ? "it" : "them"} from the row.`,
     ].filter(Boolean);
+    if (resumed === 0 && notes.length === 0) return; // only duplicates: the dialog says it all
     toast({
-      title: resumed > 0 ? `Resuming ${resumed} ${resumed === 1 ? "upload" : "uploads"}` : "No matching files",
+      title: resumed > 0 ? `Resuming ${resumed} ${resumed === 1 ? "upload" : "uploads"}` : "No matching files found",
       description: notes.join(" ") || undefined,
     });
   };
@@ -209,25 +227,27 @@ export function UploadProgressWindow() {
           </div>
         </div>
 
-        {/* Batch actions, pinned above the rows (PORTAL-13077). Per-row ↻ still works for one file. */}
-        {!isCollapsed && (reselectCount > 0 || retryableCount > 0) && (
-          <div className="border-b bg-primary/5 divide-y divide-primary/10">
-            {reselectCount > 0 && (
-              <UploadBanner
-                icon="bi-info-circle"
-                message={`${reselectCount} ${reselectCount === 1 ? "upload was" : "uploads were"} interrupted. Reselect the files to pick up where they left off.`}
-                actionLabel="Reselect files"
-                onAction={() => reselectInputRef.current?.click()}
-              />
-            )}
-            {retryableCount > 0 && (
-              <UploadBanner
-                icon="bi-exclamation-circle"
-                message={`${retryableCount} ${retryableCount === 1 ? "upload" : "uploads"} failed.`}
-                actionLabel="Retry all"
-                onAction={handleRetryAll}
-              />
-            )}
+        {/* Bulk retry, pinned above the rows (PORTAL-13077). Row ↻ still retries one. */}
+        {!isCollapsed && failedCount > 0 && (
+          <div className="border-b bg-primary/5 flex items-start gap-2 px-3 py-2.5" role="status">
+            <i className="bi bi-exclamation-circle text-primary w-4 h-4 mt-px inline-flex items-center justify-center leading-none flex-shrink-0" aria-hidden="true" />
+            <p className="flex-1 min-w-0 text-[12px] leading-snug text-foreground">
+              {failedCount} {failedCount === 1 ? "upload" : "uploads"} failed.
+              {reselectCount > 0 && (
+                <span className="block text-muted-foreground">
+                  {reselectCount === failedCount
+                    ? `You'll reselect ${reselectCount === 1 ? "the file" : "the files"} to pick up where ${reselectCount === 1 ? "it" : "they"} left off.`
+                    : `${reselectCount} ${reselectCount === 1 ? "needs its file" : "need their files"} reselected to pick up where they left off.`}
+                </span>
+              )}
+            </p>
+            <button
+              type="button"
+              onClick={handleRetryAll}
+              className="flex-shrink-0 text-[12px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+            >
+              Retry All
+            </button>
             <input ref={reselectInputRef} type="file" multiple className="hidden" onChange={handleFilesReselected} aria-hidden="true" tabIndex={-1} />
           </div>
         )}
@@ -241,6 +261,7 @@ export function UploadProgressWindow() {
                   onAbort={() => abortUpload(upload.queueId)}
                   onDismiss={() => dismissUpload(upload.queueId)}
                   onRetry={() => retryUpload(upload.queueId)}
+                  onReselect={(file) => reselectFile(upload.queueId, file)}
                 />
               </div>
             ))}
@@ -251,6 +272,40 @@ export function UploadProgressWindow() {
           </div>
         )}
       </div>
+
+      {/* Duplicate check against recent successes, e.g. "this song already exists: add again or skip?" */}
+      <AlertDialog open={duplicates.length > 0} onOpenChange={(open) => !open && setDuplicates([])}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {duplicates.length === 1 ? "This file was already uploaded" : `${duplicates.length} files were already uploaded`}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  {duplicates.length === 1 ? "It's" : "They're"} already in the library. Uploading again will add a duplicate.
+                </p>
+                <ul className="max-h-40 overflow-auto text-foreground text-[13px] list-disc pl-5">
+                  {duplicates.map((f) => (
+                    <li key={`${f.name}|${f.size}|${f.lastModified}`} className="truncate">{f.name}</li>
+                  ))}
+                </ul>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Skip</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                startUploadsForFiles(duplicates);
+                setDuplicates([]);
+              }}
+            >
+              Upload Again
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <CancelUploadsDialog
         open={confirmOpen}
@@ -272,28 +327,3 @@ export function UploadProgressWindow() {
   );
 }
 
-function UploadBanner({
-  icon,
-  message,
-  actionLabel,
-  onAction,
-}: {
-  icon: string;
-  message: string;
-  actionLabel: string;
-  onAction: () => void;
-}) {
-  return (
-    <div className="flex items-start gap-2 px-3 py-2.5" role="status">
-      <i className={cn("bi", icon, "text-primary w-4 h-4 mt-px inline-flex items-center justify-center leading-none flex-shrink-0")} aria-hidden="true" />
-      <p className="flex-1 min-w-0 text-[12px] leading-snug text-foreground">{message}</p>
-      <button
-        type="button"
-        onClick={onAction}
-        className="flex-shrink-0 text-[12px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
-      >
-        {actionLabel}
-      </button>
-    </div>
-  );
-}

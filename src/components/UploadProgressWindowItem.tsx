@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,8 @@ interface UploadProgressWindowItemProps {
   onAbort: () => void;
   onDismiss: () => void;
   onRetry: () => void;
+  /** Interrupted rows: the ↻ opens a picker for this one file. */
+  onReselect: (file: File) => void;
 }
 
 /** Short relative time — uploads live on a seconds-to-minutes scale. */
@@ -37,8 +39,10 @@ export function UploadProgressWindowItem({
   onAbort,
   onDismiss,
   onRetry,
+  onReselect,
 }: UploadProgressWindowItemProps) {
   const relativeTime = useRelativeTime(upload.createdAt);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isReconnecting = upload.status === "RECONNECTING";
   const isProcessing = upload.status === "PROCESSING";
@@ -114,7 +118,7 @@ export function UploadProgressWindowItem({
             <button
               type="button"
               className="text-primary p-0 flex-shrink-0 hover:opacity-70 transition-opacity"
-              onClick={onRetry}
+              onClick={upload.needsFileReselection ? () => fileInputRef.current?.click() : onRetry}
               aria-label={upload.needsFileReselection ? "Select file to resume upload" : "Retry upload"}
             >
               <i
@@ -122,6 +126,21 @@ export function UploadProgressWindowItem({
                 aria-hidden="true"
               />
             </button>
+          )}
+
+          {upload.needsFileReselection && (
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              aria-hidden="true"
+              tabIndex={-1}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (file) onReselect(file);
+              }}
+            />
           )}
 
           {(showAbortButton || showDismissButton) && (
