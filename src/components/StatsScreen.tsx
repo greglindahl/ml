@@ -43,6 +43,22 @@ function overviewCsvRows(range: InsightsRange): (string | number)[][] {
   ];
 }
 
+/**
+ * Overview / Users date range as a facet at the top of the report, with prod's
+ * "+ / - Quantities…" print-out under it. It drives the cards as well as the
+ * table, so it sits above both rather than in the Users table's filter row.
+ */
+function ReportsDateRow({ range, onRangeChange }: { range: InsightsRange; onRangeChange: (r: InsightsRange) => void }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-1.5">
+        <DateRangeSelect value={range} onChange={onRangeChange} />
+      </div>
+      <RangePrintOut range={range} />
+    </div>
+  );
+}
+
 interface StatsScreenProps {
   isMobile?: boolean;
   /** Tab to open on mount (e.g. "activity" when deep-linked from Home). Defaults to "activity". */
@@ -83,10 +99,9 @@ export function StatsScreen({ isMobile = false, initialTab }: StatsScreenProps) 
         {/* min-h = 40px CTA + pb-4, so tabs without a CTA don't shift the title. */}
         <h1 className="text-[26px] font-semibold text-foreground">Insights</h1>
         {activeTab !== "activity" && (
-          // Prod's reports header: date range + primary Export, top right. The
-          // label collapses to the download icon below lg, as in prod.
+          // Primary Export, top right; the label collapses to the icon below lg, as
+          // in prod. The date range lives in the content as a facet (see below).
           <div className="flex items-center gap-3">
-            {(activeTab === "overview" || activeTab === "users") && <DateRangeSelect value={range} onChange={setRange} />}
             <Button onClick={exportCsv} aria-label="Export as CSV">
               <i className="bi bi-download text-base lg:hidden" />
               <span className="max-lg:hidden">Export as CSV</span>
@@ -103,12 +118,12 @@ export function StatsScreen({ isMobile = false, initialTab }: StatsScreenProps) 
         </TabsContent>
 
         <TabsContent value="overview" className="py-6 mt-0 flex flex-col gap-4 data-[state=inactive]:hidden">
-          <RangePrintOut range={range} />
+          <ReportsDateRow range={range} onRangeChange={setRange} />
           <InsightsOverview range={range} />
         </TabsContent>
 
         <TabsContent value="users" className="py-6 mt-0 flex flex-col gap-4 data-[state=inactive]:hidden">
-          <RangePrintOut range={range} />
+          <ReportsDateRow range={range} onRangeChange={setRange} />
           <InsightsUsers range={range} controls={usersControls} />
         </TabsContent>
 
