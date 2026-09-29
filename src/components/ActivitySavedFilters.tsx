@@ -269,13 +269,13 @@ export function useActivitySavedFilters({
               variant="outline"
               size="sm"
               className={cn(
-                "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3] max-w-[260px]",
+                "saved-filters-trigger h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3] max-w-[260px]",
                 selected && "bg-primary/10 border-primary text-primary",
               )}
               aria-label={selected ? `Saved filter: ${selected.name}` : "Saved Filters"}
             >
               <i className={cn("bi w-4 h-4 inline-flex items-center justify-center leading-none", selected ? "bi-bookmark-fill" : "bi-bookmark")} />
-              <span className="filter-label truncate">{selected ? selected.name : "Saved Filters"}</span>
+              <span className="filter-label truncate flex-1 text-left">{selected ? selected.name : "Saved Filters"}</span>
               {!selected && saved.length > 0 && (
                 <span className="inline-flex items-center justify-center rounded-full bg-muted text-foreground text-[10px] min-w-4 h-4 px-1 tabular-nums">
                   {saved.length}

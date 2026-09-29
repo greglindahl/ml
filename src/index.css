@@ -487,6 +487,22 @@
   }
 }
 
+/* Activity › Saved Filters trigger: hold the width of "Saved Filters [n] ▾" so
+   picking a short name ("aj") doesn't shrink it. */
+.saved-filters-trigger {
+  /* px, not rem: the root font is 15px, and the label + count + chevron
+     measure ~181px at the filter-row type size. */
+  min-width: 184px;
+}
+
+@container filterbar (max-width: 1023px) {
+  /* Icon-only: hold the width of bookmark + count + chevron, which loses the
+     count once a saved filter is selected. */
+  .saved-filters-trigger {
+    min-width: 92px;
+  }
+}
+
 /* Wider threshold for filter bars with many chips (e.g. Manage Users — no folder
    sidebar consuming width, more chips than Library). Tuned to the chip-row's
    natural width (~1134px) with a ~65px buffer. */
