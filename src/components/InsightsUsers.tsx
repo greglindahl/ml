@@ -14,14 +14,32 @@ import { formatNumber, getUserMetrics, getUsersTiles, type InsightsRange, type U
 type MetricKey = Exclude<keyof UserMetricsRow, "user">;
 type SortField = "name" | MetricKey;
 
-interface ColumnGroup {
+/**
+ * Prod feature flags that gate parts of the Users report, set the way test and
+ * prod run today. The fulfillment cards and the request column groups are in
+ * prod's code but switched off, so the prototype hides them too; flip a flag
+ * to preview what it unlocks.
+ */
+const USERS_REPORT_FLAGS = {
+  V1_SHARE_REQUESTS: false,
+  V1_CONTENT_REQUESTS: false,
+  DASHBOARD_USERS_GALLERY_ENGAGEMENT_DISABLED: true,
+};
+
+type FlagGate = { requireFlag?: keyof typeof USERS_REPORT_FLAGS; disabledByFlag?: keyof typeof USERS_REPORT_FLAGS };
+
+/** Prod's users-page selector: hidden if its disabling flag is on, or its required flag is off. */
+const isEnabled = ({ requireFlag, disabledByFlag }: FlagGate) =>
+  !(disabledByFlag && USERS_REPORT_FLAGS[disabledByFlag]) && (!requireFlag || USERS_REPORT_FLAGS[requireFlag]);
+
+interface ColumnGroup extends FlagGate {
   key: string;
   label: string;
   columns: { key: MetricKey; label: string; pct?: boolean }[];
 }
 
 /** Prod's column groups, in order. Each is one "Manage Columns" toggle — prod's show/hide buttons. */
-const COLUMN_GROUPS: ColumnGroup[] = [
+const ALL_COLUMN_GROUPS: ColumnGroup[] = [
   {
     key: "universal",
     label: "Universal Metrics",
@@ -35,6 +53,7 @@ const COLUMN_GROUPS: ColumnGroup[] = [
   {
     key: "shareRequests",
     label: "Share Requests",
+    requireFlag: "V1_SHARE_REQUESTS",
     columns: [
       { key: "shareRequestsSent", label: "Sent" },
       { key: "shareRequestsFulfilled", label: "Fulfilled" },
@@ -44,6 +63,7 @@ const COLUMN_GROUPS: ColumnGroup[] = [
   {
     key: "contentRequests",
     label: "Content Requests",
+    requireFlag: "V1_CONTENT_REQUESTS",
     columns: [
       { key: "contentRequestsSent", label: "Sent" },
       { key: "contentRequestsFulfilled", label: "Fulfilled" },
@@ -64,17 +84,20 @@ const COLUMN_GROUPS: ColumnGroup[] = [
 ];
 
 /** Prod's tooltips and icons (dashboardUsersEngagementNumberStructure). */
-const TILE_META: Record<string, { tooltip: string; icon: string }> = {
+const TILE_META: Record<string, { tooltip: string; icon: string } & FlagGate> = {
   "Total Uploads": { icon: "bi-upload", tooltip: "Total # of uploads across your network" },
   "Total Downloads": { icon: "bi-download", tooltip: "Total # of downloads across your network" },
   "Total Shares": { icon: "bi-share", tooltip: "Total # of shares across your network" },
-  "Share Request Fulfillment": { icon: "bi-share", tooltip: "The percentage of users who shared content to social via Share Requests" },
-  "Content Request Fulfillment": { icon: "bi-camera", tooltip: "The percentage of users who uploaded content via Content Requests" },
+  "Share Request Fulfillment": { requireFlag: "V1_SHARE_REQUESTS", icon: "bi-share", tooltip: "The percentage of users who shared content to social via Share Requests" },
+  "Content Request Fulfillment": { requireFlag: "V1_CONTENT_REQUESTS", icon: "bi-camera", tooltip: "The percentage of users who uploaded content via Content Requests" },
   "Gallery Engagement": {
+    disabledByFlag: "DASHBOARD_USERS_GALLERY_ENGAGEMENT_DISABLED",
     icon: "bi-image",
     tooltip: "The percentage of users with Gallery access who viewed, downloaded or shared content from a Gallery",
   },
 };
+
+const COLUMN_GROUPS = ALL_COLUMN_GROUPS.filter(isEnabled);
 
 export const USERS_COLUMN_SETTINGS = COLUMN_GROUPS.map((g) => ({ key: g.key, label: g.label }));
 
@@ -127,13 +150,13 @@ export function InsightsUsers({ range, controls }: { range: InsightsRange; contr
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Prod's engagement numbers: one card per metric, two rows of three. */}
+      {/* Prod's engagement numbers: one card per metric; the second row is flag-gated. */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
-        {tiles.counts.map((t) => (
-          <MetricCard key={t.label} title={t.label} value={t.value} {...TILE_META[t.label]} />
+        {tiles.counts.filter((t) => isEnabled(TILE_META[t.label])).map((t) => (
+          <MetricCard key={t.label} title={t.label} value={t.value} icon={TILE_META[t.label].icon} tooltip={TILE_META[t.label].tooltip} />
         ))}
-        {tiles.percents.map((t) => (
-          <MetricCard key={t.label} title={t.label} value={t.value} isPercent {...TILE_META[t.label]} />
+        {tiles.percents.filter((t) => isEnabled(TILE_META[t.label])).map((t) => (
+          <MetricCard key={t.label} title={t.label} value={t.value} isPercent icon={TILE_META[t.label].icon} tooltip={TILE_META[t.label].tooltip} />
         ))}
       </div>
 
