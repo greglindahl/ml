@@ -46,6 +46,7 @@ import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, 
 import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
 import { relevanceScore, capRelevanceResults, isRelevanceCapped, RELEVANCE_RESULT_LIMIT } from "@/lib/relevance";
 import { FolderSidebar } from "@/components/FolderSidebar";
+import { BrandingTab, WorkflowsTab } from "@/components/LibraryListTabs";
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
 import { NewGalleryDialog, type NewGalleryData } from "@/components/NewGalleryDialog";
@@ -1454,7 +1455,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
   return (
     <div className="flex-1 flex h-screen overflow-hidden">
-      {/* Folders Sidebar with DnD */}
+      {/* Folders Sidebar with DnD. Hidden on Workflows and Branding, which
+          don't use the folder tree (interim until the Library IA changes). */}
+      {!(activeFolder === "all" && (activeTab === "workflows" || activeTab === "branding")) && (
       <FolderSidebar
         folderTree={folderTree}
         activeFolder={activeFolder}
@@ -1468,6 +1471,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
         showArchived={archivedFoldersOnly}
         onToggleArchived={setArchivedFoldersOnly}
       />
+      )}
 
       {/* Main Content Area - Show GalleryDetailsView, FolderDetailsView, or Library content */}
       {activeGallery ? (
@@ -2856,16 +2860,12 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             </Tabs>
           </TabsContent>
 
-          <TabsContent value="branding" className="flex-1 overflow-y-auto py-6 mt-0">
-            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
-              <p>Branding content placeholder</p>
-            </div>
+          <TabsContent value="branding" className="flex-1 overflow-y-auto py-6 mt-0 flex flex-col gap-4 data-[state=inactive]:hidden">
+            <BrandingTab />
           </TabsContent>
 
-          <TabsContent value="workflows" className="flex-1 overflow-y-auto py-6 mt-0">
-            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
-              <p>Workflows content placeholder</p>
-            </div>
+          <TabsContent value="workflows" className="flex-1 overflow-y-auto py-6 mt-0 flex flex-col gap-4 data-[state=inactive]:hidden">
+            <WorkflowsTab />
           </TabsContent>
         </Tabs>
       </div>
