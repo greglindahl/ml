@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { PROTO_VARIANT_PARAMS } from "@/lib/protoVariants";
 
 /**
  * Keeps the address bar shareable for a screen: writes `?screen=<name>&tab=<tab>`
@@ -11,9 +12,15 @@ import { useEffect } from "react";
  */
 export function useScreenSlug(screen: string, tab?: string) {
   useEffect(() => {
+    const current = new URLSearchParams(window.location.search);
     const params = new URLSearchParams();
     params.set("screen", screen);
     if (tab) params.set("tab", tab);
+    // Design-review variant switches ride along so a shared link keeps them.
+    PROTO_VARIANT_PARAMS.forEach((key) => {
+      const value = current.get(key);
+      if (value) params.set(key, value);
+    });
     window.history.replaceState(null, "", `?${params.toString()}`);
   }, [screen, tab]);
 }

@@ -8,7 +8,9 @@ import { EmptyState } from "@/components/EmptyState";
 import { ListToolbar, useListControls } from "./ListToolbar";
 import { matchesFilter, type ListFilterDef, type ListFilterState } from "./ListFilters";
 import { RowActions } from "./ListTable";
-import { useActivitySavedFilters } from "./ActivitySavedFilters";
+import { useActivitySavedFilters, useStoredSavedFilters } from "./ActivitySavedFilters";
+import { useActivitySavedViews } from "./ActivitySavedViews";
+import { useProtoVariant } from "@/lib/protoVariants";
 import { getUniqueUserGroups, mockUsers } from "@/lib/mockUserData";
 import {
   ACTIVITY_CATEGORIES,
@@ -119,7 +121,13 @@ export function InsightsActivity() {
   const { search, filters, setFilters } = controls;
   const [visible, setVisible] = useState(PAGE_SIZE);
   const [details, setDetails] = useState<ActivityEvent | null>(null);
-  const savedFilters = useActivitySavedFilters({ filters, setFilters, defs: ACTIVITY_FILTERS });
+  // Two saved-filter designs under review (?savedFilters=button | views). Both
+  // hooks run so hook order never changes; only the chosen one renders.
+  const savedFiltersVariant = useProtoVariant("savedFilters");
+  const savedStore = useStoredSavedFilters();
+  const savedFilters = useActivitySavedFilters({ store: savedStore, filters, setFilters, defs: ACTIVITY_FILTERS });
+  const savedViews = useActivitySavedViews({ store: savedStore, filters, setFilters, defs: ACTIVITY_FILTERS });
+  const showViewsBar = savedFiltersVariant === "views";
 
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -147,16 +155,17 @@ export function InsightsActivity() {
 
   return (
     <>
+      {showViewsBar && savedViews.bar}
       <ListToolbar
         controls={controls}
         filterDefs={ACTIVITY_FILTERS}
         searchPlaceholder="Search activity"
         sheetTitle="Activity Filters"
         searchProposed
-        filterRowTrailing={savedFilters.menu}
-        chipRowTrailing={savedFilters.chipAction}
+        filterRowTrailing={showViewsBar ? undefined : savedFilters.menu}
+        chipRowTrailing={showViewsBar ? undefined : savedFilters.chipAction}
       />
-      {savedFilters.dialogs}
+      {showViewsBar ? savedViews.dialogs : savedFilters.dialogs}
 
       <div className="min-h-[400px] flex flex-col gap-3">
         {/* Prod's count treatment: muted label + success pill, right-aligned over the feed. */}
