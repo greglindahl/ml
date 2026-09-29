@@ -1454,7 +1454,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
   return (
     <div className="flex-1 flex h-screen overflow-hidden">
-      {/* Folders Sidebar with DnD */}
+      {/* Folders Sidebar with DnD. Hidden on Workflows and Branding, which
+          don't use the folder tree (interim until the Library IA changes). */}
+      {!(activeFolder === "all" && (activeTab === "workflows" || activeTab === "branding")) && (
       <FolderSidebar
         folderTree={folderTree}
         activeFolder={activeFolder}
@@ -1468,6 +1470,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
         showArchived={archivedFoldersOnly}
         onToggleArchived={setArchivedFoldersOnly}
       />
+      )}
 
       {/* Main Content Area - Show GalleryDetailsView, FolderDetailsView, or Library content */}
       {activeGallery ? (
