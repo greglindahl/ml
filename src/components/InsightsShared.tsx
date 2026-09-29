@@ -5,8 +5,8 @@ import { Group } from "@visx/group";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -48,38 +48,28 @@ export function useInsightsRange() {
   return [range, setRange] as const;
 }
 
-/**
- * The report date range as a filter-row facet — same trigger as the other
- * pages' dropdown filters (icon · value · chevron). It always holds a value
- * (prod's select isn't clearable), so it shows the range instead of a count
- * and never produces a chip.
- */
+/** Not clearable, same as prod's gf-date-range-select. */
 export function DateRangeSelect({ value, onChange }: { value: InsightsRange; onChange: (value: InsightsRange) => void }) {
   const label = INSIGHTS_RANGES.find((r) => r.value === value)?.label;
   return (
     <DropdownMenu>
-      <Tooltip delayDuration={700}>
-        <TooltipTrigger asChild>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
-              aria-label={`Date Range: ${label}`}
-            >
-              <i className="bi bi-calendar w-4 h-4 inline-flex items-center justify-center leading-none" />
-              <span className="text-foreground">{label}</span>
-              <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-            </Button>
-          </DropdownMenuTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">Date Range</TooltipContent>
-      </Tooltip>
-      <DropdownMenuContent align="start" className="bg-popover z-50 min-w-[200px]" onCloseAutoFocus={(e) => e.preventDefault()}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-10 min-w-[200px] justify-between gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
+          aria-label={`Date range: ${label}`}
+        >
+          <span className="text-foreground">{label}</span>
+          <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="bg-white w-[var(--radix-dropdown-menu-trigger-width)]">
         {INSIGHTS_RANGES.map((r) => (
-          <DropdownMenuCheckboxItem key={r.value} className="text-[13px]" checked={r.value === value} onCheckedChange={() => onChange(r.value)}>
+          <DropdownMenuItem key={r.value} onClick={() => onChange(r.value)} className="flex items-center justify-between text-[13px]">
             {r.label}
-          </DropdownMenuCheckboxItem>
+            {r.value === value && <i className="bi bi-check2 text-primary" />}
+          </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
