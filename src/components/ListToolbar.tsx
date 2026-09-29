@@ -112,6 +112,10 @@ interface ListToolbarProps {
   sheetTitle?: string;
   /** Prod has no search on this list — hidden unless SHOW_PROPOSED_FILTERS. */
   searchProposed?: boolean;
+  /** Extra controls at the right end of the filter row (e.g. Saved Filters). */
+  filterRowTrailing?: React.ReactNode;
+  /** Right-aligned on the applied-chip row while filters are applied (e.g. "Save filters"). */
+  chipRowTrailing?: React.ReactNode;
 }
 
 export function ListToolbar({
@@ -122,6 +126,8 @@ export function ListToolbar({
   searchPlaceholder,
   sheetTitle,
   searchProposed = false,
+  filterRowTrailing,
+  chipRowTrailing,
 }: ListToolbarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -156,14 +162,21 @@ export function ListToolbar({
             pillState={controls.pills}
             onPillToggle={controls.setPill}
             onOpenFiltersSheet={() => setSheetOpen(true)}
-            trailing={!showSearch && openSettings ? <SettingsButton onClick={openSettings} /> : undefined}
+            trailing={
+              filterRowTrailing || (!showSearch && openSettings) ? (
+                <>
+                  {filterRowTrailing}
+                  {!showSearch && openSettings && <SettingsButton onClick={openSettings} />}
+                </>
+              ) : undefined
+            }
           />
         </div>
       )}
 
       {/* Reserved chip row only where dropdown filters exist to produce chips. */}
       {visibleFilters.length > 0 && (
-        <AppliedFilterChips filters={visibleFilters} value={controls.filters} onChange={controls.setFilters} />
+        <AppliedFilterChips filters={visibleFilters} value={controls.filters} onChange={controls.setFilters} trailing={chipRowTrailing} />
       )}
 
       {hasFilterRow && (

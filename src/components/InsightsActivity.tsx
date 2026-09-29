@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { ListToolbar, useListControls } from "./ListToolbar";
 import { matchesFilter, type ListFilterDef, type ListFilterState } from "./ListFilters";
 import { RowActions } from "./ListTable";
+import { useActivitySavedFilters } from "./ActivitySavedFilters";
 import { getUniqueUserGroups, mockUsers } from "@/lib/mockUserData";
 import {
   ACTIVITY_CATEGORIES,
@@ -118,6 +119,7 @@ export function InsightsActivity() {
   const { search, filters, setFilters } = controls;
   const [visible, setVisible] = useState(PAGE_SIZE);
   const [details, setDetails] = useState<ActivityEvent | null>(null);
+  const savedFilters = useActivitySavedFilters({ filters, setFilters, defs: ACTIVITY_FILTERS });
 
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -145,7 +147,16 @@ export function InsightsActivity() {
 
   return (
     <>
-      <ListToolbar controls={controls} filterDefs={ACTIVITY_FILTERS} searchPlaceholder="Search activity" sheetTitle="Activity Filters" searchProposed />
+      <ListToolbar
+        controls={controls}
+        filterDefs={ACTIVITY_FILTERS}
+        searchPlaceholder="Search activity"
+        sheetTitle="Activity Filters"
+        searchProposed
+        filterRowTrailing={savedFilters.menu}
+        chipRowTrailing={savedFilters.chipAction}
+      />
+      {savedFilters.dialogs}
 
       <div className="min-h-[400px] flex flex-col gap-3">
         {/* Prod's count treatment: muted label + success pill, right-aligned over the feed. */}

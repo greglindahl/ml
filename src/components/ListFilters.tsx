@@ -313,10 +313,12 @@ interface AppliedFilterChipsProps {
   filters: ListFilterDef[];
   value: ListFilterState;
   onChange: (next: ListFilterState) => void;
+  /** Right-aligned after the chips; only rendered while chips are showing. */
+  trailing?: React.ReactNode;
 }
 
 /** Reserved-height row so the table doesn't jump when the first chip lands. */
-export function AppliedFilterChips({ filters, value, onChange }: AppliedFilterChipsProps) {
+export function AppliedFilterChips({ filters, value, onChange, trailing }: AppliedFilterChipsProps) {
   const chips = filters.flatMap((def) => (value[def.id] || []).map((v) => ({ def, v })));
 
   return (
@@ -344,6 +346,7 @@ export function AppliedFilterChips({ filters, value, onChange }: AppliedFilterCh
           >
             Clear Filters
           </button>
+          {trailing && <div className="ml-auto flex items-center">{trailing}</div>}
         </div>
       )}
     </div>
