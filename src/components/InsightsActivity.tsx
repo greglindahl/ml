@@ -160,7 +160,8 @@ export function InsightsActivity() {
 
       <div className="min-h-[400px] flex flex-col gap-3">
         {/* Prod's count treatment: muted label + success pill, right-aligned over the feed. */}
-        <p className="flex items-center justify-end gap-2 text-[15px] font-medium text-muted-foreground" aria-live="polite">
+        {/* div, not p: Badge renders a div, which can't sit inside a paragraph. */}
+        <div className="flex items-center justify-end gap-2 text-[15px] font-medium text-muted-foreground" aria-live="polite">
           Viewing
           <Badge
             colorStyle="success"
@@ -171,7 +172,7 @@ export function InsightsActivity() {
           >
             {formatEventCount(rows.length)} {rows.length === 1 ? "Event" : "Events"}
           </Badge>
-        </p>
+        </div>
 
         {rows.length === 0 ? (
           <EmptyState icon="bi-activity" title="No events found." onClearAll={controls.clearAll} />
