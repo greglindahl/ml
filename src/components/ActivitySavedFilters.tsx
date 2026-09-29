@@ -74,14 +74,7 @@ const SEED: SavedFilter[] = [
   },
 ];
 
-export type SavedFiltersStore = readonly [SavedFilter[], React.Dispatch<React.SetStateAction<SavedFilter[]>>];
-
-/**
- * One store for both Saved Filters variants. Call it once per screen and pass
- * it to whichever variant renders — two independent copies would overwrite
- * each other in localStorage.
- */
-export function useStoredSavedFilters(): SavedFiltersStore {
+function useStoredSavedFilters() {
   const [saved, setSaved] = useState<SavedFilter[]>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -125,7 +118,7 @@ export function describeFilters(filters: ListFilterState, defs: ListFilterDef[])
 // Name dialog (create + rename)
 // ---------------------------------------------------------------------------
 
-export function NameDialog({
+function NameDialog({
   open,
   onOpenChange,
   mode,
@@ -133,12 +126,7 @@ export function NameDialog({
   existingNames,
   summary,
   onSubmit,
-  title,
-  description,
 }: {
-  /** Override the default filter wording (the views-bar variant says "view"). */
-  title?: string;
-  description?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode: "create" | "rename";
@@ -173,9 +161,9 @@ export function NameDialog({
       <DialogContent className="sm:max-w-md">
         <form onSubmit={submit} className="space-y-4">
           <DialogHeader>
-            <DialogTitle>{title ?? (mode === "create" ? "Save Filter" : "Edit Filter Name")}</DialogTitle>
+            <DialogTitle>{mode === "create" ? "Save Filter" : "Edit Filter Name"}</DialogTitle>
             <DialogDescription>
-              {description ?? (mode === "create" ? "Load these filters again from Saved Filters." : "Only the name changes; the filters stay the same.")}
+              {mode === "create" ? "Load these filters again from Saved Filters." : "Only the name changes; the filters stay the same."}
             </DialogDescription>
           </DialogHeader>
 
@@ -215,16 +203,15 @@ export function NameDialog({
 // ---------------------------------------------------------------------------
 
 export function useActivitySavedFilters({
-  store: [saved, setSaved],
   filters,
   setFilters,
   defs,
 }: {
-  store: SavedFiltersStore;
   filters: ListFilterState;
   setFilters: (next: ListFilterState) => void;
   defs: ListFilterDef[];
 }) {
+  const [saved, setSaved] = useStoredSavedFilters();
   const [menuOpen, setMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [nameDialog, setNameDialog] = useState<{ mode: "create" } | { mode: "rename"; target: SavedFilter } | null>(null);
