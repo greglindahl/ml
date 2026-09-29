@@ -9,9 +9,13 @@ import {
   type ReactNode,
 } from "react";
 import {
+  INTERRUPTED_MESSAGE,
+  NOT_STARTED_MESSAGE,
   createMockUpload,
   createMockUploadBatch,
   isActiveUpload,
+  isRetryable,
+  matchReselectedFiles,
   tickUpload,
   type ChunkedUpload,
 } from "@/lib/mockUploadData";
@@ -23,6 +27,16 @@ import {
  */
 
 const TICK_MS = 250;
+
+// Resume from where it stopped: the tick carries on from uploadedBytes, so
+// the bar starts at its prior progress rather than 0.
+const resume = (u: ChunkedUpload): ChunkedUpload => ({
+  ...u,
+  status: "UPLOADING",
+  errorMessage: null,
+  needsFileReselection: false,
+  isResumed: true,
+});
 
 interface UploadQueueValue {
   uploads: ChunkedUpload[];
@@ -41,6 +55,13 @@ interface UploadQueueValue {
   abortUpload: (queueId: string) => void;
   dismissUpload: (queueId: string) => void;
   retryUpload: (queueId: string) => void;
+  /** Banner action: retry every failed upload whose file is still in memory. */
+  retryAllFailed: () => number;
+  /**
+   * Banner action: resume interrupted uploads from one multi-select pick.
+   * Exact matches resume from their last confirmed part; the rest stay put.
+   */
+  resumeWithFiles: (files: File[]) => { resumed: number; unmatchedFiles: number; stillWaiting: number };
 
   setCollapsed: (collapsed: boolean) => void;
   closeWindow: () => void;
@@ -49,6 +70,7 @@ interface UploadQueueValue {
   /** Demo hooks so the failure treatments are reachable without waiting for one. */
   simulateNetworkDrop: (queueId: string) => void;
   simulateFailure: (queueId: string) => void;
+  simulateInterrupt: () => number;
 
   /**
    * Uploads that reached SUCCESS. The refresh / new-assets work reads this —
@@ -64,6 +86,9 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
   const [uploads, setUploads] = useState<ChunkedUpload[]>([]);
   const [isWindowVisible, setIsWindowVisible] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  // Bulk actions report counts synchronously; read the latest queue without re-creating them.
+  const uploadsRef = useRef(uploads);
+  uploadsRef.current = uploads;
 
   // Drive the simulation. One interval for the whole queue; it parks itself
   // when nothing is in flight so an idle tab isn't re-rendering four times a second.
@@ -109,6 +134,8 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         createMockUpload({
           filename: file.name,
           fileSize: file.size || undefined,
+          // Real picks keep their real lastModified so reviewers can reselect the same files.
+          lastModified: file.lastModified,
           kind: file.type.startsWith("video") ? "video" : "image",
         }),
       ),
@@ -144,6 +171,46 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
     },
     [patch],
   );
+
+  const retryAllFailed = useCallback(() => {
+    const count = uploadsRef.current.filter(isRetryable).length;
+    setUploads((prev) => prev.map((u) => (isRetryable(u) ? resume(u) : u)));
+    return count;
+  }, []);
+
+  const resumeWithFiles = useCallback((files: File[]) => {
+    const { matched, unmatchedFiles, stillWaiting } = matchReselectedFiles(uploadsRef.current, files);
+    const ids = new Set(matched.map((m) => m.upload.queueId));
+    setUploads((prev) => prev.map((u) => (ids.has(u.queueId) ? resume(u) : u)));
+    return { resumed: matched.length, unmatchedFiles: unmatchedFiles.length, stillWaiting: stillWaiting.length };
+  }, []);
+
+  /**
+   * What a reload mid-transfer leaves behind in prod: in-flight rows come back
+   * FAILED + needsFileReselection, progress kept at their confirmed parts.
+   */
+  const simulateInterrupt = useCallback(() => {
+    const count = uploadsRef.current.filter(isActiveUpload).length;
+    setUploads((prev) =>
+      prev.map((u) => {
+        if (!isActiveUpload(u)) return u;
+        const confirmedBytes = u.completedChunks * u.chunkSize;
+        return {
+          ...u,
+          status: "FAILED",
+          speed: null,
+          needsFileReselection: true,
+          isResumed: true,
+          uploadedBytes: confirmedBytes,
+          progress: (confirmedBytes / u.fileSize) * 100,
+          errorMessage: u.completedChunks > 0 ? INTERRUPTED_MESSAGE : NOT_STARTED_MESSAGE,
+        };
+      }),
+    );
+    setIsWindowVisible(true);
+    setIsCollapsed(false);
+    return count;
+  }, []);
 
   const simulateNetworkDrop = useCallback(
     (queueId: string) => {
@@ -182,6 +249,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
    *
    *   __uploadDemo.drop()    // first active upload → RECONNECTING
    *   __uploadDemo.fail()    // first active upload → FAILED (retry appears)
+   *   __uploadDemo.interrupt() // every in-flight upload → interrupted, needs file reselection
    *   __uploadDemo.list()    // queueIds + statuses
    */
   useEffect(() => {
@@ -196,9 +264,10 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         if (target) simulateFailure(target);
         return target ?? "no active upload";
       },
+      interrupt: () => `${simulateInterrupt()} uploads interrupted`,
       list: () => uploads.map((u) => ({ queueId: u.queueId, file: u.filename, status: u.status })),
     };
-  }, [uploads, simulateNetworkDrop, simulateFailure]);
+  }, [uploads, simulateNetworkDrop, simulateFailure, simulateInterrupt]);
 
   // Prod warns before unload while transfers are in flight.
   useEffect(() => {
@@ -224,11 +293,14 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
       abortUpload,
       dismissUpload,
       retryUpload,
+      retryAllFailed,
+      resumeWithFiles,
       setCollapsed: setIsCollapsed,
       closeWindow,
       showWindow,
       simulateNetworkDrop,
       simulateFailure,
+      simulateInterrupt,
       completedUploads,
     }),
     [
@@ -242,10 +314,13 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
       abortUpload,
       dismissUpload,
       retryUpload,
+      retryAllFailed,
+      resumeWithFiles,
       closeWindow,
       showWindow,
       simulateNetworkDrop,
       simulateFailure,
+      simulateInterrupt,
       completedUploads,
     ],
   );

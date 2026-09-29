@@ -51,6 +51,8 @@ export interface ChunkedUpload {
 
   filename: string;
   fileSize: number;
+  /** File.lastModified (ms). With name + size, what a reselected file must match to resume. */
+  lastModified: number;
   kind: "image" | "video";
 
   status: MultipartUploadStatus;
@@ -163,6 +165,8 @@ export function createMockUpload(overrides: Partial<ChunkedUpload> = {}): Chunke
 
     filename,
     fileSize,
+    // Saved to disk a little before it was queued.
+    lastModified: now - Math.round(rand(60_000, 3 * 60 * 60_000)),
     kind,
 
     status: "PENDING",
@@ -267,3 +271,45 @@ export function sortUploadsForDisplay(uploads: ChunkedUpload[]): ChunkedUpload[]
 
 export const isActiveUpload = (upload: ChunkedUpload) =>
   ACTIVE_UPLOAD_STATUSES.includes(upload.status);
+
+/** Prod's copy for an upload restored after the page went away mid-transfer. */
+export const INTERRUPTED_MESSAGE = "Upload interrupted. Please click the refresh icon to reselect file.";
+export const NOT_STARTED_MESSAGE = "Upload was queued but not started. Please click the refresh icon to reselect file.";
+
+/** Failed with the file still in memory: a plain retry picks up where it stopped. */
+export const isRetryable = (upload: ChunkedUpload) => upload.status === "FAILED" && !upload.needsFileReselection;
+
+/** Interrupted: the browser lost the file handle, so the user has to pick it again. */
+export const needsReselection = (upload: ChunkedUpload) => upload.status === "FAILED" && !!upload.needsFileReselection;
+
+export interface FileDescriptor {
+  name: string;
+  size: number;
+  lastModified: number;
+}
+
+/**
+ * Pair reselected files with interrupted uploads, 1:1. A file resumes an upload
+ * only when name, size and lastModified all agree; order doesn't matter.
+ * Interim: the grouped summary (changed / extra / ambiguous...) is still to come
+ * — for now anything that isn't an exact match is reported back unmatched.
+ */
+export function matchReselectedFiles<F extends FileDescriptor>(uploads: ChunkedUpload[], files: F[]) {
+  const key = (name: string, size: number, lastModified: number) => `${name}|${size}|${lastModified}`;
+  const waiting = new Map<string, ChunkedUpload[]>();
+  for (const u of uploads.filter(needsReselection)) {
+    const k = key(u.filename, u.fileSize, u.lastModified);
+    waiting.set(k, [...(waiting.get(k) ?? []), u]);
+  }
+
+  const matched: { upload: ChunkedUpload; file: F }[] = [];
+  const unmatchedFiles: F[] = [];
+  for (const file of files) {
+    const candidates = waiting.get(key(file.name, file.size, file.lastModified));
+    const upload = candidates?.shift();
+    if (upload) matched.push({ upload, file });
+    else unmatchedFiles.push(file);
+  }
+  const stillWaiting = [...waiting.values()].flat();
+  return { matched, unmatchedFiles, stillWaiting };
+}

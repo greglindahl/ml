@@ -3,7 +3,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useUploadQueue } from "@/hooks/useUploadQueue";
 import { UploadProgressWindowItem } from "@/components/UploadProgressWindowItem";
 import { CancelUploadsDialog } from "@/components/CancelUploadsDialog";
-import { sortUploadsForDisplay } from "@/lib/mockUploadData";
+import { toast } from "@/hooks/use-toast";
+import { isRetryable, needsReselection, sortUploadsForDisplay } from "@/lib/mockUploadData";
 import { cn } from "@/lib/utils";
 
 /**
@@ -27,6 +28,8 @@ export function UploadProgressWindow() {
     abortUpload,
     dismissUpload,
     retryUpload,
+    retryAllFailed,
+    resumeWithFiles,
   } = useUploadQueue();
 
   const isMobile = useIsMobile();
@@ -38,6 +41,30 @@ export function UploadProgressWindow() {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const sorted = sortUploadsForDisplay(uploads);
+  const retryableCount = uploads.filter(isRetryable).length;
+  const reselectCount = uploads.filter(needsReselection).length;
+  const reselectInputRef = useRef<HTMLInputElement>(null);
+
+  const handleRetryAll = () => {
+    const count = retryAllFailed();
+    toast({ title: `Retrying ${count} ${count === 1 ? "upload" : "uploads"}` });
+  };
+
+  const handleFilesReselected = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = ""; // so picking the same files again still fires
+    if (files.length === 0) return;
+    const { resumed, unmatchedFiles, stillWaiting } = resumeWithFiles(files);
+    // Interim report until the grouped summary lands (PORTAL-13077 §5).
+    const notes = [
+      unmatchedFiles > 0 && `${unmatchedFiles} selected ${unmatchedFiles === 1 ? "file didn't" : "files didn't"} match an interrupted upload.`,
+      stillWaiting > 0 && `${stillWaiting} ${stillWaiting === 1 ? "upload is" : "uploads are"} still waiting for ${stillWaiting === 1 ? "its file" : "their files"}.`,
+    ].filter(Boolean);
+    toast({
+      title: resumed > 0 ? `Resuming ${resumed} ${resumed === 1 ? "upload" : "uploads"}` : "No matching files",
+      description: notes.join(" ") || undefined,
+    });
+  };
 
   const handlePointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
@@ -182,6 +209,29 @@ export function UploadProgressWindow() {
           </div>
         </div>
 
+        {/* Batch actions, pinned above the rows (PORTAL-13077). Per-row ↻ still works for one file. */}
+        {!isCollapsed && (reselectCount > 0 || retryableCount > 0) && (
+          <div className="border-b bg-primary/5 divide-y divide-primary/10">
+            {reselectCount > 0 && (
+              <UploadBanner
+                icon="bi-info-circle"
+                message={`${reselectCount} ${reselectCount === 1 ? "upload was" : "uploads were"} interrupted. Reselect the files to pick up where they left off.`}
+                actionLabel="Reselect files"
+                onAction={() => reselectInputRef.current?.click()}
+              />
+            )}
+            {retryableCount > 0 && (
+              <UploadBanner
+                icon="bi-exclamation-circle"
+                message={`${retryableCount} ${retryableCount === 1 ? "upload" : "uploads"} failed.`}
+                actionLabel="Retry all"
+                onAction={handleRetryAll}
+              />
+            )}
+            <input ref={reselectInputRef} type="file" multiple className="hidden" onChange={handleFilesReselected} aria-hidden="true" tabIndex={-1} />
+          </div>
+        )}
+
         {!isCollapsed && (
           <div className="overflow-auto bg-card max-h-[25rem] max-md:max-h-[50vh]">
             {sorted.map((upload) => (
@@ -219,5 +269,31 @@ export function UploadProgressWindow() {
         }}
       />
     </>
+  );
+}
+
+function UploadBanner({
+  icon,
+  message,
+  actionLabel,
+  onAction,
+}: {
+  icon: string;
+  message: string;
+  actionLabel: string;
+  onAction: () => void;
+}) {
+  return (
+    <div className="flex items-start gap-2 px-3 py-2.5" role="status">
+      <i className={cn("bi", icon, "text-primary w-4 h-4 mt-px inline-flex items-center justify-center leading-none flex-shrink-0")} aria-hidden="true" />
+      <p className="flex-1 min-w-0 text-[12px] leading-snug text-foreground">{message}</p>
+      <button
+        type="button"
+        onClick={onAction}
+        className="flex-shrink-0 text-[12px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+      >
+        {actionLabel}
+      </button>
+    </div>
   );
 }

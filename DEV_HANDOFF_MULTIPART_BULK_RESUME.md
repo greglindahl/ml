@@ -2,7 +2,7 @@
 
 **Branch:** `multipart-updates`
 **Ticket:** [PORTAL-13077](https://greenfly.atlassian.net/browse/PORTAL-13077) — Resume interrupted uploads by reselecting files in bulk
-**Status:** Context + plan only. No code written yet.
+**Status:** Banner + batch actions built (build plan steps 1, 2, 4, and an interim exact-match version of 3/6). Summary surface still open.
 
 ---
 
@@ -55,6 +55,15 @@ Goal: one multi-select (files, or a folder where supported) → automatic re-mat
 
 - **Batch action = banner pinned above the row list** (chosen 2026-09-28). It shows whenever anything is resumable, e.g. "ⓘ 3 uploads were interrupted — [Reselect files]". Per-row ↻ stays for single reselect.
 - **Summary surface: OPEN.** The recommendation is a **modal dialog** (grouped sections, a choice per unclear file, one "Resume N uploads" confirm; progress then continues in the tray). The alternative is inline in the tray, which gets cramped with many files. Greg hasn't confirmed yet.
+
+### Built so far (2026-09-29)
+
+- `ChunkedUpload.lastModified` (real files keep theirs). `__uploadDemo.interrupt()` turns in-flight rows into prod's restored state, with progress kept at confirmed parts and prod's two messages.
+- The tray banner, pinned above the rows, has two lines:
+  - "N uploads were interrupted… **Reselect files**" opens one multi-select picker.
+  - "N uploads failed. **Retry all**" retries every failure whose file is still in memory.
+- `matchReselectedFiles` in `mockUploadData.ts`: 1:1 on name + size + lastModified, order-independent. Exact matches resume from prior progress; everything else stays waiting. The result is reported in a toast **as a stand-in for the summary**.
+- Not yet: the grouped summary, changed/extra/expired/ambiguous handling (duplicate keys currently pair first-come), folder picking and `reselectScenario()`.
 
 ## 6. Build plan (prototype)
 
