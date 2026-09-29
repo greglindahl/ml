@@ -102,7 +102,6 @@ export interface OverviewData {
   downloads: Segment[];
   contentAdded: Segment[];
   shares: Segment[];
-  shareBreakdown: { platform: string; stats: { label: string; value: number }[] }[];
   galleryDownloads: Segment[];
   galleryTiles: { label: string; value: MetricValue }[];
   shareRequests: { label: string; value: MetricValue }[];
@@ -115,51 +114,40 @@ export function getOverview(range: InsightsRange): OverviewData {
   const insta = metric("InstagramShares", 22, range);
   const x = metric("XShares", 9, range);
   const fb = metric("FacebookShares", 11, range);
+  const youtube = metric("YouTubeShares", 7, range);
+  const tiktok = metric("TikTokShares", 6, range);
   const other = metric("OtherShares", 4, range);
-  const k = (n: number) => Math.round(n);
 
   return {
     totalUsers: 1284,
     newUsers,
     downloads: [
-      { key: "videos", label: "Videos", value: metric("VideosDownloaded", 38, range) },
       { key: "images", label: "Images", value: metric("ImagesDownloaded", 142, range) },
+      { key: "videos", label: "Videos", value: metric("VideosDownloaded", 38, range) },
     ],
     contentAdded: [
-      { key: "videos", label: "Videos", value: metric("VideosCreated", 21, range) },
       { key: "images", label: "Images", value: metric("ImagesCreated", 96, range) },
+      { key: "videos", label: "Videos", value: metric("VideosCreated", 21, range) },
     ],
     shares: [
       { key: "instagram", label: "Instagram", value: insta },
       { key: "x", label: "X", value: x },
       { key: "facebook", label: "Facebook", value: fb },
+      // YouTube and TikTok come from the Overview redesign (Figma); prod's
+      // metric set today is Instagram / X / Facebook / Additional Platforms.
+      { key: "youtube", label: "YouTube", value: youtube },
+      { key: "tiktok", label: "TikTok", value: tiktok },
       { key: "other", label: "Additional Platforms", value: other },
     ],
-    shareBreakdown: [
-      { platform: "*Instagram", stats: [
-        { label: "Likes", value: k(insta.current * 412) },
-        { label: "Views", value: k(insta.current * 5230) },
-        { label: "Comments", value: k(insta.current * 18) },
-      ] },
-      { platform: "X", stats: [
-        { label: "Likes", value: k(x.current * 96) },
-        { label: "Reposts", value: k(x.current * 14) },
-      ] },
-      { platform: "Facebook", stats: [
-        { label: "Likes", value: k(fb.current * 133) },
-        { label: "Comments", value: k(fb.current * 9) },
-        { label: "Shares", value: k(fb.current * 6) },
-      ] },
-      { platform: "Additional Platforms", stats: [] },
-    ],
     galleryDownloads: [
-      { key: "videos", label: "Videos", value: metric("GalleryVideosDownloaded", 14, range) },
       { key: "images", label: "Images", value: metric("GalleryImagesDownloaded", 61, range) },
+      { key: "videos", label: "Videos", value: metric("GalleryVideosDownloaded", 14, range) },
     ],
     galleryTiles: [
       { label: "Galleries Shared", value: metric("GalleriesShared", 3, range) },
-      { label: "Assets Added", value: metric("GalleryAssetsAdded", 88, range) },
-      { label: "Asset Views", value: metric("GalleryAssetViews", 640, range) },
+      // Labels per the Overview redesign (prod: "Assets Added", "Asset Views").
+      { label: "Assets Shared", value: metric("GalleryAssetsAdded", 88, range) },
+      { label: "Assets Viewed", value: metric("GalleryAssetViews", 640, range) },
       { label: "Tracked Shares", value: metric("GalleryTrackedShares", 12, range) },
     ],
     shareRequests: [

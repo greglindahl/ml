@@ -189,156 +189,131 @@ export function RangePrintOut({ range }: { range: InsightsRange }) {
   );
 }
 
-export function StatTile({
-  label,
-  value,
-  format = formatNumber,
-  showChange = true,
-}: {
-  label: string;
-  value: MetricValue | number | null;
-  format?: (n: number) => string;
-  showChange?: boolean;
-}) {
-  const metric = typeof value === "number" ? { current: value, previous: value } : value;
-  return (
-    <div className="flex flex-col gap-1 min-w-0">
-      <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{label}</span>
-      <div className="flex items-baseline gap-2 flex-wrap">
-        <span className="text-[24px] font-semibold text-foreground tabular-nums leading-tight">
-          {metric ? format(metric.current) : "n/a"}
-        </span>
-        {metric && showChange && typeof value !== "number" && <ChangeBadge value={metric} />}
-      </div>
-    </div>
-  );
-}
-
-export function InsightsCard({
-  title,
-  action,
-  children,
-  className,
-}: {
-  title: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <section className={cn("border rounded-lg bg-white flex flex-col", className)} aria-label={title}>
-      <header className="flex items-center justify-between gap-3 px-5 py-3 border-b min-h-[52px]">
-        <h2 className="text-[15px] font-semibold text-foreground">{title}</h2>
-        {action}
-      </header>
-      <div className="p-5 flex-1">{children}</div>
-    </section>
-  );
-}
-
 // ---------------------------------------------------------------------------
 // Doughnut (Visx)
 // ---------------------------------------------------------------------------
 
 /**
  * Categorical slots from the dataviz reference palette, fixed order, never
- * cycled. Validated on white: adjacent pairs (incl. the ring's wraparound) pass
- * CVD ≥ 8 and normal-vision ≥ 15. Slots 3–4 sit under 3:1 contrast, so the
- * legend always prints values — the required relief.
+ * cycled (blue, orange, aqua, yellow, magenta, green). Validated on white for a
+ * ring — every adjacent pair incl. the wraparound passes CVD ≥ 8 and
+ * normal-vision ≥ 15. Aqua, yellow and magenta sit under 3:1 contrast, so every
+ * legend prints its values: that's the required relief.
  */
-export const SERIES_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"];
+export const SERIES_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300"];
 
-const SIZE = 168;
-const THICKNESS = 20;
+/** "2,480" → "2.5K", "1,204,000" → "1.2M" — the doughnut centers in the Overview design. */
+export function formatShort(n: number): string {
+  if (n >= 1_000_000) return `${Number((n / 1_000_000).toFixed(1))}M`;
+  if (n >= 1_000) return `${Number((n / 1_000).toFixed(1))}K`;
+  return String(n);
+}
 
+/**
+ * Overview doughnut (Visx). Center: uppercase label, short total, change badge;
+ * hovering or focusing a segment swaps the center to that segment's value and
+ * share. Legend is "Label: value" — `inline` under the ring (Total Content,
+ * Galleries) or a `side` list beside it (Shares).
+ */
 export function InsightsDonut({
   segments,
   totalLabel,
+  size = 150,
+  thickness = 16,
+  legend = "inline",
   showChange = true,
 }: {
   segments: Segment[];
   totalLabel: string;
+  size?: number;
+  thickness?: number;
+  legend?: "inline" | "side";
   showChange?: boolean;
 }) {
   const [active, setActive] = useState<string | null>(null);
   const total: MetricValue = segments.reduce(
-    (sum, s) => ({ current: sum.current + s.value.current, previous: sum.previous + s.value.previous }),
+    (sum, seg) => ({ current: sum.current + seg.value.current, previous: sum.previous + seg.value.previous }),
     { current: 0, previous: 0 },
   );
-  const activeSegment = segments.find((s) => s.key === active);
+  const activeSegment = segments.find((seg) => seg.key === active);
   const share = (n: number) => (total.current === 0 ? 0 : Math.round((n / total.current) * 100));
-  const radius = SIZE / 2;
+  const radius = size / 2;
 
-  return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="relative" style={{ width: SIZE, height: SIZE }}>
-        <svg width={SIZE} height={SIZE} role="img" aria-label={`${totalLabel}: ${formatNumber(total.current)}`}>
-          <Group top={radius} left={radius}>
-            {total.current === 0 ? (
-              <circle r={radius - THICKNESS / 2} fill="none" stroke="#edf2f9" strokeWidth={THICKNESS} />
-            ) : (
-              <Pie
-                data={segments}
-                pieValue={(s) => s.value.current}
-                pieSort={null}
-                outerRadius={radius}
-                innerRadius={radius - THICKNESS}
-                cornerRadius={3}
-              >
-                {(pie) =>
-                  pie.arcs.map((arc, i) => (
-                    <path
-                      key={arc.data.key}
-                      d={pie.path(arc) ?? ""}
-                      fill={SERIES_COLORS[i]}
-                      // 2px surface gap between segments.
-                      stroke="#ffffff"
-                      strokeWidth={2}
-                      opacity={active && active !== arc.data.key ? 0.35 : 1}
-                      className="transition-opacity duration-150 motion-reduce:transition-none cursor-default"
-                      onMouseEnter={() => setActive(arc.data.key)}
-                      onMouseLeave={() => setActive(null)}
-                    />
-                  ))
-                }
-              </Pie>
-            )}
-          </Group>
-        </svg>
-        {/* Center readout doubles as the hover tooltip: total by default, the hovered segment otherwise. */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-6" aria-live="polite">
-          <span className="text-[22px] font-semibold text-foreground tabular-nums leading-tight">
-            {formatNumber(activeSegment ? activeSegment.value.current : total.current)}
-          </span>
-          <span className="text-[12px] text-muted-foreground leading-tight">
-            {activeSegment ? `${activeSegment.label} · ${share(activeSegment.value.current)}%` : totalLabel}
-          </span>
-          {showChange && <ChangeBadge value={activeSegment ? activeSegment.value : total} className="mt-1" />}
-        </div>
+  const ring = (
+    <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} role="img" aria-label={`${totalLabel}: ${formatNumber(total.current)}`}>
+        <Group top={radius} left={radius}>
+          {total.current === 0 ? (
+            <circle r={radius - thickness / 2} fill="none" stroke="#edf2f9" strokeWidth={thickness} />
+          ) : (
+            <Pie data={segments} pieValue={(seg) => seg.value.current} pieSort={null} outerRadius={radius} innerRadius={radius - thickness} cornerRadius={2}>
+              {(pie) =>
+                pie.arcs.map((arc, i) => (
+                  <path
+                    key={arc.data.key}
+                    d={pie.path(arc) ?? ""}
+                    fill={SERIES_COLORS[i]}
+                    // 2px surface gap between segments.
+                    stroke="#ffffff"
+                    strokeWidth={2}
+                    opacity={active && active !== arc.data.key ? 0.35 : 1}
+                    className="transition-opacity duration-150 motion-reduce:transition-none"
+                    onMouseEnter={() => setActive(arc.data.key)}
+                    onMouseLeave={() => setActive(null)}
+                  />
+                ))
+              }
+            </Pie>
+          )}
+        </Group>
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center" style={{ padding: thickness + 8 }} aria-live="polite">
+        <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground leading-tight">
+          {activeSegment ? activeSegment.label : totalLabel}
+        </span>
+        <span className="text-[22px] font-semibold text-foreground tabular-nums leading-tight mt-0.5" title={formatNumber(activeSegment ? activeSegment.value.current : total.current)}>
+          {formatShort(activeSegment ? activeSegment.value.current : total.current)}
+        </span>
+        {activeSegment ? (
+          <span className="text-[11px] text-muted-foreground tabular-nums mt-0.5">{share(activeSegment.value.current)}%</span>
+        ) : (
+          showChange && <ChangeBadge value={total} className="mt-1 text-[11px] px-1.5" />
+        )}
       </div>
+    </div>
+  );
 
-      <ul className="w-full space-y-1.5">
-        {segments.map((s, i) => (
-          <li key={s.key}>
-            <button
-              type="button"
-              className={cn(
-                "w-full flex items-center gap-2 text-[13px] rounded px-1 -mx-1 py-0.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                active && active !== s.key && "opacity-50",
-              )}
-              onMouseEnter={() => setActive(s.key)}
-              onMouseLeave={() => setActive(null)}
-              onFocus={() => setActive(s.key)}
-              onBlur={() => setActive(null)}
-            >
-              <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: SERIES_COLORS[i] }} aria-hidden="true" />
-              <span className="text-foreground flex-1 min-w-0 truncate">{s.label}</span>
-              <span className="tabular-nums text-foreground">{formatNumber(s.value.current)}</span>
-              <span className="tabular-nums text-muted-foreground w-10 text-right">{share(s.value.current)}%</span>
-            </button>
-          </li>
-        ))}
-      </ul>
+  const items = segments.map((seg, i) => (
+    <li key={seg.key}>
+      <button
+        type="button"
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded px-0.5 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+          legend === "side" ? "text-[13px]" : "text-[11px]",
+          active && active !== seg.key && "opacity-50",
+        )}
+        onMouseEnter={() => setActive(seg.key)}
+        onMouseLeave={() => setActive(null)}
+        onFocus={() => setActive(seg.key)}
+        onBlur={() => setActive(null)}
+      >
+        <span className="w-[9px] h-[9px] rounded-full flex-shrink-0" style={{ backgroundColor: SERIES_COLORS[i] }} aria-hidden="true" />
+        <span className="tabular-nums whitespace-nowrap">
+          {seg.label}: {formatNumber(seg.value.current)}
+        </span>
+      </button>
+    </li>
+  ));
+
+  return legend === "side" ? (
+    <div className="flex flex-wrap items-center justify-center gap-x-9 gap-y-4">
+      {ring}
+      <ul className="flex flex-col gap-2">{items}</ul>
+    </div>
+  ) : (
+    <div className="flex flex-col items-center gap-3">
+      {ring}
+      <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1">{items}</ul>
     </div>
   );
 }
