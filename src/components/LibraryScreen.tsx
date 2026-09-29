@@ -46,6 +46,7 @@ import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, 
 import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
 import { relevanceScore, capRelevanceResults, isRelevanceCapped, RELEVANCE_RESULT_LIMIT } from "@/lib/relevance";
 import { FolderSidebar } from "@/components/FolderSidebar";
+import { BrandingTab, WorkflowsTab } from "@/components/LibraryListTabs";
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
 import { NewGalleryDialog, type NewGalleryData } from "@/components/NewGalleryDialog";
@@ -2859,16 +2860,12 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             </Tabs>
           </TabsContent>
 
-          <TabsContent value="branding" className="flex-1 overflow-y-auto py-6 mt-0">
-            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
-              <p>Branding content placeholder</p>
-            </div>
+          <TabsContent value="branding" className="flex-1 overflow-y-auto py-6 mt-0 flex flex-col gap-4 data-[state=inactive]:hidden">
+            <BrandingTab />
           </TabsContent>
 
-          <TabsContent value="workflows" className="flex-1 overflow-y-auto py-6 mt-0">
-            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center text-muted-foreground">
-              <p>Workflows content placeholder</p>
-            </div>
+          <TabsContent value="workflows" className="flex-1 overflow-y-auto py-6 mt-0 flex flex-col gap-4 data-[state=inactive]:hidden">
+            <WorkflowsTab />
           </TabsContent>
         </Tabs>
       </div>
