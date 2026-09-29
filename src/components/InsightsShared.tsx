@@ -9,12 +9,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import {
   DEFAULT_INSIGHTS_RANGE,
   INSIGHTS_RANGES,
   formatNumber,
   percentChange,
+  rangeBounds,
   type InsightsRange,
   type MetricValue,
   type Segment,
@@ -55,15 +57,14 @@ export function DateRangeSelect({ value, onChange }: { value: InsightsRange; onC
         <Button
           variant="outline"
           size="sm"
-          className="h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
+          className="h-10 min-w-[200px] justify-between gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]"
           aria-label={`Date range: ${label}`}
         >
-          <i className="bi bi-calendar w-4 h-4 inline-flex items-center justify-center leading-none" />
           <span className="text-foreground">{label}</span>
           <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="bg-white min-w-[200px]">
+      <DropdownMenuContent align="end" className="bg-white w-[var(--radix-dropdown-menu-trigger-width)]">
         {INSIGHTS_RANGES.map((r) => (
           <DropdownMenuItem key={r.value} onClick={() => onChange(r.value)} className="flex items-center justify-between text-[13px]">
             {r.label}
@@ -97,27 +98,94 @@ export function downloadCsv(filename: string, rows: (string | number | null)[][]
 // Change badge + tiles + cards
 // ---------------------------------------------------------------------------
 
-/** Prod's gf-change-over-time-badge: arrow + percent vs the previous period. Never color alone. */
+/**
+ * Prod's gf-change-over-time-badge: "+ 123.1%" (success), "-12.5%" (danger),
+ * "0%" (neutral), up to one decimal, "n/a" when there's no previous period to
+ * compare against. The sign is text, never color alone.
+ */
 export function ChangeBadge({ value, className }: { value: MetricValue; className?: string }) {
   const change = percentChange(value);
-  if (change === null) return null;
-  const rounded = Math.round(change);
-  const tone = rounded > 0 ? "up" : rounded < 0 ? "down" : "flat";
+  const rounded = change === null ? null : Math.round(change * 10) / 10;
+  const tone = rounded === null || rounded === 0 ? "flat" : rounded > 0 ? "up" : "down";
+  const text =
+    rounded === null ? "n/a" : `${rounded > 0 ? "+ " : ""}${rounded.toLocaleString("en-US", { maximumFractionDigits: 1 })}%`;
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-medium tabular-nums whitespace-nowrap",
+        "inline-flex items-center rounded-md px-2 py-0.5 text-[13px] font-medium tabular-nums whitespace-nowrap",
         tone === "up" && "bg-[#CCF2E0] text-[#00854D]",
         tone === "down" && "bg-[#FAD7DD] text-[#B4213D]",
-        tone === "flat" && "bg-muted text-muted-foreground",
+        tone === "flat" && "bg-[#EDF2F9] text-[#6E84A3]",
         className,
       )}
-      title={`${formatNumber(value.previous)} in the previous period`}
+      title={rounded === null ? "No previous period to compare" : `${formatNumber(value.previous)} in the previous period`}
     >
-      <i className={cn("bi", tone === "up" ? "bi-arrow-up-short" : tone === "down" ? "bi-arrow-down-short" : "bi-dash")} aria-hidden="true" />
-      {Math.abs(rounded)}%
-      <span className="sr-only">{tone === "up" ? "increase" : tone === "down" ? "decrease" : "no change"} vs previous period</span>
+      {text}
+      <span className="sr-only">{rounded === null ? "" : " vs previous period"}</span>
     </span>
+  );
+}
+
+/**
+ * Prod's dashboard-metric-number-module inside a card: uppercase title with an
+ * info tooltip, the number and its change badge, and an icon on the right.
+ */
+export function MetricCard({
+  title,
+  tooltip,
+  icon,
+  value,
+  isPercent = false,
+}: {
+  title: string;
+  tooltip: string;
+  icon: string;
+  value: MetricValue | null;
+  isPercent?: boolean;
+}) {
+  return (
+    <div className="border rounded-lg bg-white px-5 py-4">
+      <h3 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground mb-3">
+        {title}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button type="button" className="text-muted-foreground hover:text-foreground" aria-label={`About ${title}`}>
+              <i className="bi bi-info-circle text-[13px]" aria-hidden="true" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-[260px] normal-case tracking-normal font-normal">{tooltip}</TooltipContent>
+        </Tooltip>
+      </h3>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 flex-wrap min-w-0">
+          <span className={cn("text-[26px] font-semibold tabular-nums leading-none", value ? "text-foreground" : "text-muted-foreground")}>
+            {value ? `${formatNumber(value.current)}${isPercent ? "%" : ""}` : "n/a"}
+          </span>
+          {value && <ChangeBadge value={value} />}
+        </div>
+        <i className={cn("bi", icon, "text-[24px] text-foreground flex-shrink-0")} aria-hidden="true" />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Prod's dashboard-date-range-print-out: "+ / - Quantities are looking back at
+ * the previous 7 days, Data for: 9/22/26, 12:00 AM - 9/28/26, 11:59 PM".
+ */
+export function RangePrintOut({ range }: { range: InsightsRange }) {
+  const label = INSIGHTS_RANGES.find((r) => r.value === range)?.label ?? "";
+  const phrase = label.startsWith("Last ") ? `previous ${label.slice(5)}` : label.toLowerCase();
+  const { from, until } = rangeBounds(range);
+  const end = new Date(until);
+  end.setHours(23, 59, 0, 0);
+  const short = (d: Date) =>
+    d.toLocaleString("en-US", { month: "numeric", day: "numeric", year: "2-digit", hour: "numeric", minute: "2-digit" });
+  return (
+    <p className="text-[13px] text-muted-foreground">
+      + / - Quantities are looking back at the {phrase},{" "}
+      <strong className="font-semibold">Data for:</strong> {short(from)} - {short(end)}
+    </p>
   );
 }
 

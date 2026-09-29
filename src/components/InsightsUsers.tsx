@@ -6,7 +6,7 @@ import { ListToolbar, type ListControls } from "./ListToolbar";
 import { matchesFilter, type ListFilterDef } from "./ListFilters";
 import { HEAD_TEXT, SortableHeadCell, TableShell, sortRows, usePage, useSort } from "./ListTable";
 import { TablePagination } from "./TablePagination";
-import { StatTile } from "./InsightsShared";
+import { MetricCard } from "./InsightsShared";
 import { cn } from "@/lib/utils";
 import { getUniqueUserGroups, getUniqueUserRoles, mockUsers } from "@/lib/mockUserData";
 import { formatNumber, getUserMetrics, getUsersTiles, type InsightsRange, type UserMetricsRow } from "@/lib/mockInsightsData";
@@ -63,6 +63,19 @@ const COLUMN_GROUPS: ColumnGroup[] = [
   },
 ];
 
+/** Prod's tooltips and icons (dashboardUsersEngagementNumberStructure). */
+const TILE_META: Record<string, { tooltip: string; icon: string }> = {
+  "Total Uploads": { icon: "bi-upload", tooltip: "Total # of uploads across your network" },
+  "Total Downloads": { icon: "bi-download", tooltip: "Total # of downloads across your network" },
+  "Total Shares": { icon: "bi-share", tooltip: "Total # of shares across your network" },
+  "Share Request Fulfillment": { icon: "bi-share", tooltip: "The percentage of users who shared content to social via Share Requests" },
+  "Content Request Fulfillment": { icon: "bi-camera", tooltip: "The percentage of users who uploaded content via Content Requests" },
+  "Gallery Engagement": {
+    icon: "bi-image",
+    tooltip: "The percentage of users with Gallery access who viewed, downloaded or shared content from a Gallery",
+  },
+};
+
 export const USERS_COLUMN_SETTINGS = COLUMN_GROUPS.map((g) => ({ key: g.key, label: g.label }));
 
 export const USERS_FILTERS: ListFilterDef[] = [
@@ -114,12 +127,13 @@ export function InsightsUsers({ range, controls }: { range: InsightsRange; contr
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="border rounded-lg bg-white p-5 grid gap-5 grid-cols-2 md:grid-cols-3">
+      {/* Prod's engagement numbers: one card per metric, two rows of three. */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
         {tiles.counts.map((t) => (
-          <StatTile key={t.label} label={t.label} value={t.value} />
+          <MetricCard key={t.label} title={t.label} value={t.value} {...TILE_META[t.label]} />
         ))}
         {tiles.percents.map((t) => (
-          <StatTile key={t.label} label={t.label} value={t.value} format={(n) => `${n}%`} />
+          <MetricCard key={t.label} title={t.label} value={t.value} isPercent {...TILE_META[t.label]} />
         ))}
       </div>
 

@@ -6,12 +6,12 @@ import { SectionTabs } from "@/components/SectionTabs";
 import { useScreenSlug, validTab } from "@/hooks/useScreenSlug";
 import { toast } from "@/hooks/use-toast";
 import { useListControls } from "./ListToolbar";
-import { DateRangeSelect, downloadCsv, useInsightsRange } from "./InsightsShared";
+import { DateRangeSelect, RangePrintOut, downloadCsv, useInsightsRange } from "./InsightsShared";
 import { InsightsActivity } from "./InsightsActivity";
 import { InsightsOverview } from "./InsightsOverview";
 import { InsightsUsers, USERS_COLUMN_SETTINGS, USERS_FILTER_SETTINGS, usersCsvRows } from "./InsightsUsers";
 import { InitiatedSharesTab, VerifiedSharesTab } from "./InsightsShares";
-import { formatRange, getOverview, mockSocialShares, type InsightsRange } from "@/lib/mockInsightsData";
+import { getOverview, mockSocialShares, type InsightsRange } from "@/lib/mockInsightsData";
 
 // Prod order: Activity first, and /insights lands on it.
 const STATS_TABS = [
@@ -41,16 +41,6 @@ function overviewCsvRows(range: InsightsRange): (string | number)[][] {
     ...d.shareRequests.map((t) => row("Share Requests", t.label, t.value)),
     ...d.contentRequests.map((t) => row("Content Requests", t.label, t.value)),
   ];
-}
-
-/** Date range + the range it resolves to, printed under the control as in prod. */
-function ReportsToolbar({ range, onRangeChange }: { range: InsightsRange; onRangeChange: (r: InsightsRange) => void }) {
-  return (
-    <div className="flex flex-wrap items-center gap-3">
-      <DateRangeSelect value={range} onChange={onRangeChange} />
-      <span className="text-[13px] text-muted-foreground">{formatRange(range)}</span>
-    </div>
-  );
 }
 
 interface StatsScreenProps {
@@ -89,14 +79,19 @@ export function StatsScreen({ isMobile = false, initialTab }: StatsScreenProps) 
       {/* Spacer for consistent header position - matches LibraryScreen */}
       {!isMobile && <div className="mb-2 h-[44px] flex-shrink-0" />}
       {/* Header */}
-      <div className="px-6 md:px-9 pb-4 flex items-center justify-between gap-3 min-h-[56px]">
+      <div className="px-6 md:px-9 pb-4 flex flex-wrap items-center justify-between gap-3 min-h-[56px]">
         {/* min-h = 40px CTA + pb-4, so tabs without a CTA don't shift the title. */}
         <h1 className="text-[26px] font-semibold text-foreground">Insights</h1>
         {activeTab !== "activity" && (
-          <Button variant="outline" onClick={exportCsv} aria-label="Export as CSV">
-            <i className="bi bi-download text-base" />
-            <span className="max-sm:hidden">Export as CSV</span>
-          </Button>
+          // Prod's reports header: date range + primary Export, top right. The
+          // label collapses to the download icon below lg, as in prod.
+          <div className="flex items-center gap-3">
+            {(activeTab === "overview" || activeTab === "users") && <DateRangeSelect value={range} onChange={setRange} />}
+            <Button onClick={exportCsv} aria-label="Export as CSV">
+              <i className="bi bi-download text-base lg:hidden" />
+              <span className="max-lg:hidden">Export as CSV</span>
+            </Button>
+          </div>
         )}
       </div>
 
@@ -108,12 +103,12 @@ export function StatsScreen({ isMobile = false, initialTab }: StatsScreenProps) 
         </TabsContent>
 
         <TabsContent value="overview" className="py-6 mt-0 flex flex-col gap-4 data-[state=inactive]:hidden">
-          <ReportsToolbar range={range} onRangeChange={setRange} />
+          <RangePrintOut range={range} />
           <InsightsOverview range={range} />
         </TabsContent>
 
         <TabsContent value="users" className="py-6 mt-0 flex flex-col gap-4 data-[state=inactive]:hidden">
-          <ReportsToolbar range={range} onRangeChange={setRange} />
+          <RangePrintOut range={range} />
           <InsightsUsers range={range} controls={usersControls} />
         </TabsContent>
 
