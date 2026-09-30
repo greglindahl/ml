@@ -15,17 +15,15 @@ import {
   autoRetryDelay,
   MISMATCH_MESSAGE,
   NOT_STARTED_MESSAGE,
-  NO_MATCH_MESSAGE,
   checkSingleReselect,
   createMockUpload,
   createMockUploadBatch,
   isActiveUpload,
   isRetryable,
-  matchReselectedFiles,
   tickUpload,
   type ChunkedUpload,
 } from "@/lib/mockUploadData";
-import { historyKey, loadHistory, loadResumable, recordSuccesses, saveResumable } from "@/lib/uploadPersistence";
+import { loadResumable, saveResumable } from "@/lib/uploadPersistence";
 
 /**
  * App-wide upload queue. Production keeps this in an NgRx feature slice
@@ -60,19 +58,6 @@ const asInterrupted = (u: ChunkedUpload): ChunkedUpload => {
   };
 };
 
-export interface BulkRetryResult {
-  /** Failures whose file was still in memory, restarted straight away. */
-  retried: number;
-  /** Interrupted uploads a picked file matched, resuming. */
-  resumed: number;
-  /** Picked files that match nothing waiting but did upload recently: ask before duplicating. */
-  alreadyUploaded: File[];
-  /** Picked files that match nothing at all. */
-  unmatchedFiles: number;
-  /** Interrupted uploads still without a file; their rows now say so. */
-  stillWaiting: number;
-}
-
 interface UploadQueueValue {
   uploads: ChunkedUpload[];
   activeCount: number;
@@ -90,11 +75,8 @@ interface UploadQueueValue {
   abortUpload: (queueId: string) => void;
   dismissUpload: (queueId: string) => void;
   retryUpload: (queueId: string) => void;
-  /**
-   * Banner "Retry All". Failures with the file in memory restart now; pass the
-   * files from the one multi-select pick to resume interrupted ones too.
-   */
-  retryAll: (files?: File[]) => BulkRetryResult;
+  /** Banner "Retry All": restart every failure whose file is still in memory. Returns how many. */
+  retryAll: () => number;
   /** Row ↻ on an interrupted upload: prod's single-file reselect. */
   reselectFile: (queueId: string, file: File) => void;
 
@@ -170,15 +152,6 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
     saveResumable(uploads);
   }, [uploads]);
 
-  // Remember what succeeded, so a later reselect can spot a duplicate.
-  const recordedRef = useRef(new Set<string>());
-  useEffect(() => {
-    const fresh = uploads.filter((u) => u.completed && !recordedRef.current.has(u.queueId));
-    if (fresh.length === 0) return;
-    fresh.forEach((u) => recordedRef.current.add(u.queueId));
-    recordSuccesses(fresh);
-  }, [uploads]);
-
   const startUploads = useCallback((count = 6) => {
     setUploads((prev) => [...prev, ...createMockUploadBatch(count)]);
     setIsWindowVisible(true);
@@ -231,23 +204,10 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
     [patch],
   );
 
-  const retryAll = useCallback((files: File[] = []): BulkRetryResult => {
+  const retryAll = useCallback(() => {
     const retried = uploadsRef.current.filter(isRetryable).length;
-    const history = new Set(loadHistory().map(historyKey));
-    const { matched, alreadyUploaded, unmatchedFiles, stillWaiting } = matchReselectedFiles(uploadsRef.current, files, history);
-    const resumeIds = new Set(matched.map((m) => m.upload.queueId));
-    // Only flag rows when the user actually picked files; a Retry All with
-    // nothing to reselect shouldn't rewrite interrupted rows' messages.
-    const flagIds = files.length > 0 ? new Set(stillWaiting.map((u) => u.queueId)) : new Set<string>();
-
-    setUploads((prev) =>
-      prev.map((u) => {
-        if (isRetryable(u) || resumeIds.has(u.queueId)) return resume(u);
-        if (flagIds.has(u.queueId)) return { ...u, errorMessage: NO_MATCH_MESSAGE };
-        return u;
-      }),
-    );
-    return { retried, resumed: matched.length, alreadyUploaded, unmatchedFiles: unmatchedFiles.length, stillWaiting: stillWaiting.length };
+    setUploads((prev) => prev.map((u) => (isRetryable(u) ? resume(u) : u)));
+    return retried;
   }, []);
 
   const reselectFile = useCallback((queueId: string, file: File) => {

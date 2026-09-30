@@ -328,7 +328,7 @@ export const NOT_STARTED_MESSAGE = "Upload was queued but not started. Please cl
 /** Failed with the file still in memory: a plain retry picks up where it stopped. */
 export const isRetryable = (upload: ChunkedUpload) => upload.status === "FAILED" && !upload.needsFileReselection;
 
-/** Interrupted: the browser lost the file handle, so the user has to pick it again. */
+/** Interrupted: the browser lost the file handle, so the user has to pick it again (inline, per row). */
 export const needsReselection = (upload: ChunkedUpload) => upload.status === "FAILED" && !!upload.needsFileReselection;
 
 export interface FileDescriptor {
@@ -339,47 +339,6 @@ export interface FileDescriptor {
 
 /** Prod's copy when a single-row reselect picks the wrong file. */
 export const MISMATCH_MESSAGE = "Selected file doesn't match the original. Please select the correct file.";
-/** Left on an interrupted row a bulk reselect couldn't pair (call notes: prompt individual reselect). */
-export const NO_MATCH_MESSAGE = "No matching file found. Click the refresh icon to reselect this file.";
-
-const descriptorKey = (name: string, size: number, lastModified: number) => `${name}|${size}|${lastModified}`;
-
-/**
- * Pair reselected files with interrupted uploads, 1:1 and order-independent,
- * through a key map (name + size + lastModified) rather than string scans, so
- * hundreds of files stay cheap.
- *
- * - matched: confident match, resumes automatically
- * - alreadyUploaded: no interrupted upload wants it, but it's in the recent
- *   success history; ask before uploading a duplicate
- * - unmatchedFiles: picked but matches nothing
- * - stillWaiting: interrupted uploads no picked file matched; flagged for individual reselect
- */
-export function matchReselectedFiles<F extends FileDescriptor>(
-  uploads: ChunkedUpload[],
-  files: F[],
-  historyKeys: Set<string> = new Set(),
-) {
-  const waiting = new Map<string, ChunkedUpload[]>();
-  for (const u of uploads.filter(needsReselection)) {
-    const k = descriptorKey(u.filename, u.fileSize, u.lastModified);
-    waiting.set(k, [...(waiting.get(k) ?? []), u]);
-  }
-
-  const matched: { upload: ChunkedUpload; file: F }[] = [];
-  const alreadyUploaded: F[] = [];
-  const unmatchedFiles: F[] = [];
-  for (const file of files) {
-    const k = descriptorKey(file.name, file.size, file.lastModified);
-    const upload = waiting.get(k)?.shift();
-    if (upload) matched.push({ upload, file });
-    else if (historyKeys.has(k)) alreadyUploaded.push(file);
-    else unmatchedFiles.push(file);
-  }
-  const stillWaiting = [...waiting.values()].flat();
-  return { matched, alreadyUploaded, unmatchedFiles, stillWaiting };
-}
-
 /** Prod's single-row check: name + size must agree; a newer lastModified restarts from scratch. */
 export function checkSingleReselect(upload: ChunkedUpload, file: FileDescriptor): "resume" | "restart" | "mismatch" {
   if (file.name !== upload.filename || file.size !== upload.fileSize) return "mismatch";

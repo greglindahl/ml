@@ -4,17 +4,7 @@ import { useUploadQueue } from "@/hooks/useUploadQueue";
 import { UploadProgressWindowItem } from "@/components/UploadProgressWindowItem";
 import { CancelUploadsDialog } from "@/components/CancelUploadsDialog";
 import { toast } from "@/hooks/use-toast";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { needsReselection, sortUploadsForDisplay } from "@/lib/mockUploadData";
+import { isRetryable, sortUploadsForDisplay } from "@/lib/mockUploadData";
 import { cn } from "@/lib/utils";
 
 /**
@@ -40,7 +30,6 @@ export function UploadProgressWindow() {
     retryUpload,
     retryAll,
     reselectFile,
-    startUploadsForFiles,
   } = useUploadQueue();
 
   const isMobile = useIsMobile();
@@ -52,37 +41,15 @@ export function UploadProgressWindow() {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const sorted = sortUploadsForDisplay(uploads);
-  const reselectCount = uploads.filter(needsReselection).length;
-  const reselectInputRef = useRef<HTMLInputElement>(null);
-  const [duplicates, setDuplicates] = useState<File[]>([]);
+  const retryableCount = uploads.filter(isRetryable).length;
 
-  // Surfaces only once background auto-retry has given up. Kept for the 10/1 dev
-  // discussion (may be redundant then): in-memory failures restart now; if any
-  // were interrupted, the same click opens one picker to reselect them all.
+  // Retries every failure it can in one click, so nobody has to go row by row.
+  // Rows whose file was lost (after a refresh) can't be retried until the user
+  // picks the file; they keep their inline "reselect" error. Kept for the 10/1
+  // dev discussion: may be redundant once background auto-retry ships.
   const handleRetryAll = () => {
-    const { retried } = retryAll();
-    if (reselectCount > 0) {
-      reselectInputRef.current?.click();
-    } else {
-      toast({ title: `Retrying ${retried} ${retried === 1 ? "upload" : "uploads"}` });
-    }
-  };
-
-  const handleFilesReselected = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files ?? []);
-    event.target.value = ""; // so picking the same files again still fires
-    if (files.length === 0) return;
-    const { resumed, alreadyUploaded, unmatchedFiles, stillWaiting } = retryAll(files);
-    if (alreadyUploaded.length > 0) setDuplicates(alreadyUploaded);
-    const notes = [
-      unmatchedFiles > 0 && `${unmatchedFiles} selected ${unmatchedFiles === 1 ? "file didn't" : "files didn't"} match a failed upload.`,
-      stillWaiting > 0 && `${stillWaiting} ${stillWaiting === 1 ? "upload still needs its file" : "uploads still need their files"}; reselect ${stillWaiting === 1 ? "it" : "them"} from the row.`,
-    ].filter(Boolean);
-    if (resumed === 0 && notes.length === 0) return; // only duplicates: the dialog says it all
-    toast({
-      title: resumed > 0 ? `Resuming ${resumed} ${resumed === 1 ? "upload" : "uploads"}` : "No matching files found",
-      description: notes.join(" ") || undefined,
-    });
+    const retried = retryAll();
+    toast({ title: `Retrying ${retried} ${retried === 1 ? "upload" : "uploads"}` });
   };
 
   const handlePointerDown = useCallback(
@@ -236,6 +203,8 @@ export function UploadProgressWindow() {
               {failedCount} {failedCount === 1 ? "upload" : "uploads"} failed.
               {/* The why lives on each row as an inline error (9/30 call). */}
             </p>
+            {/* Hidden when every failure needs its file reselected: nothing to retry yet. */}
+            {retryableCount > 0 && (
             <button
               type="button"
               onClick={handleRetryAll}
@@ -243,7 +212,7 @@ export function UploadProgressWindow() {
             >
               Retry All
             </button>
-            <input ref={reselectInputRef} type="file" multiple className="hidden" onChange={handleFilesReselected} aria-hidden="true" tabIndex={-1} />
+            )}
           </div>
         )}
 
@@ -267,40 +236,6 @@ export function UploadProgressWindow() {
           </div>
         )}
       </div>
-
-      {/* Duplicate check against recent successes, e.g. "this song already exists: add again or skip?" */}
-      <AlertDialog open={duplicates.length > 0} onOpenChange={(open) => !open && setDuplicates([])}>
-        <AlertDialogContent className="max-w-md">
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {duplicates.length === 1 ? "This file was already uploaded" : `${duplicates.length} files were already uploaded`}
-            </AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-2">
-                <p>
-                  {duplicates.length === 1 ? "It's" : "They're"} already in the library. Uploading again will add a duplicate.
-                </p>
-                <ul className="max-h-40 overflow-auto text-foreground text-[13px] list-disc pl-5">
-                  {duplicates.map((f) => (
-                    <li key={`${f.name}|${f.size}|${f.lastModified}`} className="truncate">{f.name}</li>
-                  ))}
-                </ul>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Skip</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                startUploadsForFiles(duplicates);
-                setDuplicates([]);
-              }}
-            >
-              Upload Again
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <CancelUploadsDialog
         open={confirmOpen}
