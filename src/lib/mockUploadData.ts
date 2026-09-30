@@ -84,7 +84,26 @@ export interface ChunkedUpload {
   throughput: number;
   /** Simulation-only: ms remaining in PROCESSING. */
   processingRemaining: number;
+
+  /** Background auto-retry: which attempt is running (1-based), 0 when none. */
+  autoRetryAttempt?: number;
+  /** Simulation-only: ms until the current auto-retry attempt fires. */
+  autoRetryRemaining?: number;
+  /** Simulation-only: how many more attempts will fail before one succeeds. */
+  failuresRemaining?: number;
 }
+
+/**
+ * How many background retries run before a failure surfaces to the user.
+ * Open question from the 9/30 call (once? 2-3?); needs engineering input.
+ */
+export const AUTO_RETRY_ATTEMPTS = 3;
+/** Backoff before each attempt: 2s, 4s, 8s... */
+export const autoRetryDelay = (attempt: number) => 1000 * 2 ** attempt;
+
+export const autoRetryMessage = (attempt: number) =>
+  `Connection lost. Retrying automatically (${attempt} of ${AUTO_RETRY_ATTEMPTS})…`;
+export const RETRIES_EXHAUSTED_MESSAGE = `Upload failed after ${AUTO_RETRY_ATTEMPTS} retries. Click the refresh icon to try again.`;
 
 const CHANNELS: UploadChannel[] = [
   { name: "Team Media", initials: "TM" },
@@ -252,7 +271,37 @@ export function tickUpload(upload: ChunkedUpload, dt: number): ChunkedUpload {
       };
     }
 
-    // RECONNECTING / FAILED / CANCELLED / SUCCESS hold until the user acts.
+    // Background auto-retry: count down to the next attempt, then either
+    // resume or, once attempts run out, surface the failure.
+    case "RECONNECTING": {
+      if (!upload.autoRetryAttempt) return upload; // a plain drop from elsewhere holds as before
+      const remaining = (upload.autoRetryRemaining ?? 0) - dt;
+      if (remaining > 0) return { ...upload, autoRetryRemaining: remaining };
+
+      const failuresRemaining = upload.failuresRemaining ?? 0;
+      if (failuresRemaining === 0) {
+        return { ...upload, status: "UPLOADING", autoRetryAttempt: 0, autoRetryRemaining: 0, errorMessage: null };
+      }
+      if (upload.autoRetryAttempt >= AUTO_RETRY_ATTEMPTS) {
+        return {
+          ...upload,
+          status: "FAILED",
+          autoRetryAttempt: 0,
+          autoRetryRemaining: 0,
+          failuresRemaining: 0,
+          errorMessage: RETRIES_EXHAUSTED_MESSAGE,
+        };
+      }
+      const attempt = upload.autoRetryAttempt + 1;
+      return {
+        ...upload,
+        autoRetryAttempt: attempt,
+        autoRetryRemaining: autoRetryDelay(attempt),
+        failuresRemaining: failuresRemaining - 1,
+      };
+    }
+
+    // FAILED / CANCELLED / SUCCESS hold until the user acts.
     default:
       return upload;
   }

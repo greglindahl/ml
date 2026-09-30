@@ -9,7 +9,9 @@ import {
   type ReactNode,
 } from "react";
 import {
+  AUTO_RETRY_ATTEMPTS,
   INTERRUPTED_MESSAGE,
+  autoRetryDelay,
   MISMATCH_MESSAGE,
   NOT_STARTED_MESSAGE,
   NO_MATCH_MESSAGE,
@@ -127,7 +129,11 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
   // when nothing is in flight so an idle tab isn't re-rendering four times a second.
   const lastTickRef = useRef<number>(Date.now());
   const needsTick = uploads.some(
-    (u) => u.status === "PENDING" || u.status === "UPLOADING" || u.status === "PROCESSING",
+    (u) =>
+      u.status === "PENDING" ||
+      u.status === "UPLOADING" ||
+      u.status === "PROCESSING" ||
+      (u.status === "RECONNECTING" && !!u.autoRetryAttempt),
   );
 
   useEffect(() => {
@@ -272,23 +278,26 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
     return count;
   }, []);
 
-  const simulateNetworkDrop = useCallback(
-    (queueId: string) => {
-      patch(queueId, { status: "RECONNECTING", speed: null });
-    },
-    [patch],
-  );
-
-  const simulateFailure = useCallback(
-    (queueId: string) => {
+  // A dropped connection goes into background auto-retry first; the user only
+  // sees a failure (and the Retry All banner) once the attempts run out.
+  const startAutoRetry = useCallback(
+    (queueId: string, failures: number) => {
       patch(queueId, {
-        status: "FAILED",
+        status: "RECONNECTING",
         speed: null,
-        errorMessage: "Network connection lost. Please retry when connection is restored.",
+        autoRetryAttempt: 1,
+        autoRetryRemaining: autoRetryDelay(1),
+        failuresRemaining: failures,
       });
     },
     [patch],
   );
+
+  /** Transient drop: the first background retry gets it going again. */
+  const simulateNetworkDrop = useCallback((queueId: string) => startAutoRetry(queueId, 0), [startAutoRetry]);
+
+  /** Hard failure: every background retry fails, then the row surfaces as FAILED. */
+  const simulateFailure = useCallback((queueId: string) => startAutoRetry(queueId, AUTO_RETRY_ATTEMPTS), [startAutoRetry]);
 
   const closeWindow = useCallback(() => {
     setUploads([]);
@@ -307,8 +316,8 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
    * simulation reaches them. Kept off the tray chrome so it stays a faithful
    * copy; drive them from the console instead:
    *
-   *   __uploadDemo.drop()    // first active upload → RECONNECTING
-   *   __uploadDemo.fail()    // first active upload → FAILED (retry appears)
+   *   __uploadDemo.drop()    // first active upload drops; the first background retry recovers it
+   *   __uploadDemo.fail()    // first active upload drops; every background retry fails → FAILED
    *   __uploadDemo.interrupt() // every in-flight upload → interrupted, needs file reselection
    *   __uploadDemo.list()    // queueIds + statuses
    */

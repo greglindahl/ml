@@ -79,6 +79,22 @@ This came out of a call about CS feedback via Lucy: bulk retry is missing, so us
 
 **Demo:** Upload files, then run `__uploadDemo.interrupt()` in the console and reload the page. Click **Retry All** and re-pick the same files.
 
+## 5b. Order of operations (2026-09-30 call)
+
+Background auto-retry now comes **first**. The user only sees a failure once it gives up.
+
+1. When a connection drops, the row goes to RECONNECTING (prod's existing state) and retries in the background with backoff (2s, 4s, 8s). The row reads "Connection lost. Retrying automatically (2 of 3)…".
+2. When an attempt succeeds, the upload carries on from its progress, and nothing else is shown.
+3. When all attempts are spent, the row goes to FAILED with an **inline error**: "Upload failed after 3 retries. Click the refresh icon to try again." Only then does the banner appear.
+4. The banner shows **just the count** ("1 upload failed."), and the explanation lives on the row. **Retry All** is kept for the dev discussion, since it may be redundant once background retry exists.
+5. The minimize/close warning is unchanged: closing the tray still cancels uploads.
+
+The attempt count is `AUTO_RETRY_ATTEMPTS = 3` in `mockUploadData.ts`, so the "once / 2-3 / button" question is a one-line change.
+
+**Feasibility to raise with dev:** background retry only works while the page still holds the `File`, which covers a network drop or a server error. After a refresh or a closed tab, the browser won't reopen a file from stored metadata alone, so those rows still need a user pick (Retry All's picker, or the row's ↻). The one exception is the Chromium-only File System Access API: file *handles* can be stored in IndexedDB and re-permissioned with a single prompt. That's worth asking about if true auto-resume after a refresh matters.
+
+Demo: `__uploadDemo.drop()` recovers on the first retry. `__uploadDemo.fail()` uses up all 3 attempts and then shows the banner.
+
 ## 6. Build plan (prototype)
 
 1. **Model:** add `lastModified` and `expiresAt` to `ChunkedUpload`, and keep `completedChunks` as the resume point.

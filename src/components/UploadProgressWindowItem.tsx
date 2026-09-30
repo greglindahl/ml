@@ -4,6 +4,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import {
   ACTIVE_UPLOAD_STATUSES,
+  autoRetryMessage,
   formatSpeed,
   type ChunkedUpload,
 } from "@/lib/mockUploadData";
@@ -184,7 +185,9 @@ export function UploadProgressWindowItem({
               aria-hidden="true"
             />
             <span className="text-[11px] break-words">
-              Network connection lost. Attempting to reconnect...
+              {upload.autoRetryAttempt
+                ? autoRetryMessage(upload.autoRetryAttempt)
+                : "Network connection lost. Attempting to reconnect..."}
             </span>
           </div>
         ) : upload.errorMessage ? (

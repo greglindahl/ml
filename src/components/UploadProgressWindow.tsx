@@ -56,7 +56,8 @@ export function UploadProgressWindow() {
   const reselectInputRef = useRef<HTMLInputElement>(null);
   const [duplicates, setDuplicates] = useState<File[]>([]);
 
-  // One CTA for every failure (call notes): in-memory ones restart now; if any
+  // Surfaces only once background auto-retry has given up. Kept for the 10/1 dev
+  // discussion (may be redundant then): in-memory failures restart now; if any
   // were interrupted, the same click opens one picker to reselect them all.
   const handleRetryAll = () => {
     const { retried } = retryAll();
@@ -233,13 +234,7 @@ export function UploadProgressWindow() {
             <i className="bi bi-exclamation-circle text-primary w-4 h-4 mt-px inline-flex items-center justify-center leading-none flex-shrink-0" aria-hidden="true" />
             <p className="flex-1 min-w-0 text-[12px] leading-snug text-foreground">
               {failedCount} {failedCount === 1 ? "upload" : "uploads"} failed.
-              {reselectCount > 0 && (
-                <span className="block text-muted-foreground">
-                  {reselectCount === failedCount
-                    ? `You'll reselect ${reselectCount === 1 ? "the file" : "the files"} to pick up where ${reselectCount === 1 ? "it" : "they"} left off.`
-                    : `${reselectCount} ${reselectCount === 1 ? "needs its file" : "need their files"} reselected to pick up where they left off.`}
-                </span>
-              )}
+              {/* The why lives on each row as an inline error (9/30 call). */}
             </p>
             <button
               type="button"
