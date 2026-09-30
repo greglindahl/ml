@@ -10,6 +10,7 @@ import {
 } from "react";
 import {
   AUTO_RETRY_ATTEMPTS,
+  RETRIES_EXHAUSTED_MESSAGE,
   INTERRUPTED_MESSAGE,
   autoRetryDelay,
   MISMATCH_MESSAGE,
@@ -299,6 +300,38 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
   /** Hard failure: every background retry fails, then the row surfaces as FAILED. */
   const simulateFailure = useCallback((queueId: string) => startAutoRetry(queueId, AUTO_RETRY_ATTEMPTS), [startAutoRetry]);
 
+  /**
+   * Design-review snapshot: one row in each state the new flow produces, so the
+   * inline treatments can be compared side by side without waiting on timers.
+   */
+  const showScenario = useCallback(() => {
+    const MB = 1024 * 1024;
+    const part = (size: number, pct: number) => {
+      const chunkSize = 5 * MB;
+      const completedChunks = Math.floor((size * pct) / chunkSize);
+      return { fileSize: size, completedChunks, uploadedBytes: completedChunks * chunkSize, progress: ((completedChunks * chunkSize) / size) * 100 };
+    };
+    setUploads([
+      // Needs the file again (after a refresh): the reselect ask, inline.
+      asInterrupted(createMockUpload({ filename: "press_conference_full_204.mov", kind: "video", ...part(480 * MB, 0.62) })),
+      // Background retries used up.
+      createMockUpload({
+        filename: "tunnel_walk_4410.jpg",
+        kind: "image",
+        ...part(24 * MB, 0.4),
+        status: "FAILED",
+        errorMessage: RETRIES_EXHAUSTED_MESSAGE,
+      }),
+      // Retrying in the background: the user doesn't need to act yet. Parked
+      // on attempt 2 (no countdown) so it holds still for the call.
+      createMockUpload({ filename: "q1_highlight_reel_318.mov", kind: "video", ...part(310 * MB, 0.35), status: "RECONNECTING", autoRetryAttempt: 2, autoRetryRemaining: Infinity, failuresRemaining: 1 }),
+      createMockUpload({ filename: "crowd_reaction_7712.jpg", kind: "image", fileSize: 18 * MB }),
+      createMockUpload({ filename: "bench_celebration_2291.jpg", kind: "image", ...part(9 * MB, 1), status: "SUCCESS", completed: true, progress: 100, completedAt: new Date().toISOString() }),
+    ]);
+    setIsWindowVisible(true);
+    setIsCollapsed(false);
+  }, []);
+
   const closeWindow = useCallback(() => {
     setUploads([]);
     setIsWindowVisible(false);
@@ -318,6 +351,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
    *
    *   __uploadDemo.drop()    // first active upload drops; the first background retry recovers it
    *   __uploadDemo.fail()    // first active upload drops; every background retry fails → FAILED
+   *   __uploadDemo.scenario()  // every state side by side, for design review
    *   __uploadDemo.interrupt() // every in-flight upload → interrupted, needs file reselection
    *   __uploadDemo.list()    // queueIds + statuses
    */
@@ -333,10 +367,14 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         if (target) simulateFailure(target);
         return target ?? "no active upload";
       },
+      scenario: () => {
+        showScenario();
+        return "tray seeded: reselect, retries used up, retrying, uploading, done";
+      },
       interrupt: () => `${simulateInterrupt()} uploads interrupted`,
       list: () => uploads.map((u) => ({ queueId: u.queueId, file: u.filename, status: u.status })),
     };
-  }, [uploads, simulateNetworkDrop, simulateFailure, simulateInterrupt]);
+  }, [uploads, simulateNetworkDrop, simulateFailure, simulateInterrupt, showScenario]);
 
   // Prod warns before unload while transfers are in flight.
   useEffect(() => {

@@ -93,7 +93,7 @@ The attempt count is `AUTO_RETRY_ATTEMPTS = 3` in `mockUploadData.ts`, so the "o
 
 **Feasibility to raise with dev:** background retry only works while the page still holds the `File`, which covers a network drop or a server error. After a refresh or a closed tab, the browser won't reopen a file from stored metadata alone, so those rows still need a user pick (Retry All's picker, or the row's ↻). The one exception is the Chromium-only File System Access API: file *handles* can be stored in IndexedDB and re-permissioned with a single prompt. That's worth asking about if true auto-resume after a refresh matters.
 
-Demo: `__uploadDemo.drop()` recovers on the first retry. `__uploadDemo.fail()` uses up all 3 attempts and then shows the banner.
+Demo: `__uploadDemo.scenario()` seeds one row per state for design review (reselect ask, retries used up, retrying, uploading, done). `__uploadDemo.drop()` recovers on the first retry. `__uploadDemo.fail()` uses up all 3 attempts and then shows the banner.
 
 ## 6. Build plan (prototype)
 
