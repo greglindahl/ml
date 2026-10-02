@@ -183,6 +183,8 @@ interface AssetSettingsDrawerProps {
   filterVisibility: AssetFilterVisibility;
   onFilterVisibilityChange: (value: AssetFilterVisibility) => void;
   defaultTab?: SettingsTab;
+  /** Filters this page doesn't offer, left out of the Filters tab (e.g. Folders inside a gallery). */
+  hiddenFilters?: AssetFilterKey[];
 }
 
 export function AssetSettingsDrawer({
@@ -197,6 +199,7 @@ export function AssetSettingsDrawer({
   filterVisibility,
   onFilterVisibilityChange,
   defaultTab = "grid",
+  hiddenFilters = [],
 }: AssetSettingsDrawerProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>(defaultTab);
 
@@ -345,7 +348,7 @@ export function AssetSettingsDrawer({
                 </button>
               </div>
               <div className="space-y-2">
-                {ASSET_FILTERS.map((filter) => (
+                {ASSET_FILTERS.filter((f) => !hiddenFilters.includes(f.key)).map((filter) => (
                   <label key={filter.key} className="flex items-center gap-2 cursor-pointer">
                     <Checkbox
                       checked={filterVisibility[filter.key]}

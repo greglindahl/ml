@@ -859,6 +859,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
         onColumnVisibilityChange={setAssetColumnVisibility}
         filterVisibility={assetFilterVisibility}
         onFilterVisibilityChange={setAssetFilterVisibility}
+        hiddenFilters={["folders"]}
       />
 
       {/* Asset Detail Modal */}
