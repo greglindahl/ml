@@ -17,7 +17,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { mockLibraryAssets } from "@/lib/mockLibraryData";
-import { folders, FolderItem } from "@/lib/mockFolderData";
 import { TogglePill } from "./TogglePill";
 
 interface FilterOption {
@@ -76,26 +75,6 @@ const peopleOptions = computeTagMatchCounts(PEOPLE_NAMES);
 const sceneOptions = computeTagMatchCounts(Object.keys(SCENE_VALUES), SCENE_VALUES);
 const brandOptions = computeTagMatchCounts(Object.keys(BRAND_VALUES), BRAND_VALUES);
 
-// Helper to flatten folder tree into options with depth (folders only, no galleries)
-function flattenFolderTree(items: FolderItem[], depth = 0): FilterOption[] {
-  const result: FilterOption[] = [];
-  items.forEach(item => {
-    if (item.id !== "all" && item.type === "folder") {
-      result.push({
-        label: item.name,
-        value: item.id,
-        depth,
-        type: item.type
-      });
-      if (item.children) {
-        result.push(...flattenFolderTree(item.children, depth + 1));
-      }
-    }
-  });
-  return result;
-}
-
-const folderOptions = flattenFolderTree(folders);
 
 // Source options
 const sourceOptions: FilterOption[] = [
@@ -201,14 +180,8 @@ const filters: FilterConfig[] = [{
       .sort(([va, a], [vb, b]) => (va === "unknown" ? 1 : vb === "unknown" ? -1 : b - a))
       .map(([value, count]) => ({ label: labels[value] || value, value, count, iconClass: orientationIcons[value] }));
   })(),
-}, {
-  id: "folders",
-  label: "Folders",
-  icon: <i className="bi bi-folder" />,
-  multiSelect: true,
-  isTreeStructure: true,
-  options: folderOptions
 }];
+// No Folders filter: everything here is already in this one gallery.
 
 export interface CustomDateRange {
   from: Date | undefined;
