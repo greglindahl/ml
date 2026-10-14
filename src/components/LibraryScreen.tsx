@@ -1521,36 +1521,46 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
         {!isMobile && <div className="mb-2 h-[44px] flex-shrink-0" />}
 
         {/* Header with title and actions */}
+        {/* Header with title and actions. Branding and Workflows are their own
+            objects, so each shows a single create CTA; the folder/gallery
+            dropdown and Upload only apply to the asset tabs. */}
         <div className="flex items-center justify-between flex-shrink-0 mb-6">
           <h1 className="text-[26px] font-semibold text-foreground">Library</h1>
-          <div className="flex items-center gap-3">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="h-10 px-3 py-2 gap-2 text-primary border-primary hover:bg-primary/5"
-                >
-                  <i className="bi bi-plus-circle w-4 h-4 inline-flex items-center justify-center leading-none" />
-                  New
-                  <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setNewFolderDialogOpen(true)}>
-                  <i className="bi bi-folder w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
-                  Folder
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setNewGalleryDialogOpen(true)}>
-                  <i className="bi bi-image w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
-                  Gallery
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button className="h-10 px-3 py-2 gap-2" onClick={() => setUploadModalOpen(true)}>
-              <i className="bi bi-upload w-4 h-4 inline-flex items-center justify-center leading-none" />
-              Upload
+          {activeTab === "branding" || activeTab === "workflows" ? (
+            <Button className="h-10 px-3 py-2 gap-2">
+              <i className="bi bi-plus-circle w-4 h-4 inline-flex items-center justify-center leading-none" />
+              {activeTab === "branding" ? "New Branding" : "New Workflow"}
             </Button>
-          </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="h-10 px-3 py-2 gap-2 text-primary border-primary hover:bg-primary/5"
+                  >
+                    <i className="bi bi-plus-circle w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    New
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setNewFolderDialogOpen(true)}>
+                    <i className="bi bi-folder w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
+                    Folder
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setNewGalleryDialogOpen(true)}>
+                    <i className="bi bi-image w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" />
+                    Gallery
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button className="h-10 px-3 py-2 gap-2" onClick={() => setUploadModalOpen(true)}>
+                <i className="bi bi-upload w-4 h-4 inline-flex items-center justify-center leading-none" />
+                Upload
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Tabs */}
