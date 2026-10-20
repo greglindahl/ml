@@ -106,8 +106,10 @@ interface ListToolbarProps {
   controls: ListControls;
   filterDefs?: ListFilterDef[];
   pillDefs?: ListPillDef[];
-  /** Omit for lists with no table preferences — the gear goes away. */
+  /** Omit for lists with no table preferences — the gear goes away (unless filterSettingsOnly). */
   columns?: SettingsOption[];
+  /** No table, but the gear still opens View Settings for the filters (e.g. a feed). */
+  filterSettingsOnly?: boolean;
   searchPlaceholder?: string;
   sheetTitle?: string;
   /** Prod has no search on this list — hidden unless SHOW_PROPOSED_FILTERS. */
@@ -123,6 +125,7 @@ export function ListToolbar({
   filterDefs: allFilterDefs = [],
   pillDefs = [],
   columns,
+  filterSettingsOnly = false,
   searchPlaceholder,
   sheetTitle,
   searchProposed = false,
@@ -136,7 +139,7 @@ export function ListToolbar({
   const visibleFilters = filterDefs.filter((f) => controls.filterVisibility[f.id] !== false);
   const hasFilterRow = visibleFilters.length > 0 || pillDefs.length > 0;
   const showSearch = !searchProposed || SHOW_PROPOSED_FILTERS;
-  const openSettings = columns ? () => setSettingsOpen(true) : undefined;
+  const openSettings = columns || filterSettingsOnly ? () => setSettingsOpen(true) : undefined;
   const filterOptions = useMemo(() => filterDefs.map((f) => ({ key: f.id, label: f.label })), [filterDefs]);
 
   return (
@@ -195,7 +198,7 @@ export function ListToolbar({
         />
       )}
 
-      {columns && (
+      {columns ? (
         <TableSettingsDrawer
           open={settingsOpen}
           onOpenChange={setSettingsOpen}
@@ -210,6 +213,17 @@ export function ListToolbar({
           defaultFilterVisibility={allVisible(filterOptions)}
           onFilterVisibilityChange={controls.setFilterVisibility}
         />
+      ) : (
+        filterSettingsOnly && (
+          <TableSettingsDrawer
+            open={settingsOpen}
+            onOpenChange={setSettingsOpen}
+            filters={filterOptions}
+            filterVisibility={controls.filterVisibility}
+            defaultFilterVisibility={allVisible(filterOptions)}
+            onFilterVisibilityChange={controls.setFilterVisibility}
+          />
+        )
       )}
     </>
   );

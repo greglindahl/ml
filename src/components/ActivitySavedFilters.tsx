@@ -367,20 +367,21 @@ export function useActivitySavedFilters({
           </ul>
         )}
 
-        <div className="border-t p-1">
-          <button
-            type="button"
-            onClick={openSave}
-            disabled={!isFiltered || !!selected}
-            className="w-full flex items-center gap-2 rounded-md px-3 py-2 text-[13px] text-primary hover:bg-accent disabled:text-muted-foreground disabled:hover:bg-transparent disabled:cursor-not-allowed"
-          >
-            <i className="bi bi-bookmark-plus" aria-hidden="true" />
-            Save current filters
-            <span className="ml-auto text-[12px] text-muted-foreground">
-              {!isFiltered ? "Apply a filter first" : selected ? "Already saved" : ""}
-            </span>
-          </button>
-        </div>
+        {/* Only once there's something to save (no "apply a filter first" placeholder). */}
+        {isFiltered && (
+          <div className="border-t p-1">
+            <button
+              type="button"
+              onClick={openSave}
+              disabled={!!selected}
+              className="w-full flex items-center gap-2 rounded-md px-3 py-2 text-[13px] text-primary hover:bg-accent disabled:text-muted-foreground disabled:hover:bg-transparent disabled:cursor-not-allowed"
+            >
+              <i className="bi bi-bookmark-plus" aria-hidden="true" />
+              Save current filters
+              {selected && <span className="ml-auto text-[12px] text-muted-foreground">Already saved</span>}
+            </button>
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   );
