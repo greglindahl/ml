@@ -16,7 +16,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { mockLibraryAssets } from "@/lib/mockLibraryData";
+import { mockLibraryAssets, CREATOR_NAMES } from "@/lib/mockLibraryData";
 import { TogglePill } from "./TogglePill";
 
 interface FilterOption {
@@ -37,7 +37,7 @@ interface FilterConfig {
   isTreeStructure?: boolean;
 }
 
-const CREATOR_MAP: Record<string, string> = { john: "John Smith", jane: "Jane Doe", alex: "Alex Johnson" };
+const CREATOR_MAP = CREATOR_NAMES;
 
 // Hardcoded recent tags for prototype
 const RECENT_TAGS = ["Lebron James", "Dunk", "Nike", "Celebration", "Kevin Durant"];
@@ -190,6 +190,7 @@ export interface CustomDateRange {
 
 export interface GalleryDetailsFilterBarHandle {
   removeValue: (filterId: string, value: string) => void;
+  addValue: (filterId: string, value: string, label: string) => void;
   clearAll: () => void;
 }
 
@@ -285,6 +286,15 @@ export function GalleryDetailsFilterBar({
             }
             onFilterChange?.(filterId, updated.map(i => i.value));
             return newFilters;
+          });
+        },
+        addValue: (filterId: string, value: string, label: string) => {
+          setActiveFilters(prev => {
+            const current = prev[filterId] || [];
+            if (current.some(item => item.value === value)) return prev;
+            const updated = [...current, { value, label }];
+            onFilterChange?.(filterId, updated.map(i => i.value));
+            return { ...prev, [filterId]: updated };
           });
         },
         clearAll: () => {

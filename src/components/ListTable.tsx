@@ -1,3 +1,4 @@
+import { PaginationSummary, TablePagination, type PaginationProps } from "./TablePagination";
 import { useEffect, useMemo, useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Table, TableHead } from "@/components/ui/table";
@@ -96,13 +97,17 @@ export function sortRows<T, F extends string>(rows: T[], field: F, direction: So
   });
 }
 
-export function TableShell({ children, footer }: { children: React.ReactNode; footer?: React.ReactNode }) {
+export function TableShell({ children, footer, pagination }: { children: React.ReactNode; footer?: React.ReactNode; pagination?: PaginationProps }) {
   return (
-    <div className="flex flex-col border rounded-lg bg-white overflow-hidden">
-      <div className="overflow-x-auto">
-        <Table>{children}</Table>
+    <div>
+      <div className="flex flex-col border rounded-lg bg-white overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>{children}</Table>
+        </div>
+        {pagination && <TablePagination {...pagination} />}
+        {footer}
       </div>
-      {footer}
+      {pagination && <PaginationSummary {...pagination} />}
     </div>
   );
 }

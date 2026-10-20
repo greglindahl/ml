@@ -18,7 +18,6 @@ import { toast } from "@/hooks/use-toast";
 import { ListToolbar, useListControls } from "./ListToolbar";
 import { matchesFilter, type ListFilterDef, type ListFilterState } from "./ListFilters";
 import { HeadCell, RowActions, SortableHeadCell, TableShell, sortRows, usePage, useSort } from "./ListTable";
-import { TablePagination } from "./TablePagination";
 import type { VisibilityMap } from "./TableSettingsDrawer";
 import { cn } from "@/lib/utils";
 import { mockUsers } from "@/lib/mockUserData";
@@ -152,7 +151,7 @@ function VerifiedTable({ rows, perPage, columnVisibility }: { rows: SocialShare[
   const { page, setPage, paged } = usePage(sorted, perPage);
 
   return (
-    <TableShell footer={<TablePagination page={page} perPage={perPage} total={sorted.length} onPageChange={setPage} />}>
+    <TableShell pagination={{ page: page, perPage: perPage, total: sorted.length, onPageChange: setPage }}>
       <TableHeader>
         <TableRow className="bg-[#f9fbfd]">
           {/* Prod doesn't sort Post, Social Account, Assets or Downloads. */}
@@ -245,7 +244,7 @@ function InitiatedTable({
   const { page, setPage, paged } = usePage(sorted, perPage);
 
   return (
-    <TableShell footer={<TablePagination page={page} perPage={perPage} total={sorted.length} onPageChange={setPage} />}>
+    <TableShell pagination={{ page: page, perPage: perPage, total: sorted.length, onPageChange: setPage }}>
       <TableHeader>
         <TableRow className="bg-[#f9fbfd]">
           {show("asset") && <HeadCell label="Asset/Link" />}

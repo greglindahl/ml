@@ -5,7 +5,6 @@ import { EmptyState } from "@/components/EmptyState";
 import { ListToolbar, type ListControls } from "./ListToolbar";
 import { matchesFilter, type ListFilterDef } from "./ListFilters";
 import { HEAD_TEXT, SortableHeadCell, TableShell, sortRows, usePage, useSort } from "./ListTable";
-import { TablePagination } from "./TablePagination";
 import { MetricCard } from "./InsightsShared";
 import { cn } from "@/lib/utils";
 import { getUniqueUserGroups, getUniqueUserRoles, mockUsers } from "@/lib/mockUserData";
@@ -178,7 +177,7 @@ export function InsightsUsers({ range, controls }: { range: InsightsRange; contr
             onClearAll={controls.clearAll}
           />
         ) : (
-          <TableShell footer={<TablePagination page={page} perPage={controls.perPage} total={sorted.length} onPageChange={setPage} />}>
+          <TableShell pagination={{ page: page, perPage: controls.perPage, total: sorted.length, onPageChange: setPage }}>
             <TableHeader>
               <TableRow className="bg-[#f9fbfd] hover:bg-[#f9fbfd]">
                 <TableHead />

@@ -200,6 +200,12 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
     return getAllDescendantIds(gallery);
   }, [gallery]);
 
+  // Creators offered in search suggestions: only ones with assets in this gallery
+  const scopedAssets = useMemo(
+    () => allAssets.filter((a) => a.folderId && allowedFolderIds.includes(a.folderId)),
+    [allAssets, allowedFolderIds],
+  );
+
   // Filter results by gallery and all active filters
   const filteredResults = useMemo(() => {
     return results.filter((asset) => {
@@ -505,7 +511,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
           {/* Search Row with Utility Cluster */}
           <div className="flex items-center gap-4 mb-3 cq-search-row">
             <div className="flex-1 min-w-0 cq-search-input">
-              <FacetedSearchWithTypeahead handleRef={searchHandleRef} onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
+              <FacetedSearchWithTypeahead handleRef={searchHandleRef} onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" onCreatorSelect={(id, name) => filterBarHandleRef.current?.addValue("creator", id, name)} selectedCreatorIds={creatorFilter} creatorAssets={scopedAssets} />
             </div>
 
             <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
