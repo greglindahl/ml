@@ -1594,7 +1594,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             {/* Search Row with Utility Cluster */}
             <div className="flex items-center gap-4 mb-3 cq-search-row">
               <div className="flex-1 min-w-0 cq-search-input">
-                <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} onSelectedFacetsChange={setSearchSelectedFacets} handleRef={searchHandleRef} placeholder="Search by people, tags, filenames…" />
+                <FacetedSearchWithTypeahead onSearch={handleSearch} assets={allAssets} onSelectedFacetsChange={setSearchSelectedFacets} handleRef={searchHandleRef} placeholder="Search by people, tags, filenames…" onCreatorSelect={(id, name) => filterBarHandleRef.current?.addValue("creator", id, name)} selectedCreatorIds={creatorFilter} />
               </div>
 
               {/* Table view only: the grid says "Relevance" in its sort dropdown, so a
@@ -2629,7 +2629,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 {/* Search Row with Utility Cluster */}
                 <div className="flex items-center gap-4 mb-3 cq-search-row">
                   <div className="flex-1 min-w-0 cq-search-input">
-                    <FacetedSearchWithTypeahead onSearch={setFavAssetSearch} assets={favAssetsBase} placeholder="Search by people, tags, filenames…" />
+                    <FacetedSearchWithTypeahead onSearch={setFavAssetSearch} assets={favAssetsBase} placeholder="Search by people, tags, filenames…" onCreatorSelect={(id, name) => favAssetsFilterBarHandleRef.current?.addValue("creator", id, name)} selectedCreatorIds={favAssetFilters["creator"] ?? []} />
                   </div>
                   <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
                   {favAssetsViewMode === "grid" && (
@@ -2735,6 +2735,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                         label: filterId === "added-date" ? `Uploaded: ${dateLabels[value] ?? value}`
                           : filterId === "captured-date" ? `Captured: ${dateLabels[value] ?? value}`
                           : filterId === "content-type" ? value.charAt(0).toUpperCase() + value.slice(1)
+                          : filterId === "creator" ? PEOPLE_NAME_LOOKUP[value] || value
                           : value,
                       }))
                     );

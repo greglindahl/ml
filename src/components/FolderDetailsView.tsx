@@ -14,7 +14,7 @@ import { GalleryFilterBar, type GalleryFilterBarHandle, type GalleryFilterChip }
 import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
 import { Badge } from "@/components/ui/badge";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
-import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
+import { getRelativeTime, LibraryAsset, CREATOR_NAMES } from "@/lib/mockLibraryData";
 import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries, Gallery, FlattenedFolder, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor, enrichGallery, sortGalleries, GALLERY_SORT_OPTIONS, GallerySortField } from "@/lib/mockFolderData";
 import { relevanceScore, capRelevanceResults, isRelevanceCapped } from "@/lib/relevance";
 import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
@@ -319,6 +319,12 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   const allowedFolderIds = useMemo(() => {
     return getAllDescendantIds(folder);
   }, [folder]);
+
+  // Creators offered in search suggestions: only ones with assets in this folder
+  const scopedAssets = useMemo(
+    () => allAssets.filter((a) => a.folderId && allowedFolderIds.includes(a.folderId)),
+    [allAssets, allowedFolderIds],
+  );
 
   // Filter results by folder and all active filters
   const filteredResults = useMemo(() => {
@@ -648,7 +654,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           {/* Search Row with Utility Cluster */}
           <div className="flex items-center gap-4 mb-3 cq-search-row">
             <div className="flex-1 min-w-0 cq-search-input">
-              <FacetedSearchWithTypeahead handleRef={searchHandleRef} onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" />
+              <FacetedSearchWithTypeahead handleRef={searchHandleRef} onSearch={handleSearch} assets={allAssets} placeholder="Search by people, tags, filenames…" onCreatorSelect={(id, name) => filterBarHandleRef.current?.addValue("creator", id, name)} selectedCreatorIds={creatorFilter} creatorAssets={scopedAssets} />
             </div>
 
             <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
@@ -744,7 +750,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             {(() => {
               const chips: { label: string; value: string; sourceId: string }[] = [];
               peopleFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "people" }));
-              creatorFilter.forEach(v => chips.push({ label: v, value: v, sourceId: "creator" }));
+              creatorFilter.forEach(v => chips.push({ label: CREATOR_NAMES[v] || v, value: v, sourceId: "creator" }));
               contentTypeFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "content-type" }));
               orientationFilter.forEach(v => chips.push({ label: ({ panoramic: "Panoramic", landscape: "Landscape", square: "Square", portrait: "Portrait", tall: "Tall", unknown: "Unknown" } as Record<string, string>)[v] || v, value: v, sourceId: "orientation" }));
               {

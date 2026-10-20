@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { folders, FolderItem } from "@/lib/mockFolderData";
-import { mockLibraryAssets } from "@/lib/mockLibraryData";
+import { mockLibraryAssets, CREATOR_NAMES } from "@/lib/mockLibraryData";
 import { TogglePill } from "@/components/TogglePill";
 
 interface FilterOption {
@@ -63,7 +63,7 @@ const SCENE_VALUES: Record<string, string> = {
 const BRAND_VALUES: Record<string, string> = {
   "nike": "Nike", "adidas": "Adidas", "under armour": "Under Armour", "puma": "Puma",
 };
-const CREATOR_MAP: Record<string, string> = { john: "John Smith", jane: "Jane Doe", alex: "Alex Johnson" };
+const CREATOR_MAP = CREATOR_NAMES;
 
 // Hardcoded recent tags for prototype
 const RECENT_TAGS = ["Lebron James", "Dunk", "Nike", "Celebration", "Kevin Durant"];
@@ -209,6 +209,7 @@ export interface CustomDateRange {
 
 export interface FilterBarHandle {
   removeValue: (filterId: string, value: string) => void;
+  addValue: (filterId: string, value: string, label: string) => void;
   clearAll: () => void;
 }
 
@@ -350,6 +351,17 @@ export function FilterBar({
     });
   };
 
+  /** Select a value from outside (e.g. a creator picked in search suggestions). No-op if already selected. */
+  const handleAddValue = (filterId: string, value: string, label: string) => {
+    setActiveFilters(prev => {
+      const current = prev[filterId] || [];
+      if (current.some(item => item.value === value)) return prev;
+      const updated = [...current, { value, label }];
+      onFilterChange?.(filterId, updated.map(i => i.value));
+      return { ...prev, [filterId]: updated };
+    });
+  };
+
   const clearFilter = (filterId: string) => {
     if (DATE_FILTER_IDS.includes(filterId as typeof DATE_FILTER_IDS[number])) {
       setCustomDateRanges(prev => ({ ...prev, [filterId]: { from: undefined, to: undefined } }));
@@ -377,6 +389,7 @@ export function FilterBar({
     if (handleRef) {
       handleRef.current = {
         removeValue: handleRemoveValue,
+        addValue: handleAddValue,
         clearAll: clearAllFilters,
       };
     }

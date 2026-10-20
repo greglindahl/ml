@@ -88,11 +88,19 @@ export const AI_GENERATED_TAGS = new Set([
   "esports",
 ]);
 
+// Bowen / Bowers share a word prefix ("bow"), for the search type-ahead's
+// creator suggestions (PORTAL-13177).
 const creators = [
   { id: "john", name: "John Smith" },
   { id: "jane", name: "Jane Doe" },
   { id: "alex", name: "Alex Johnson" },
+  { id: "amanda", name: "Amanda Bowen" },
+  { id: "marcus", name: "Marcus Bowers" },
+  { id: "priya", name: "Priya Natarajan" },
 ];
+
+/** Creator id → full name, for the Creator filter's labels. */
+export const CREATOR_NAMES: Record<string, string> = Object.fromEntries(creators.map((c) => [c.id, c.name]));
 
 const assetNames = {
   image: [

@@ -73,6 +73,27 @@ interface FacetedSearchWithTypeaheadProps {
   assets?: LibraryAsset[];
   placeholder?: string;
   handleRef?: React.MutableRefObject<FacetedSearchWithTypeaheadHandle | null>;
+  /**
+   * Asset searches only: offers matching creators under their own heading
+   * (PORTAL-13177). Picking one applies it as a Creator filter, not a text
+   * term, so the page selects it in its Creator facet.
+   */
+  onCreatorSelect?: (creatorId: string, name: string) => void;
+  /** Creators already in the Creator filter, left out of suggestions. */
+  selectedCreatorIds?: string[];
+  /** Assets creators are drawn from: this page's scope (e.g. one gallery). Defaults to `assets`. */
+  creatorAssets?: LibraryAsset[];
+}
+
+/** Suggestions start at 2 characters (PORTAL-13174); the plain "search for…" row still shows from 1. */
+const MIN_SUGGESTION_CHARS = 2;
+/** Per group, so Tags and Creators both fit without scrolling. */
+const MAX_PER_GROUP = 5;
+
+/** Each typed word must start some word of the name: "bowen" finds Amanda Bowen, "owen" doesn't (PORTAL-13175). */
+function matchesWordPrefix(name: string, query: string): boolean {
+  const nameWords = name.toLowerCase().split(/\s+/);
+  return query.toLowerCase().split(/\s+/).filter(Boolean).every((q) => nameWords.some((w) => w.startsWith(q)));
 }
 
 // Helper to filter assets based on query, facets, and search terms (with fuzzy matching)
@@ -131,6 +152,9 @@ export function FacetedSearchWithTypeahead({
   assets = [],
   placeholder = "Search",
   handleRef,
+  onCreatorSelect,
+  selectedCreatorIds = [],
+  creatorAssets,
 }: FacetedSearchWithTypeaheadProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -204,9 +228,10 @@ export function FacetedSearchWithTypeahead({
 
   // Generate grouped typeahead suggestions based on query
   const groupedSuggestions = useMemo(() => {
-    if (!searchQuery.trim()) return {
+    if (searchQuery.trim().length < MIN_SUGGESTION_CHARS) return {
       aiIdentified: [],
-      otherTags: []
+      otherTags: [],
+      creators: []
     };
     const query = searchQuery.toLowerCase();
     const aiIdentified: Suggestion[] = [];
@@ -317,11 +342,24 @@ export function FacetedSearchWithTypeahead({
       }
     }
 
+    // Creators of assets this page can already show (no access to anyone else's).
+    const creators: { id: string; name: string }[] = [];
+    if (onCreatorSelect) {
+      const byId = new Map<string, string>();
+      (creatorAssets ?? assets).forEach(a => byId.set(a.creatorId, a.creator));
+      [...byId.entries()]
+        .filter(([id, name]) => !selectedCreatorIds.includes(id) && matchesWordPrefix(name, searchQuery.trim()))
+        .sort(([, a], [, b]) => a.localeCompare(b))
+        .slice(0, MAX_PER_GROUP)
+        .forEach(([id, name]) => creators.push({ id, name }));
+    }
+
     return {
-      aiIdentified,
-      otherTags
+      aiIdentified: aiIdentified.slice(0, MAX_PER_GROUP),
+      otherTags: otherTags.slice(0, MAX_PER_GROUP),
+      creators
     };
-  }, [searchQuery, filteredAssets, selectedFacetValues, facetCounts]);
+  }, [searchQuery, filteredAssets, selectedFacetValues, facetCounts, assets, creatorAssets, onCreatorSelect, selectedCreatorIds]);
   const handleRemoveFacet = useCallback((facetValue: string) => {
     setSelectedFacets(prev => prev.filter(f => f.value !== facetValue));
   }, []);
@@ -416,7 +454,13 @@ export function FacetedSearchWithTypeahead({
       handleAddSearchTerm(suggestion.value);
     }
   }, [handleAddSearchTerm]);
-  const hasTagSuggestions = groupedSuggestions.aiIdentified.length > 0 || groupedSuggestions.otherTags.length > 0;
+  const handleCreatorClick = (creator: { id: string; name: string }) => {
+    onCreatorSelect?.(creator.id, creator.name);
+    setSearchQuery("");
+    setIsOpen(false);
+  };
+  const hasTagSuggestions =
+    groupedSuggestions.aiIdentified.length > 0 || groupedSuggestions.otherTags.length > 0 || groupedSuggestions.creators.length > 0;
   const showTypeahead = isOpen && (searchQuery.trim().length > 0 || recentSearches.length > 0);
   return <div ref={containerRef} className="relative w-full">
       {/* Search Input - pills rendered by parent */}
@@ -429,7 +473,11 @@ export function FacetedSearchWithTypeahead({
           ref={inputRef}
           type="text"
           value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
+          onChange={e => {
+            setSearchQuery(e.target.value);
+            // Picking a suggestion closes the dropdown but keeps focus; typing again reopens it.
+            setIsOpen(true);
+          }}
           onFocus={handleInputFocus}
           onKeyDown={handleKeyDown}
           placeholder={selectedFacets.length === 0 ? placeholder : ""}
@@ -445,7 +493,8 @@ export function FacetedSearchWithTypeahead({
       {/* Typeahead Suggestions Dropdown */}
       {showTypeahead && <div className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-lg shadow-lg z-50">
           {/* ScrollArea Viewport uses h-full, so we must provide an explicit height here for scrolling */}
-          <ScrollArea className="h-[min(400px,60vh)]">
+          {/* Taller than prod's 360px so Tags and Creators (5 each) both fit without scrolling. */}
+          <ScrollArea className="h-[min(500px,70vh)]">
             <div className="p-3">
               {/* Generic Search Option - shown when user is typing */}
               {searchQuery.trim() && <div className="mb-4">
@@ -527,6 +576,23 @@ export function FacetedSearchWithTypeahead({
                         </button>
                       );
                     })}
+                  </div>
+                </div>}
+
+              {/* Creators Section - below Tags; hidden when nobody matches */}
+              {groupedSuggestions.creators.length > 0 && <div className="mt-4">
+                  <h4 className="text-sm font-semibold text-foreground mb-2">Creators</h4>
+                  <div className="flex flex-col gap-2">
+                    {groupedSuggestions.creators.map(creator => (
+                      <button
+                        key={`creator-${creator.id}`}
+                        onClick={() => handleCreatorClick(creator)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors w-fit bg-gray-200 hover:bg-gray-300 text-gray-900"
+                      >
+                        <i className="bi bi-person w-4 h-4 inline-flex items-center justify-center leading-none" />
+                        <span>{creator.name}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>}
             </div>
