@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { PaginationSummary, TablePagination } from "./TablePagination";
 import {
   Campaign,
   formatCampaignStatus,
@@ -22,6 +23,8 @@ import type {
 
 interface CampaignsTableProps {
   campaigns: Campaign[];
+  /** Opens the campaign's own page (Requests + Details tabs). */
+  onOpenCampaign?: (campaignId: string) => void;
   searchQuery?: string;
   perPage?: number;
   columnVisibility?: CampaignsTableColumnVisibility;
@@ -30,7 +33,7 @@ interface CampaignsTableProps {
 type SortField = "name" | "status" | "requestType" | "creator" | "createdDate" | "views" | "shares";
 type SortDirection = "asc" | "desc";
 
-export function CampaignsTable({ campaigns, searchQuery, perPage = 40, columnVisibility }: CampaignsTableProps) {
+export function CampaignsTable({ campaigns, onOpenCampaign, searchQuery, perPage = 40, columnVisibility }: CampaignsTableProps) {
   const isVisible = (key: CampaignsTableColumnKey) =>
     columnVisibility?.[key] !== false;
   const [sortField, setSortField] = useState<SortField>("createdDate");
@@ -105,6 +108,7 @@ export function CampaignsTable({ campaigns, searchQuery, perPage = 40, columnVis
   };
 
   return (
+    <div>
     <div className="flex flex-col border rounded-lg bg-white overflow-hidden">
       {/* Table */}
       <div className="overflow-x-auto">
@@ -225,7 +229,7 @@ export function CampaignsTable({ campaigns, searchQuery, perPage = 40, columnVis
                 )}
                 {isVisible("name") && (
                   <TableCell>
-                    <button className="text-[13px] text-primary hover:underline text-left">
+                    <button className="text-[13px] text-primary hover:underline text-left" onClick={() => onOpenCampaign?.(campaign.id)}>
                       {campaign.name}
                     </button>
                   </TableCell>
@@ -333,60 +337,10 @@ export function CampaignsTable({ campaigns, searchQuery, perPage = 40, columnVis
         </Table>
       </div>
 
-      {/* Pagination Footer */}
-      <div className="flex flex-col items-center gap-4 py-4">
-        <div className="flex items-stretch w-full">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className={cn(
-              "flex items-center justify-center gap-2 px-6 h-16 bg-[#edf2f9] border border-border rounded-bl-lg text-[15px]",
-              currentPage === 1
-                ? "text-muted-foreground cursor-not-allowed"
-                : "text-foreground hover:bg-muted"
-            )}
-          >
-            <i className="bi bi-arrow-left" />
-            Prev
-          </button>
-          <div className="flex-1 flex items-center justify-center gap-2 border-y border-border bg-white">
-            {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .slice(0, 5)
-              .map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={cn(
-                    "w-8 h-8 flex items-center justify-center text-[15px] rounded",
-                    currentPage === page
-                      ? "border-b-2 border-primary font-medium"
-                      : "text-muted-foreground hover:bg-muted"
-                  )}
-                >
-                  {page}
-                </button>
-              ))}
-          </div>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages || totalPages === 0}
-            className={cn(
-              "flex items-center justify-center gap-2 px-6 h-16 bg-[#edf2f9] border border-border rounded-br-lg text-[15px]",
-              currentPage === totalPages || totalPages === 0
-                ? "text-muted-foreground cursor-not-allowed"
-                : "text-foreground hover:bg-muted"
-            )}
-          >
-            Next
-            <i className="bi bi-arrow-right" />
-          </button>
-        </div>
-        <span className="text-[13px] text-foreground">
-          Viewing {startIndex + 1} -{" "}
-          {Math.min(endIndex, sortedCampaigns.length)} of{" "}
-          {sortedCampaigns.length}
-        </span>
-      </div>
+      {/* Pagination strip inside the card; the "Viewing" summary sits below it (matches the shared list tables). */}
+      <TablePagination page={currentPage} perPage={itemsPerPage} total={sortedCampaigns.length} onPageChange={setCurrentPage} />
+    </div>
+    <PaginationSummary page={currentPage} perPage={itemsPerPage} total={sortedCampaigns.length} />
     </div>
   );
 }
