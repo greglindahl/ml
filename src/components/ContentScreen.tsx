@@ -7,6 +7,7 @@ import { ConnectScreen } from "./ConnectScreen";
 import { RequestsScreen } from "./RequestsScreen";
 import { StatsScreen } from "./StatsScreen";
 import { AdminScreen } from "./AdminScreen";
+import { AnnouncementsScreen } from "./AnnouncementsScreen";
 
 interface ContentScreenProps {
   screen: Screen;
@@ -61,6 +62,10 @@ export function ContentScreen({ screen, isMobile = false, initialLibraryFolderId
   // Network has its own dedicated screen with tabs
   if (screen === "network") {
     return <AdminScreen isMobile={isMobile} initialTab={initialScreenTab} />;
+  }
+
+  if (screen === "announcements") {
+    return <AnnouncementsScreen isMobile={isMobile} />;
   }
 
   const exhaustiveCheck: never = screen;

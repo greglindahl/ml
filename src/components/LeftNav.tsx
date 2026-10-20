@@ -54,7 +54,8 @@ export type Screen =
   | "connect"
   | "engage"
   | "requests"
-  | "stats";
+  | "stats"
+  | "announcements";
 
 interface LeftNavProps {
   isExpanded: boolean;
@@ -154,7 +155,12 @@ export function LeftNav({
               99+
             </span>
           </button>
-          <button className="p-2 hover:bg-sidebar-accent rounded-md transition-colors">
+          <button
+            className={`p-2 hover:bg-sidebar-accent rounded-md transition-colors ${activeScreen === "announcements" ? "bg-sidebar-accent" : ""}`}
+            onClick={() => onNavigate("announcements")}
+            aria-label="Announcements"
+            aria-current={activeScreen === "announcements" ? "page" : undefined}
+          >
             <i className="bi bi-megaphone text-nav-text text-xl" />
           </button>
         </div>
@@ -236,14 +242,24 @@ export function LeftNav({
                 99+
               </span>
             </button>
-            <button className="p-2 hover:bg-sidebar-accent rounded-md transition-colors">
+            <button
+              className={`p-2 hover:bg-sidebar-accent rounded-md transition-colors ${activeScreen === "announcements" ? "bg-sidebar-accent" : ""}`}
+              onClick={() => onNavigate("announcements")}
+              aria-label="Announcements"
+              aria-current={activeScreen === "announcements" ? "page" : undefined}
+            >
               <i className="bi bi-megaphone text-nav-text text-xl" />
             </button>
           </div>
         </div>
       ) : (
         <div className="py-3 pb-4 flex flex-col items-center gap-3">
-          <button className="p-2 hover:bg-sidebar-accent rounded-md transition-colors">
+          <button
+            className={`p-2 hover:bg-sidebar-accent rounded-md transition-colors ${activeScreen === "announcements" ? "bg-sidebar-accent" : ""}`}
+            onClick={() => onNavigate("announcements")}
+            aria-label="Announcements"
+            aria-current={activeScreen === "announcements" ? "page" : undefined}
+          >
             <i className="bi bi-megaphone text-nav-text text-xl" />
           </button>
           <button className="relative p-2 hover:bg-sidebar-accent rounded-md transition-colors">
