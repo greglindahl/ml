@@ -35,6 +35,8 @@ interface RequestsFilterBarProps {
   onArchivedToggle?: (active: boolean) => void;
   onOpenFiltersSheet?: () => void;
   onActiveFiltersChange?: (filters: Record<string, FilterValue[]>) => void;
+  /** Inside a campaign every request already belongs to it, so the Campaign filter goes. */
+  hideCampaignFilter?: boolean;
 }
 
 const dateOptions = [
@@ -78,6 +80,7 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
       onArchivedToggle,
       onOpenFiltersSheet,
       onActiveFiltersChange,
+      hideCampaignFilter = false,
     },
     ref
   ) {
@@ -215,7 +218,8 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
 
         {/* Expanded Filters (visible at wide widths) */}
         <div className="filters-expanded contents">
-          {/* Campaigns Dropdown */}
+          {/* Campaigns Dropdown (left out inside a campaign's own Requests tab) */}
+          {!hideCampaignFilter && (
           <DropdownMenu>
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
@@ -280,6 +284,7 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
+          )}
 
           {/* Request Type Dropdown (single select) */}
           <DropdownMenu>

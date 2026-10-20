@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { PaginationSummary, TablePagination } from "./TablePagination";
 import {
   Request,
   formatRequestStatus,
@@ -109,6 +110,7 @@ export function RequestsTable({ requests, searchQuery, perPage = 40, columnVisib
   };
 
   return (
+    <div>
     <div className="flex flex-col border rounded-lg bg-white overflow-hidden">
       {/* Table */}
       <div className="overflow-x-auto">
@@ -359,60 +361,10 @@ export function RequestsTable({ requests, searchQuery, perPage = 40, columnVisib
         </Table>
       </div>
 
-      {/* Pagination Footer */}
-      <div className="flex flex-col items-center gap-4 py-4">
-        <div className="flex items-stretch w-full">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className={cn(
-              "flex items-center justify-center gap-2 px-6 h-16 bg-[#edf2f9] border border-border rounded-bl-lg text-[15px]",
-              currentPage === 1
-                ? "text-muted-foreground cursor-not-allowed"
-                : "text-foreground hover:bg-muted"
-            )}
-          >
-            <i className="bi bi-arrow-left" />
-            Prev
-          </button>
-          <div className="flex-1 flex items-center justify-center gap-2 border-y border-border bg-white">
-            {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .slice(0, 5)
-              .map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={cn(
-                    "w-8 h-8 flex items-center justify-center text-[15px] rounded",
-                    currentPage === page
-                      ? "border-b-2 border-primary font-medium"
-                      : "text-muted-foreground hover:bg-muted"
-                  )}
-                >
-                  {page}
-                </button>
-              ))}
-          </div>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages || totalPages === 0}
-            className={cn(
-              "flex items-center justify-center gap-2 px-6 h-16 bg-[#edf2f9] border border-border rounded-br-lg text-[15px]",
-              currentPage === totalPages || totalPages === 0
-                ? "text-muted-foreground cursor-not-allowed"
-                : "text-foreground hover:bg-muted"
-            )}
-          >
-            Next
-            <i className="bi bi-arrow-right" />
-          </button>
-        </div>
-        <span className="text-[13px] text-foreground">
-          Viewing {startIndex + 1} -{" "}
-          {Math.min(endIndex, sortedRequests.length)} of{" "}
-          {sortedRequests.length}
-        </span>
-      </div>
+      {/* Pagination strip inside the card; the "Viewing" summary sits below it (matches the shared list tables). */}
+      <TablePagination page={currentPage} perPage={itemsPerPage} total={sortedRequests.length} onPageChange={setCurrentPage} />
+    </div>
+    <PaginationSummary page={currentPage} perPage={itemsPerPage} total={sortedRequests.length} />
     </div>
   );
 }
