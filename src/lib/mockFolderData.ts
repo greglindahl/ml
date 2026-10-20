@@ -384,6 +384,19 @@ export const folders: FolderItem[] = [
       { id: "broadcast-masters-2425", name: "2024-25 Game Masters", type: "gallery", count: 4350, countType: "assets" },
     ],
   },
+  // Over the overnight ceiling too: the size a large league's first migration
+  // reaches (Peloton's 2022 folder is 54,232). Moving it is a support job.
+  {
+    id: "league-vault",
+    name: "League Vault",
+    type: "folder",
+    count: 2,
+    countType: "galleries",
+    children: [
+      { id: "vault-broadcasts", name: "Broadcast Archive 2010-2020", type: "gallery", count: 41200, countType: "assets" },
+      { id: "vault-photos", name: "Photo Archive 2010-2020", type: "gallery", count: 13032, countType: "assets" },
+    ],
+  },
   {
     id: "season-2022-archived",
     name: "Season 22-23",

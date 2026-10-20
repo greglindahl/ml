@@ -44,6 +44,8 @@ interface FolderSidebarProps {
   onReorder: (parentId: string | null, itemId: string, overItemId: string) => void;
   showArchived: boolean;
   onToggleArchived: (v: boolean) => void;
+  /** Folders with a move queued for tonight. */
+  scheduledMoveIds?: string[];
 }
 
 // The folder tree only lists galleries that live inside a folder — a standalone
@@ -110,6 +112,7 @@ export function FolderSidebar({
   onReorder,
   showArchived,
   onToggleArchived,
+  scheduledMoveIds = [],
 }: FolderSidebarProps) {
   const [activeItem, setActiveItem] = useState<FolderItem | null>(null);
   const [overTargetId, setOverTargetId] = useState<string | null>(null);
@@ -294,6 +297,7 @@ export function FolderSidebar({
             isOverValid={isThisOverValid}
             isOverInvalid={isThisOverInvalid}
             isArchived={folder.archived === true}
+            hasScheduledMove={scheduledMoveIds.includes(folder.id)}
             disableDrag={folder.id === "all"}
           >
             {hasChildren && isExpanded && (

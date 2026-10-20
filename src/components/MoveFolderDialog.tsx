@@ -28,8 +28,8 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import { toast as sonnerToast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { FolderItem, FlattenedFolder } from "@/lib/mockFolderData";
-import { getMaxDepth, getAllDescendantIds, countTotalAssets } from "@/lib/mockFolderData";
-import { MOVE_MEDIA_ITEM_LIMIT } from "@/lib/limits";
+import { getMaxDepth, getAllDescendantIds, countTotalAssets, findFolderAncestorIds } from "@/lib/mockFolderData";
+import { MOVE_MEDIA_ITEM_LIMIT, OVERNIGHT_MOVE_MEDIA_LIMIT, OVERNIGHT_WINDOW_LABEL, moveTier } from "@/lib/limits";
 
 import { collectNestedFolders } from "@/lib/mockFolderData";
 
@@ -64,6 +64,10 @@ interface MoveFolderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onMove: (targetLocationId: string | null) => void;
+  /** Over the move-now limit but under the overnight ceiling: queue it for tonight. */
+  onSchedule?: (targetLocationId: string | null, targetName: string) => void;
+  /** Over the overnight ceiling: hand it to support. */
+  onContactSupport?: () => void;
   folder: FolderItem;
   breadcrumbPath: string;
   flattenedFolders: FlattenedFolder[];
@@ -74,6 +78,8 @@ export function MoveFolderDialog({
   open,
   onOpenChange,
   onMove,
+  onSchedule,
+  onContactSupport,
   folder,
   breadcrumbPath,
   flattenedFolders,
@@ -123,7 +129,15 @@ export function MoveFolderDialog({
 
   const nestedRows = useMemo(() => collectNestedFolders(folder, breadcrumbPath), [folder, breadcrumbPath]);
   const totalAssets = useMemo(() => countTotalAssets(folder), [folder]);
-  const exceedsMoveLimit = totalAssets > MOVE_MEDIA_ITEM_LIMIT;
+  // now: move right away · overnight: schedule for tonight · support: CS moves it
+  const tier = moveTier(totalAssets);
+  // Where it lives now (null = All Media). Moving there is a no-op.
+  const currentParentId = useMemo(() => {
+    const ancestors = findFolderAncestorIds(folderTree, folder.id);
+    return ancestors && ancestors.length > 0 ? ancestors[ancestors.length - 1] : null;
+  }, [folderTree, folder.id]);
+  const isCurrentLocation = targetLocationId === currentParentId;
+  const blockedByStructure = exceedsDepthLimit || blockedByArchivedDest || isCurrentLocation;
 
   const handleMove = () => {
     setPhase("submitting");
@@ -239,6 +253,11 @@ export function MoveFolderDialog({
                 </Select>
               </div>
 
+              {/* Same location: nothing to move. Kept separate from the size notice, which stays visible. */}
+              {isCurrentLocation && (
+                <p className="text-sm text-muted-foreground">"{folder.name}" is already here. Choose a different location.</p>
+              )}
+
               {/* Archived destination error */}
               {blockedByArchivedDest && (
                 <div className="flex items-start gap-2 p-3 rounded-lg border border-destructive/50 bg-destructive/10 text-destructive text-sm">
@@ -255,17 +274,38 @@ export function MoveFolderDialog({
                 </div>
               )}
 
-              {/* Move size limit warning */}
-              {exceedsMoveLimit ? (
+              {/* Move size: the count and the limit, before the user commits (PORTAL-12837),
+                  plus a way forward that fits the size. */}
+              {tier === "overnight" && (
+                <div className="flex items-start gap-3 rounded-md bg-[#F6C343] px-6 py-3 text-[#12263F] text-[15px] leading-snug tracking-[-0.01em]">
+                  <i className="bi bi-clock flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
+                  <div className="space-y-1">
+                    <p>
+                      <strong className="font-semibold">Too large to move right now.</strong> This move affects{" "}
+                      <strong className="font-semibold">{totalAssets.toLocaleString()} media items</strong>, over the{" "}
+                      {MOVE_MEDIA_ITEM_LIMIT.toLocaleString()} limit for moving right away.
+                    </p>
+                    <p>
+                      Schedule it for tonight at {OVERNIGHT_WINDOW_LABEL}, when it won't slow down search for your team. The
+                      folder stays where it is until then.
+                    </p>
+                  </div>
+                </div>
+              )}
+              {tier === "support" && (
                 <div className="flex items-start gap-3 rounded-md bg-[#F6C343] px-6 py-3 text-[#12263F] text-[15px] leading-snug tracking-[-0.01em]">
                   <i className="bi bi-info-circle flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
-                  <p>
-                    <strong className="font-semibold">Too many items to move.</strong> This move would affect{" "}
-                    <strong className="font-semibold">{totalAssets.toLocaleString()} media items</strong>, which exceeds the{" "}
-                    {MOVE_MEDIA_ITEM_LIMIT.toLocaleString()} media item limit for a single move. Try moving subfolders individually in smaller batches.
-                  </p>
+                  <div className="space-y-1">
+                    <p>
+                      <strong className="font-semibold">Too large to move in the Library.</strong> This move affects{" "}
+                      <strong className="font-semibold">{totalAssets.toLocaleString()} media items</strong>, over the{" "}
+                      {OVERNIGHT_MOVE_MEDIA_LIMIT.toLocaleString()} limit even for an overnight move.
+                    </p>
+                    <p>Our support team can plan the move with you and run it for you.</p>
+                  </div>
                 </div>
-              ) : (
+              )}
+              {tier === "now" && (
                 <div className="flex items-start gap-2 p-3 rounded-lg border bg-muted/50 text-sm text-muted-foreground">
                   <i className="bi bi-info-circle w-4 h-4 flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
                   <p>
@@ -280,16 +320,33 @@ export function MoveFolderDialog({
               <Button variant="outline" onClick={() => onOpenChange(false)} disabled={phase === "submitting"}>
                 Cancel
               </Button>
-              <Button onClick={handleMove} disabled={exceedsDepthLimit || exceedsMoveLimit || blockedByArchivedDest || phase === "submitting"}>
-                {phase === "submitting" ? (
-                  <>
-                    <i className="bi bi-arrow-repeat animate-spin w-4 h-4 inline-flex items-center justify-center leading-none" />
-                    Moving...
-                  </>
-                ) : (
-                  "Move"
-                )}
-              </Button>
+              {tier === "now" && (
+                <Button onClick={handleMove} disabled={blockedByStructure || phase === "submitting"}>
+                  {phase === "submitting" ? (
+                    <>
+                      <i className="bi bi-arrow-repeat animate-spin w-4 h-4 inline-flex items-center justify-center leading-none" />
+                      Moving...
+                    </>
+                  ) : (
+                    "Move"
+                  )}
+                </Button>
+              )}
+              {tier === "overnight" && (
+                <Button
+                  onClick={() => onSchedule?.(targetLocationId, targetFolder?.name ?? "All Media")}
+                  disabled={blockedByStructure}
+                >
+                  <i className="bi bi-clock w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  Schedule for Tonight
+                </Button>
+              )}
+              {tier === "support" && (
+                <Button onClick={() => onContactSupport?.()}>
+                  <i className="bi bi-headset w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  Contact Support
+                </Button>
+              )}
             </DialogFooter>
         </>
       </DialogContent>

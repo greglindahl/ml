@@ -35,6 +35,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EditFolderDialog } from "@/components/EditFolderDialog";
 import { MoveFolderDialog } from "@/components/MoveFolderDialog";
+import { countTotalAssets as countFolderMedia } from "@/lib/mockFolderData";
+import { formatTime, nextOvernightWindow, type CompletedMove, type ScheduledMove } from "@/lib/scheduledMoves";
 import { ArchiveFolderDialog } from "@/components/ArchiveFolderDialog";
 import { UnarchiveFolderDialog } from "@/components/UnarchiveFolderDialog";
 import { DeleteFolderDialog } from "@/components/DeleteFolderDialog";
@@ -112,6 +114,14 @@ interface FolderDetailsViewProps {
   folderTree: FolderItem[];
   onEditFolder?: (folderId: string, data: { name: string; locationId: string | null; galleryIds: string[] }) => void;
   onMoveFolder?: (folderId: string, targetLocationId: string | null) => void;
+  /** A move too large for daytime, waiting for tonight's window. */
+  scheduledMove?: ScheduledMove;
+  /** Last night's move landed; shown once, until dismissed. */
+  completedMove?: CompletedMove;
+  onScheduleMove?: (move: ScheduledMove) => void;
+  onCancelScheduledMove?: (folderId: string) => void;
+  onRunScheduledMoveNow?: (folderId: string) => void;
+  onDismissCompletedMove?: (folderId: string) => void;
   onArchiveFolder?: (folderId: string) => void;
   onUnarchiveFolder?: (folderId: string) => void;
   onDeleteFolder?: (folderId: string) => void;
@@ -132,7 +142,7 @@ interface FolderDetailsViewProps {
   flattenedFolders?: FlattenedFolder[];
 }
 
-export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = false, folderTree, onEditFolder, onMoveFolder, onArchiveFolder, onUnarchiveFolder, onDeleteFolder, onCreateGallery, onAddGalleriesToFolder, onCreateFolder, onMoveGalleries, onArchiveGallery, onUnarchiveGallery, onToggleFavoriteGallery, onSetGalleriesFavorite, onSetGalleriesArchived, showArchivedFolders = false, galleryList, flattenedFolders }: FolderDetailsViewProps) {
+export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = false, folderTree, onEditFolder, onMoveFolder, scheduledMove, completedMove, onScheduleMove, onCancelScheduledMove, onRunScheduledMoveNow, onDismissCompletedMove, onArchiveFolder, onUnarchiveFolder, onDeleteFolder, onCreateGallery, onAddGalleriesToFolder, onCreateFolder, onMoveGalleries, onArchiveGallery, onUnarchiveGallery, onToggleFavoriteGallery, onSetGalleriesFavorite, onSetGalleriesArchived, showArchivedFolders = false, galleryList, flattenedFolders }: FolderDetailsViewProps) {
   const [activeTab, setActiveTab] = useState("assets");
   
   // Dialog states
@@ -598,9 +608,15 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               <DropdownMenuItem onClick={() => setEditOpen(true)}>
                 <i className="bi bi-pencil w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Edit
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setMoveOpen(true)}>
-                <i className="bi bi-arrows-move w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Move
-              </DropdownMenuItem>
+              {scheduledMove ? (
+                <DropdownMenuItem onClick={() => onCancelScheduledMove?.(folderId)}>
+                  <i className="bi bi-x-circle w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Cancel Scheduled Move
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem onClick={() => setMoveOpen(true)}>
+                  <i className="bi bi-arrows-move w-4 h-4 mr-2 inline-flex items-center justify-center leading-none" /> Move
+                </DropdownMenuItem>
+              )}
               {folder.archived ? (
                 <DropdownMenuItem
                   onClick={() => {
@@ -630,6 +646,56 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           </DropdownMenu>
         </div>
       </div>
+
+      {/* Scheduled: the folder stays put until tonight's window. */}
+      {scheduledMove && (
+        <div className="flex flex-wrap items-start gap-x-3 gap-y-2 rounded-lg border border-[#F6C343] bg-[#FDF6E3] px-4 py-3 mb-6 flex-shrink-0" role="status">
+          <i className="bi bi-clock text-[#B5850B] text-[18px] mt-0.5 flex-shrink-0 inline-flex items-center justify-center leading-none" aria-hidden="true" />
+          {/* min width so the actions wrap below the copy in narrow layouts instead of squeezing it */}
+          <div className="flex-1 min-w-[16rem] text-[14px] leading-snug text-foreground">
+            <p className="font-semibold">Move scheduled for tonight at {formatTime(scheduledMove.runsAt)}</p>
+            <p className="text-muted-foreground">
+              This folder will move to <span className="text-foreground font-medium">{scheduledMove.targetName}</span>. It stays here
+              until then, and search isn't affected. You'll see it in its new location tomorrow.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
+            {/* Prototype only: play tonight's run now */}
+            <button
+              type="button"
+              onClick={() => onRunScheduledMoveNow?.(folderId)}
+              className="text-[12px] text-muted-foreground border border-dashed border-muted-foreground/40 rounded px-2 py-1 hover:text-foreground"
+            >
+              Demo: run now
+            </button>
+            <Button variant="outline" size="sm" onClick={() => onCancelScheduledMove?.(folderId)}>
+              Cancel Move
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Done: what moved, and that search has caught up. */}
+      {completedMove && (
+        <div className="flex items-start gap-3 rounded-lg border border-[#00D97E]/50 bg-[#E6FAF2] px-4 py-3 mb-6 flex-shrink-0" role="status">
+          <i className="bi bi-check-circle-fill text-[#00A862] text-[18px] mt-0.5 flex-shrink-0 inline-flex items-center justify-center leading-none" aria-hidden="true" />
+          <div className="flex-1 min-w-0 text-[14px] leading-snug text-foreground">
+            <p className="font-semibold">Moved overnight to {completedMove.targetName}</p>
+            <p className="text-muted-foreground">
+              Finished at {formatTime(completedMove.completedAt)}. All {completedMove.mediaCount.toLocaleString()} media items are in
+              place and searchable.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onDismissCompletedMove?.(folderId)}
+            className="text-muted-foreground hover:text-foreground p-1 flex-shrink-0"
+            aria-label="Dismiss"
+          >
+            <i className="bi bi-x-lg inline-flex items-center justify-center leading-none" />
+          </button>
+        </div>
+      )}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
@@ -1367,6 +1433,16 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           setMoveOpen(false);
           onMoveFolder?.(folderId, targetId);
           toast({ title: "Folder moved", description: `"${folder.name}" has been moved.` });
+        }}
+        onSchedule={(targetId, targetName) => {
+          setMoveOpen(false);
+          const runsAt = nextOvernightWindow();
+          onScheduleMove?.({ folderId, folderName: folder.name, targetLocationId: targetId, targetName, mediaCount: countFolderMedia(folder), runsAt });
+          toast({ title: `Move scheduled for tonight at ${formatTime(runsAt)}`, description: `"${folder.name}" will move to ${targetName}.` });
+        }}
+        onContactSupport={() => {
+          setMoveOpen(false);
+          toast({ title: "Support request started", description: `We'll reach out to plan moving "${folder.name}".` });
         }}
         folder={folder}
         breadcrumbPath={breadcrumbPath.map(b => b.name).join(" > ")}

@@ -59,6 +59,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { MoveGalleriesDialog, MoveGalleryItem } from "@/components/MoveGalleriesDialog";
 import { useToast } from "@/hooks/use-toast";
 import { toast as sonnerToast } from "sonner";
+import { type CompletedMove, type ScheduledMove } from "@/lib/scheduledMoves";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
@@ -431,6 +432,37 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
       return tree;
     });
   }, [removeFolderById, insertFolderAt]);
+
+  // Moves too large for daytime wait for the overnight window (limits.ts).
+  const [scheduledMoves, setScheduledMoves] = useState<Record<string, ScheduledMove>>({});
+  const [completedMoves, setCompletedMoves] = useState<Record<string, CompletedMove>>({});
+  const scheduleFolderMove = useCallback((move: ScheduledMove) => {
+    setScheduledMoves(prev => ({ ...prev, [move.folderId]: move }));
+  }, []);
+  const cancelScheduledMove = useCallback((folderId: string) => {
+    setScheduledMoves(prev => {
+      const { [folderId]: _, ...rest } = prev;
+      return rest;
+    });
+  }, []);
+  /** Demo: play tonight's run now, so the "moved overnight" state can be reviewed. */
+  const runScheduledMoveNow = useCallback((folderId: string) => {
+    const move = scheduledMoves[folderId];
+    if (!move) return;
+    handleMoveFolder(folderId, move.targetLocationId);
+    cancelScheduledMove(folderId);
+    const completedAt = new Date(move.runsAt.getTime() + (3 * 60 + 14) * 60_000);
+    setCompletedMoves(prev => ({
+      ...prev,
+      [folderId]: { folderId, folderName: move.folderName, targetName: move.targetName, mediaCount: move.mediaCount, completedAt },
+    }));
+  }, [scheduledMoves, handleMoveFolder, cancelScheduledMove]);
+  const dismissCompletedMove = useCallback((folderId: string) => {
+    setCompletedMoves(prev => {
+      const { [folderId]: _, ...rest } = prev;
+      return rest;
+    });
+  }, []);
 
   // DnD: move an item (folder or gallery) into a target folder
   const handleDndMoveItem = useCallback((itemId: string, targetFolderId: string | null) => {
@@ -1470,6 +1502,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
         onReorder={handleDndReorder}
         showArchived={archivedFoldersOnly}
         onToggleArchived={setArchivedFoldersOnly}
+        scheduledMoveIds={Object.keys(scheduledMoves)}
       />
       )}
 
@@ -1497,6 +1530,12 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
           folderTree={folderTree}
           onEditFolder={handleEditFolder}
           onMoveFolder={handleMoveFolder}
+          scheduledMove={scheduledMoves[activeFolderItem.id]}
+          completedMove={completedMoves[activeFolderItem.id]}
+          onScheduleMove={scheduleFolderMove}
+          onCancelScheduledMove={cancelScheduledMove}
+          onRunScheduledMoveNow={runScheduledMoveNow}
+          onDismissCompletedMove={dismissCompletedMove}
           onArchiveFolder={handleArchiveFolder}
           onUnarchiveFolder={handleUnarchiveFolder}
           onDeleteFolder={handleDeleteFolder}

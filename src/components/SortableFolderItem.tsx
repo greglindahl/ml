@@ -23,6 +23,8 @@ interface SortableFolderItemProps {
   isArchived?: boolean;
   disableDrag?: boolean;
   disableDrop?: boolean;
+  /** A move is queued for tonight's window (shows a clock after the name). */
+  hasScheduledMove?: boolean;
 }
 
 export function SortableFolderItem({
@@ -39,6 +41,7 @@ export function SortableFolderItem({
   isArchived,
   disableDrag,
   disableDrop,
+  hasScheduledMove,
 }: SortableFolderItemProps) {
   const {
     attributes,
@@ -151,6 +154,9 @@ export function SortableFolderItem({
               {folder.name}
             </TooltipContent>
           </Tooltip>
+          {hasScheduledMove && (
+            <i className="bi bi-clock text-[13px] text-[#B5850B] flex-shrink-0 ml-auto" role="img" aria-label="Move scheduled for tonight" />
+          )}
         </button>
       </div>
 
