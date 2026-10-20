@@ -12,7 +12,7 @@ const LEFT_NAV_EXPANDED_KEY = "leftNavExpanded";
 
 // Screens addressable via ?screen= (Library also answers to its own params;
 // Home is bare "/"). Every page in the proto has a slug so tickets can link it.
-const SLUG_SCREENS: Screen[] = ["home", "library", "network", "connect", "engage", "requests", "stats"];
+const SLUG_SCREENS: Screen[] = ["home", "library", "network", "connect", "engage", "requests", "stats", "announcements"];
 
 // Deep-link support: ?screen=<name> opens any top-level screen (&tab= its
 // section tab). Library keeps its richer params: ?gallery=<id> / ?folder=<id>

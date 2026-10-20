@@ -54,12 +54,13 @@ export const allVisible = (options: SettingsOption[]): VisibilityMap =>
 interface TableSettingsDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  perPage: number;
-  onPerPageChange: (value: number) => void;
-  columns: SettingsOption[];
-  columnVisibility: VisibilityMap;
-  defaultColumnVisibility: VisibilityMap;
-  onColumnVisibilityChange: (value: VisibilityMap) => void;
+  /** Table Preferences (per page + columns). Omit all four for a list with no table, e.g. a feed: the drawer then shows Filters only. */
+  perPage?: number;
+  onPerPageChange?: (value: number) => void;
+  columns?: SettingsOption[];
+  columnVisibility?: VisibilityMap;
+  defaultColumnVisibility?: VisibilityMap;
+  onColumnVisibilityChange?: (value: VisibilityMap) => void;
   filters?: SettingsOption[];
   filterVisibility?: VisibilityMap;
   defaultFilterVisibility?: VisibilityMap;
@@ -118,6 +119,7 @@ export function TableSettingsDrawer({
 }: TableSettingsDrawerProps) {
   const [activeTab, setActiveTab] = useState<"table" | "filters">("table");
   const hasFiltersTab = !!(filters?.length && filterVisibility && defaultFilterVisibility && onFilterVisibilityChange);
+  const hasTableTab = !!(columns?.length && columnVisibility && defaultColumnVisibility && onColumnVisibilityChange && onPerPageChange);
 
   const tabClass = (tab: "table" | "filters") =>
     cn(
@@ -132,6 +134,18 @@ export function TableSettingsDrawer({
           <SheetTitle>View Settings</SheetTitle>
         </SheetHeader>
 
+        {!hasTableTab && hasFiltersTab ? (
+          // Filters only: no table on this list, so no tabs to choose between.
+          <div className="mt-6">
+            <VisibilityList
+              label="Manage Filters"
+              options={filters!}
+              value={filterVisibility!}
+              defaults={defaultFilterVisibility!}
+              onChange={onFilterVisibilityChange!}
+            />
+          </div>
+        ) : (
         <div className="mt-6">
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "table" | "filters")}>
             <TabsList className="w-full border-b border-gray-200 pb-0 gap-0">
@@ -159,7 +173,7 @@ export function TableSettingsDrawer({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-full bg-white">
                     {[10, 20, 40, 100].map((option) => (
-                      <DropdownMenuItem key={option} onClick={() => onPerPageChange(option)}>
+                      <DropdownMenuItem key={option} onClick={() => onPerPageChange?.(option)}>
                         {option} per page
                       </DropdownMenuItem>
                     ))}
@@ -169,10 +183,10 @@ export function TableSettingsDrawer({
 
               <VisibilityList
                 label="Manage Columns"
-                options={columns}
-                value={columnVisibility}
-                defaults={defaultColumnVisibility}
-                onChange={onColumnVisibilityChange}
+                options={columns ?? []}
+                value={columnVisibility ?? {}}
+                defaults={defaultColumnVisibility ?? {}}
+                onChange={onColumnVisibilityChange ?? (() => {})}
               />
             </TabsContent>
 
@@ -189,6 +203,7 @@ export function TableSettingsDrawer({
             )}
           </Tabs>
         </div>
+        )}
       </SheetContent>
     </Sheet>
   );

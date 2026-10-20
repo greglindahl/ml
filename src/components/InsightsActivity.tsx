@@ -153,6 +153,7 @@ export function InsightsActivity() {
         searchPlaceholder="Search activity"
         sheetTitle="Activity Filters"
         searchProposed
+        filterSettingsOnly
         filterRowTrailing={savedFilters.menu}
         chipRowTrailing={savedFilters.chipAction}
       />
