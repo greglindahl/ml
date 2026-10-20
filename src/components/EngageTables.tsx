@@ -3,7 +3,6 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { TablePagination } from "./TablePagination";
 import { HeadCell, RowActions, SortableHeadCell, TableShell, sortRows, usePage, useSort } from "./ListTable";
 import type { VisibilityMap } from "./TableSettingsDrawer";
 import { cn } from "@/lib/utils";
@@ -64,7 +63,7 @@ export function EngageCampaignsTable({
   const { page, setPage, paged } = usePage(sorted, perPage);
 
   return (
-    <TableShell footer={<TablePagination page={page} perPage={perPage} total={sorted.length} onPageChange={setPage} />}>
+    <TableShell pagination={{ page: page, perPage: perPage, total: sorted.length, onPageChange: setPage }}>
       <TableHeader>
         <TableRow className="bg-[#f9fbfd]">
           {show("campaign") && <HeadCell label="Campaign" />}

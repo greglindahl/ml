@@ -15,7 +15,6 @@ import { EmptyState } from "@/components/EmptyState";
 import { toast } from "@/hooks/use-toast";
 import { ListToolbar, useListControls } from "./ListToolbar";
 import { CREATED_DATE_OPTIONS, matchesFilter, type ListFilterDef } from "./ListFilters";
-import { TablePagination } from "./TablePagination";
 import { HeadCell, RowActions, SortableHeadCell, StatusBadge, TableShell, sortRows, usePage, useSort } from "./ListTable";
 import { matchesDateRange, type DateRangeValue } from "@/lib/dateRangeFilter";
 import {
@@ -115,7 +114,7 @@ export function BrandingTab() {
         {rows.length === 0 ? (
           <EmptyState icon="bi-badge-tm" title="No branding packages found." onClearAll={controls.isFiltered ? controls.clearAll : undefined} />
         ) : (
-          <TableShell footer={<TablePagination page={page} perPage={perPage} total={rows.length} onPageChange={setPage} />}>
+          <TableShell pagination={{ page: page, perPage: perPage, total: rows.length, onPageChange: setPage }}>
             <TableHeader>
               <TableRow className="bg-[#f9fbfd]">
                 {show("name") && <SortableHeadCell label="Name" field="name" sort={sort} />}
@@ -243,7 +242,7 @@ export function WorkflowsTab() {
         {rows.length === 0 ? (
           <EmptyState icon="bi-diagram-3" title="No approval workflows found." onClearAll={controls.isFiltered ? controls.clearAll : undefined} />
         ) : (
-          <TableShell footer={<TablePagination page={page} perPage={perPage} total={rows.length} onPageChange={setPage} />}>
+          <TableShell pagination={{ page: page, perPage: perPage, total: rows.length, onPageChange: setPage }}>
             <TableHeader>
               <TableRow className="bg-[#f9fbfd]">
                 {show("name") && <HeadCell label="Name" />}

@@ -1,26 +1,31 @@
 import { cn } from "@/lib/utils";
 
-/** The Prev / pages / Next footer every list table shares (lifted from GroupsTable). */
-export function TablePagination({
-  page,
-  perPage,
-  total,
-  onPageChange,
-}: {
+export interface PaginationProps {
   page: number;
   perPage: number;
   total: number;
   onPageChange: (page: number) => void;
-}) {
-  const totalPages = Math.max(1, Math.ceil(total / perPage));
+}
+
+/** "Viewing 1 - 20 of 77". Sits below the table card, on the page background. */
+export function PaginationSummary({ page, perPage, total }: Pick<PaginationProps, "page" | "perPage" | "total">) {
   const start = total === 0 ? 0 : (page - 1) * perPage + 1;
   const end = Math.min(page * perPage, total);
+  return (
+    <p className="py-4 text-center text-[13px] text-foreground">
+      Viewing {start} - {end} of {total}
+    </p>
+  );
+}
+
+/** The Prev / pages / Next strip every list table shares (lifted from GroupsTable). Lives inside the table card. */
+export function TablePagination({ page, perPage, total, onPageChange }: PaginationProps) {
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
   const atStart = page <= 1;
   const atEnd = page >= totalPages;
 
   return (
-    <div className="flex flex-col items-center gap-4 py-4">
-      <div className="flex items-stretch w-full">
+    <div className="flex items-stretch w-full">
         <button
           onClick={() => onPageChange(page - 1)}
           disabled={atStart}
@@ -59,10 +64,6 @@ export function TablePagination({
           Next
           <i className="bi bi-arrow-right" />
         </button>
-      </div>
-      <span className="text-[13px] text-foreground">
-        Viewing {start} - {end} of {total}
-      </span>
     </div>
   );
 }

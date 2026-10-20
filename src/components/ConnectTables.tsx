@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { TablePagination } from "./TablePagination";
 import {
   HEAD_TEXT,
   HeadCell,
@@ -138,7 +137,7 @@ export function ImportsTable({
   const { page, setPage, paged } = usePage(sorted, perPage);
 
   return (
-    <TableShell footer={<TablePagination page={page} perPage={perPage} total={sorted.length} onPageChange={setPage} />}>
+    <TableShell pagination={{ page: page, perPage: perPage, total: sorted.length, onPageChange: setPage }}>
       <TableHeader>
         <TableRow className="bg-[#f9fbfd]">
           {show("service") && <HeadCell label="Service" />}
@@ -304,7 +303,7 @@ export function ExportsTable({
   const { page, setPage, paged } = usePage(sorted, perPage);
 
   return (
-    <TableShell footer={<TablePagination page={page} perPage={perPage} total={sorted.length} onPageChange={setPage} />}>
+    <TableShell pagination={{ page: page, perPage: perPage, total: sorted.length, onPageChange: setPage }}>
       <TableHeader>
         <TableRow className="bg-[#f9fbfd]">
           {show("integration") && <HeadCell label="Integration" />}
@@ -434,7 +433,7 @@ export function RoutingRulesTable({
   const { page, setPage, paged } = usePage(sorted, perPage);
 
   return (
-    <TableShell footer={<TablePagination page={page} perPage={perPage} total={sorted.length} onPageChange={setPage} />}>
+    <TableShell pagination={{ page: page, perPage: perPage, total: sorted.length, onPageChange: setPage }}>
       <TableHeader>
         <TableRow className="bg-[#f9fbfd]">
           {show("name") && <SortableHeadCell label="Rule Name" field="name" sort={sort} />}
