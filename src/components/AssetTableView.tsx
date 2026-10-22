@@ -1,6 +1,7 @@
 import { useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { LibraryAsset, getRelativeTime } from "@/lib/mockLibraryData";
+import { LibraryAsset } from "@/lib/mockLibraryData";
+import { TableDate } from "@/components/TableDate";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import {
@@ -370,20 +371,15 @@ export function AssetTableView({
               {/* Uploaded Date */}
               {columnVisibility.added && (
                 <TableCell>
-                  <span className="text-sm">{getRelativeTime(asset.dateCreated)}</span>
+                  <TableDate value={asset.dateCreated} className="text-sm" />
                 </TableCell>
               )}
 
               {/* Capture Date */}
               {columnVisibility.captured && (
                 <TableCell>
-                  <span className="text-sm text-muted-foreground">
-                    {asset.dateCreated.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "2-digit"
-                    })}
-                  </span>
+                  {/* Was formatting dateCreated, so "Captured" showed the upload date. */}
+                  <TableDate value={asset.captureDate} className="text-sm" />
                 </TableCell>
               )}
 

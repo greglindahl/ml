@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { TableDate } from "@/components/TableDate";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { FolderItem, countAllGalleries } from "@/lib/mockFolderData";
 import { Button } from "@/components/ui/button";
@@ -114,10 +115,6 @@ export function FolderTableView({
   // Apply pagination
   const paginatedFolders = sorted.slice(0, perPage);
 
-  const formatDate = (date: Date | undefined) => {
-    if (!date) return "-";
-    return date.toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "2-digit" });
-  };
 
   const renderRow = (folder: EnrichedFolder) => (
     <TableRow key={folder.id}>
@@ -155,7 +152,7 @@ export function FolderTableView({
       )}
       {columnVisibility.created && (
         <TableCell>
-          <span className="text-sm">{formatDate(folder.createdDate)}</span>
+          <TableDate value={folder.createdDate} className="text-sm" />
         </TableCell>
       )}
       {columnVisibility.createdBy && (
