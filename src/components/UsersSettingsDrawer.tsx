@@ -180,7 +180,7 @@ export function UsersSettingsDrawer({
                 )}
               >
                 <i className="bi bi-table text-[15px]" />
-                Table Preferences
+                Table View
               </TabsTrigger>
               <TabsTrigger
                 value="filters"
