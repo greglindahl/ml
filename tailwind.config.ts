@@ -17,7 +17,7 @@ export default {
         sans: ['"Cerebri Sans"', 'Arial', 'sans-serif'],
       },
       fontSize: {
-        // Portal uses 15px base, not 16px
+        // Body text is 15px (0.9375rem against prod's 16px root)
         xs:   ['0.625rem',  { lineHeight: '1.5' }],   // 10px
         sm:   ['0.8125rem', { lineHeight: '1.5' }],   // 13px
         base: ['0.9375rem', { lineHeight: '1.5' }],   // 15px
