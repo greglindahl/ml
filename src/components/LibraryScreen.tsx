@@ -45,6 +45,7 @@ const ORIENTATION_LABELS: Record<string, string> = {
 import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, findFolderAncestorIds, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor, enrichGallery, sortGalleries, GALLERY_SORT_OPTIONS, GallerySortField } from "@/lib/mockFolderData";
 import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
 import { relevanceScore, capRelevanceResults, isRelevanceCapped, RELEVANCE_RESULT_LIMIT } from "@/lib/relevance";
+import { AssetViewerPage } from "@/components/AssetViewerPage";
 import { FolderSidebar } from "@/components/FolderSidebar";
 import { BrandingTab, WorkflowsTab } from "@/components/LibraryListTabs";
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
@@ -145,6 +146,9 @@ interface LibraryScreenProps {
   initialBulkSelect?: boolean;
 }
 
+/** Assets that open in the full-page viewer redesign (prototype). */
+const NEW_VIEWER_ASSET_IDS = new Set(["asset-hero-1"]);
+
 export function LibraryScreen({ isMobile = false, initialActiveFolder, initialActiveTab, initialBulkSelect }: LibraryScreenProps) {
   const [activeTab, setActiveTab] = useState(initialActiveTab ?? "assets");
   const [isFolderSidebarExpanded, setIsFolderSidebarExpanded] = useState(false);
@@ -244,6 +248,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   const inFavAssetMultiSelect = favAssetMultiSelectMode || favSelectedAssets.size > 0;
   const inFavGalleryMultiSelect = favGalleryMultiSelectMode || favSelectedGalleries.size > 0;
   const [viewingAssetId, setViewingAssetId] = useState<string | null>(null);
+  const [useNewAssetViewer, setUseNewAssetViewer] = useState(false);
 
   // Settings drawer state
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
@@ -1142,7 +1147,10 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     return sortedResults.findIndex((a) => a.id === viewingAssetId);
   }, [viewingAssetId, sortedResults]);
 
+  // Prototype: the full-page viewer redesign opens for one asset and stays on
+  // for that session's Previous/Next; everything else keeps AssetDetailModal.
   const handleViewAsset = useCallback((assetId: string) => {
+    setUseNewAssetViewer(NEW_VIEWER_ASSET_IDS.has(assetId));
     setViewingAssetId(assetId);
   }, []);
 
@@ -3069,8 +3077,24 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
       />
 
       {/* Asset Detail Modal */}
+      <AssetViewerPage
+        open={viewingAssetId !== null && useNewAssetViewer}
+        onOpenChange={(open) => {
+          if (!open) {
+            setViewingAssetId(null);
+            setUseNewAssetViewer(false);
+          }
+        }}
+        asset={viewingAsset}
+        currentIndex={viewingAssetIndex}
+        totalAssets={sortedResults.length}
+        onPrevious={handlePreviousAsset}
+        onNext={handleNextAsset}
+        isFavorite={!!viewingAsset && favoriteAssetIds.has(viewingAsset.id)}
+        onToggleFavorite={() => viewingAsset && handleToggleFavoriteAsset(viewingAsset.id)}
+      />
       <AssetDetailModal
-        open={viewingAssetId !== null}
+        open={viewingAssetId !== null && !useNewAssetViewer}
         onOpenChange={(open) => {
           if (!open) setViewingAssetId(null);
         }}
