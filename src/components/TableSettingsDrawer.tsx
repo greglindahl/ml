@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Config-driven twin of RequestsSettingsDrawer: right-side "View Settings" with
- * Table Preferences (per page + Manage Columns) and, when the list has filters,
+ * Table View (per page + Manage Columns) and, when the list has filters,
  * a Filters tab that pins which dropdowns show in the filter row.
  */
 
@@ -54,7 +54,7 @@ export const allVisible = (options: SettingsOption[]): VisibilityMap =>
 interface TableSettingsDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Table Preferences (per page + columns). Omit all four for a list with no table, e.g. a feed: the drawer then shows Filters only. */
+  /** Table View (per page + columns). Omit all four for a list with no table, e.g. a feed: the drawer then shows Filters only. */
   perPage?: number;
   onPerPageChange?: (value: number) => void;
   columns?: SettingsOption[];
@@ -151,7 +151,7 @@ export function TableSettingsDrawer({
             <TabsList className="w-full border-b border-gray-200 pb-0 gap-0">
               <TabsTrigger value="table" className={tabClass("table")}>
                 <i className="bi bi-table text-[15px]" />
-                Table Preferences
+                Table View
               </TabsTrigger>
               {hasFiltersTab && (
                 <TabsTrigger value="filters" className={tabClass("filters")}>

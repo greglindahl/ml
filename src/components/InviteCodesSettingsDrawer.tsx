@@ -92,7 +92,7 @@ export function InviteCodesSettingsDrawer({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-[320px] sm:w-[360px]">
         <SheetHeader>
-          <SheetTitle>Table Preferences</SheetTitle>
+          <SheetTitle>View Settings</SheetTitle>
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
