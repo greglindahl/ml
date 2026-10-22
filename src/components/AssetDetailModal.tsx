@@ -24,6 +24,26 @@ interface AssetDetailModalProps {
   onNext: () => void;
 }
 
+/** "Oct 20, 2026, 9:15 PM" */
+const formatDateTime = (d: Date) =>
+  `${d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}, ${d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
+
+/**
+ * Where the captured + uploaded dates live (timestamp design pass, 10/22 call).
+ * Prototype-only switch so both can be compared on real assets:
+ * - footer: icon-led lines in the footer, captured first (option B)
+ * - panel: a Dates section in the details panel (option C)
+ */
+type DateLayout = "footer" | "panel";
+const DATE_LAYOUT_KEY = "proto.assetDetails.dateLayout";
+const readDateLayout = (): DateLayout => {
+  try {
+    return localStorage.getItem(DATE_LAYOUT_KEY) === "panel" ? "panel" : "footer";
+  } catch {
+    return "footer";
+  }
+};
+
 function getOrientationLabel(aspectRatio: LibraryAsset["aspectRatio"]) {
   if (aspectRatio === "9:16") return "Portrait";
   if (aspectRatio === "1:1") return "Square";
@@ -40,6 +60,15 @@ export function AssetDetailModal({
   onNext,
 }: AssetDetailModalProps) {
   const [showDetailsPanel, setShowDetailsPanel] = useState(true);
+  const [dateLayout, setDateLayoutState] = useState<DateLayout>(readDateLayout);
+  const setDateLayout = (next: DateLayout) => {
+    setDateLayoutState(next);
+    try {
+      localStorage.setItem(DATE_LAYOUT_KEY, next);
+    } catch {
+      // per-viewer convenience only
+    }
+  };
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -56,15 +85,10 @@ export function AssetDetailModal({
 
   if (!asset) return null;
 
-  const formattedDate = asset.dateCreated.toLocaleDateString("en-US", {
-    month: "numeric",
-    day: "numeric",
-    year: "numeric",
-  });
-  const formattedTime = asset.dateCreated.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  // Some media has no capture date (screenshots, exports, files without EXIF): say so, muted.
+  const capturedLabel = asset.captureDate ? formatDateTime(asset.captureDate) : null;
+  const uploadedLabel = formatDateTime(asset.dateCreated);
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -74,7 +98,7 @@ export function AssetDetailModal({
         hideClose
       >
         {/* Header */}
-        <DialogHeader className="flex-shrink-0 px-6 py-4 border-b bg-gray-100 flex flex-row items-center justify-between">
+        <DialogHeader className="relative flex-shrink-0 px-6 py-4 border-b bg-gray-100 flex flex-row items-center justify-between">
           <Button
             variant="ghost"
             size="icon"
@@ -83,6 +107,22 @@ export function AssetDetailModal({
           >
             <i className="bi bi-x-lg w-4 h-4 inline-flex items-center justify-center leading-none" />
           </Button>
+
+          {/* Prototype only: compare date placements */}
+          <div className="hidden md:flex items-center gap-1 border border-dashed border-muted-foreground/40 rounded-md p-0.5 text-[12px] absolute left-16 top-1/2 -translate-y-1/2" role="group" aria-label="Date layout (prototype)">
+            <span className="px-1.5 text-muted-foreground">Dates:</span>
+            {(["footer", "panel"] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setDateLayout(v)}
+                aria-pressed={dateLayout === v}
+                className={dateLayout === v ? "px-2 py-0.5 rounded bg-white shadow-sm text-foreground" : "px-2 py-0.5 rounded text-muted-foreground hover:text-foreground"}
+              >
+                {v === "footer" ? "Footer" : "Panel"}
+              </button>
+            ))}
+          </div>
 
           <DialogTitle className="sr-only">Asset Details</DialogTitle>
           <DialogDescription className="sr-only">
@@ -220,6 +260,25 @@ export function AssetDetailModal({
                     </p>
                   )}
                 </div>
+
+                {/* Option C: dates as their own section */}
+                {dateLayout === "panel" && (
+                  <>
+                    <div className="h-px bg-gray-300" />
+                    <div>
+                      <h3 className="text-[15px] font-bold text-black tracking-tight mb-2">Dates</h3>
+                      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[13px]">
+                        <dt className="text-gray-600">Captured</dt>
+                        <dd className={capturedLabel ? "text-black" : "text-gray-500 italic"}>{capturedLabel ?? "Unknown"}</dd>
+                        <dt className="text-gray-600">Uploaded</dt>
+                        <dd className="text-black">
+                          {uploadedLabel}
+                          <span className="block text-gray-600">by {asset.creator}</span>
+                        </dd>
+                      </dl>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -254,9 +313,19 @@ export function AssetDetailModal({
                 {getOrientationLabel(asset.aspectRatio)} | {asset.aspectRatio} | {asset.fileSize} | Asset ID: {asset.id}
               </span>
             </div>
-            <span className="italic text-black">
-              Uploaded by {asset.creator} {formattedDate}, {formattedTime}
-            </span>
+            {/* Option B: icon-led lines, captured first. In panel mode the dates live in the panel instead. */}
+            {dateLayout === "footer" && (
+              <>
+                <span className="flex items-center gap-1.5 text-black">
+                  <i className="bi bi-camera text-xs text-gray-600" aria-hidden="true" />
+                  {capturedLabel ? <>Captured {capturedLabel}</> : <span className="text-gray-500">Capture date unknown</span>}
+                </span>
+                <span className="flex items-center gap-1.5 text-black">
+                  <i className="bi bi-cloud-arrow-up text-xs text-gray-600" aria-hidden="true" />
+                  Uploaded by {asset.creator} · {uploadedLabel}
+                </span>
+              </>
+            )}
           </div>
         </div>
       </DialogContent>

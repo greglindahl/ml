@@ -755,8 +755,11 @@ const generatedLibraryAssets: LibraryAsset[] = (() => {
     const lastDownloadDate = hasLastDownload
       ? (() => { const d = new Date(); d.setDate(d.getDate() - Math.floor(favRandom() * 60)); return d; })()
       : null;
-    // captureDate is always before dateCreated
-    const captureDate = new Date(asset.dateCreated.getTime() - Math.floor(favRandom() * 30 + 1) * 86400000);
+    // captureDate is always before dateCreated. The extra minutes (derived from
+    // the day offset, so no new random draw reshuffles other fields) give it its
+    // own time of day instead of mirroring the upload time.
+    const captureDaysBack = Math.floor(favRandom() * 30 + 1);
+    const captureDate = new Date(asset.dateCreated.getTime() - captureDaysBack * 86400000 - ((captureDaysBack * 137) % 600) * 60000);
     // Orientation bucket: mostly derived from aspectRatio, with occasional
     // panoramic/portrait/unknown overrides so every index bucket has demo data
     const derivedOrientation: LibraryAsset["orientation"] =
