@@ -321,8 +321,10 @@
   }
 
   html {
-    /* Portal uses 15px base font, not 16px. 93.75% of 16px = 15px */
-    font-size: 93.75%;
+    /* Root stays at the browser's 16px, as in prod (Bootstrap/Dashkit never
+       overrides it). Prod's "15px" is body text ($font-size-base: 0.9375rem),
+       which the body rule below sets. Shrinking the root to 15px made every
+       rem (text, spacing, icons, control heights) ~6% smaller than prod. */
     /* Prevent layout shift when content changes height */
     scrollbar-gutter: stable;
   }
