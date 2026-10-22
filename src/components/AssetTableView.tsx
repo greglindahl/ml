@@ -97,6 +97,19 @@ function getOrientation(aspectRatio: LibraryAsset["aspectRatio"]): string {
 }
 
 
+/**
+ * Prototype-only: show who uploaded under the Uploaded date (timestamp design
+ * pass). Column names stay as they are. Remembered per browser.
+ */
+const UPLOADER_UNDER_DATE_KEY = "proto.assetTable.uploaderUnderDate";
+const readUploaderUnderDate = () => {
+  try {
+    return localStorage.getItem(UPLOADER_UNDER_DATE_KEY) === "on";
+  } catch {
+    return false;
+  }
+};
+
 export function AssetTableView({
   assets,
   isLoading = false,
@@ -111,6 +124,15 @@ export function AssetTableView({
   onSortChange,
 }: AssetTableViewProps) {
   const [internalSelected, setInternalSelected] = useState<Set<string>>(new Set());
+  const [uploaderUnderDate, setUploaderUnderDateState] = useState(readUploaderUnderDate);
+  const setUploaderUnderDate = (on: boolean) => {
+    setUploaderUnderDateState(on);
+    try {
+      localStorage.setItem(UPLOADER_UNDER_DATE_KEY, on ? "on" : "off");
+    } catch {
+      // per-viewer convenience only
+    }
+  };
   const [internalSortField, setInternalSortField] = useState<SortField>("dateCreated");
   const [internalSortDirection, setInternalSortDirection] = useState<SortDirection>("desc");
   const isSortControlled = onSortChange !== undefined;
@@ -244,6 +266,24 @@ export function AssetTableView({
   }
 
   return (
+    <>
+    {/* Prototype only: compare the Uploaded column with and without the uploader */}
+    <div className="flex justify-end mb-2">
+      <div className="inline-flex items-center gap-1 border border-dashed border-muted-foreground/40 rounded-md p-0.5 text-[12px]" role="group" aria-label="Uploader under date (prototype)">
+        <span className="px-1.5 text-muted-foreground">Uploader under date:</span>
+        {([false, true] as const).map((on) => (
+          <button
+            key={String(on)}
+            type="button"
+            onClick={() => setUploaderUnderDate(on)}
+            aria-pressed={uploaderUnderDate === on}
+            className={uploaderUnderDate === on ? "px-2 py-0.5 rounded bg-white shadow-sm text-foreground" : "px-2 py-0.5 rounded text-muted-foreground hover:text-foreground"}
+          >
+            {on ? "On" : "Off"}
+          </button>
+        ))}
+      </div>
+    </div>
     <div className="border rounded-lg bg-card">
       <Table wrapperClassName="overflow-visible">
           <TableHeader className="sticky top-[var(--content-sticky-h,0px)] z-10">
@@ -371,7 +411,10 @@ export function AssetTableView({
               {/* Uploaded Date */}
               {columnVisibility.added && (
                 <TableCell>
-                  <TableDate value={asset.dateCreated} className="text-sm" />
+                  <TableDate value={asset.dateCreated} className="text-sm block" />
+                  {uploaderUnderDate && (
+                    <span className="block text-[13px] text-muted-foreground whitespace-nowrap">by {asset.creator}</span>
+                  )}
                 </TableCell>
               )}
 
@@ -439,5 +482,6 @@ export function AssetTableView({
           </TableBody>
         </Table>
     </div>
+    </>
   );
 }
