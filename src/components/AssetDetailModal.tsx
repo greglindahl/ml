@@ -306,9 +306,9 @@ export function AssetDetailModal({
           </div>
 
           {/* Metadata */}
-          <div className="flex flex-col items-end gap-1.5 text-[13px] text-gray-600">
+          <div className="flex flex-col items-end gap-2 text-[13px] text-gray-600">
             <div className="flex items-center gap-1.5">
-              <i className="bi bi-aspect-ratio text-xs" />
+              <i className="bi bi-aspect-ratio text-[15px] text-gray-600" aria-hidden="true" />
               <span>
                 {getOrientationLabel(asset.aspectRatio)} | {asset.aspectRatio} | {asset.fileSize} | Asset ID: {asset.id}
               </span>
@@ -317,11 +317,11 @@ export function AssetDetailModal({
             {dateLayout === "footer" && (
               <>
                 <span className="flex items-center gap-1.5 text-black">
-                  <i className="bi bi-camera text-xs text-gray-600" aria-hidden="true" />
+                  <i className="bi bi-camera text-[15px] text-gray-600" aria-hidden="true" />
                   {capturedLabel ? <>Captured {capturedLabel}</> : <span className="text-gray-500">Capture date unknown</span>}
                 </span>
                 <span className="flex items-center gap-1.5 text-black">
-                  <i className="bi bi-cloud-arrow-up text-xs text-gray-600" aria-hidden="true" />
+                  <i className="bi bi-cloud-arrow-up text-[15px] text-gray-600" aria-hidden="true" />
                   Uploaded by {asset.creator} · {uploadedLabel}
                 </span>
               </>
