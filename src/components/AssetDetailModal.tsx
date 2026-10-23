@@ -9,6 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import type { LibraryAsset } from "@/lib/mockLibraryData";
+import { formatCaptured, formatInstant, useViewerZone, viewerOffsetAt } from "@/lib/captureTime";
+import { ViewerZoneToggle } from "@/components/ViewerZoneToggle";
 
 interface AssetDetailModalProps {
   open: boolean;
@@ -23,10 +25,6 @@ interface AssetDetailModalProps {
   /** Navigate to next asset */
   onNext: () => void;
 }
-
-/** "Oct 20, 2026, 9:15 PM" */
-const formatDateTime = (d: Date) =>
-  `${d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}, ${d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
 
 /**
  * Where the captured + uploaded dates live (timestamp design pass, 10/22 call).
@@ -61,6 +59,7 @@ export function AssetDetailModal({
 }: AssetDetailModalProps) {
   const [showDetailsPanel, setShowDetailsPanel] = useState(true);
   const [dateLayout, setDateLayoutState] = useState<DateLayout>(readDateLayout);
+  const { tz } = useViewerZone();
   const setDateLayout = (next: DateLayout) => {
     setDateLayoutState(next);
     try {
@@ -85,9 +84,21 @@ export function AssetDetailModal({
 
   if (!asset) return null;
 
-  // Some media has no capture date (screenshots, exports, files without EXIF): say so, muted.
-  const capturedLabel = asset.captureDate ? formatDateTime(asset.captureDate) : null;
-  const uploadedLabel = formatDateTime(asset.dateCreated);
+  // Captured = the photographer's wall clock + zone (PORTAL-12970); no recorded
+  // zone shows unlabeled with a muted note. Uploaded = the viewer's zone, and it
+  // carries its own zone label whenever the capture zone differs, so two correct
+  // dates never read as "captured after upload".
+  const captured = asset.captureDate ? formatCaptured(asset.captureDate, asset.captureOffsetMinutes) : null;
+  const zonesDiffer =
+    asset.captureOffsetMinutes != null && asset.captureOffsetMinutes !== viewerOffsetAt(asset.dateCreated, tz);
+  const uploaded = formatInstant(asset.dateCreated, tz, zonesDiffer);
+  const capturedLine = captured ? (
+    <>
+      {captured.date}, {captured.time}{" "}
+      {captured.zone ? <span className="text-gray-600">{captured.zone}</span> : <span className="text-gray-500">(time zone not recorded)</span>}
+    </>
+  ) : null;
+  const uploadedLabel = uploaded.full;
 
 
   return (
@@ -109,7 +120,10 @@ export function AssetDetailModal({
           </Button>
 
           {/* Prototype only: compare date placements */}
-          <div className="hidden md:flex items-center gap-1 border border-dashed border-muted-foreground/40 rounded-md p-0.5 text-[12px] absolute left-16 top-1/2 -translate-y-1/2" role="group" aria-label="Date layout (prototype)">
+          {/* Prototype switches; wide screens only so they never cover the pager */}
+          <div className="hidden lg:flex flex-col items-start gap-1 absolute left-16 top-1/2 -translate-y-1/2">
+          <ViewerZoneToggle />
+          <div className="flex items-center gap-1 border border-dashed border-muted-foreground/40 rounded-md p-0.5 text-[12px]" role="group" aria-label="Date layout (prototype)">
             <span className="px-1.5 text-muted-foreground">Dates:</span>
             {(["footer", "panel"] as const).map((v) => (
               <button
@@ -122,6 +136,7 @@ export function AssetDetailModal({
                 {v === "footer" ? "Footer" : "Panel"}
               </button>
             ))}
+          </div>
           </div>
 
           <DialogTitle className="sr-only">Asset Details</DialogTitle>
@@ -269,7 +284,7 @@ export function AssetDetailModal({
                       <h3 className="text-[15px] font-bold text-black tracking-tight mb-2">Dates</h3>
                       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[13px]">
                         <dt className="text-gray-600">Captured</dt>
-                        <dd className={capturedLabel ? "text-black" : "text-gray-500 italic"}>{capturedLabel ?? "Unknown"}</dd>
+                        <dd className={capturedLine ? "text-black" : "text-gray-500 italic"}>{capturedLine ?? "Unknown"}</dd>
                         <dt className="text-gray-600">Uploaded</dt>
                         <dd className="text-black">
                           {uploadedLabel}
@@ -318,7 +333,7 @@ export function AssetDetailModal({
               <>
                 <span className="flex items-center gap-1.5 text-black">
                   <i className="bi bi-camera text-[15px] text-gray-600" aria-hidden="true" />
-                  {capturedLabel ? <>Captured {capturedLabel}</> : <span className="text-gray-500">Capture date unknown</span>}
+                  {capturedLine ? <span>Captured {capturedLine}</span> : <span className="text-gray-500">Capture date unknown</span>}
                 </span>
                 <span className="flex items-center gap-1.5 text-black">
                   <i className="bi bi-cloud-arrow-up text-[15px] text-gray-600" aria-hidden="true" />

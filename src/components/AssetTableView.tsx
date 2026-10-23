@@ -2,6 +2,7 @@ import { useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { LibraryAsset } from "@/lib/mockLibraryData";
 import { TableDate } from "@/components/TableDate";
+import { ViewerZoneToggle } from "@/components/ViewerZoneToggle";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import {
@@ -268,7 +269,8 @@ export function AssetTableView({
   return (
     <>
     {/* Prototype only: compare the Uploaded column with and without the uploader */}
-    <div className="flex justify-end mb-2">
+    <div className="flex justify-end items-center gap-2 mb-2">
+      <ViewerZoneToggle />
       <div className="inline-flex items-center gap-1 border border-dashed border-muted-foreground/40 rounded-md p-0.5 text-[12px]" role="group" aria-label="Uploader under date (prototype)">
         <span className="px-1.5 text-muted-foreground">Uploader under date:</span>
         {([false, true] as const).map((on) => (
@@ -422,7 +424,7 @@ export function AssetTableView({
               {columnVisibility.captured && (
                 <TableCell>
                   {/* Was formatting dateCreated, so "Captured" showed the upload date. */}
-                  <TableDate value={asset.captureDate} className="text-sm" />
+                  <TableDate value={asset.captureDate} capture={{ offsetMinutes: asset.captureOffsetMinutes }} className="text-sm" />
                 </TableCell>
               )}
 

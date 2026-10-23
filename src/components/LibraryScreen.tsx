@@ -44,6 +44,7 @@ const ORIENTATION_LABELS: Record<string, string> = {
 };
 import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, findFolderAncestorIds, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor, enrichGallery, sortGalleries, GALLERY_SORT_OPTIONS, GallerySortField } from "@/lib/mockFolderData";
 import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
+import { matchesCaptureRange } from "@/lib/captureTime";
 import { relevanceScore, capRelevanceResults, isRelevanceCapped, RELEVANCE_RESULT_LIMIT } from "@/lib/relevance";
 import { FolderSidebar } from "@/components/FolderSidebar";
 import { BrandingTab, WorkflowsTab } from "@/components/LibraryListTabs";
@@ -1049,7 +1050,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
       if (addedDateFilter && !matchesDateRange(asset.dateCreated, addedDateFilter, customDateRanges["added-date"])) return false;
 
       // Captured Date filter (when the media was originally shot)
-      if (capturedDateFilter && !matchesDateRange(asset.captureDate, capturedDateFilter, customDateRanges["captured-date"])) return false;
+      if (capturedDateFilter && !matchesCaptureRange(asset.captureDate, asset.captureOffsetMinutes, capturedDateFilter, customDateRanges["captured-date"])) return false;
 
       // Folder dropdown filter (from FilterBar - uses folder IDs and descendants)
       if (folderFilter.length) {
@@ -1377,7 +1378,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     const added = f["added-date"]?.[0];
     if (added) results = results.filter(a => matchesDateRange(a.dateCreated, added as DateRangeValue, favAssetCustomDates["added-date"]));
     const captured = f["captured-date"]?.[0];
-    if (captured) results = results.filter(a => matchesDateRange(a.captureDate, captured as DateRangeValue, favAssetCustomDates["captured-date"]));
+    if (captured) results = results.filter(a => matchesCaptureRange(a.captureDate, a.captureOffsetMinutes, captured as DateRangeValue, favAssetCustomDates["captured-date"]));
     if (favAssetSort === "relevance") {
       const q = favAssetSearch.toLowerCase();
       return [...results].sort((a, b) => {
