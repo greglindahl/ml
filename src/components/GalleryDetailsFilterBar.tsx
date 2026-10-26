@@ -772,19 +772,13 @@ export function GalleryDetailsFilterBar({
                         <span className="text-xs text-primary font-medium">Choose a Date Range</span>
                       </div>
                       {customDateOpenFor === "captured-date" && (
-                        <div className="flex items-start gap-1.5 mt-2 px-1 max-w-[290px]">
-                          <i className="bi bi-camera text-sm text-muted-foreground flex-shrink-0 mt-0.5" />
-                          <span className="text-xs text-muted-foreground">
+                        <div className="flex items-start gap-1.5 mt-3 max-w-[290px] rounded-md bg-[#39AFD1] px-2.5 py-2 text-white">
+                          <i className="bi bi-info-circle text-sm flex-shrink-0 mt-0.5" />
+                          <span className="text-xs">
                             Pick the days photos were taken. A photo shot at 1:00 AM on Oct 23 in Riyadh counts as Oct 23 for everyone.
                           </span>
                         </div>
                       )}
-                      <div className="flex items-start gap-1.5 mt-3 px-1">
-                        <i className="bi bi-info-circle text-sm text-muted-foreground flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-muted-foreground">
-                          For optimal performance, limit your search selection to 12 months.
-                        </span>
-                      </div>
                     </div>
                     <Separator className="mt-4" />
                     <div className="flex items-center justify-between p-3">
