@@ -18,7 +18,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { UsersFilterBar, UsersFilterBarHandle } from "./UsersFilterBar";
+import { UsersFilterBar, UsersFilterBarHandle, NOTIFICATION_OPTIONS } from "./UsersFilterBar";
 import { UsersTable } from "./UsersTable";
 import {
   UsersSettingsDrawer,
@@ -220,7 +220,6 @@ export function AdminScreen({ isMobile = false, initialTab }: AdminScreenProps) 
   const [usersColumnVisibility, setUsersColumnVisibility] = useUsersColumnVisibility();
   const [usersFilterVisibility, setUsersFilterVisibility] = useUsersFilterVisibility();
   const [usersActiveFilters, setUsersActiveFilters] = useState<Record<string, FilterValue[]>>({});
-  const [usersNotificationsActive, setUsersNotificationsActive] = useState(false);
   const [usersFiltersSheetOpen, setUsersFiltersSheetOpen] = useState(false);
   const usersFilterBarRef = useRef<UsersFilterBarHandle>(null);
 
@@ -238,7 +237,10 @@ export function AdminScreen({ isMobile = false, initialTab }: AdminScreenProps) 
       if (filterId === "organizationRole") icon = <i className="bi bi-briefcase text-sm" />;
       if (filterId === "orgDepartment") icon = <i className="bi bi-building text-sm" />;
       if (filterId === "duration") icon = <i className="bi bi-hourglass text-sm" />;
-      usersChips.push({ label: v.label, value: v.value, filterId, icon });
+      if (filterId === "notifications") icon = <i className="bi bi-bell text-sm" />;
+      // "On" / "Off" alone is ambiguous in the chip row, so name the filter.
+      const label = filterId === "notifications" ? `Notifications: ${v.label}` : v.label;
+      usersChips.push({ label, value: v.value, filterId, icon });
     });
   });
 
@@ -406,8 +408,6 @@ export function AdminScreen({ isMobile = false, initialTab }: AdminScreenProps) 
           <div>
             <UsersFilterBar
               ref={usersFilterBarRef}
-              isNotificationsActive={usersNotificationsActive}
-              onNotificationsToggle={setUsersNotificationsActive}
               onActiveFiltersChange={setUsersActiveFilters}
               onOpenFiltersSheet={() => setUsersFiltersSheetOpen(true)}
             />
@@ -576,33 +576,13 @@ export function AdminScreen({ isMobile = false, initialTab }: AdminScreenProps) 
           />
         </FilterSection>
         <FilterSection label="Notifications">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="w-full justify-between font-normal h-10">
-                <span className={cn(!usersNotificationsActive && "text-muted-foreground")}>
-                  {usersNotificationsActive ? "Enabled" : "All"}
-                </span>
-                <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              className="w-[var(--radix-dropdown-menu-trigger-width)] bg-white"
-              onCloseAutoFocus={(e) => e.preventDefault()}
-            >
-              <DropdownMenuCheckboxItem
-                checked={!usersNotificationsActive}
-                onCheckedChange={() => setUsersNotificationsActive(false)}
-              >
-                All
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={usersNotificationsActive}
-                onCheckedChange={() => setUsersNotificationsActive(true)}
-              >
-                Enabled
-              </DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <MobileFilterDropdown
+            filterId="notifications"
+            placeholder="All"
+            options={NOTIFICATION_OPTIONS}
+            activeFilters={usersActiveFilters}
+            setActiveFilters={setUsersActiveFilters}
+          />
         </FilterSection>
       </FiltersSheet>
     </div>

@@ -15,7 +15,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { TogglePill } from "./TogglePill";
 import {
   getUniqueUserRoles,
   getUniqueUserGroups,
@@ -36,8 +35,6 @@ export interface UsersFilterBarHandle {
 }
 
 interface UsersFilterBarProps {
-  isNotificationsActive?: boolean;
-  onNotificationsToggle?: (active: boolean) => void;
   onOpenFiltersSheet?: () => void;
   onActiveFiltersChange?: (filters: Record<string, FilterValue[]>) => void;
 }
@@ -60,6 +57,12 @@ const aiAssistOptions = [
   { label: "No Action", value: "No Action" },
 ];
 
+/** Prod's options (user-collection-filters: userNotificationsOptions). */
+export const NOTIFICATION_OPTIONS = [
+  { label: "On", value: "true" },
+  { label: "Off", value: "false" },
+];
+
 const durationOptions = [
   { label: "1 year", value: "1 year" },
   { label: "2 years", value: "2 years" },
@@ -72,8 +75,6 @@ const durationOptions = [
 export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarProps>(
   function UsersFilterBar(
     {
-      isNotificationsActive = false,
-      onNotificationsToggle,
       onOpenFiltersSheet,
       onActiveFiltersChange,
     },
@@ -159,6 +160,7 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
     const organizationRoleSelected = activeFilters["organizationRole"] || [];
     const orgDepartmentSelected = activeFilters["orgDepartment"] || [];
     const durationSelected = activeFilters["duration"] || [];
+    const notificationsSelected = activeFilters["notifications"] || [];
     // Custom user fields all sit under More; its badge counts every one of them.
     const moreSelectedCount = organizationRoleSelected.length + orgDepartmentSelected.length + durationSelected.length;
 
@@ -627,14 +629,45 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* 8. Notifications (binary toggle pill) */}
-          <TogglePill
-            label="Notifications"
-            iconClass="bi-bell"
-            tooltip="Show only users with notifications enabled"
-            isActive={isNotificationsActive}
-            onClick={() => onNotificationsToggle?.(!isNotificationsActive)}
-          />
+          {/* 8. Notifications: single-select On / Off, nothing selected = All. Prod's
+              filter has all three states; a toggle could only express two, losing Off. */}
+          <DropdownMenu>
+            <Tooltip delayDuration={700}>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
+                      notificationsSelected.length > 0 && "bg-primary/10 border-primary text-primary"
+                    )}
+                  >
+                    <i className="bi bi-bell w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    <span className="filter-label">Notifications</span>
+                    {notificationsSelected.length > 0 && (
+                      <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                        {notificationsSelected.length}
+                      </span>
+                    )}
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Notifications</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent align="start" className="bg-popover z-50 min-w-[200px]" onCloseAutoFocus={(e) => e.preventDefault()}>
+              {NOTIFICATION_OPTIONS.map((option) => (
+                <DropdownMenuCheckboxItem
+                  key={option.value}
+                  checked={notificationsSelected.some((s) => s.value === option.value)}
+                  onCheckedChange={() => handleSingleSelect("notifications", option.value, option.label)}
+                >
+                  {option.label}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     );
