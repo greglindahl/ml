@@ -1479,6 +1479,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         onColumnVisibilityChange={setGalleryColumnVisibility}
         filterVisibility={galleryFilterVisibility}
         onFilterVisibilityChange={setGalleryFilterVisibility}
+        hiddenFilters={["unsorted"]}
       />
 
       {/* Assets Filters Sheet (for narrow widths) */}

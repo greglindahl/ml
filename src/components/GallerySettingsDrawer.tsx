@@ -63,7 +63,9 @@ export const GALLERY_FILTERS = [
   { key: "groups", label: "Groups" },
   { key: "createdDate", label: "Created Date" },
   { key: "assetsLastAddedDate", label: "Assets Last Added Date" },
+  { key: "unsorted", label: "Unsorted" },
   { key: "archived", label: "Archived" },
+  { key: "favorites", label: "Favorites" },
 ] as const;
 
 export type GalleryFilterKey = typeof GALLERY_FILTERS[number]["key"];
@@ -75,7 +77,9 @@ export const DEFAULT_GALLERY_FILTER_VISIBILITY: GalleryFilterVisibility = {
   groups: true,
   createdDate: true,
   assetsLastAddedDate: false,
+  unsorted: true,
   archived: false,
+  favorites: true,
 };
 
 // Storage keys
@@ -150,6 +154,8 @@ interface GallerySettingsDrawerProps {
   filterVisibility: GalleryFilterVisibility;
   onFilterVisibilityChange: (value: GalleryFilterVisibility) => void;
   defaultTab?: GallerySettingsTab;
+  /** Filters this page doesn't offer, left out of the Filters tab (e.g. Unsorted inside a folder). */
+  hiddenFilters?: GalleryFilterKey[];
 }
 
 export function GallerySettingsDrawer({
@@ -162,6 +168,7 @@ export function GallerySettingsDrawer({
   filterVisibility,
   onFilterVisibilityChange,
   defaultTab = "table",
+  hiddenFilters = [],
 }: GallerySettingsDrawerProps) {
   const [activeTab, setActiveTab] = useState<GallerySettingsTab>(defaultTab);
 
@@ -267,7 +274,7 @@ export function GallerySettingsDrawer({
                 </button>
               </div>
               <div className="space-y-2">
-                {GALLERY_FILTERS.map((filter) => (
+                {GALLERY_FILTERS.filter((f) => !hiddenFilters.includes(f.key)).map((filter) => (
                   <label key={filter.key} className="flex items-center gap-2 cursor-pointer">
                     <Checkbox
                       checked={filterVisibility[filter.key]}

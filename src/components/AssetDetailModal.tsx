@@ -33,6 +33,8 @@ interface AssetDetailModalProps {
  * - footer: icon-led lines in the footer, captured first (option B)
  * - panel: a Dates section in the details panel (option C)
  */
+const SHOW_DETAIL_PROTO_SWITCHES = false;
+
 type DateLayout = "footer" | "panel";
 const DATE_LAYOUT_KEY = "proto.assetDetails.dateLayout";
 const readDateLayout = (): DateLayout => {
@@ -135,8 +137,9 @@ export function AssetDetailModal({
           </Button>
 
           {/* Prototype only: compare date placements */}
-          {/* Prototype switches; wide screens only so they never cover the pager */}
-          <div className="hidden lg:flex flex-col items-start gap-1 absolute left-16 top-1/2 -translate-y-1/2">
+          {/* Prototype switches; wide screens only so they never cover the pager.
+              Hidden for the PM review — flip SHOW_DETAIL_PROTO_SWITCHES to bring them back. */}
+          {SHOW_DETAIL_PROTO_SWITCHES && <div className="hidden lg:flex flex-col items-start gap-1 absolute left-16 top-1/2 -translate-y-1/2">
           <ViewerZoneToggle />
           <div className="flex items-center gap-1 border border-dashed border-muted-foreground/40 rounded-md p-0.5 text-[12px]" role="group" aria-label="Date layout (prototype)">
             <span className="px-1.5 text-muted-foreground">Dates:</span>
@@ -152,7 +155,7 @@ export function AssetDetailModal({
               </button>
             ))}
           </div>
-          </div>
+          </div>}
 
           <DialogTitle className="sr-only">Asset Details</DialogTitle>
           <DialogDescription className="sr-only">

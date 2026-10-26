@@ -60,12 +60,16 @@ export function useListControls(
   const [columnVisibility, setColumnVisibility] = useVisibilityPreference(`tableColumns.${key}`, defaultColumns);
   const [filterVisibility, setFilterVisibilityRaw] = useVisibilityPreference(`filterVisibility.${key}`, defaultFilters);
 
-  // Hiding a filter from the row also drops its applied values; otherwise a chip
-  // would keep narrowing the list with no control left to change it.
+  // Hiding a filter or toggle from the row also drops its applied value; otherwise
+  // it would keep narrowing the list with no control left to change it.
   const setFilterVisibility = useCallback(
     (next: VisibilityMap) => {
       setFilterVisibilityRaw(next);
       setFilters((prev) => {
+        const kept = Object.fromEntries(Object.entries(prev).filter(([id]) => next[id] !== false));
+        return Object.keys(kept).length === Object.keys(prev).length ? prev : kept;
+      });
+      setPills((prev) => {
         const kept = Object.fromEntries(Object.entries(prev).filter(([id]) => next[id] !== false));
         return Object.keys(kept).length === Object.keys(prev).length ? prev : kept;
       });
@@ -123,7 +127,7 @@ interface ListToolbarProps {
 export function ListToolbar({
   controls,
   filterDefs: allFilterDefs = [],
-  pillDefs = [],
+  pillDefs: allPillDefs = [],
   columns,
   filterSettingsOnly = false,
   searchPlaceholder,
@@ -137,10 +141,15 @@ export function ListToolbar({
 
   const filterDefs = useMemo(() => allFilterDefs.filter(isFilterAvailable), [allFilterDefs]);
   const visibleFilters = filterDefs.filter((f) => controls.filterVisibility[f.id] !== false);
+  const pillDefs = allPillDefs.filter((p) => controls.filterVisibility[p.id] !== false);
   const hasFilterRow = visibleFilters.length > 0 || pillDefs.length > 0;
   const showSearch = !searchProposed || SHOW_PROPOSED_FILTERS;
   const openSettings = columns || filterSettingsOnly ? () => setSettingsOpen(true) : undefined;
-  const filterOptions = useMemo(() => filterDefs.map((f) => ({ key: f.id, label: f.label })), [filterDefs]);
+  // Toggles (pills) are filters too, so they get a row in the Filters tab.
+  const filterOptions = useMemo(
+    () => [...filterDefs, ...allPillDefs].map((f) => ({ key: f.id, label: f.label })),
+    [filterDefs, allPillDefs],
+  );
 
   return (
     <>
