@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { SettingsButton } from "@/components/ListFilters";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { SectionTabs } from "@/components/SectionTabs";
@@ -146,19 +147,7 @@ export function RequestsScreen({ isMobile = false, initialTab }: RequestsScreenP
             {/* Utility cluster - pushed right */}
             <div className="flex items-center gap-2 ml-auto">
               {/* Settings Button */}
-              <Tooltip delayDuration={700}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
-                    onClick={() => setCampaignsSettingsOpen(true)}
-                  >
-                    <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">Settings</TooltipContent>
-              </Tooltip>
+              <SettingsButton onClick={() => setCampaignsSettingsOpen(true)} />
             </div>
           </div>
 
