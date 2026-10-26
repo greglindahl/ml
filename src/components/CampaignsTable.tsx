@@ -10,12 +10,13 @@ import {
   getCampaignRequests,
   type CampaignStat,
 } from "@/lib/mockCampaignData";
-import type { CampaignsTableColumnKey, CampaignsTableColumnVisibility } from "./CampaignsSettingsDrawer";
+import { SHOW_CAMPAIGN_TYPE_COLUMN, type CampaignsTableColumnKey, type CampaignsTableColumnVisibility } from "./CampaignsSettingsDrawer";
 
 /**
  * Requests › Campaigns. Columns, sorting and row menu follow prod's
  * feature/requests campaigns-page: Name, Type, Flagged, Creator, Created,
- * Total Requests, Completed, Expired, Open. Default sort: Created, newest first.
+ * Total Requests, Completed, Expired, Open. Type is hidden (customer-specific,
+ * see SHOW_CAMPAIGN_TYPE_COLUMN). Default sort: Created, newest first.
  * The request counts open a popover of those requests (prod's
  * campaign-table-stats-popover).
  */
@@ -72,7 +73,8 @@ function StatCount({ campaignId, stat, total }: { campaignId: string; stat: Camp
 }
 
 export function CampaignsTable({ campaigns, onOpenCampaign, searchQuery, perPage = 40, columnVisibility }: CampaignsTableProps) {
-  const show = (key: CampaignsTableColumnKey) => columnVisibility?.[key] !== false;
+  const show = (key: CampaignsTableColumnKey) =>
+    (key !== "type" || SHOW_CAMPAIGN_TYPE_COLUMN) && columnVisibility?.[key] !== false;
 
   const rows = useMemo(() => {
     const q = (searchQuery ?? "").trim().toLowerCase();

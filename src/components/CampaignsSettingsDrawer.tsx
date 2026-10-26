@@ -34,6 +34,15 @@ export const CAMPAIGNS_TABLE_COLUMNS = [
 ] as const;
 
 export type CampaignsTableColumnKey = typeof CAMPAIGNS_TABLE_COLUMNS[number]["key"];
+
+/**
+ * Type only applies to specific customers (campaign types are a per-company
+ * setup), so it's hidden from the table and Manage Columns. Flip to show it.
+ */
+export const SHOW_CAMPAIGN_TYPE_COLUMN = false;
+
+/** Columns this company can see (Type left out unless enabled). */
+export const AVAILABLE_CAMPAIGNS_COLUMNS = CAMPAIGNS_TABLE_COLUMNS.filter((c) => c.key !== "type" || SHOW_CAMPAIGN_TYPE_COLUMN);
 export type CampaignsTableColumnVisibility = Record<CampaignsTableColumnKey, boolean>;
 
 export const DEFAULT_CAMPAIGNS_TABLE_COLUMN_VISIBILITY: CampaignsTableColumnVisibility = {
@@ -222,7 +231,7 @@ export function CampaignsSettingsDrawer({
                   </button>
                 </div>
                 <div className="space-y-2">
-                  {CAMPAIGNS_TABLE_COLUMNS.map((col) => (
+                  {AVAILABLE_CAMPAIGNS_COLUMNS.map((col) => (
                     <label key={col.key} className="flex items-center gap-2 cursor-pointer">
                       <Checkbox
                         checked={columnVisibility[col.key]}
