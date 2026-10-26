@@ -657,6 +657,13 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
               <TooltipContent side="bottom">Notifications</TooltipContent>
             </Tooltip>
             <DropdownMenuContent align="start" className="bg-popover z-50 min-w-[200px]" onCloseAutoFocus={(e) => e.preventDefault()}>
+              {/* All = no filter, like prod's default */}
+              <DropdownMenuCheckboxItem
+                checked={notificationsSelected.length === 0}
+                onCheckedChange={() => notificationsSelected.forEach((s) => handleRemoveValue("notifications", s.value))}
+              >
+                All
+              </DropdownMenuCheckboxItem>
               {NOTIFICATION_OPTIONS.map((option) => (
                 <DropdownMenuCheckboxItem
                   key={option.value}
