@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { formatCaptured, formatInstant, useViewerZone } from "@/lib/captureTime";
 
 /**
@@ -58,5 +59,59 @@ export function TableDate({
     <time dateTime={date.toISOString()} title={title} className={cls}>
       {shown.date}
     </time>
+  );
+}
+
+/** Badge's info / solid treatment (teal, white text), as a span so it can sit inside a date line. */
+export function ZoneBadge({ zone }: { zone: string }) {
+  return (
+    <span className="inline-flex items-center rounded px-1.5 py-0.5 align-middle text-[11px] font-medium leading-none bg-[#39AFD1] text-white">
+      {zone}
+    </span>
+  );
+}
+
+/**
+ * The second line under a table date: the time plus its zone badge, optionally
+ * led by something (the uploader). Capture dates show the photographer's clock
+ * and zone; other dates show the viewer's.
+ */
+export function TableDateDetail({
+  value,
+  capture,
+  lead,
+}: {
+  value: Date | string | null | undefined;
+  capture?: { offsetMinutes: number | null | undefined };
+  lead?: ReactNode;
+}) {
+  const { tz } = useViewerZone();
+  const date = toDate(value);
+  if (!date && !lead) return null;
+
+  let time: ReactNode = null;
+  if (date && capture) {
+    const c = formatCaptured(date, capture.offsetMinutes);
+    time = (
+      <>
+        {c.time} {c.zone ? <ZoneBadge zone={c.zone} /> : <span>(zone not recorded)</span>}
+      </>
+    );
+  } else if (date) {
+    const zone = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" })
+      .formatToParts(date)
+      .find((p) => p.type === "timeZoneName")?.value;
+    time = (
+      <>
+        {formatInstant(date, tz, false).time} {zone && <ZoneBadge zone={zone} />}
+      </>
+    );
+  }
+  return (
+    <span className="block text-[13px] text-muted-foreground whitespace-nowrap">
+      {lead}
+      {lead && time && " · "}
+      {time}
+    </span>
   );
 }

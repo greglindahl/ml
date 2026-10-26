@@ -11,6 +11,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import type { LibraryAsset } from "@/lib/mockLibraryData";
 import { formatCaptured, formatInstant, useViewerZone, viewerOffsetAt } from "@/lib/captureTime";
 import { ViewerZoneToggle } from "@/components/ViewerZoneToggle";
+import { ZoneBadge } from "@/components/TableDate";
 
 interface AssetDetailModalProps {
   open: boolean;
@@ -41,15 +42,6 @@ const readDateLayout = (): DateLayout => {
     return "footer";
   }
 };
-
-/** Badge's info / solid treatment (teal, white text), as a span so it can sit inside a date line. */
-function ZoneBadge({ zone }: { zone: string }) {
-  return (
-    <span className="inline-flex items-center rounded px-1.5 py-0.5 align-middle text-[11px] font-medium leading-none bg-[#39AFD1] text-white">
-      {zone}
-    </span>
-  );
-}
 
 function getOrientationLabel(aspectRatio: LibraryAsset["aspectRatio"]) {
   if (aspectRatio === "9:16") return "Portrait";

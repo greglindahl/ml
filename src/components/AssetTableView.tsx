@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { LibraryAsset } from "@/lib/mockLibraryData";
-import { TableDate } from "@/components/TableDate";
+import { TableDate, TableDateDetail } from "@/components/TableDate";
 import { ViewerZoneToggle } from "@/components/ViewerZoneToggle";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -414,9 +414,7 @@ export function AssetTableView({
               {columnVisibility.added && (
                 <TableCell>
                   <TableDate value={asset.dateCreated} className="text-sm block" />
-                  {uploaderUnderDate && (
-                    <span className="block text-[13px] text-muted-foreground whitespace-nowrap">by {asset.creator}</span>
-                  )}
+                  {uploaderUnderDate && <TableDateDetail value={asset.dateCreated} lead={`by ${asset.creator}`} />}
                 </TableCell>
               )}
 
@@ -424,7 +422,10 @@ export function AssetTableView({
               {columnVisibility.captured && (
                 <TableCell>
                   {/* Was formatting dateCreated, so "Captured" showed the upload date. */}
-                  <TableDate value={asset.captureDate} capture={{ offsetMinutes: asset.captureOffsetMinutes }} className="text-sm" />
+                  <TableDate value={asset.captureDate} capture={{ offsetMinutes: asset.captureOffsetMinutes }} className="text-sm block" />
+                  {uploaderUnderDate && (
+                    <TableDateDetail value={asset.captureDate} capture={{ offsetMinutes: asset.captureOffsetMinutes }} />
+                  )}
                 </TableCell>
               )}
 
