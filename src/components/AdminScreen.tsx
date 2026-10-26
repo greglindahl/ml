@@ -279,7 +279,7 @@ export function AdminScreen({ isMobile = false, initialTab }: AdminScreenProps) 
             </Button>
             <Button onClick={() => {}}>
               <i className="bi bi-plus-circle text-base" />
-              New User
+              Add User
             </Button>
           </div>
         )}
@@ -410,6 +410,7 @@ export function AdminScreen({ isMobile = false, initialTab }: AdminScreenProps) 
               ref={usersFilterBarRef}
               onActiveFiltersChange={setUsersActiveFilters}
               onOpenFiltersSheet={() => setUsersFiltersSheetOpen(true)}
+              filterVisibility={usersFilterVisibility}
             />
           </div>
 
@@ -489,101 +490,129 @@ export function AdminScreen({ isMobile = false, initialTab }: AdminScreenProps) 
         onApply={() => {}}
         title="Filter"
       >
-        <FilterSection label="Groups">
-          <MobileFilterDropdown
-            filterId="groups"
-            placeholder="Search"
-            options={getUniqueUserGroups().map((g) => ({ value: g.id, label: g.name }))}
-            isMulti
-            hasSearch
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
-        <FilterSection label="Invite Codes">
-          <MobileFilterDropdown
-            filterId="inviteCodes"
-            placeholder="Search"
-            options={getUniqueInviteCodes().map((c) => ({ value: c, label: c }))}
-            isMulti
-            hasSearch
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
-        <FilterSection label="Roles">
-          <MobileFilterDropdown
-            filterId="roles"
-            placeholder="All Roles"
-            options={getUniqueUserRoles().map((r) => ({ value: r, label: r }))}
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
-        <FilterSection label="AI Assist">
-          <MobileFilterDropdown
-            filterId="aiAssist"
-            placeholder="Select"
-            options={SHEET_AI_ASSIST_OPTIONS}
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
-        <FilterSection label="Last Login">
-          <MobileFilterDropdown
-            filterId="lastLogin"
-            placeholder="Select"
-            options={SHEET_DATE_OPTIONS}
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
-        <FilterSection label="Join Date">
-          <MobileFilterDropdown
-            filterId="joinDate"
-            placeholder="Select"
-            options={SHEET_DATE_OPTIONS}
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
-        <FilterSection label="Notifications">
-          <MobileFilterDropdown
-            filterId="notifications"
-            placeholder="All"
-            options={NOTIFICATION_OPTIONS}
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
-        <FilterSection label="Organization Role">
-          <MobileFilterDropdown
-            filterId="organizationRole"
-            placeholder="Select"
-            options={getUniqueOrganizationRoles().map((r) => ({ value: r, label: r }))}
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
-        <FilterSection label="Org Department">
-          <MobileFilterDropdown
-            filterId="orgDepartment"
-            placeholder="Select"
-            options={getUniqueOrgDepartments().map((d) => ({ value: d, label: d }))}
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
+        {usersFilterVisibility.groups !== false && (
+          <FilterSection label="Groups">
+            <MobileFilterDropdown
+              filterId="groups"
+              placeholder="Search"
+              options={getUniqueUserGroups().map((g) => ({ value: g.id, label: g.name }))}
+              isMulti
+              hasSearch
+              activeFilters={usersActiveFilters}
+              setActiveFilters={setUsersActiveFilters}
+            />
+          </FilterSection>
+        )}
+        {usersFilterVisibility.inviteCodes !== false && (
+          <FilterSection label="Invite Codes">
+            <MobileFilterDropdown
+              filterId="inviteCodes"
+              placeholder="Search"
+              options={getUniqueInviteCodes().map((c) => ({ value: c, label: c }))}
+              isMulti
+              hasSearch
+              activeFilters={usersActiveFilters}
+              setActiveFilters={setUsersActiveFilters}
+            />
+          </FilterSection>
+        )}
+        {usersFilterVisibility.roles !== false && (
+          <FilterSection label="Roles">
+            <MobileFilterDropdown
+              filterId="roles"
+              placeholder="All Roles"
+              options={getUniqueUserRoles().map((r) => ({ value: r, label: r }))}
+              isMulti
+              activeFilters={usersActiveFilters}
+              setActiveFilters={setUsersActiveFilters}
+            />
+          </FilterSection>
+        )}
+        {usersFilterVisibility.aiAssist !== false && (
+          <FilterSection label="AI Assist">
+            <MobileFilterDropdown
+              filterId="aiAssist"
+              placeholder="Select"
+              options={SHEET_AI_ASSIST_OPTIONS}
+              isMulti
+              activeFilters={usersActiveFilters}
+              setActiveFilters={setUsersActiveFilters}
+            />
+          </FilterSection>
+        )}
+        {usersFilterVisibility.lastLogin !== false && (
+          <FilterSection label="Last Login">
+            <MobileFilterDropdown
+              filterId="lastLogin"
+              placeholder="Select"
+              options={SHEET_DATE_OPTIONS}
+              activeFilters={usersActiveFilters}
+              setActiveFilters={setUsersActiveFilters}
+            />
+          </FilterSection>
+        )}
+        {usersFilterVisibility.joinDate !== false && (
+          <FilterSection label="Join Date">
+            <MobileFilterDropdown
+              filterId="joinDate"
+              placeholder="Select"
+              options={SHEET_DATE_OPTIONS}
+              activeFilters={usersActiveFilters}
+              setActiveFilters={setUsersActiveFilters}
+            />
+          </FilterSection>
+        )}
+        {usersFilterVisibility.notifications !== false && (
+          <FilterSection label="Notifications">
+            <MobileFilterDropdown
+              filterId="notifications"
+              placeholder="All"
+              options={NOTIFICATION_OPTIONS}
+              activeFilters={usersActiveFilters}
+              setActiveFilters={setUsersActiveFilters}
+            />
+          </FilterSection>
+        )}
+        {usersFilterVisibility.organizationRole !== false && (
+          <FilterSection label="Organization Role">
+            <MobileFilterDropdown
+              filterId="organizationRole"
+              placeholder="Select"
+              options={getUniqueOrganizationRoles().map((r) => ({ value: r, label: r }))}
+              isMulti
+              hasSearch
+              activeFilters={usersActiveFilters}
+              setActiveFilters={setUsersActiveFilters}
+            />
+          </FilterSection>
+        )}
+        {usersFilterVisibility.orgDepartment !== false && (
+          <FilterSection label="Org Department">
+            <MobileFilterDropdown
+              filterId="orgDepartment"
+              placeholder="Select"
+              options={getUniqueOrgDepartments().map((d) => ({ value: d, label: d }))}
+              isMulti
+              hasSearch
+              activeFilters={usersActiveFilters}
+              setActiveFilters={setUsersActiveFilters}
+            />
+          </FilterSection>
+        )}
         {/* Custom user fields (Organization Role, Org Department, Duration) grouped, as under More */}
-        <FilterSection label="Duration">
-          <MobileFilterDropdown
-            filterId="duration"
-            placeholder="Select"
-            options={SHEET_DURATION_OPTIONS}
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
+        {usersFilterVisibility.duration !== false && (
+          <FilterSection label="Duration">
+            <MobileFilterDropdown
+              filterId="duration"
+              placeholder="Select"
+              options={SHEET_DURATION_OPTIONS}
+              isMulti
+              hasSearch
+              activeFilters={usersActiveFilters}
+              setActiveFilters={setUsersActiveFilters}
+            />
+          </FilterSection>
+        )}
       </FiltersSheet>
     </div>
   );
