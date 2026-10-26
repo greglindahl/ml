@@ -96,8 +96,8 @@ export function AssetDetailModal({
     <>
       {captured.date}, {captured.time}{" "}
       {captured.zone ? (
-        // Badge's info / soft treatment, as a span so it can sit inside the date line
-        <span className="inline-flex items-center rounded px-1.5 py-0.5 align-middle text-[11px] font-medium leading-none bg-[#39AFD1]/20 text-[#39AFD1]">
+        // Badge's info / solid treatment (teal, white text), as a span so it can sit inside the date line
+        <span className="inline-flex items-center rounded px-1.5 py-0.5 align-middle text-[11px] font-medium leading-none bg-[#39AFD1] text-white">
           {captured.zone}
         </span>
       ) : (
