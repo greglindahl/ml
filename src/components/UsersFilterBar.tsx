@@ -159,6 +159,8 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
     const organizationRoleSelected = activeFilters["organizationRole"] || [];
     const orgDepartmentSelected = activeFilters["orgDepartment"] || [];
     const durationSelected = activeFilters["duration"] || [];
+    // Custom user fields all sit under More; its badge counts every one of them.
+    const moreSelectedCount = organizationRoleSelected.length + orgDepartmentSelected.length + durationSelected.length;
 
     const totalActiveCount = Object.values(activeFilters).reduce(
       (sum, arr) => sum + arr.length,
@@ -490,7 +492,8 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* 7. Duration (single-select) */}
+          {/* 7. More: the company's custom user fields (prod: network-company-user-field-filters).
+              Duration is one of them, so it lives here, not as its own facet. */}
           <DropdownMenu>
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
@@ -500,55 +503,14 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
                     size="sm"
                     className={cn(
                       "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
-                      durationSelected.length > 0 && "bg-primary/10 border-primary text-primary"
-                    )}
-                  >
-                    <i className="bi bi-hourglass w-4 h-4 inline-flex items-center justify-center leading-none" />
-                    <span className="filter-label">Duration</span>
-                    {durationSelected.length > 0 && (
-                      <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
-                        {durationSelected.length}
-                      </span>
-                    )}
-                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                  </Button>
-                </DropdownMenuTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">Duration</TooltipContent>
-            </Tooltip>
-            <DropdownMenuContent align="start" className="bg-popover z-50 min-w-[200px]" onCloseAutoFocus={(e) => e.preventDefault()}>
-              <div className="max-h-[280px] overflow-y-auto">
-                {durationOptions.map((option) => (
-                  <DropdownMenuCheckboxItem
-                    key={option.value}
-                    checked={durationSelected.some((s) => s.value === option.value)}
-                    onCheckedChange={() => handleSingleSelect("duration", option.value, option.label)}
-                  >
-                    {option.label}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* 8. More (Org Role + Org Department flyouts) */}
-          <DropdownMenu>
-            <Tooltip delayDuration={700}>
-              <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
-                      (organizationRoleSelected.length + orgDepartmentSelected.length) > 0 && "bg-primary/10 border-primary text-primary"
+                      moreSelectedCount > 0 && "bg-primary/10 border-primary text-primary"
                     )}
                   >
                     <i className="bi bi-three-dots w-4 h-4 inline-flex items-center justify-center leading-none" />
                     <span className="filter-label">More</span>
-                    {(organizationRoleSelected.length + orgDepartmentSelected.length) > 0 && (
+                    {moreSelectedCount > 0 && (
                       <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
-                        {organizationRoleSelected.length + orgDepartmentSelected.length}
+                        {moreSelectedCount}
                       </span>
                     )}
                     <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
@@ -640,10 +602,32 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
                   </div>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
+              {/* Duration flyout (custom field, single-select) */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  Duration
+                  {durationSelected.length > 0 && (
+                    <span className="ml-auto text-[13px] text-primary">{durationSelected.length}</span>
+                  )}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
+                  <div className="max-h-[280px] overflow-y-auto">
+                    {durationOptions.map((option) => (
+                      <DropdownMenuCheckboxItem
+                        key={option.value}
+                        checked={durationSelected.some((s) => s.value === option.value)}
+                        onCheckedChange={() => handleSingleSelect("duration", option.value, option.label)}
+                      >
+                        {option.label}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </div>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* 9. Notifications (binary toggle pill) */}
+          {/* 8. Notifications (binary toggle pill) */}
           <TogglePill
             label="Notifications"
             iconClass="bi-bell"

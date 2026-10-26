@@ -547,15 +547,6 @@ export function AdminScreen({ isMobile = false, initialTab }: AdminScreenProps) 
             setActiveFilters={setUsersActiveFilters}
           />
         </FilterSection>
-        <FilterSection label="Duration">
-          <MobileFilterDropdown
-            filterId="duration"
-            placeholder="Select"
-            options={SHEET_DURATION_OPTIONS}
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
         <FilterSection label="Organization Role">
           <MobileFilterDropdown
             filterId="organizationRole"
@@ -570,6 +561,16 @@ export function AdminScreen({ isMobile = false, initialTab }: AdminScreenProps) 
             filterId="orgDepartment"
             placeholder="Select"
             options={getUniqueOrgDepartments().map((d) => ({ value: d, label: d }))}
+            activeFilters={usersActiveFilters}
+            setActiveFilters={setUsersActiveFilters}
+          />
+        </FilterSection>
+        {/* Custom user fields (Organization Role, Org Department, Duration) grouped, as under More */}
+        <FilterSection label="Duration">
+          <MobileFilterDropdown
+            filterId="duration"
+            placeholder="Select"
+            options={SHEET_DURATION_OPTIONS}
             activeFilters={usersActiveFilters}
             setActiveFilters={setUsersActiveFilters}
           />
