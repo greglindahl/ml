@@ -15,7 +15,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { TogglePill } from "./TogglePill";
 import {
   getUniqueUserRoles,
   getUniqueUserGroups,
@@ -36,10 +35,10 @@ export interface UsersFilterBarHandle {
 }
 
 interface UsersFilterBarProps {
-  isNotificationsActive?: boolean;
-  onNotificationsToggle?: (active: boolean) => void;
   onOpenFiltersSheet?: () => void;
   onActiveFiltersChange?: (filters: Record<string, FilterValue[]>) => void;
+  /** View settings › Filters: a facet set to false is hidden. */
+  filterVisibility?: Partial<Record<string, boolean>>;
 }
 
 // Date-preset options — from production Last Login filter screenshot.
@@ -60,6 +59,12 @@ const aiAssistOptions = [
   { label: "No Action", value: "No Action" },
 ];
 
+/** Prod's options (user-collection-filters: userNotificationsOptions). */
+export const NOTIFICATION_OPTIONS = [
+  { label: "On", value: "true" },
+  { label: "Off", value: "false" },
+];
+
 const durationOptions = [
   { label: "1 year", value: "1 year" },
   { label: "2 years", value: "2 years" },
@@ -72,10 +77,9 @@ const durationOptions = [
 export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarProps>(
   function UsersFilterBar(
     {
-      isNotificationsActive = false,
-      onNotificationsToggle,
       onOpenFiltersSheet,
       onActiveFiltersChange,
+      filterVisibility,
     },
     ref
   ) {
@@ -84,6 +88,9 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
     const [groupsSearchQuery, setGroupsSearchQuery] = useState("");
     const [orgRoleSearchQuery, setOrgRoleSearchQuery] = useState("");
     const [orgDeptSearchQuery, setOrgDeptSearchQuery] = useState("");
+
+    const shown = (key: string) => filterVisibility?.[key] !== false;
+    const moreShown = shown("organizationRole") || shown("orgDepartment") || shown("duration");
 
     const roles = getUniqueUserRoles();
     const groups = getUniqueUserGroups();
@@ -159,6 +166,9 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
     const organizationRoleSelected = activeFilters["organizationRole"] || [];
     const orgDepartmentSelected = activeFilters["orgDepartment"] || [];
     const durationSelected = activeFilters["duration"] || [];
+    const notificationsSelected = activeFilters["notifications"] || [];
+    // Custom user fields all sit under More; its badge counts every one of them.
+    const moreSelectedCount = organizationRoleSelected.length + orgDepartmentSelected.length + durationSelected.length;
 
     const totalActiveCount = Object.values(activeFilters).reduce(
       (sum, arr) => sum + arr.length,
@@ -203,6 +213,7 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
         {/* Expanded Filters (visible at wide widths) */}
         <div className="filters-expanded contents">
           {/* 1. Groups (multi + search) */}
+          {shown("groups") && (
           <DropdownMenu>
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
@@ -263,8 +274,10 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
+          )}
 
           {/* 2. Invite Codes (multi + search) */}
+          {shown("inviteCodes") && (
           <DropdownMenu>
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
@@ -325,8 +338,10 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
+          )}
 
-          {/* 3. Roles (single-select) */}
+          {/* Roles (multi-select, like prod) */}
+          {shown("roles") && (
           <DropdownMenu>
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
@@ -358,7 +373,7 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
                   <DropdownMenuCheckboxItem
                     key={role}
                     checked={rolesSelected.some((s) => s.value === role)}
-                    onCheckedChange={() => handleSingleSelect("roles", role, role)}
+                    onCheckedChange={(checked) => handleMultiSelect("roles", role, role, checked as boolean)}
                   >
                     {role}
                   </DropdownMenuCheckboxItem>
@@ -366,8 +381,10 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
+          )}
 
-          {/* 5. AI Assist (single-select) */}
+          {/* AI Assist (multi-select, like prod) */}
+          {shown("aiAssist") && (
           <DropdownMenu>
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
@@ -399,7 +416,7 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
                   <DropdownMenuCheckboxItem
                     key={option.value}
                     checked={aiAssistSelected.some((s) => s.value === option.value)}
-                    onCheckedChange={() => handleSingleSelect("aiAssist", option.value, option.label)}
+                    onCheckedChange={(checked) => handleMultiSelect("aiAssist", option.value, option.label, checked as boolean)}
                   >
                     {option.label}
                   </DropdownMenuCheckboxItem>
@@ -407,8 +424,10 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
+          )}
 
           {/* 6. Last Login (date-preset) */}
+          {shown("lastLogin") && (
           <DropdownMenu>
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
@@ -448,8 +467,10 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
+          )}
 
           {/* 7. Join Date (date-preset) */}
+          {shown("joinDate") && (
           <DropdownMenu>
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
@@ -489,8 +510,11 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
+          )}
 
-          {/* 7. Duration (single-select) */}
+          {/* 8. Notifications (before More): single-select On / Off, nothing selected = All. Prod's
+              filter has all three states; a toggle could only express two, losing Off. */}
+          {shown("notifications") && (
           <DropdownMenu>
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
@@ -500,38 +524,46 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
                     size="sm"
                     className={cn(
                       "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
-                      durationSelected.length > 0 && "bg-primary/10 border-primary text-primary"
+                      notificationsSelected.length > 0 && "bg-primary/10 border-primary text-primary"
                     )}
                   >
-                    <i className="bi bi-hourglass w-4 h-4 inline-flex items-center justify-center leading-none" />
-                    <span className="filter-label">Duration</span>
-                    {durationSelected.length > 0 && (
+                    <i className="bi bi-bell w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    <span className="filter-label">Notifications</span>
+                    {notificationsSelected.length > 0 && (
                       <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
-                        {durationSelected.length}
+                        {notificationsSelected.length}
                       </span>
                     )}
                     <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
                   </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
-              <TooltipContent side="bottom">Duration</TooltipContent>
+              <TooltipContent side="bottom">Notifications</TooltipContent>
             </Tooltip>
             <DropdownMenuContent align="start" className="bg-popover z-50 min-w-[200px]" onCloseAutoFocus={(e) => e.preventDefault()}>
-              <div className="max-h-[280px] overflow-y-auto">
-                {durationOptions.map((option) => (
-                  <DropdownMenuCheckboxItem
-                    key={option.value}
-                    checked={durationSelected.some((s) => s.value === option.value)}
-                    onCheckedChange={() => handleSingleSelect("duration", option.value, option.label)}
-                  >
-                    {option.label}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </div>
+              {/* All = no filter, like prod's default */}
+              <DropdownMenuCheckboxItem
+                checked={notificationsSelected.length === 0}
+                onCheckedChange={() => notificationsSelected.forEach((s) => handleRemoveValue("notifications", s.value))}
+              >
+                All
+              </DropdownMenuCheckboxItem>
+              {NOTIFICATION_OPTIONS.map((option) => (
+                <DropdownMenuCheckboxItem
+                  key={option.value}
+                  checked={notificationsSelected.some((s) => s.value === option.value)}
+                  onCheckedChange={() => handleSingleSelect("notifications", option.value, option.label)}
+                >
+                  {option.label}
+                </DropdownMenuCheckboxItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          )}
 
-          {/* 8. More (Org Role + Org Department flyouts) */}
+          {/* 7. More: the company's custom user fields (prod: network-company-user-field-filters).
+              Duration is one of them, so it lives here, not as its own facet. */}
+          {moreShown && (
           <DropdownMenu>
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
@@ -541,14 +573,14 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
                     size="sm"
                     className={cn(
                       "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
-                      (organizationRoleSelected.length + orgDepartmentSelected.length) > 0 && "bg-primary/10 border-primary text-primary"
+                      moreSelectedCount > 0 && "bg-primary/10 border-primary text-primary"
                     )}
                   >
                     <i className="bi bi-three-dots w-4 h-4 inline-flex items-center justify-center leading-none" />
                     <span className="filter-label">More</span>
-                    {(organizationRoleSelected.length + orgDepartmentSelected.length) > 0 && (
+                    {moreSelectedCount > 0 && (
                       <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
-                        {organizationRoleSelected.length + orgDepartmentSelected.length}
+                        {moreSelectedCount}
                       </span>
                     )}
                     <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
@@ -559,6 +591,7 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
             </Tooltip>
             <DropdownMenuContent align="start" className="bg-popover z-50 min-w-[200px]" onCloseAutoFocus={(e) => e.preventDefault()}>
               {/* Organization Role flyout */}
+              {shown("organizationRole") && (
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
                   Organization Role
@@ -586,7 +619,7 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
                       <DropdownMenuCheckboxItem
                         key={r}
                         checked={organizationRoleSelected.some((s) => s.value === r)}
-                        onCheckedChange={() => handleSingleSelect("organizationRole", r, r)}
+                        onCheckedChange={(checked) => handleMultiSelect("organizationRole", r, r, checked as boolean)}
                       >
                         {r}
                       </DropdownMenuCheckboxItem>
@@ -599,7 +632,9 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
                   </div>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
+              )}
               {/* Org Department flyout */}
+              {shown("orgDepartment") && (
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
                   Org Department
@@ -627,7 +662,7 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
                       <DropdownMenuCheckboxItem
                         key={d}
                         checked={orgDepartmentSelected.some((s) => s.value === d)}
-                        onCheckedChange={() => handleSingleSelect("orgDepartment", d, d)}
+                        onCheckedChange={(checked) => handleMultiSelect("orgDepartment", d, d, checked as boolean)}
                       >
                         {d}
                       </DropdownMenuCheckboxItem>
@@ -640,17 +675,34 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
                   </div>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
+              )}
+              {/* Duration flyout (custom field; prod makes these multi-select) */}
+              {shown("duration") && (
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  Duration
+                  {durationSelected.length > 0 && (
+                    <span className="ml-auto text-[13px] text-primary">{durationSelected.length}</span>
+                  )}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
+                  <div className="max-h-[280px] overflow-y-auto">
+                    {durationOptions.map((option) => (
+                      <DropdownMenuCheckboxItem
+                        key={option.value}
+                        checked={durationSelected.some((s) => s.value === option.value)}
+                        onCheckedChange={(checked) => handleMultiSelect("duration", option.value, option.label, checked as boolean)}
+                      >
+                        {option.label}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </div>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {/* 9. Notifications (binary toggle pill) */}
-          <TogglePill
-            label="Notifications"
-            iconClass="bi-bell"
-            tooltip="Show only users with notifications enabled"
-            isActive={isNotificationsActive}
-            onClick={() => onNotificationsToggle?.(!isNotificationsActive)}
-          />
+          )}
         </div>
       </div>
     );
