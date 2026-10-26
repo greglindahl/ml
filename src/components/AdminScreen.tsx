@@ -18,7 +18,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { UsersFilterBar, UsersFilterBarHandle } from "./UsersFilterBar";
+import { UsersFilterBar, UsersFilterBarHandle, NOTIFICATION_OPTIONS } from "./UsersFilterBar";
 import { UsersTable } from "./UsersTable";
 import {
   UsersSettingsDrawer,
@@ -220,7 +220,6 @@ export function AdminScreen({ isMobile = false, initialTab }: AdminScreenProps) 
   const [usersColumnVisibility, setUsersColumnVisibility] = useUsersColumnVisibility();
   const [usersFilterVisibility, setUsersFilterVisibility] = useUsersFilterVisibility();
   const [usersActiveFilters, setUsersActiveFilters] = useState<Record<string, FilterValue[]>>({});
-  const [usersNotificationsActive, setUsersNotificationsActive] = useState(false);
   const [usersFiltersSheetOpen, setUsersFiltersSheetOpen] = useState(false);
   const usersFilterBarRef = useRef<UsersFilterBarHandle>(null);
 
@@ -238,7 +237,10 @@ export function AdminScreen({ isMobile = false, initialTab }: AdminScreenProps) 
       if (filterId === "organizationRole") icon = <i className="bi bi-briefcase text-sm" />;
       if (filterId === "orgDepartment") icon = <i className="bi bi-building text-sm" />;
       if (filterId === "duration") icon = <i className="bi bi-hourglass text-sm" />;
-      usersChips.push({ label: v.label, value: v.value, filterId, icon });
+      if (filterId === "notifications") icon = <i className="bi bi-bell text-sm" />;
+      // "On" / "Off" alone is ambiguous in the chip row, so name the filter.
+      const label = filterId === "notifications" ? `Notifications: ${v.label}` : v.label;
+      usersChips.push({ label, value: v.value, filterId, icon });
     });
   });
 
@@ -277,7 +279,7 @@ export function AdminScreen({ isMobile = false, initialTab }: AdminScreenProps) 
             </Button>
             <Button onClick={() => {}}>
               <i className="bi bi-plus-circle text-base" />
-              New User
+              Add User
             </Button>
           </div>
         )}
@@ -406,10 +408,9 @@ export function AdminScreen({ isMobile = false, initialTab }: AdminScreenProps) 
           <div>
             <UsersFilterBar
               ref={usersFilterBarRef}
-              isNotificationsActive={usersNotificationsActive}
-              onNotificationsToggle={setUsersNotificationsActive}
               onActiveFiltersChange={setUsersActiveFilters}
               onOpenFiltersSheet={() => setUsersFiltersSheetOpen(true)}
+              filterVisibility={usersFilterVisibility}
             />
           </div>
 
@@ -489,120 +490,129 @@ export function AdminScreen({ isMobile = false, initialTab }: AdminScreenProps) 
         onApply={() => {}}
         title="Filter"
       >
-        <FilterSection label="Groups">
-          <MobileFilterDropdown
-            filterId="groups"
-            placeholder="Search"
-            options={getUniqueUserGroups().map((g) => ({ value: g.id, label: g.name }))}
-            isMulti
-            hasSearch
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
-        <FilterSection label="Invite Codes">
-          <MobileFilterDropdown
-            filterId="inviteCodes"
-            placeholder="Search"
-            options={getUniqueInviteCodes().map((c) => ({ value: c, label: c }))}
-            isMulti
-            hasSearch
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
-        <FilterSection label="Roles">
-          <MobileFilterDropdown
-            filterId="roles"
-            placeholder="All Roles"
-            options={getUniqueUserRoles().map((r) => ({ value: r, label: r }))}
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
-        <FilterSection label="AI Assist">
-          <MobileFilterDropdown
-            filterId="aiAssist"
-            placeholder="Select"
-            options={SHEET_AI_ASSIST_OPTIONS}
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
-        <FilterSection label="Last Login">
-          <MobileFilterDropdown
-            filterId="lastLogin"
-            placeholder="Select"
-            options={SHEET_DATE_OPTIONS}
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
-        <FilterSection label="Join Date">
-          <MobileFilterDropdown
-            filterId="joinDate"
-            placeholder="Select"
-            options={SHEET_DATE_OPTIONS}
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
-        <FilterSection label="Duration">
-          <MobileFilterDropdown
-            filterId="duration"
-            placeholder="Select"
-            options={SHEET_DURATION_OPTIONS}
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
-        <FilterSection label="Organization Role">
-          <MobileFilterDropdown
-            filterId="organizationRole"
-            placeholder="Select"
-            options={getUniqueOrganizationRoles().map((r) => ({ value: r, label: r }))}
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
-        <FilterSection label="Org Department">
-          <MobileFilterDropdown
-            filterId="orgDepartment"
-            placeholder="Select"
-            options={getUniqueOrgDepartments().map((d) => ({ value: d, label: d }))}
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
-        <FilterSection label="Notifications">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="w-full justify-between font-normal h-10">
-                <span className={cn(!usersNotificationsActive && "text-muted-foreground")}>
-                  {usersNotificationsActive ? "Enabled" : "All"}
-                </span>
-                <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              className="w-[var(--radix-dropdown-menu-trigger-width)] bg-white"
-              onCloseAutoFocus={(e) => e.preventDefault()}
-            >
-              <DropdownMenuCheckboxItem
-                checked={!usersNotificationsActive}
-                onCheckedChange={() => setUsersNotificationsActive(false)}
-              >
-                All
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={usersNotificationsActive}
-                onCheckedChange={() => setUsersNotificationsActive(true)}
-              >
-                Enabled
-              </DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </FilterSection>
+        {usersFilterVisibility.groups !== false && (
+          <FilterSection label="Groups">
+            <MobileFilterDropdown
+              filterId="groups"
+              placeholder="Search"
+              options={getUniqueUserGroups().map((g) => ({ value: g.id, label: g.name }))}
+              isMulti
+              hasSearch
+              activeFilters={usersActiveFilters}
+              setActiveFilters={setUsersActiveFilters}
+            />
+          </FilterSection>
+        )}
+        {usersFilterVisibility.inviteCodes !== false && (
+          <FilterSection label="Invite Codes">
+            <MobileFilterDropdown
+              filterId="inviteCodes"
+              placeholder="Search"
+              options={getUniqueInviteCodes().map((c) => ({ value: c, label: c }))}
+              isMulti
+              hasSearch
+              activeFilters={usersActiveFilters}
+              setActiveFilters={setUsersActiveFilters}
+            />
+          </FilterSection>
+        )}
+        {usersFilterVisibility.roles !== false && (
+          <FilterSection label="Roles">
+            <MobileFilterDropdown
+              filterId="roles"
+              placeholder="All Roles"
+              options={getUniqueUserRoles().map((r) => ({ value: r, label: r }))}
+              isMulti
+              activeFilters={usersActiveFilters}
+              setActiveFilters={setUsersActiveFilters}
+            />
+          </FilterSection>
+        )}
+        {usersFilterVisibility.aiAssist !== false && (
+          <FilterSection label="AI Assist">
+            <MobileFilterDropdown
+              filterId="aiAssist"
+              placeholder="Select"
+              options={SHEET_AI_ASSIST_OPTIONS}
+              isMulti
+              activeFilters={usersActiveFilters}
+              setActiveFilters={setUsersActiveFilters}
+            />
+          </FilterSection>
+        )}
+        {usersFilterVisibility.lastLogin !== false && (
+          <FilterSection label="Last Login">
+            <MobileFilterDropdown
+              filterId="lastLogin"
+              placeholder="Select"
+              options={SHEET_DATE_OPTIONS}
+              activeFilters={usersActiveFilters}
+              setActiveFilters={setUsersActiveFilters}
+            />
+          </FilterSection>
+        )}
+        {usersFilterVisibility.joinDate !== false && (
+          <FilterSection label="Join Date">
+            <MobileFilterDropdown
+              filterId="joinDate"
+              placeholder="Select"
+              options={SHEET_DATE_OPTIONS}
+              activeFilters={usersActiveFilters}
+              setActiveFilters={setUsersActiveFilters}
+            />
+          </FilterSection>
+        )}
+        {usersFilterVisibility.notifications !== false && (
+          <FilterSection label="Notifications">
+            <MobileFilterDropdown
+              filterId="notifications"
+              placeholder="All"
+              options={NOTIFICATION_OPTIONS}
+              activeFilters={usersActiveFilters}
+              setActiveFilters={setUsersActiveFilters}
+            />
+          </FilterSection>
+        )}
+        {usersFilterVisibility.organizationRole !== false && (
+          <FilterSection label="Organization Role">
+            <MobileFilterDropdown
+              filterId="organizationRole"
+              placeholder="Select"
+              options={getUniqueOrganizationRoles().map((r) => ({ value: r, label: r }))}
+              isMulti
+              hasSearch
+              activeFilters={usersActiveFilters}
+              setActiveFilters={setUsersActiveFilters}
+            />
+          </FilterSection>
+        )}
+        {usersFilterVisibility.orgDepartment !== false && (
+          <FilterSection label="Org Department">
+            <MobileFilterDropdown
+              filterId="orgDepartment"
+              placeholder="Select"
+              options={getUniqueOrgDepartments().map((d) => ({ value: d, label: d }))}
+              isMulti
+              hasSearch
+              activeFilters={usersActiveFilters}
+              setActiveFilters={setUsersActiveFilters}
+            />
+          </FilterSection>
+        )}
+        {/* Custom user fields (Organization Role, Org Department, Duration) grouped, as under More */}
+        {usersFilterVisibility.duration !== false && (
+          <FilterSection label="Duration">
+            <MobileFilterDropdown
+              filterId="duration"
+              placeholder="Select"
+              options={SHEET_DURATION_OPTIONS}
+              isMulti
+              hasSearch
+              activeFilters={usersActiveFilters}
+              setActiveFilters={setUsersActiveFilters}
+            />
+          </FilterSection>
+        )}
       </FiltersSheet>
     </div>
   );

@@ -374,44 +374,15 @@ export function ExportsTable({
 // Routing rules
 // ---------------------------------------------------------------------------
 
+// Tag and Selected Gallery(s) are separate columns, as in prod's routing-rule-table.
 export const ROUTING_RULE_COLUMNS = [
   { key: "name", label: "Rule Name" },
-  { key: "mappings", label: "Tag → Selected Gallery(s)" },
+  { key: "tag", label: "Tag" },
+  { key: "galleries", label: "Selected Gallery(s)" },
   { key: "created", label: "Created" },
 ];
 
 const MAX_MAPPINGS = 2;
-
-function RuleMappings({ rule }: { rule: RoutingRule }) {
-  const [expanded, setExpanded] = useState(false);
-  const visible = expanded ? rule.tagMappings : rule.tagMappings.slice(0, MAX_MAPPINGS);
-  const hidden = rule.tagMappings.length - MAX_MAPPINGS;
-
-  return (
-    <div className="flex flex-col gap-1.5">
-      {visible.map((m) => (
-        <div key={m.tag} className="grid grid-cols-[minmax(120px,180px)_1fr] gap-3 items-start">
-          <span className="inline-flex items-center gap-1.5">
-            <i className="bi bi-tag text-muted-foreground" />
-            {m.tag}
-          </span>
-          <div className="flex flex-wrap gap-1">
-            {m.galleries.map((g) => (
-              <Badge key={g.id} colorStyle="primary" theme="subtle" shape="rounded" className="text-[12px] normal-case tracking-normal font-normal">
-                {g.name}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      ))}
-      {hidden > 0 && (
-        <button className="text-primary hover:underline text-left text-[12px]" onClick={() => setExpanded((e) => !e)}>
-          {expanded ? "Show Less" : `${hidden} More`}
-        </button>
-      )}
-    </div>
-  );
-}
 
 export function RoutingRulesTable({
   rules,
@@ -425,58 +396,102 @@ export function RoutingRulesTable({
   onDelete: (rule: RoutingRule) => void;
 }) {
   const show = (key: string) => columnVisibility[key] !== false;
+  const showMappings = show("tag") || show("galleries");
   const sort = useSort<"name" | "created">("created");
   const sorted = useMemo(
     () => sortRows(rules, sort.field, sort.direction, (row, field) => (field === "name" ? row.name : row.created.getTime())),
     [rules, sort.field, sort.direction],
   );
   const { page, setPage, paged } = usePage(sorted, perPage);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const toggleExpanded = (id: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   return (
     <TableShell pagination={{ page: page, perPage: perPage, total: sorted.length, onPageChange: setPage }}>
       <TableHeader>
         <TableRow className="bg-[#f9fbfd]">
           {show("name") && <SortableHeadCell label="Rule Name" field="name" sort={sort} />}
-          {show("mappings") && (
-            <TableHead>
-              <div className="grid grid-cols-[minmax(120px,180px)_1fr] gap-3">
-                <span className={HEAD_TEXT}>Tag</span>
-                <span className={HEAD_TEXT}>Selected Gallery(s)</span>
-              </div>
-            </TableHead>
-          )}
+          {show("tag") && <TableHead><span className={HEAD_TEXT}>Tag</span></TableHead>}
+          {show("galleries") && <TableHead><span className={HEAD_TEXT}>Selected Gallery(s)</span></TableHead>}
           {show("created") && <SortableHeadCell label="Created" field="created" sort={sort} />}
           <TableHead className="w-[40px]" />
         </TableRow>
       </TableHeader>
       <TableBody>
-        {paged.map((rule) => (
-          <TableRow key={rule.id} className="text-[13px] align-top">
-            {show("name") && (
-              <TableCell>
-                <button className="text-primary hover:underline text-left font-medium">{rule.name}</button>
-              </TableCell>
-            )}
-            {show("mappings") && (
-              <TableCell>
-                <RuleMappings rule={rule} />
-              </TableCell>
-            )}
-            {show("created") && (
-              <TableCell className="whitespace-nowrap">
-                {rule.created.toLocaleString("en-US", { month: "numeric", day: "numeric", year: "2-digit", hour: "numeric", minute: "2-digit" })}
-              </TableCell>
-            )}
-            <TableCell>
-              <RowActions
-                actions={[
-                  { label: "Edit Rule", icon: "bi-pencil", onSelect: () => {} },
-                  { label: "Delete Rule", icon: "bi-trash", onSelect: () => onDelete(rule), destructive: true },
-                ]}
-              />
-            </TableCell>
-          </TableRow>
-        ))}
+        {paged.flatMap((rule) => {
+          // One table row per tag mapping so each tag lines up with its galleries across the
+          // two columns; the rule's own cells span them.
+          const isExpanded = expanded.has(rule.id);
+          const visible = isExpanded ? rule.tagMappings : rule.tagMappings.slice(0, MAX_MAPPINGS);
+          const hidden = rule.tagMappings.length - MAX_MAPPINGS;
+          const mappings = showMappings && visible.length > 0 ? visible : [null];
+          const span = mappings.length;
+          return mappings.map((m, i) => {
+            const isFirst = i === 0;
+            const isLast = i === span - 1;
+            const toggle = isLast && showMappings && hidden > 0 && (
+              <button className="block mt-1.5 text-primary hover:underline text-left text-[12px]" onClick={() => toggleExpanded(rule.id)}>
+                {isExpanded ? "Show Less" : `${hidden} More`}
+              </button>
+            );
+            const sub = cn(!isFirst && "pt-0", !isLast && "pb-1.5");
+            return (
+              <TableRow key={`${rule.id}-${i}`} className={cn("text-[13px] align-top hover:bg-transparent", !isLast && "border-b-0")}>
+                {isFirst && show("name") && (
+                  <TableCell rowSpan={span} className="align-top">
+                    <button className="text-primary hover:underline text-left font-medium">{rule.name}</button>
+                  </TableCell>
+                )}
+                {show("tag") && (
+                  <TableCell className={sub}>
+                    {m && (
+                      <span className="inline-flex items-center gap-1.5">
+                        <i className="bi bi-tag text-muted-foreground" />
+                        {m.tag}
+                      </span>
+                    )}
+                    {toggle}
+                  </TableCell>
+                )}
+                {show("galleries") && (
+                  <TableCell className={sub}>
+                    {m && (
+                      <div className="flex flex-wrap gap-1">
+                        {m.galleries.map((g) => (
+                          <Badge key={g.id} colorStyle="primary" theme="subtle" shape="rounded" className="text-[12px] normal-case tracking-normal font-normal">
+                            {g.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    {!show("tag") && toggle}
+                  </TableCell>
+                )}
+                {isFirst && show("created") && (
+                  <TableCell rowSpan={span} className="align-top whitespace-nowrap">
+                    {rule.created.toLocaleString("en-US", { month: "numeric", day: "numeric", year: "2-digit", hour: "numeric", minute: "2-digit" })}
+                  </TableCell>
+                )}
+                {isFirst && (
+                  <TableCell rowSpan={span} className="align-top">
+                    <RowActions
+                      actions={[
+                        { label: "Edit Rule", icon: "bi-pencil", onSelect: () => {} },
+                        { label: "Delete Rule", icon: "bi-trash", onSelect: () => onDelete(rule), destructive: true },
+                      ]}
+                    />
+                  </TableCell>
+                )}
+              </TableRow>
+            );
+          });
+        })}
       </TableBody>
     </TableShell>
   );

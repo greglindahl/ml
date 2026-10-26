@@ -20,27 +20,48 @@ import { cn } from "@/lib/utils";
 
 export type UsersSettingsTab = "table" | "filters";
 
-// Column definitions for Table View — matches UsersTable columns.
+// Column definitions for Table View: prod's user-collection-page columns, same
+// order and same defaults (the first nine on, the rest off).
 // Checkbox + 3-dot columns are structural and NOT in this map.
 export const USERS_TABLE_COLUMNS = [
+  { key: "aiImage", label: "AI Assist Image" },
   { key: "name", label: "Name" },
   { key: "role", label: "Role" },
   { key: "aiAssist", label: "AI Assist" },
   { key: "inviteCode", label: "Invite Code" },
   { key: "groups", label: "Groups" },
   { key: "joinDate", label: "Join Date" },
+  { key: "lastLogin", label: "Last Login Date" },
+  { key: "instagram", label: "Instagram" },
+  { key: "facebook", label: "Facebook" },
+  { key: "x", label: "X" },
+  { key: "tikTok", label: "TikTok" },
+  { key: "lastDownload", label: "Last Download Date" },
+  { key: "lastShare", label: "Last Share Date" },
+  { key: "galleries", label: "Galleries" },
+  { key: "notifications", label: "Notifications" },
 ] as const;
 
 export type UsersTableColumnKey = typeof USERS_TABLE_COLUMNS[number]["key"];
 export type UsersTableColumnVisibility = Record<UsersTableColumnKey, boolean>;
 
 export const DEFAULT_USERS_TABLE_COLUMN_VISIBILITY: UsersTableColumnVisibility = {
+  aiImage: true,
   name: true,
   role: true,
   aiAssist: true,
   inviteCode: true,
   groups: true,
   joinDate: true,
+  lastLogin: true,
+  instagram: true,
+  facebook: false,
+  x: false,
+  tikTok: false,
+  lastDownload: false,
+  lastShare: false,
+  galleries: false,
+  notifications: false,
 };
 
 // Filter definitions for Filters tab
@@ -75,7 +96,7 @@ export const DEFAULT_USERS_FILTER_VISIBILITY: UsersFilterVisibility = {
 
 // Storage keys
 const PER_PAGE_KEY = "tablePerPage.users";
-const COLUMN_VISIBILITY_KEY = "tableColumns.users.v1";
+const COLUMN_VISIBILITY_KEY = "tableColumns.users.v2";
 const FILTER_VISIBILITY_KEY = "filterVisibility.users";
 
 // Hooks

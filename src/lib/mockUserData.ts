@@ -27,6 +27,14 @@ export interface User {
   organizationRole: OrganizationRole;
   orgDepartment: OrgDepartment;
   duration: DurationBucket;
+  // Prod's optional Manage Users columns
+  instagram: string | null;
+  facebook: string | null;
+  x: string | null;
+  tikTok: string | null;
+  lastDownload: Date | null;
+  lastShare: Date | null;
+  galleryCount: number;
 }
 
 // Pool of groups users can belong to
@@ -121,6 +129,13 @@ function buildUser(idx: number): User {
     organizationRole: pick(ORG_ROLES, idx + 2),
     orgDepartment: pick(DEPARTMENTS, idx),
     duration: pick(DURATIONS, idx + 3),
+    instagram: idx % 3 !== 2 ? `@${firstName.toLowerCase()}${lastName.toLowerCase().slice(0, 4)}` : null,
+    facebook: idx % 4 === 0 ? name : null,
+    x: idx % 2 === 0 ? `@${firstName.toLowerCase()}_${idx}` : null,
+    tikTok: idx % 5 === 1 ? `@${firstName.toLowerCase()}.${lastName.toLowerCase()}` : null,
+    lastDownload: idx % 4 !== 3 ? new Date(2026, 8, ((idx * 5) % 28) + 1) : null,
+    lastShare: idx % 3 !== 1 ? new Date(2026, 9, ((idx * 2) % 24) + 1) : null,
+    galleryCount: (idx * 7) % 13,
   };
 }
 
