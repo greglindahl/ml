@@ -494,6 +494,53 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {/* 8. Notifications (before More): single-select On / Off, nothing selected = All. Prod's
+              filter has all three states; a toggle could only express two, losing Off. */}
+          <DropdownMenu>
+            <Tooltip delayDuration={700}>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
+                      notificationsSelected.length > 0 && "bg-primary/10 border-primary text-primary"
+                    )}
+                  >
+                    <i className="bi bi-bell w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    <span className="filter-label">Notifications</span>
+                    {notificationsSelected.length > 0 && (
+                      <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                        {notificationsSelected.length}
+                      </span>
+                    )}
+                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Notifications</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent align="start" className="bg-popover z-50 min-w-[200px]" onCloseAutoFocus={(e) => e.preventDefault()}>
+              {/* All = no filter, like prod's default */}
+              <DropdownMenuCheckboxItem
+                checked={notificationsSelected.length === 0}
+                onCheckedChange={() => notificationsSelected.forEach((s) => handleRemoveValue("notifications", s.value))}
+              >
+                All
+              </DropdownMenuCheckboxItem>
+              {NOTIFICATION_OPTIONS.map((option) => (
+                <DropdownMenuCheckboxItem
+                  key={option.value}
+                  checked={notificationsSelected.some((s) => s.value === option.value)}
+                  onCheckedChange={() => handleSingleSelect("notifications", option.value, option.label)}
+                >
+                  {option.label}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {/* 7. More: the company's custom user fields (prod: network-company-user-field-filters).
               Duration is one of them, so it lives here, not as its own facet. */}
           <DropdownMenu>
@@ -626,53 +673,6 @@ export const UsersFilterBar = forwardRef<UsersFilterBarHandle, UsersFilterBarPro
                   </div>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* 8. Notifications: single-select On / Off, nothing selected = All. Prod's
-              filter has all three states; a toggle could only express two, losing Off. */}
-          <DropdownMenu>
-            <Tooltip delayDuration={700}>
-              <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
-                      notificationsSelected.length > 0 && "bg-primary/10 border-primary text-primary"
-                    )}
-                  >
-                    <i className="bi bi-bell w-4 h-4 inline-flex items-center justify-center leading-none" />
-                    <span className="filter-label">Notifications</span>
-                    {notificationsSelected.length > 0 && (
-                      <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
-                        {notificationsSelected.length}
-                      </span>
-                    )}
-                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                  </Button>
-                </DropdownMenuTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">Notifications</TooltipContent>
-            </Tooltip>
-            <DropdownMenuContent align="start" className="bg-popover z-50 min-w-[200px]" onCloseAutoFocus={(e) => e.preventDefault()}>
-              {/* All = no filter, like prod's default */}
-              <DropdownMenuCheckboxItem
-                checked={notificationsSelected.length === 0}
-                onCheckedChange={() => notificationsSelected.forEach((s) => handleRemoveValue("notifications", s.value))}
-              >
-                All
-              </DropdownMenuCheckboxItem>
-              {NOTIFICATION_OPTIONS.map((option) => (
-                <DropdownMenuCheckboxItem
-                  key={option.value}
-                  checked={notificationsSelected.some((s) => s.value === option.value)}
-                  onCheckedChange={() => handleSingleSelect("notifications", option.value, option.label)}
-                >
-                  {option.label}
-                </DropdownMenuCheckboxItem>
-              ))}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

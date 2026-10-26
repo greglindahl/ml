@@ -547,6 +547,15 @@ export function AdminScreen({ isMobile = false, initialTab }: AdminScreenProps) 
             setActiveFilters={setUsersActiveFilters}
           />
         </FilterSection>
+        <FilterSection label="Notifications">
+          <MobileFilterDropdown
+            filterId="notifications"
+            placeholder="All"
+            options={NOTIFICATION_OPTIONS}
+            activeFilters={usersActiveFilters}
+            setActiveFilters={setUsersActiveFilters}
+          />
+        </FilterSection>
         <FilterSection label="Organization Role">
           <MobileFilterDropdown
             filterId="organizationRole"
@@ -571,15 +580,6 @@ export function AdminScreen({ isMobile = false, initialTab }: AdminScreenProps) 
             filterId="duration"
             placeholder="Select"
             options={SHEET_DURATION_OPTIONS}
-            activeFilters={usersActiveFilters}
-            setActiveFilters={setUsersActiveFilters}
-          />
-        </FilterSection>
-        <FilterSection label="Notifications">
-          <MobileFilterDropdown
-            filterId="notifications"
-            placeholder="All"
-            options={NOTIFICATION_OPTIONS}
             activeFilters={usersActiveFilters}
             setActiveFilters={setUsersActiveFilters}
           />
