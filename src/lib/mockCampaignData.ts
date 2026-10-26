@@ -215,6 +215,8 @@ export interface Request {
   requestType: string;
   campaignId?: string;
   campaignName?: string;
+  /** Flagged for follow-up (prod: requestSummary.flagged counts these). */
+  flagged?: boolean;
   creator: CampaignUser;
   createdDate: Date;
   assignees: CampaignUser[];
@@ -250,6 +252,7 @@ export const mockRequests: Request[] = [
   {
     id: "r2",
     name: "Product Launch Video",
+    flagged: true,
     status: "scheduled",
     statusDate: new Date("2025-01-31T12:00:00"),
     requestType: "Video Production",
@@ -342,6 +345,7 @@ export const mockRequests: Request[] = [
   {
     id: "r7",
     name: "Athlete Partnership Brief",
+    flagged: true,
     status: "scheduled",
     statusDate: new Date("2025-02-01T10:00:00"),
     requestType: "Influencer Collaboration",
@@ -450,6 +454,7 @@ export const mockRequests: Request[] = [
   {
     id: "r13",
     name: "Gazelle Behind the Scenes",
+    flagged: true,
     status: "delivered",
     statusDate: new Date("2025-01-20T16:00:00"),
     requestType: "Video Production",
@@ -504,6 +509,7 @@ export const mockRequests: Request[] = [
   {
     id: "r16",
     name: "Clot Superstar Fan Reactions",
+    flagged: true,
     status: "expired",
     statusDate: new Date("2024-12-18T12:00:00"),
     requestType: "Create and Post to Social",
@@ -559,3 +565,28 @@ export function formatRequestStatus(status: RequestStatus): string {
   };
   return statusMap[status];
 }
+
+export type CampaignStat = "TOTAL" | "FLAGGED" | "COMPLETED" | "EXPIRED" | "OPEN";
+
+/**
+ * Prod's campaign.requestSummary: request counts per campaign. Completed and
+ * Expired are terminal; everything else (draft, scheduled, delivered) is Open.
+ */
+export function getCampaignRequests(campaignId: string, stat: CampaignStat): Request[] {
+  const all = mockRequests.filter((r) => r.campaignId === campaignId);
+  switch (stat) {
+    case "TOTAL": return all;
+    case "FLAGGED": return all.filter((r) => r.flagged);
+    case "COMPLETED": return all.filter((r) => r.status === "completed");
+    case "EXPIRED": return all.filter((r) => r.status === "expired");
+    case "OPEN": return all.filter((r) => r.status !== "completed" && r.status !== "expired");
+  }
+}
+
+export const getCampaignRequestSummary = (campaignId: string): Record<CampaignStat, number> => ({
+  TOTAL: getCampaignRequests(campaignId, "TOTAL").length,
+  FLAGGED: getCampaignRequests(campaignId, "FLAGGED").length,
+  COMPLETED: getCampaignRequests(campaignId, "COMPLETED").length,
+  EXPIRED: getCampaignRequests(campaignId, "EXPIRED").length,
+  OPEN: getCampaignRequests(campaignId, "OPEN").length,
+});

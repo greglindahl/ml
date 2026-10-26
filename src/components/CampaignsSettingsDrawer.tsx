@@ -20,34 +20,41 @@ import { cn } from "@/lib/utils";
 
 export type CampaignsSettingsTab = "table" | "filters";
 
-// Column definitions for Table View - matches CampaignsTable columns
+// Column definitions for Table View - prod's campaigns-page columns
 export const CAMPAIGNS_TABLE_COLUMNS = [
-  { key: "thumbnail", label: "Thumbnail" },
-  { key: "name", label: "Request Name" },
-  { key: "status", label: "Status" },
-  { key: "requestType", label: "Request Type" },
+  { key: "name", label: "Name" },
+  { key: "type", label: "Type" },
+  { key: "flagged", label: "Flagged" },
   { key: "creator", label: "Creator" },
   { key: "created", label: "Created" },
-  { key: "assignee", label: "Assignee" },
-  { key: "recipient", label: "Recipient" },
-  { key: "views", label: "Views" },
-  { key: "shares", label: "Shares" },
+  { key: "totalRequests", label: "Total Requests" },
+  { key: "completed", label: "Completed" },
+  { key: "expired", label: "Expired" },
+  { key: "open", label: "Open" },
 ] as const;
 
 export type CampaignsTableColumnKey = typeof CAMPAIGNS_TABLE_COLUMNS[number]["key"];
+
+/**
+ * Type only applies to specific customers (campaign types are a per-company
+ * setup), so it's hidden from the table and Manage Columns. Flip to show it.
+ */
+export const SHOW_CAMPAIGN_TYPE_COLUMN = false;
+
+/** Columns this company can see (Type left out unless enabled). */
+export const AVAILABLE_CAMPAIGNS_COLUMNS = CAMPAIGNS_TABLE_COLUMNS.filter((c) => c.key !== "type" || SHOW_CAMPAIGN_TYPE_COLUMN);
 export type CampaignsTableColumnVisibility = Record<CampaignsTableColumnKey, boolean>;
 
 export const DEFAULT_CAMPAIGNS_TABLE_COLUMN_VISIBILITY: CampaignsTableColumnVisibility = {
-  thumbnail: true,
   name: true,
-  status: true,
-  requestType: true,
+  type: true,
+  flagged: true,
   creator: true,
   created: true,
-  assignee: true,
-  recipient: true,
-  views: true,
-  shares: true,
+  totalRequests: true,
+  completed: true,
+  expired: true,
+  open: true,
 };
 
 // Filter definitions for Filters tab
@@ -68,7 +75,7 @@ export const DEFAULT_CAMPAIGNS_FILTER_VISIBILITY: CampaignsFilterVisibility = {
 
 // Storage keys
 const PER_PAGE_KEY = "tablePerPage.campaigns";
-const COLUMN_VISIBILITY_KEY = "tableColumns.campaigns.v1";
+const COLUMN_VISIBILITY_KEY = "tableColumns.campaigns.v2"; // v2: prod column set
 const FILTER_VISIBILITY_KEY = "filterVisibility.campaigns";
 
 // Hooks
@@ -224,7 +231,7 @@ export function CampaignsSettingsDrawer({
                   </button>
                 </div>
                 <div className="space-y-2">
-                  {CAMPAIGNS_TABLE_COLUMNS.map((col) => (
+                  {AVAILABLE_CAMPAIGNS_COLUMNS.map((col) => (
                     <label key={col.key} className="flex items-center gap-2 cursor-pointer">
                       <Checkbox
                         checked={columnVisibility[col.key]}
