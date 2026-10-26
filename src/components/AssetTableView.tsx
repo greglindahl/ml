@@ -3,6 +3,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import { LibraryAsset } from "@/lib/mockLibraryData";
 import { TableDate, TableDateDetail } from "@/components/TableDate";
 import { ViewerZoneToggle } from "@/components/ViewerZoneToggle";
+import { SHOW_TIMESTAMP_PROTO } from "@/lib/captureTime";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import {
@@ -104,6 +105,7 @@ function getOrientation(aspectRatio: LibraryAsset["aspectRatio"]): string {
  */
 const UPLOADER_UNDER_DATE_KEY = "proto.assetTable.uploaderUnderDate";
 const readUploaderUnderDate = () => {
+  if (!SHOW_TIMESTAMP_PROTO) return false;
   try {
     return localStorage.getItem(UPLOADER_UNDER_DATE_KEY) === "on";
   } catch {
@@ -268,8 +270,8 @@ export function AssetTableView({
 
   return (
     <>
-    {/* Prototype only: compare the Uploaded column with and without the uploader */}
-    <div className="flex justify-end items-center gap-2 mb-2">
+    {/* Prototype only (?proto=1): compare the Uploaded column with and without the uploader */}
+    {SHOW_TIMESTAMP_PROTO && <div className="flex justify-end items-center gap-2 mb-2">
       <ViewerZoneToggle />
       <div className="inline-flex items-center gap-1 border border-dashed border-muted-foreground/40 rounded-md p-0.5 text-[12px]" role="group" aria-label="Uploader under date (prototype)">
         <span className="px-1.5 text-muted-foreground">Uploader under date:</span>
@@ -285,7 +287,7 @@ export function AssetTableView({
           </button>
         ))}
       </div>
-    </div>
+    </div>}
     <div className="border rounded-lg bg-card">
       <Table wrapperClassName="overflow-visible">
           <TableHeader className="sticky top-[var(--content-sticky-h,0px)] z-10">

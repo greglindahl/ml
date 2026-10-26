@@ -30,7 +30,23 @@ export type ViewerZoneId = (typeof VIEWER_ZONES)[number]["id"];
 const KEY = "proto.viewerTimeZone";
 const EVENT = "proto-viewer-zone";
 
+/**
+ * Timestamp prototype switches (Viewing as, Uploader under date) only show with
+ * ?proto=1. Kept for the tab's session so in-app navigation that rewrites the
+ * URL doesn't drop it. Without it the switches' stored choices are ignored.
+ */
+export const SHOW_TIMESTAMP_PROTO = (() => {
+  if (typeof window === "undefined") return false;
+  try {
+    if (new URLSearchParams(window.location.search).get("proto") === "1") sessionStorage.setItem("proto.timestamps", "1");
+    return sessionStorage.getItem("proto.timestamps") === "1";
+  } catch {
+    return new URLSearchParams(window.location.search).get("proto") === "1";
+  }
+})();
+
 const readZone = (): ViewerZoneId => {
+  if (!SHOW_TIMESTAMP_PROTO) return "browser";
   try {
     const v = localStorage.getItem(KEY);
     return VIEWER_ZONES.some((z) => z.id === v) ? (v as ViewerZoneId) : "browser";
