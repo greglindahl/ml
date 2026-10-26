@@ -1,6 +1,9 @@
 import { useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { LibraryAsset, getRelativeTime } from "@/lib/mockLibraryData";
+import { LibraryAsset } from "@/lib/mockLibraryData";
+import { TableDate, TableDateDetail } from "@/components/TableDate";
+import { ViewerZoneToggle } from "@/components/ViewerZoneToggle";
+import { SHOW_TIMESTAMP_PROTO } from "@/lib/captureTime";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import {
@@ -96,6 +99,20 @@ function getOrientation(aspectRatio: LibraryAsset["aspectRatio"]): string {
 }
 
 
+/**
+ * Prototype-only: show who uploaded under the Uploaded date (timestamp design
+ * pass). Column names stay as they are. Remembered per browser.
+ */
+const UPLOADER_UNDER_DATE_KEY = "proto.assetTable.uploaderUnderDate";
+const readUploaderUnderDate = () => {
+  if (!SHOW_TIMESTAMP_PROTO) return false;
+  try {
+    return localStorage.getItem(UPLOADER_UNDER_DATE_KEY) === "on";
+  } catch {
+    return false;
+  }
+};
+
 export function AssetTableView({
   assets,
   isLoading = false,
@@ -110,6 +127,15 @@ export function AssetTableView({
   onSortChange,
 }: AssetTableViewProps) {
   const [internalSelected, setInternalSelected] = useState<Set<string>>(new Set());
+  const [uploaderUnderDate, setUploaderUnderDateState] = useState(readUploaderUnderDate);
+  const setUploaderUnderDate = (on: boolean) => {
+    setUploaderUnderDateState(on);
+    try {
+      localStorage.setItem(UPLOADER_UNDER_DATE_KEY, on ? "on" : "off");
+    } catch {
+      // per-viewer convenience only
+    }
+  };
   const [internalSortField, setInternalSortField] = useState<SortField>("dateCreated");
   const [internalSortDirection, setInternalSortDirection] = useState<SortDirection>("desc");
   const isSortControlled = onSortChange !== undefined;
@@ -243,6 +269,25 @@ export function AssetTableView({
   }
 
   return (
+    <>
+    {/* Prototype only (?proto=1): compare the Uploaded column with and without the uploader */}
+    {SHOW_TIMESTAMP_PROTO && <div className="flex justify-end items-center gap-2 mb-2">
+      <ViewerZoneToggle />
+      <div className="inline-flex items-center gap-1 border border-dashed border-muted-foreground/40 rounded-md p-0.5 text-[12px]" role="group" aria-label="Uploader under date (prototype)">
+        <span className="px-1.5 text-muted-foreground">Uploader under date:</span>
+        {([false, true] as const).map((on) => (
+          <button
+            key={String(on)}
+            type="button"
+            onClick={() => setUploaderUnderDate(on)}
+            aria-pressed={uploaderUnderDate === on}
+            className={uploaderUnderDate === on ? "px-2 py-0.5 rounded bg-white shadow-sm text-foreground" : "px-2 py-0.5 rounded text-muted-foreground hover:text-foreground"}
+          >
+            {on ? "On" : "Off"}
+          </button>
+        ))}
+      </div>
+    </div>}
     <div className="border rounded-lg bg-card">
       <Table wrapperClassName="overflow-visible">
           <TableHeader className="sticky top-[var(--content-sticky-h,0px)] z-10">
@@ -370,20 +415,22 @@ export function AssetTableView({
               {/* Uploaded Date */}
               {columnVisibility.added && (
                 <TableCell>
-                  <span className="text-sm">{getRelativeTime(asset.dateCreated)}</span>
+                  <TableDate value={asset.dateCreated} className="text-sm block" />
+                  {/* Always rendered so the column keeps its width; collapsed when off. */}
+                  <div className={uploaderUnderDate ? undefined : "h-0 overflow-hidden"} aria-hidden={!uploaderUnderDate}>
+                    <TableDateDetail value={asset.dateCreated} lead={`by ${asset.creator}`} />
+                  </div>
                 </TableCell>
               )}
 
               {/* Capture Date */}
               {columnVisibility.captured && (
                 <TableCell>
-                  <span className="text-sm text-muted-foreground">
-                    {asset.dateCreated.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "2-digit"
-                    })}
-                  </span>
+                  {/* Was formatting dateCreated, so "Captured" showed the upload date. */}
+                  <TableDate value={asset.captureDate} capture={{ offsetMinutes: asset.captureOffsetMinutes }} className="text-sm block" />
+                  <div className={uploaderUnderDate ? undefined : "h-0 overflow-hidden"} aria-hidden={!uploaderUnderDate}>
+                    <TableDateDetail value={asset.captureDate} capture={{ offsetMinutes: asset.captureOffsetMinutes }} />
+                  </div>
                 </TableCell>
               )}
 
@@ -443,5 +490,6 @@ export function AssetTableView({
           </TableBody>
         </Table>
     </div>
+    </>
   );
 }

@@ -31,7 +31,10 @@ export interface LibraryAsset {
   creatorId: string;
   type: "image" | "video";
   dateCreated: Date;
+  /** The true capture moment. Render with captureOffsetMinutes (lib/captureTime). */
   captureDate: Date;
+  /** Camera's UTC offset in minutes (PORTAL-12973); null = the file never recorded one. */
+  captureOffsetMinutes?: number | null;
   aspectRatio: "1:1" | "16:9" | "9:16" | "4:3";
   /** Search-index orientation bucket (PORTAL-12778) — what the Orientation facet filters on. */
   orientation: "panoramic" | "landscape" | "square" | "portrait" | "tall" | "unknown";
@@ -227,6 +230,21 @@ const tagSets = [
 function randomFromArray<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
+
+// Riyadh, US Central, London, unknown, Tokyo, US Pacific, UTC, unknown
+const CAPTURE_ZONE_CYCLE: (number | null)[] = [180, -300, 60, null, 540, -420, 0, null];
+
+/**
+ * PORTAL-12970's Saudi Pro League case: shot 1:00 AM GMT+3, uploaded 30 min
+ * later. Before the fix it read "captured after upload"; after it, a viewer
+ * west of UTC still sees Captured on the next day vs Uploaded, both correct.
+ */
+const SAUDI_MIDNIGHT_CASE = (asset: { id: string; dateCreated: Date }) => {
+  if (asset.id !== "asset-lebron-nike-3") return {};
+  const d = asset.dateCreated;
+  const capture = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 22, 0)); // 1:00 AM GMT+3 next day
+  return { captureDate: capture, dateCreated: new Date(capture.getTime() + 30 * 60_000), captureOffsetMinutes: 180 };
+};
 
 // Fixed assets for user testing scenarios
 const fixedAssets: Omit<LibraryAsset, 'downloads' | 'shares' | 'galleries' | 'viewers' | 'publicViews' | 'publicDownloads' | 'favorites' | 'lastDownloadDate' | 'captureDate' | 'orientation'>[] = [
@@ -743,7 +761,7 @@ const generatedLibraryAssets: LibraryAsset[] = (() => {
     favSeed = (favSeed * 16807) % 2147483647;
     return (favSeed - 1) / 2147483646;
   };
-  return allAssets.map(asset => {
+  return allAssets.map((asset, i) => {
     const downloads = Math.floor(favRandom() * 500);
     const shares = Math.floor(favRandom() * 100);
     const galleries = Math.floor(favRandom() * 8);
@@ -755,8 +773,11 @@ const generatedLibraryAssets: LibraryAsset[] = (() => {
     const lastDownloadDate = hasLastDownload
       ? (() => { const d = new Date(); d.setDate(d.getDate() - Math.floor(favRandom() * 60)); return d; })()
       : null;
-    // captureDate is always before dateCreated
-    const captureDate = new Date(asset.dateCreated.getTime() - Math.floor(favRandom() * 30 + 1) * 86400000);
+    // captureDate is always before dateCreated. The extra minutes (derived from
+    // the day offset, so no new random draw reshuffles other fields) give it its
+    // own time of day instead of mirroring the upload time.
+    const captureDaysBack = Math.floor(favRandom() * 30 + 1);
+    const captureDate = new Date(asset.dateCreated.getTime() - captureDaysBack * 86400000 - ((captureDaysBack * 137) % 600) * 60000);
     // Orientation bucket: mostly derived from aspectRatio, with occasional
     // panoramic/portrait/unknown overrides so every index bucket has demo data
     const derivedOrientation: LibraryAsset["orientation"] =
@@ -783,6 +804,10 @@ const generatedLibraryAssets: LibraryAsset[] = (() => {
       favorites,
       lastDownloadDate,
       captureDate,
+      // Camera zones cycle by index (no random draw, so nothing else reshuffles);
+      // null = no recorded offset, as for ~¼ of real images.
+      captureOffsetMinutes: CAPTURE_ZONE_CYCLE[i % CAPTURE_ZONE_CYCLE.length],
+      ...SAUDI_MIDNIGHT_CASE(asset),
     };
   });
 })();

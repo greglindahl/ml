@@ -19,6 +19,7 @@ import { getRelativeTime, LibraryAsset, CREATOR_NAMES } from "@/lib/mockLibraryD
 import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries, Gallery, FlattenedFolder, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor, enrichGallery, sortGalleries, GALLERY_SORT_OPTIONS, GallerySortField } from "@/lib/mockFolderData";
 import { relevanceScore, capRelevanceResults, isRelevanceCapped } from "@/lib/relevance";
 import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
+import { matchesCaptureRange } from "@/lib/captureTime";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { AddGalleryDialog } from "@/components/AddGalleryDialog";
@@ -353,7 +354,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
       if (addedDateFilter && !matchesDateRange(asset.dateCreated, addedDateFilter, customDateRanges["added-date"])) return false;
 
       // Captured Date filter (when the media was originally shot)
-      if (capturedDateFilter && !matchesDateRange(asset.captureDate, capturedDateFilter, customDateRanges["captured-date"])) return false;
+      if (capturedDateFilter && !matchesCaptureRange(asset.captureDate, asset.captureOffsetMinutes, capturedDateFilter, customDateRanges["captured-date"])) return false;
 
       // Toggle pills — parity with All Assets
       if (isBrandedActive && !asset.isBranded) return false;
@@ -1478,6 +1479,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         onColumnVisibilityChange={setGalleryColumnVisibility}
         filterVisibility={galleryFilterVisibility}
         onFilterVisibilityChange={setGalleryFilterVisibility}
+        hiddenFilters={["unsorted"]}
       />
 
       {/* Assets Filters Sheet (for narrow widths) */}

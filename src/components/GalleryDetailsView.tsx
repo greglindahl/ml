@@ -23,6 +23,7 @@ import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
 import { FolderItem, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay } from "@/lib/mockFolderData";
 import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
+import { matchesCaptureRange } from "@/lib/captureTime";
 import { relevanceScore, capRelevanceResults, isRelevanceCapped } from "@/lib/relevance";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
@@ -234,7 +235,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
       if (addedDateFilter && !matchesDateRange(asset.dateCreated, addedDateFilter, customDateRanges["added-date"])) return false;
 
       // Captured Date filter (when the media was originally shot)
-      if (capturedDateFilter && !matchesDateRange(asset.captureDate, capturedDateFilter, customDateRanges["captured-date"])) return false;
+      if (capturedDateFilter && !matchesCaptureRange(asset.captureDate, asset.captureOffsetMinutes, capturedDateFilter, customDateRanges["captured-date"])) return false;
 
       // Toggle pills — parity with All Assets
       if (isBrandedActive && !asset.isBranded) return false;
@@ -866,7 +867,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
         onColumnVisibilityChange={setAssetColumnVisibility}
         filterVisibility={assetFilterVisibility}
         onFilterVisibilityChange={setAssetFilterVisibility}
-        hiddenFilters={["folders"]}
+        hiddenFilters={["folders", "unsorted"]}
       />
 
       {/* Asset Detail Modal */}

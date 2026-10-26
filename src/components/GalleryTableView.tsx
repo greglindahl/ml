@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { TableDate } from "@/components/TableDate";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { Gallery, GalleryTableItem, enrichGallery, sortGalleries, GallerySortField } from "@/lib/mockFolderData";
@@ -146,20 +147,7 @@ export function GalleryTableView({
   const allSelected = galleries.length > 0 && selectedGalleries.size === galleries.length;
   const someSelected = selectedGalleries.size > 0 && selectedGalleries.size < galleries.length;
 
-  const formatDate = (date: Date | undefined) => {
-    if (!date) return "-";
-    return date.toLocaleDateString("en-US", { 
-      month: "numeric", 
-      day: "numeric",
-      year: "2-digit"
-    });
-  };
 
-  const formatLastAdded = (value: Date | string | undefined) => {
-    if (!value) return "-";
-    if (typeof value === "string") return value;
-    return formatDate(value);
-  };
 
   if (isLoading) {
     return (
@@ -422,16 +410,14 @@ export function GalleryTableView({
               {/* Created Date */}
               {columnVisibility.created && (
                 <TableCell>
-                  <span className="text-sm">{formatDate(gallery.createdDate)}</span>
+                  <TableDate value={gallery.createdDate} className="text-sm" />
                 </TableCell>
               )}
 
               {/* Last Added */}
               {columnVisibility.lastAdded && (
                 <TableCell>
-                  <span className="text-sm text-muted-foreground">
-                    {formatLastAdded(gallery.lastAdded)}
-                  </span>
+                  <TableDate value={gallery.lastAdded} className="text-sm" />
                 </TableCell>
               )}
 
