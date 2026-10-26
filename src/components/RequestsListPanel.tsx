@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { SettingsButton } from "@/components/ListFilters";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -77,19 +78,7 @@ export function RequestsListPanel({ requests, withinCampaign = false }: { reques
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
-          <Tooltip delayDuration={700}>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
-                onClick={() => setSettingsOpen(true)}
-              >
-                <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">Settings</TooltipContent>
-          </Tooltip>
+          <SettingsButton onClick={() => setSettingsOpen(true)} />
         </div>
       </div>
 
