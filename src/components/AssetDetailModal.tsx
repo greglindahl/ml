@@ -42,6 +42,15 @@ const readDateLayout = (): DateLayout => {
   }
 };
 
+/** Badge's info / solid treatment (teal, white text), as a span so it can sit inside a date line. */
+function ZoneBadge({ zone }: { zone: string }) {
+  return (
+    <span className="inline-flex items-center rounded px-1.5 py-0.5 align-middle text-[11px] font-medium leading-none bg-[#39AFD1] text-white">
+      {zone}
+    </span>
+  );
+}
+
 function getOrientationLabel(aspectRatio: LibraryAsset["aspectRatio"]) {
   if (aspectRatio === "9:16") return "Portrait";
   if (aspectRatio === "1:1") return "Square";
@@ -91,21 +100,28 @@ export function AssetDetailModal({
   const captured = asset.captureDate ? formatCaptured(asset.captureDate, asset.captureOffsetMinutes) : null;
   const zonesDiffer =
     asset.captureOffsetMinutes != null && asset.captureOffsetMinutes !== viewerOffsetAt(asset.dateCreated, tz);
-  const uploaded = formatInstant(asset.dateCreated, tz, zonesDiffer);
+  const uploaded = formatInstant(asset.dateCreated, tz, false);
+  const uploadedZone = zonesDiffer
+    ? new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" })
+        .formatToParts(asset.dateCreated)
+        .find((p) => p.type === "timeZoneName")?.value
+    : undefined;
   const capturedLine = captured ? (
     <>
       {captured.date}, {captured.time}{" "}
       {captured.zone ? (
-        // Badge's info / solid treatment (teal, white text), as a span so it can sit inside the date line
-        <span className="inline-flex items-center rounded px-1.5 py-0.5 align-middle text-[11px] font-medium leading-none bg-[#39AFD1] text-white">
-          {captured.zone}
-        </span>
+        <ZoneBadge zone={captured.zone} />
       ) : (
         <span className="text-gray-500">(time zone not recorded)</span>
       )}
     </>
   ) : null;
-  const uploadedLabel = uploaded.full;
+  const uploadedLabel = (
+    <>
+      {uploaded.full}
+      {uploadedZone && <> <ZoneBadge zone={uploadedZone} /></>}
+    </>
+  );
 
 
   return (
