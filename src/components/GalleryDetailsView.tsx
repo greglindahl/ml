@@ -1,4 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { SettingsButton } from "@/components/ListFilters";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { AssetBulkActionBar } from "@/components/AssetBulkActionBar";
 import { AssetTableView } from "@/components/AssetTableView";
@@ -542,7 +544,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   size="icon"
                   className={`h-10 w-10 rounded-r-none text-[#6e84a3] ${assetsViewMode === "grid" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("grid")}
-                >
+                 aria-label="Grid view">
                   <i className="bi bi-grid w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
                 <Button
@@ -550,33 +552,32 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                   size="icon"
                   className={`h-10 w-10 rounded-none border-x border-gray-300 text-[#6e84a3] ${assetsViewMode === "list" ? "bg-gray-100" : ""}`}
                   onClick={() => setAssetsViewMode("list")}
-                >
+                 aria-label="Table view">
                   <i className="bi bi-table w-4 h-4 inline-flex items-center justify-center leading-none" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${multiSelectMode ? "bg-gray-100" : ""}`}
-                  onClick={() => {
-                    if (multiSelectMode) {
-                      setSelectedAssets(new Set());
-                    }
-                    setMultiSelectMode(!multiSelectMode);
-                  }}
-                >
-                  <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
-                </Button>
+                {/* Prod's tooltip (media-browse-page / galleries-browse-page) */}
+                <Tooltip delayDuration={700}>
+                  <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-10 w-10 rounded-l-none text-[#6e84a3] ${multiSelectMode ? "bg-gray-100" : ""}`}
+                    onClick={() => {
+                      if (multiSelectMode) {
+                        setSelectedAssets(new Set());
+                      }
+                      setMultiSelectMode(!multiSelectMode);
+                    }}
+                   aria-label="Select multiple assets">
+                    <i className="bi bi-check-square w-4 h-4 inline-flex items-center justify-center leading-none" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Select multiple assets</TooltipContent>
+                </Tooltip>
               </div>
 
               {/* Settings button */}
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
-                onClick={() => setSettingsDrawerOpen(true)}
-              >
-                <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
-              </Button>
+              <SettingsButton onClick={() => setSettingsDrawerOpen(true)} />
             </div>
           </div>
 

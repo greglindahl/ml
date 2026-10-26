@@ -155,12 +155,13 @@ export function SettingsButton({ onClick }: { onClick: () => void }) {
           size="icon"
           className="h-10 w-10 rounded-md border-gray-300 bg-white text-[#6e84a3]"
           onClick={onClick}
-          aria-label="Settings"
+          aria-label="View settings"
         >
           <i className="bi bi-gear w-4 h-4 inline-flex items-center justify-center leading-none" />
         </Button>
       </TooltipTrigger>
-      <TooltipContent side="bottom">Settings</TooltipContent>
+      {/* Prod's wording (media-browse-page / galleries-browse-page) */}
+      <TooltipContent side="bottom">View settings</TooltipContent>
     </Tooltip>
   );
 }
