@@ -775,7 +775,7 @@ export function GalleryDetailsFilterBar({
                         <div className="flex items-start gap-1.5 mt-3 w-0 min-w-full rounded-md bg-[#39AFD1] px-2.5 py-2 text-white">
                           <i className="bi bi-info-circle text-sm flex-shrink-0 mt-0.5" />
                           <span className="text-xs">
-                            Pick the days photos were taken. A photo shot at 1:00 AM on Oct 23 in Riyadh counts as Oct 23 for everyone.
+                            Dates match where the asset was captured, not where you are.
                           </span>
                         </div>
                       )}
