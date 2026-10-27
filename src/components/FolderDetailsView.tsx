@@ -16,7 +16,8 @@ import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
 import { Badge } from "@/components/ui/badge";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset, CREATOR_NAMES } from "@/lib/mockLibraryData";
-import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries, Gallery, FlattenedFolder, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor, enrichGallery, sortGalleries, GALLERY_SORT_OPTIONS, GallerySortField } from "@/lib/mockFolderData";
+import { FolderItem, getAllDescendantIds, flattenFolders, mockGalleries, Gallery, FlattenedFolder, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, countTotalAssets, findGalleryParentPath, hasArchivedAncestor, enrichGallery, sortGalleries, GALLERY_SORT_OPTIONS, GallerySortField } from "@/lib/mockFolderData";
+import { TooLargeDialog, isTooLarge } from "@/components/TooLarge";
 import { relevanceScore, capRelevanceResults, isRelevanceCapped } from "@/lib/relevance";
 import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
 import { matchesCaptureRange } from "@/lib/captureTime";
@@ -148,6 +149,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   const [unarchiveOpen, setUnarchiveOpen] = useState(false);
   const [moveGalleriesOpen, setMoveGalleriesOpen] = useState(false);
   const [moveGalleryItems, setMoveGalleryItems] = useState<MoveGalleryItem[]>([]);
+  const [unarchiveBlocked, setUnarchiveBlocked] = useState<FolderItem | null>(null);
   
   // Gallery selection state for grid view bulk actions
   const [selectedGalleries, setSelectedGalleries] = useState<Set<string>>(new Set());
@@ -1307,6 +1309,12 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 folders={filteredChildFolders}
                 onNavigate={onNavigate}
                 onUnarchiveFolder={(id) => {
+                  // No modal here, so check first and block instead of sending it.
+                  const target = filteredChildFolders.find((f) => f.id === id);
+                  if (target && isTooLarge(countTotalAssets(target))) {
+                    setUnarchiveBlocked(target);
+                    return;
+                  }
                   onUnarchiveFolder?.(id);
                   toast({ title: "Folder unarchived", description: "The folder and its contents are active again." });
                 }}
@@ -1392,7 +1400,12 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
           onUnarchiveFolder?.(folderId);
           toast({ title: "Folder unarchived", description: `"${folder.name}" has been unarchived.` });
         }}
-        folderName={folder.name}
+        folder={folder}
+      />
+      <TooLargeDialog
+        action={unarchiveBlocked ? "unarchiveFolder" : null}
+        context={unarchiveBlocked ? { count: countTotalAssets(unarchiveBlocked) } : null}
+        onClose={() => setUnarchiveBlocked(null)}
       />
       <DeleteFolderDialog
         open={deleteOpen}

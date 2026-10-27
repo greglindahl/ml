@@ -25,40 +25,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { toast as sonnerToast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { FolderItem, FlattenedFolder } from "@/lib/mockFolderData";
-import { getMaxDepth, getAllDescendantIds, countTotalAssets } from "@/lib/mockFolderData";
-import { MOVE_MEDIA_ITEM_LIMIT } from "@/lib/limits";
+import { getMaxDepth, getAllDescendantIds, countTotalAssets, countSubFolders } from "@/lib/mockFolderData";
+import { TooLargeDialog, TooLargeNotice, isTooLarge } from "@/components/TooLarge";
 
 import { collectNestedFolders } from "@/lib/mockFolderData";
 
 type MovePhase = "form" | "submitting" | "error";
-
-// Danger-treatment failure toast: slides in from the bottom-left, auto-dismisses after 10s.
-function showMoveFailureToast(folder: FolderItem) {
-  sonnerToast.custom(
-    (t) => (
-      <div className="flex items-start gap-3 rounded-lg bg-[#FCE7EB] p-4 w-[380px] shadow-lg">
-        <i className="bi bi-x-circle-fill text-[#E63757] text-[20px] flex-shrink-0 inline-flex items-center justify-center leading-none" />
-        <div className="flex-1 text-[#12263F]">
-          <p className="font-bold text-[16px] leading-tight mb-1">Move couldn't be completed</p>
-          <p className="text-[14px] leading-snug">
-            "{folder.name}" exceeds the {MOVE_MEDIA_ITEM_LIMIT.toLocaleString()} media item limit for a single move, so nothing was moved. Try moving subfolders individually in smaller batches.
-          </p>
-        </div>
-        <button
-          onClick={() => sonnerToast.dismiss(t)}
-          aria-label="Dismiss"
-          className="flex-shrink-0 text-[#6e84a3] hover:text-[#12263F] transition-colors"
-        >
-          <i className="bi bi-x-lg text-[16px] inline-flex items-center justify-center leading-none" />
-        </button>
-      </div>
-    ),
-    { position: "bottom-left", duration: 10_000 }
-  );
-}
 
 interface MoveFolderDialogProps {
   open: boolean;
@@ -82,6 +56,8 @@ export function MoveFolderDialog({
   const contentRef = useRef<HTMLDivElement>(null);
   const [targetLocationId, setTargetLocationId] = useState<string | null>(null);
   const [phase, setPhase] = useState<MovePhase>("form");
+  // Server refused a move that passed the pre-check (stale count): shared blocked dialog, not a toast.
+  const [refused, setRefused] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
@@ -123,17 +99,18 @@ export function MoveFolderDialog({
 
   const nestedRows = useMemo(() => collectNestedFolders(folder, breadcrumbPath), [folder, breadcrumbPath]);
   const totalAssets = useMemo(() => countTotalAssets(folder), [folder]);
-  const exceedsMoveLimit = totalAssets > MOVE_MEDIA_ITEM_LIMIT;
+  const exceedsMoveLimit = isTooLarge(totalAssets);
+  const tooLargeContext = { count: totalAssets, hasSubfolders: countSubFolders(folder) > 0 };
 
   const handleMove = () => {
     setPhase("submitting");
     timerRef.current = setTimeout(() => {
       if (folder.simulateMoveRejection) {
-        // Scenario B (in-dialog error phase) is disabled in favor of a failure
-        // toast — restore by swapping these two lines for setPhase("error")
-        // and un-commenting the error-phase JSX below.
+        // Scenario B (in-dialog error phase) is disabled in favor of the shared
+        // blocked dialog — restore by swapping these two lines for
+        // setPhase("error") and un-commenting the error-phase JSX below.
         onOpenChange(false);
-        showMoveFailureToast(folder);
+        setRefused(true);
       } else {
         onMove(targetLocationId);
       }
@@ -146,6 +123,7 @@ export function MoveFolderDialog({
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg" ref={contentRef}>
         {/* Scenario B in-dialog error phase — disabled in favor of the failure toast (see handleMove). Restore by replacing the fragment below with this ternary:
@@ -255,16 +233,9 @@ export function MoveFolderDialog({
                 </div>
               )}
 
-              {/* Move size limit warning */}
+              {/* Move size limit warning — its own slot, so depth/archived messages never hide it */}
               {exceedsMoveLimit ? (
-                <div className="flex items-start gap-3 rounded-md bg-[#F6C343] px-6 py-3 text-[#12263F] text-[15px] leading-snug tracking-[-0.01em]">
-                  <i className="bi bi-info-circle flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
-                  <p>
-                    <strong className="font-semibold">Too many items to move.</strong> This move would affect{" "}
-                    <strong className="font-semibold">{totalAssets.toLocaleString()} media items</strong>, which exceeds the{" "}
-                    {MOVE_MEDIA_ITEM_LIMIT.toLocaleString()} media item limit for a single move. Try moving subfolders individually in smaller batches.
-                  </p>
-                </div>
+                <TooLargeNotice action="moveFolder" context={tooLargeContext} />
               ) : (
                 <div className="flex items-start gap-2 p-3 rounded-lg border bg-muted/50 text-sm text-muted-foreground">
                   <i className="bi bi-info-circle w-4 h-4 flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
@@ -294,5 +265,11 @@ export function MoveFolderDialog({
         </>
       </DialogContent>
     </Dialog>
+    <TooLargeDialog
+      action={refused ? "moveFolder" : null}
+      context={refused ? { ...tooLargeContext, refused: true } : null}
+      onClose={() => setRefused(false)}
+    />
+    </>
   );
 }

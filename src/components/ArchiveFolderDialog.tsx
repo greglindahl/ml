@@ -19,7 +19,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import type { FolderItem } from "@/lib/mockFolderData";
-import { collectNestedFolders, countAllSubFolders, countAllGalleries } from "@/lib/mockFolderData";
+import { collectNestedFolders, countAllSubFolders, countAllGalleries, countTotalAssets } from "@/lib/mockFolderData";
+import { TooLargeNotice, isTooLarge } from "@/components/TooLarge";
 
 interface ArchiveFolderDialogProps {
   open: boolean;
@@ -32,6 +33,8 @@ interface ArchiveFolderDialogProps {
 export function ArchiveFolderDialog({ open, onOpenChange, onArchive, folder }: ArchiveFolderDialogProps) {
   const subFolderCount = useMemo(() => countAllSubFolders(folder), [folder]);
   const galleryCount = useMemo(() => countAllGalleries(folder), [folder]);
+  const mediaCount = useMemo(() => countTotalAssets(folder), [folder]);
+  const tooLarge = isTooLarge(mediaCount);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -61,18 +64,22 @@ export function ArchiveFolderDialog({ open, onOpenChange, onArchive, folder }: A
             </TableBody>
           </Table>
 
-          {/* Light-treatment info note (design system Alert, type=Light) */}
-          <div className="flex items-start gap-3 rounded-md bg-[#EDF2F9] px-6 py-3 text-[#12263F] text-[15px] leading-snug tracking-[-0.01em]">
-            <i className="bi bi-info-circle flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
-            <p>Galleries and assets are not deleted.</p>
-          </div>
+          {tooLarge ? (
+            <TooLargeNotice action="archiveFolder" context={{ count: mediaCount, hasSubfolders: subFolderCount > 0 }} />
+          ) : (
+            // Light-treatment info note (design system Alert, type=Light)
+            <div className="flex items-start gap-3 rounded-md bg-[#EDF2F9] px-6 py-3 text-[#12263F] text-[15px] leading-snug tracking-[-0.01em]">
+              <i className="bi bi-info-circle flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
+              <p>Galleries and assets are not deleted.</p>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={onArchive}>Archive</Button>
+          <Button onClick={onArchive} disabled={tooLarge}>Archive</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

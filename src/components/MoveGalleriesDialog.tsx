@@ -22,7 +22,7 @@ import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, Command
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { FlattenedFolder, mockGalleries } from "@/lib/mockFolderData";
-import { MOVE_MEDIA_ITEM_LIMIT } from "@/lib/limits";
+import { TooLargeNotice, isTooLarge } from "@/components/TooLarge";
 
 export interface MoveGalleryItem {
   id: string;
@@ -65,7 +65,7 @@ export function MoveGalleriesDialog({
     () => galleries.reduce((sum, g) => sum + (g.assetCount ?? mockGalleries.find((m) => m.id === g.id)?.assetCount ?? 0), 0),
     [galleries]
   );
-  const exceedsMoveLimit = totalAssets > MOVE_MEDIA_ITEM_LIMIT;
+  const exceedsMoveLimit = isTooLarge(totalAssets);
 
   // Active galleries can't move into an archived destination — the user must
   // unarchive it first. Archived galleries can move anywhere (they stay archived).
@@ -194,14 +194,7 @@ export function MoveGalleriesDialog({
         )}
 
         {exceedsMoveLimit ? (
-          <div className="flex items-start gap-3 rounded-md bg-[#F6C343] px-6 py-3 text-[#12263F] text-[15px] leading-snug tracking-[-0.01em]">
-            <i className="bi bi-info-circle flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />
-            <p>
-              <strong className="font-semibold">Too many items to move.</strong> This move would affect{" "}
-              <strong className="font-semibold">{totalAssets.toLocaleString()} media items</strong>, which exceeds the{" "}
-              {MOVE_MEDIA_ITEM_LIMIT.toLocaleString()} media item limit for a single move. Try moving fewer galleries in smaller batches.
-            </p>
-          </div>
+          <TooLargeNotice action="moveGalleries" context={{ count: totalAssets, galleryCount: galleries.length }} />
         ) : (
           <div className="flex items-start gap-3 rounded-md bg-[#EDF2F9] px-6 py-3 text-[#12263F] text-[15px] leading-snug tracking-[-0.01em]">
             <i className="bi bi-info-circle flex-shrink-0 mt-0.5 inline-flex items-center justify-center leading-none" />

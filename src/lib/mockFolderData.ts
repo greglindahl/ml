@@ -380,8 +380,8 @@ export const folders: FolderItem[] = [
     countType: "galleries",
     simulateMoveRejection: true,
     children: [
-      { id: "broadcast-masters-2324", name: "2023-24 Game Masters", type: "gallery", count: 5100, countType: "assets" },
-      { id: "broadcast-masters-2425", name: "2024-25 Game Masters", type: "gallery", count: 4350, countType: "assets" },
+      { id: "broadcast-masters-2324", name: "2023-24 Game Masters", type: "gallery", count: 2550, countType: "assets" },
+      { id: "broadcast-masters-2425", name: "2024-25 Game Masters", type: "gallery", count: 2175, countType: "assets" },
     ],
   },
   {
@@ -467,8 +467,8 @@ export const mockGalleries: Gallery[] = [
   { id: "archive-full-games", name: "Full Game Broadcasts", assetCount: 6200, timeAgo: "6 months ago", thumbnailUrl: "https://picsum.photos/seed/gal38/400/300" },
   { id: "archive-raw-photos", name: "Raw Photo Dumps", assetCount: 4800, timeAgo: "6 months ago", thumbnailUrl: "https://picsum.photos/seed/gal39/400/300" },
   { id: "archive-press-photos", name: "Press Photo Archive", assetCount: 1450, timeAgo: "5 months ago", thumbnailUrl: "https://picsum.photos/seed/gal40/400/300" },
-  { id: "broadcast-masters-2324", name: "2023-24 Game Masters", assetCount: 5100, timeAgo: "8 months ago", thumbnailUrl: "https://picsum.photos/seed/gal41/400/300" },
-  { id: "broadcast-masters-2425", name: "2024-25 Game Masters", assetCount: 4350, timeAgo: "2 months ago", thumbnailUrl: "https://picsum.photos/seed/gal42/400/300" },
+  { id: "broadcast-masters-2324", name: "2023-24 Game Masters", assetCount: 2550, timeAgo: "8 months ago", thumbnailUrl: "https://picsum.photos/seed/gal41/400/300" },
+  { id: "broadcast-masters-2425", name: "2024-25 Game Masters", assetCount: 2175, timeAgo: "2 months ago", thumbnailUrl: "https://picsum.photos/seed/gal42/400/300" },
 ];
 
 // Collect all gallery IDs that are assigned to any folder in the tree
