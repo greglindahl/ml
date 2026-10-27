@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import type { LibraryAsset } from "@/lib/mockLibraryData";
-import { formatCaptured, formatInstant, useViewerZone, viewerOffsetAt } from "@/lib/captureTime";
+import { formatCaptured, formatInstant, useViewerZone } from "@/lib/captureTime";
 import { ViewerZoneToggle } from "@/components/ViewerZoneToggle";
 import { ZoneBadge } from "@/components/TableDate";
 
@@ -88,18 +88,13 @@ export function AssetDetailModal({
   if (!asset) return null;
 
   // Captured = the photographer's wall clock + zone (PORTAL-12970); no recorded
-  // zone shows unlabeled with a muted note. Uploaded = the viewer's zone, and it
-  // carries its own zone label whenever the capture zone differs, so two correct
-  // dates never read as "captured after upload".
+  // zone shows unlabeled with a muted note. Uploaded = the viewer's zone, always
+  // labeled, so two correct dates never read as "captured after upload".
   const captured = asset.captureDate ? formatCaptured(asset.captureDate, asset.captureOffsetMinutes) : null;
-  const zonesDiffer =
-    asset.captureOffsetMinutes != null && asset.captureOffsetMinutes !== viewerOffsetAt(asset.dateCreated, tz);
   const uploaded = formatInstant(asset.dateCreated, tz, false);
-  const uploadedZone = zonesDiffer
-    ? new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" })
-        .formatToParts(asset.dateCreated)
-        .find((p) => p.type === "timeZoneName")?.value
-    : undefined;
+  const uploadedZone = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" })
+    .formatToParts(asset.dateCreated)
+    .find((p) => p.type === "timeZoneName")?.value;
   const capturedLine = captured ? (
     <>
       {captured.date}, {captured.time}{" "}
