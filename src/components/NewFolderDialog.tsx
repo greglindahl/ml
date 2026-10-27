@@ -19,6 +19,7 @@ import type { FlattenedFolder, Gallery, FolderItem } from "@/lib/mockFolderData"
 import { collectAssignedGalleryIds } from "@/lib/mockFolderData";
 import { AddGalleryDialog } from "./AddGalleryDialog";
 import { NewGalleryDialog, type NewGalleryData } from "./NewGalleryDialog";
+import { TooLargeNotice, isTooLarge } from "./TooLarge";
 
 export interface NewFolderData {
   name: string;
@@ -114,6 +115,8 @@ export function NewFolderDialog({
   }, []);
 
   const selectedGalleries = galleries.filter((g) => selectedGalleryIds.includes(g.id));
+  const selectedMediaCount = selectedGalleries.reduce((sum, g) => sum + g.assetCount, 0);
+  const tooLarge = isTooLarge(selectedMediaCount);
 
   return (
     <>
@@ -252,6 +255,10 @@ export function NewFolderDialog({
               )}
             </div>
 
+            {tooLarge && (
+              <TooLargeNotice action="createFolder" context={{ count: selectedMediaCount, galleryCount: selectedGalleries.length }} />
+            )}
+
             {/* Full row below the gallery selector — long translations (e.g. German) don't fit beside the footer buttons */}
             <div className="flex items-center gap-2">
               <Checkbox
@@ -269,7 +276,7 @@ export function NewFolderDialog({
             <Button variant="outline" onClick={() => handleOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreate}>Create</Button>
+            <Button onClick={handleCreate} disabled={tooLarge}>Create</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

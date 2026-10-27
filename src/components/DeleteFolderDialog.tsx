@@ -18,7 +18,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { FolderItem } from "@/lib/mockFolderData";
-import { countSubFolders } from "@/lib/mockFolderData";
+import { countSubFolders, countTotalAssets } from "@/lib/mockFolderData";
+import { TooLargeNotice, isTooLarge } from "@/components/TooLarge";
 
 interface DeleteFolderDialogProps {
   open: boolean;
@@ -35,6 +36,8 @@ export function DeleteFolderDialog({ open, onOpenChange, onDelete, folder }: Del
   }, [open]);
 
   const subFolderCount = countSubFolders(folder);
+  const mediaCount = countTotalAssets(folder);
+  const tooLarge = isTooLarge(mediaCount);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -62,6 +65,10 @@ export function DeleteFolderDialog({ open, onOpenChange, onDelete, folder }: Del
             </TableBody>
           </Table>
 
+          {tooLarge && (
+            <TooLargeNotice action="deleteFolder" context={{ count: mediaCount, hasSubfolders: subFolderCount > 0 }} />
+          )}
+
           <label className="flex items-start gap-3 cursor-pointer">
             <Checkbox
               checked={confirmed}
@@ -78,7 +85,7 @@ export function DeleteFolderDialog({ open, onOpenChange, onDelete, folder }: Del
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={onDelete} disabled={!confirmed}>
+          <Button variant="destructive" onClick={onDelete} disabled={!confirmed || tooLarge}>
             Delete
           </Button>
         </DialogFooter>

@@ -43,7 +43,8 @@ const ORIENTATION_LABELS: Record<string, string> = {
   tall: "Tall",
   unknown: "Unknown",
 };
-import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, findFolderAncestorIds, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, findGalleryParentPath, hasArchivedAncestor, enrichGallery, sortGalleries, GALLERY_SORT_OPTIONS, GallerySortField } from "@/lib/mockFolderData";
+import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, findFolderAncestorIds, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, countTotalAssets, findGalleryParentPath, hasArchivedAncestor, enrichGallery, sortGalleries, GALLERY_SORT_OPTIONS, GallerySortField } from "@/lib/mockFolderData";
+import { TooLargeDialog, isTooLarge } from "@/components/TooLarge";
 import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
 import { matchesCaptureRange } from "@/lib/captureTime";
 import { relevanceScore, capRelevanceResults, isRelevanceCapped, RELEVANCE_RESULT_LIMIT } from "@/lib/relevance";
@@ -186,6 +187,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   const [gallerySearchQuery, setGallerySearchQuery] = useState("");
   const [selectedGalleries, setSelectedGalleries] = useState<Set<string>>(new Set());
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
+  const [unarchiveBlocked, setUnarchiveBlocked] = useState<FolderItem | null>(null);
   const { toast } = useToast();
 
   // ── Favorites tab ──────────────────────────────────────────────────────
@@ -2309,8 +2311,14 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                   folders={visibleFolders}
                   onNavigate={(folderId) => setActiveFolder(folderId)}
                   onUnarchiveFolder={(folderId) => {
+                    // No modal here, so check first and block instead of sending it.
+                    const target = topLevelFolders.find(f => f.id === folderId);
+                    if (target && isTooLarge(countTotalAssets(target))) {
+                      setUnarchiveBlocked(target);
+                      return;
+                    }
                     handleUnarchiveFolder(folderId);
-                    const name = topLevelFolders.find(f => f.id === folderId)?.name || "Folder";
+                    const name = target?.name || "Folder";
                     toast({ title: "Folder unarchived", description: `"${name}" has been unarchived.` });
                   }}
                   perPage={folderPerPage}
@@ -2872,6 +2880,11 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
         </Tabs>
       </div>
       )}
+      <TooLargeDialog
+        action={unarchiveBlocked ? "unarchiveFolder" : null}
+        context={unarchiveBlocked ? { count: countTotalAssets(unarchiveBlocked) } : null}
+        onClose={() => setUnarchiveBlocked(null)}
+      />
       <MoveGalleriesDialog
         open={isMoveDialogOpen}
         onOpenChange={setIsMoveDialogOpen}

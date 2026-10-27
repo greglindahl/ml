@@ -15,9 +15,10 @@ import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, Command
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { cn } from "@/lib/utils";
 import type { FlattenedFolder, Gallery, FolderItem } from "@/lib/mockFolderData";
-import { collectAssignedGalleryIds } from "@/lib/mockFolderData";
+import { collectAssignedGalleryIds, countTotalAssets } from "@/lib/mockFolderData";
 import { AddGalleryDialog } from "./AddGalleryDialog";
 import { NewGalleryDialog, type NewGalleryData } from "./NewGalleryDialog";
+import { TooLargeNotice, isTooLarge } from "./TooLarge";
 
 interface EditFolderDialogProps {
   open: boolean;
@@ -85,6 +86,12 @@ export function EditFolderDialog({
 
   const selectedGalleries = galleries.filter((g) => selectedGalleryIds.includes(g.id));
 
+  // Renaming (or relocating) re-indexes the whole subtree, so a folder over the
+  // limit says so up front; Save blocks only once the name or location changes.
+  const mediaCount = useMemo(() => countTotalAssets(folder), [folder]);
+  const tooLarge = isTooLarge(mediaCount);
+  const reindexes = name.trim() !== folder.name || locationId !== currentLocationId;
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -112,6 +119,8 @@ export function EditFolderDialog({
               />
               {nameError && <p className="text-xs text-destructive">Name is required</p>}
             </div>
+
+            {tooLarge && <TooLargeNotice action="renameFolder" context={{ count: mediaCount }} />}
 
             <div className="space-y-2">
               <Label>Location</Label>
@@ -219,7 +228,7 @@ export function EditFolderDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>Save</Button>
+            <Button onClick={handleSave} disabled={tooLarge && reindexes}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

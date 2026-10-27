@@ -29,8 +29,9 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import type { FolderItem } from "@/lib/mockFolderData";
-import { findFolderById, getMaxDepth, getFolderDepth, countTotalAssets } from "@/lib/mockFolderData";
+import { findFolderById, getMaxDepth, getFolderDepth, countTotalAssets, countSubFolders } from "@/lib/mockFolderData";
 import { MOVE_MEDIA_ITEM_LIMIT } from "@/lib/limits";
+import { TooLargeDialog } from "@/components/TooLarge";
 
 interface FolderSidebarProps {
   folderTree: FolderItem[];
@@ -419,23 +420,15 @@ export function FolderSidebar({
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={limitAlertItem != null} onOpenChange={(open) => !open && setLimitAlertItem(null)}>
-        <AlertDialogContent className="max-w-md">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Move not allowed</AlertDialogTitle>
-            <AlertDialogDescription>
-              <strong className="font-semibold text-foreground">Too many items to move.</strong> This move would affect{" "}
-              <strong className="font-semibold text-foreground">{limitAlertItem ? countTotalAssets(limitAlertItem).toLocaleString() : ""} media items</strong>, which exceeds the{" "}
-              {MOVE_MEDIA_ITEM_LIMIT.toLocaleString()} media item limit for a single move. Try moving subfolders individually in smaller batches.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setLimitAlertItem(null)}>
-              OK
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <TooLargeDialog
+        action={limitAlertItem ? (limitAlertItem.type === "gallery" ? "moveGalleries" : "moveFolder") : null}
+        context={
+          limitAlertItem
+            ? { count: countTotalAssets(limitAlertItem), hasSubfolders: countSubFolders(limitAlertItem) > 0, galleryCount: 1 }
+            : null
+        }
+        onClose={() => setLimitAlertItem(null)}
+      />
     </div>
   );
 }
