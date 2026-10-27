@@ -34,6 +34,8 @@ export interface TooLargeContext {
   hasSubfolders?: boolean;
   /** Gallery moves: how many galleries are selected. */
   galleryCount?: number;
+  /** Server refused after the pre-check passed: our count is stale, so don't quote it. */
+  refused?: boolean;
 }
 
 const SUPPORT = "Contact support to raise your limit.";
@@ -88,6 +90,14 @@ export const isTooLarge = (count: number) => count > MOVE_MEDIA_ITEM_LIMIT;
 /** "This folder has 12,450 media, more than your 5,000 limit for one action. <way forward>" */
 function TooLargeText({ action, context, strongClassName }: { action: TooLargeAction; context: TooLargeContext; strongClassName?: string }) {
   const copy = COPY[action];
+  if (context.refused) {
+    return (
+      <>
+        <strong className={strongClassName ?? "font-semibold"}>{copy.lead}</strong> {copy.subject(context)} grown past your{" "}
+        {MOVE_MEDIA_ITEM_LIMIT.toLocaleString()} limit for one action since you started, so nothing changed. {copy.next(context)}
+      </>
+    );
+  }
   return (
     <>
       <strong className={strongClassName ?? "font-semibold"}>{copy.lead}</strong> {copy.subject(context)}{" "}

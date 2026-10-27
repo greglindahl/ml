@@ -267,11 +267,9 @@ export function MoveFolderDialog({
     </Dialog>
     <TooLargeDialog
       action={refused ? "moveFolder" : null}
-      context={refused ? tooLargeContext : null}
+      context={refused ? { ...tooLargeContext, refused: true } : null}
       onClose={() => setRefused(false)}
-    >
-      {" "}Media was added since you opened Move, so nothing was moved.
-    </TooLargeDialog>
+    />
     </>
   );
 }
