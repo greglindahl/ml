@@ -1864,21 +1864,31 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 filterBarHandleRef.current?.clearAll();
                 changeUploaded(UPLOADED_DEFAULT);
               };
-              // On the 30-day default the date is the likeliest culprit, so offer
-              // one step wider (not All time — the expensive search). Start over
-              // would only land back here when nothing else is applied, so it goes.
-              if (addedDateFilter === UPLOADED_DEFAULT) {
+              // Any range short of All time is the likeliest culprit, so offer All
+              // time (Amber: straight there, no stepping through 90 days). Start
+              // over would only land back here when nothing else is applied, so it goes.
+              if (addedDateFilter && addedDateFilter !== "all-time") {
                 const nothingElseApplied =
                   !activeQuery && searchSelectedFacets.length === 0 &&
                   [contentTypeFilter, creatorFilter, orientationFilter, peopleFilter, sceneFilter, brandFilter, tagsFilter, folderFilter, sourceFilter, orgStatusFilter].every(f => f.length === 0) &&
                   !capturedDateFilter && !isBrandedActive && !isUnviewedActive && !isUnsortedActive;
-                const try90 = (
+                const RANGE_PHRASE: Partial<Record<DateRangeValue, string>> = {
+                  week: "in the last 7 days",
+                  "two-weeks": "in the last 14 days",
+                  month: "in the last 30 days",
+                  mtd: "this month",
+                  quarter: "in the last 90 days",
+                  year: "in the last 12 months",
+                  custom: "in that date range",
+                };
+                const range = RANGE_PHRASE[addedDateFilter] ?? "in that date range";
+                const tryAllTime = (
                   <button
                     type="button"
-                    onClick={() => changeUploaded("quarter")}
+                    onClick={() => changeUploaded("all-time")}
                     className="text-primary hover:underline focus-visible:outline-none focus-visible:underline"
                   >
-                    Last 90 days
+                    All time
                   </button>
                 );
                 return (
@@ -1887,10 +1897,10 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     title="No assets found"
                     description={
                       nothingElseApplied ? (
-                        <>Nothing was uploaded in the last 30 days. Try {try90}.</>
+                        <>Nothing was uploaded {range}. Try {tryAllTime}.</>
                       ) : (
                         <>
-                          Nothing uploaded in the last 30 days matches. Try {try90}, or{" "}
+                          Nothing uploaded {range} matches. Try {tryAllTime}, or{" "}
                           <button
                             type="button"
                             onClick={startOver}
