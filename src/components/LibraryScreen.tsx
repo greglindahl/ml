@@ -1861,18 +1861,56 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
               </div>
             ) : isError ? (
               <ErrorState onRetry={retry} />
-            ) : sortedResults.length === 0 ? (
-              <EmptyState
-                icon="bi-image"
-                title="No assets found"
-                onClearAll={() => {
-                  // Unlike the chip row's Clear Filters, the empty state resets the
-                  // search too, so the user genuinely starts over.
-                  searchHandleRef.current?.clearAll();
-                  filterBarHandleRef.current?.clearAll();
-                }}
-              />
-            ) : (
+            ) : sortedResults.length === 0 ? (() => {
+              // Unlike the chip row's Clear Filters, the empty state resets the
+              // search too, so the user genuinely starts over.
+              const startOver = () => {
+                searchHandleRef.current?.clearAll();
+                filterBarHandleRef.current?.clearAll();
+              };
+              // On the 30-day default the date is the likeliest culprit, so offer
+              // one step wider (not All time — the expensive search). Start over
+              // would only land back here when nothing else is applied, so it goes.
+              if (addedDateFilter === UPLOADED_DEFAULT) {
+                const nothingElseApplied =
+                  !activeQuery && searchSelectedFacets.length === 0 &&
+                  [contentTypeFilter, creatorFilter, orientationFilter, peopleFilter, sceneFilter, brandFilter, tagsFilter, folderFilter, sourceFilter, orgStatusFilter].every(f => f.length === 0) &&
+                  !capturedDateFilter && !isBrandedActive && !isUnviewedActive && !isUnsortedActive;
+                const try90 = (
+                  <button
+                    type="button"
+                    onClick={() => filterBarHandleRef.current?.setValue("added-date", "quarter", "Last 90 days")}
+                    className="text-primary hover:underline focus-visible:outline-none focus-visible:underline"
+                  >
+                    Last 90 days
+                  </button>
+                );
+                return (
+                  <EmptyState
+                    icon="bi-image"
+                    title="No assets found"
+                    description={
+                      nothingElseApplied ? (
+                        <>Nothing was uploaded in the last 30 days. Try {try90}.</>
+                      ) : (
+                        <>
+                          Nothing uploaded in the last 30 days matches. Try {try90}, or{" "}
+                          <button
+                            type="button"
+                            onClick={startOver}
+                            className="text-primary hover:underline focus-visible:outline-none focus-visible:underline"
+                          >
+                            start over
+                          </button>
+                          .
+                        </>
+                      )
+                    }
+                  />
+                );
+              }
+              return <EmptyState icon="bi-image" title="No assets found" onClearAll={startOver} />;
+            })() : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
                 {sortedResults.map((asset) => {
                   const isSelected = selectedAssets.has(asset.id);

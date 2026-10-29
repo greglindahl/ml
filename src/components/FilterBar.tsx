@@ -219,6 +219,8 @@ export interface CustomDateRange {
 export interface FilterBarHandle {
   removeValue: (filterId: string, value: string) => void;
   addValue: (filterId: string, value: string, label: string) => void;
+  /** Replace a single-select value from outside (e.g. the empty state's "Try Last 90 days"). */
+  setValue: (filterId: string, value: string, label: string) => void;
   clearAll: () => void;
 }
 
@@ -437,6 +439,7 @@ export function FilterBar({
       handleRef.current = {
         removeValue: handleRemoveValue,
         addValue: handleAddValue,
+        setValue: handleSingleSelect,
         clearAll: clearAllFilters,
       };
     }
