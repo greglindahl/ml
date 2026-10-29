@@ -10,7 +10,48 @@ export type DateRangeValue =
   | "mtd"
   | "quarter"
   | "year"
+  | "all-time"
   | "custom";
+
+/**
+ * All Assets' Uploaded filter always has a selection (default sort decision,
+ * Oct 2026): defaults to Last 30 days, offers All time explicitly, and clearing
+ * resets to 30 days instead of leaving it unfiltered. The last choice persists
+ * in the browser; with nothing stored it falls back to 30 days.
+ */
+export const UPLOADED_DEFAULT: DateRangeValue = "month";
+
+export const UPLOADED_RANGE_OPTIONS: { value: DateRangeValue; label: string }[] = [
+  { value: "week", label: "Last 7 days" },
+  { value: "two-weeks", label: "Last 14 days" },
+  { value: "month", label: "Last 30 days" },
+  { value: "mtd", label: "Month to Date" },
+  { value: "quarter", label: "Last 90 days" },
+  { value: "year", label: "Last 12 months" },
+  { value: "all-time", label: "All time" },
+  { value: "custom", label: "Custom" },
+];
+const UPLOADED_KEY = "filter.assets.uploaded";
+const PERSISTED_UPLOADED: DateRangeValue[] = ["week", "two-weeks", "month", "mtd", "quarter", "year", "all-time"];
+
+export function readStoredUploaded(): DateRangeValue {
+  try {
+    const v = localStorage.getItem(UPLOADED_KEY) as DateRangeValue | null;
+    return v && PERSISTED_UPLOADED.includes(v) ? v : UPLOADED_DEFAULT;
+  } catch {
+    return UPLOADED_DEFAULT;
+  }
+}
+
+/** Custom ranges aren't stored; a reload with one applied comes back to the last preset. */
+export function storeUploaded(value: string) {
+  if (!PERSISTED_UPLOADED.includes(value as DateRangeValue)) return;
+  try {
+    localStorage.setItem(UPLOADED_KEY, value);
+  } catch {
+    // Storage unavailable — the 30-day default still applies.
+  }
+}
 
 export interface CustomRange {
   from: Date | undefined;
@@ -30,6 +71,7 @@ export function matchesDateRange(
   filter: DateRangeValue,
   customRange?: CustomRange
 ): boolean {
+  if (filter === "all-time") return true;
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const day = new Date(date.getFullYear(), date.getMonth(), date.getDate());

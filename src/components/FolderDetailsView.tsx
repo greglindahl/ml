@@ -28,6 +28,8 @@ import { NewGalleryDialog, type NewGalleryData } from "@/components/NewGalleryDi
 import { NewFolderDialog, type NewFolderData } from "@/components/NewFolderDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { DateScopedEmptyState } from "@/components/DateScopedEmptyState";
+import { UploadedRangeControl } from "@/components/UploadedRangeControl";
 import { ErrorState } from "@/components/ErrorState";
 import { RelevanceLimitNotice } from "@/components/RelevanceLimitNotice";
 import {
@@ -274,10 +276,16 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   const [creatorFilter, setCreatorFilter] = useState<string[]>([]);
   const [orientationFilter, setOrientationFilter] = useState<LibraryAsset["orientation"][]>([]);
   const [peopleFilter, setPeopleFilter] = useState<string[]>([]);
-  const [addedDateFilter, setAddedDateFilter] = useState<DateRangeValue | null>(null);
+  // Uploaded range control beside Sort: only All Assets defaults to 30 days
+  // (Paul); a folder's Assets tab defaults to All time.
+  const [addedDateFilter, setAddedDateFilter] = useState<DateRangeValue>("all-time");
   const [capturedDateFilter, setCapturedDateFilter] = useState<DateRangeValue | null>(null);
   // Custom ranges keyed by date filter id ("added-date" / "captured-date")
   const [customDateRanges, setCustomDateRanges] = useState<Record<string, CustomRange>>({});
+  const changeUploaded = (value: DateRangeValue, range?: CustomRange) => {
+    setAddedDateFilter(value);
+    if (range) setCustomDateRanges(prev => ({ ...prev, "added-date": range }));
+  };
   const filterBarHandleRef = useRef<FilterBarHandle | null>(null);
   const searchHandleRef = useRef<FacetedSearchWithTypeaheadHandle | null>(null);
   // Galleries tab filter chips (new pattern, matching the assets bars)
@@ -490,9 +498,6 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
       case "people":
         setPeopleFilter(values);
         break;
-      case "added-date":
-        setAddedDateFilter((values[0] as DateRangeValue) ?? null);
-        break;
       case "captured-date":
         setCapturedDateFilter((values[0] as DateRangeValue) ?? null);
         break;
@@ -662,6 +667,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             </div>
 
             <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
+                <UploadedRangeControl value={addedDateFilter} customRange={customDateRanges["added-date"]} onChange={changeUploaded} />
                 {assetsViewMode === "grid" && (
                 <Tooltip delayDuration={700}>
                   <DropdownMenu>
@@ -737,7 +743,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               onCustomDateChange={handleCustomDateChange}
               compactMode={true}
               handleRef={filterBarHandleRef}
-              hideFilters={["folders"]}
+              hideFilters={["folders", "added-date"]}
               isUnsortedActive={isUnsortedActive}
               onUnsortedToggle={setIsUnsortedActive}
               isUnviewedActive={isUnviewedActive}
@@ -758,9 +764,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               orientationFilter.forEach(v => chips.push({ label: ({ panoramic: "Panoramic", landscape: "Landscape", square: "Square", portrait: "Portrait", tall: "Tall", unknown: "Unknown" } as Record<string, string>)[v] || v, value: v, sourceId: "orientation" }));
               {
                 const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 days", "two-weeks": "Last 14 days", month: "Last 30 days", mtd: "Month to Date", quarter: "Last 90 days", year: "Last 12 months", custom: "Custom Date" };
-                if (addedDateFilter) {
-                  chips.push({ label: `Uploaded: ${dateLabels[addedDateFilter] || addedDateFilter}`, value: addedDateFilter, sourceId: "added-date" });
-                }
+                // No Uploaded chip: it's the always-set range control beside Sort.
                 if (capturedDateFilter) {
                   chips.push({ label: `Captured: ${dateLabels[capturedDateFilter] || capturedDateFilter}`, value: capturedDateFilter, sourceId: "captured-date" });
                 }
@@ -851,12 +855,18 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
             ) : isError ? (
               <ErrorState onRetry={retry} />
             ) : sortedResults.length === 0 ? (
-              <EmptyState
-                icon="bi-image"
-                title="No assets found"
-                onClearAll={() => {
+              <DateScopedEmptyState
+                uploaded={addedDateFilter}
+                nothingElseApplied={
+                  !activeQuery &&
+                  [contentTypeFilter, creatorFilter, orientationFilter, peopleFilter].every(f => f.length === 0) &&
+                  !capturedDateFilter && !isBrandedActive && !isUnviewedActive && !isUnsortedActive
+                }
+                onAllTime={() => changeUploaded("all-time")}
+                onStartOver={() => {
                   searchHandleRef.current?.clearAll();
                   filterBarHandleRef.current?.clearAll();
+                  changeUploaded("all-time");
                 }}
               />
             ) : (

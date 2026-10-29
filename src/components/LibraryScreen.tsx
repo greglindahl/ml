@@ -45,7 +45,9 @@ const ORIENTATION_LABELS: Record<string, string> = {
 };
 import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, findFolderAncestorIds, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, countTotalAssets, findGalleryParentPath, hasArchivedAncestor, enrichGallery, sortGalleries, GALLERY_SORT_OPTIONS, GallerySortField } from "@/lib/mockFolderData";
 import { TooLargeDialog, isTooLarge } from "@/components/TooLarge";
-import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
+import { matchesDateRange, DateRangeValue, CustomRange, UPLOADED_DEFAULT, readStoredUploaded, storeUploaded } from "@/lib/dateRangeFilter";
+import { UploadedRangeControl } from "@/components/UploadedRangeControl";
+import { DateScopedEmptyState } from "@/components/DateScopedEmptyState";
 import { matchesCaptureRange } from "@/lib/captureTime";
 import { relevanceScore, capRelevanceResults, isRelevanceCapped, RELEVANCE_RESULT_LIMIT } from "@/lib/relevance";
 import { FolderSidebar } from "@/components/FolderSidebar";
@@ -202,6 +204,13 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   const [favBrandedActive, setFavBrandedActive] = useState(false);
   const [favAssetFilters, setFavAssetFilters] = useState<Record<string, string[]>>({});
   const [favAssetCustomDates, setFavAssetCustomDates] = useState<Record<string, CustomRange>>({});
+  // Uploaded range control: only All Assets defaults to 30 days (Paul); scoped
+  // Assets tabs default to All time and start fresh each visit.
+  const [favUploaded, setFavUploaded] = useState<DateRangeValue>("all-time");
+  const changeFavUploaded = (value: DateRangeValue, range?: CustomRange) => {
+    setFavUploaded(value);
+    if (range) setFavAssetCustomDates(prev => ({ ...prev, "added-date": range }));
+  };
   const [favSelectedAssets, setFavSelectedAssets] = useState<Set<string>>(new Set());
   // Favorites assets sort — full parity with the All Assets tab: same field set
   // (SORT_OPTIONS below), direction toggling, and the PORTAL-12776 relevance
@@ -223,6 +232,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   const gallerySearchHandleRef = useRef<FacetedSearchWithTypeaheadHandle | null>(null);
   const folderSearchHandleRef = useRef<FacetedSearchWithTypeaheadHandle | null>(null);
   const favGallerySearchHandleRef = useRef<FacetedSearchWithTypeaheadHandle | null>(null);
+  const favAssetSearchHandleRef = useRef<FacetedSearchWithTypeaheadHandle | null>(null);
   const favAssetsFilterBarHandleRef = useRef<FilterBarHandle | null>(null);
   // Session-local asset favorite state, seeded from the mock data flags.
   // Gallery favorite state lives on galleryList (already stateful).
@@ -767,10 +777,16 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   const [brandFilter, setBrandFilter] = useState<string[]>([]);
   const [tagsFilter, setTagsFilter] = useState<string[]>([]);
   const [folderFilter, setFolderFilter] = useState<string[]>([]);
-  const [addedDateFilter, setAddedDateFilter] = useState<DateRangeValue | null>(null);
+  // Uploaded is a scope control beside Sort, not a facet: always set, remembered per browser.
+  const [addedDateFilter, setAddedDateFilter] = useState<DateRangeValue | null>(readStoredUploaded);
   const [capturedDateFilter, setCapturedDateFilter] = useState<DateRangeValue | null>(null);
   // Custom ranges keyed by date filter id ("added-date" / "captured-date")
   const [customDateRanges, setCustomDateRanges] = useState<Record<string, CustomRange>>({});
+  const changeUploaded = useCallback((value: DateRangeValue, range?: CustomRange) => {
+    setAddedDateFilter(value);
+    if (range) setCustomDateRanges(prev => ({ ...prev, "added-date": range }));
+    storeUploaded(value);
+  }, []);
   const [isBrandedActive, setIsBrandedActive] = useState(false);
   const [sourceFilter, setSourceFilter] = useState<string[]>([]);
   const [orgStatusFilter, setOrgStatusFilter] = useState<string[]>([]);
@@ -1219,9 +1235,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     setBrandFilter([]);
     setTagsFilter([]);
     setFolderFilter([]);
-    setAddedDateFilter(null);
+    // Uploaded is a remembered scope like sort, so it survives leaving the tab.
     setCapturedDateFilter(null);
-    setCustomDateRanges({});
+    setCustomDateRanges(prev => (prev["added-date"] ? { "added-date": prev["added-date"] } : {}));
     setSourceFilter([]);
     setOrgStatusFilter([]);
     setIsBrandedActive(false);
@@ -1378,8 +1394,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     if (f["creator"]?.length) results = results.filter(a => f["creator"].includes(a.creatorId));
     if (f["content-type"]?.length) results = results.filter(a => f["content-type"].includes(a.type));
     if (f["orientation"]?.length) results = results.filter(a => f["orientation"].includes(a.orientation));
-    const added = f["added-date"]?.[0];
-    if (added) results = results.filter(a => matchesDateRange(a.dateCreated, added as DateRangeValue, favAssetCustomDates["added-date"]));
+    results = results.filter(a => matchesDateRange(a.dateCreated, favUploaded, favAssetCustomDates["added-date"]));
     const captured = f["captured-date"]?.[0];
     if (captured) results = results.filter(a => matchesCaptureRange(a.captureDate, a.captureOffsetMinutes, captured as DateRangeValue, favAssetCustomDates["captured-date"]));
     if (favAssetSort === "relevance") {
@@ -1406,7 +1421,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
       }
       return favAssetSortDir === "asc" ? cmp : -cmp;
     });
-  }, [favAssetsBase, favAssetSearch, favBrandedActive, favUnviewedActive, favAssetFilters, favAssetCustomDates, favAssetSort, favAssetSortDir]);
+  }, [favAssetsBase, favAssetSearch, favBrandedActive, favUnviewedActive, favAssetFilters, favAssetCustomDates, favUploaded, favAssetSort, favAssetSortDir]);
 
   // PORTAL-12776 for the Favorites assets subview: query present → Relevance
   // unless pinned; query cleared → unpin and retire Relevance.
@@ -1607,6 +1622,12 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
               {assetsViewMode === "list" && sortField === "relevance" && <RelevanceIndicator />}
 
               <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
+                {/* Both views: the date scopes the results, it isn't a sort */}
+                <UploadedRangeControl
+                  value={addedDateFilter ?? UPLOADED_DEFAULT}
+                  customRange={customDateRanges["added-date"]}
+                  onChange={changeUploaded}
+                />
                 {assetsViewMode === "grid" && (
                   <Tooltip delayDuration={700}>
                     <DropdownMenu>
@@ -1702,6 +1723,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 isBrandingActive={isBrandedActive}
                 onBrandingToggle={setIsBrandedActive}
                 onOpenFiltersSheet={() => setAssetsFiltersSheetOpen(true)}
+                hideFilters={["added-date"]}
               />
             </div>
 
@@ -1734,10 +1756,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 contentTypeFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "content-type", icon: <i className="bi bi-image text-sm" /> }));
                 orientationFilter.forEach(v => chips.push({ label: ORIENTATION_LABELS[v] || v, value: v, sourceId: "orientation", icon: <i className="bi bi-crop text-sm" /> }));
                 {
+                  // No Uploaded chip: it's the always-set scope control beside Sort.
                   const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 days", "two-weeks": "Last 14 days", month: "Last 30 days", mtd: "Month to Date", quarter: "Last 90 days", year: "Last 12 months", custom: "Custom Date" };
-                  if (addedDateFilter) {
-                    chips.push({ label: `Uploaded: ${dateLabels[addedDateFilter] || addedDateFilter}`, value: addedDateFilter, sourceId: "added-date", icon: <i className="bi bi-calendar-plus text-sm" /> });
-                  }
                   if (capturedDateFilter) {
                     chips.push({ label: `Captured: ${dateLabels[capturedDateFilter] || capturedDateFilter}`, value: capturedDateFilter, sourceId: "captured-date", icon: <i className="bi bi-calendar text-sm" /> });
                   }
@@ -1845,14 +1865,20 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             ) : isError ? (
               <ErrorState onRetry={retry} />
             ) : sortedResults.length === 0 ? (
-              <EmptyState
-                icon="bi-image"
-                title="No assets found"
-                onClearAll={() => {
+              <DateScopedEmptyState
+                uploaded={addedDateFilter ?? UPLOADED_DEFAULT}
+                nothingElseApplied={
+                  !activeQuery && searchSelectedFacets.length === 0 &&
+                  [contentTypeFilter, creatorFilter, orientationFilter, peopleFilter, sceneFilter, brandFilter, tagsFilter, folderFilter, sourceFilter, orgStatusFilter].every(f => f.length === 0) &&
+                  !capturedDateFilter && !isBrandedActive && !isUnviewedActive && !isUnsortedActive
+                }
+                onAllTime={() => changeUploaded("all-time")}
+                onStartOver={() => {
                   // Unlike the chip row's Clear Filters, the empty state resets the
                   // search too, so the user genuinely starts over.
                   searchHandleRef.current?.clearAll();
                   filterBarHandleRef.current?.clearAll();
+                  changeUploaded(UPLOADED_DEFAULT);
                 }}
               />
             ) : (
@@ -2629,9 +2655,10 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 {/* Search Row with Utility Cluster */}
                 <div className="flex items-center gap-4 mb-3 cq-search-row">
                   <div className="flex-1 min-w-0 cq-search-input">
-                    <FacetedSearchWithTypeahead onSearch={setFavAssetSearch} assets={favAssetsBase} placeholder="Search by people, tags, filenames…" onCreatorSelect={(id, name) => favAssetsFilterBarHandleRef.current?.addValue("creator", id, name)} selectedCreatorIds={favAssetFilters["creator"] ?? []} />
+                    <FacetedSearchWithTypeahead handleRef={favAssetSearchHandleRef} onSearch={setFavAssetSearch} assets={favAssetsBase} placeholder="Search by people, tags, filenames…" onCreatorSelect={(id, name) => favAssetsFilterBarHandleRef.current?.addValue("creator", id, name)} selectedCreatorIds={favAssetFilters["creator"] ?? []} />
                   </div>
                   <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
+                  <UploadedRangeControl value={favUploaded} customRange={favAssetCustomDates["added-date"]} onChange={changeFavUploaded} />
                   {favAssetsViewMode === "grid" && (
                     <Tooltip delayDuration={700}>
                       <DropdownMenu>
@@ -2720,6 +2747,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     isBrandingActive={favBrandedActive}
                     onBrandingToggle={setFavBrandedActive}
                     onOpenFiltersSheet={() => setAssetsFiltersSheetOpen(true)}
+                    hideFilters={["added-date"]}
                   />
                 </div>
 
@@ -2731,8 +2759,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                       values.map(value => ({
                         filterId,
                         value,
-                        label: filterId === "added-date" ? `Uploaded: ${dateLabels[value] ?? value}`
-                          : filterId === "captured-date" ? `Captured: ${dateLabels[value] ?? value}`
+                        label: filterId === "captured-date" ? `Captured: ${dateLabels[value] ?? value}`
                           : filterId === "content-type" ? value.charAt(0).toUpperCase() + value.slice(1)
                           : filterId === "creator" ? PEOPLE_NAME_LOOKUP[value] || value
                           : value,
@@ -2787,18 +2814,34 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     favAssetSearch.trim() !== "" ||
                     favBrandedActive ||
                     favUnviewedActive;
+                  const favStartOver = () => {
+                    // Start over always clears the search box too, not just the query state.
+                    favAssetSearchHandleRef.current?.clearAll();
+                    setFavAssetSearch("");
+                    setFavBrandedActive(false);
+                    setFavUnviewedActive(false);
+                    favAssetsFilterBarHandleRef.current?.clearAll();
+                    setFavUploaded("all-time");
+                  };
+
+                  if (favUploaded !== "all-time") {
+                    return (
+                      <DateScopedEmptyState
+                        title="No favorited assets"
+                        uploaded={favUploaded}
+                        nothingElseApplied={!favNarrowed}
+                        onAllTime={() => setFavUploaded("all-time")}
+                        onStartOver={favStartOver}
+                      />
+                    );
+                  }
 
                   return (
                     <EmptyState
                       icon="bi-heart"
                       title="No favorited assets"
                       description={favNarrowed ? undefined : "Tap the heart on any asset to add it to Favorites"}
-                      onClearAll={favNarrowed ? () => {
-                        setFavAssetSearch("");
-                        setFavBrandedActive(false);
-                        setFavUnviewedActive(false);
-                        favAssetsFilterBarHandleRef.current?.clearAll();
-                      } : undefined}
+                      onClearAll={favNarrowed ? favStartOver : undefined}
                     />
                   );
                 })() : favAssetsViewMode === "list" ? (
