@@ -425,6 +425,21 @@
   .cq-full-width-xs {
     width: 100%;
   }
+
+  /* Uploaded + Sort + view toggles + gear don't fit one phone-width row */
+  .cq-search-row .cq-utility-cluster {
+    flex-wrap: wrap;
+    flex-shrink: 1;
+    row-gap: 0.5rem;
+  }
+}
+
+/* Uploaded range control (All Assets): drops its "Uploaded:" prefix before the
+   search input gets squeezed; the calendar icon and tooltip still name it. */
+@container content (max-width: 1099px) {
+  .uploaded-range-prefix {
+    display: none;
+  }
 }
 
 /* Search row wrap behavior - utility cluster drops to its own row */

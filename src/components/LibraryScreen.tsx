@@ -45,7 +45,8 @@ const ORIENTATION_LABELS: Record<string, string> = {
 };
 import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, findFolderAncestorIds, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, countTotalAssets, findGalleryParentPath, hasArchivedAncestor, enrichGallery, sortGalleries, GALLERY_SORT_OPTIONS, GallerySortField } from "@/lib/mockFolderData";
 import { TooLargeDialog, isTooLarge } from "@/components/TooLarge";
-import { matchesDateRange, DateRangeValue, CustomRange, UPLOADED_DEFAULT } from "@/lib/dateRangeFilter";
+import { matchesDateRange, DateRangeValue, CustomRange, UPLOADED_DEFAULT, readStoredUploaded, storeUploaded } from "@/lib/dateRangeFilter";
+import { UploadedRangeControl } from "@/components/UploadedRangeControl";
 import { matchesCaptureRange } from "@/lib/captureTime";
 import { relevanceScore, capRelevanceResults, isRelevanceCapped, RELEVANCE_RESULT_LIMIT } from "@/lib/relevance";
 import { FolderSidebar } from "@/components/FolderSidebar";
@@ -767,10 +768,16 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   const [brandFilter, setBrandFilter] = useState<string[]>([]);
   const [tagsFilter, setTagsFilter] = useState<string[]>([]);
   const [folderFilter, setFolderFilter] = useState<string[]>([]);
-  const [addedDateFilter, setAddedDateFilter] = useState<DateRangeValue | null>(null);
+  // Uploaded is a scope control beside Sort, not a facet: always set, remembered per browser.
+  const [addedDateFilter, setAddedDateFilter] = useState<DateRangeValue | null>(readStoredUploaded);
   const [capturedDateFilter, setCapturedDateFilter] = useState<DateRangeValue | null>(null);
   // Custom ranges keyed by date filter id ("added-date" / "captured-date")
   const [customDateRanges, setCustomDateRanges] = useState<Record<string, CustomRange>>({});
+  const changeUploaded = useCallback((value: DateRangeValue, range?: CustomRange) => {
+    setAddedDateFilter(value);
+    if (range) setCustomDateRanges(prev => ({ ...prev, "added-date": range }));
+    storeUploaded(value);
+  }, []);
   const [isBrandedActive, setIsBrandedActive] = useState(false);
   const [sourceFilter, setSourceFilter] = useState<string[]>([]);
   const [orgStatusFilter, setOrgStatusFilter] = useState<string[]>([]);
@@ -1219,9 +1226,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     setBrandFilter([]);
     setTagsFilter([]);
     setFolderFilter([]);
-    setAddedDateFilter(null);
+    // Uploaded is a remembered scope like sort, so it survives leaving the tab.
     setCapturedDateFilter(null);
-    setCustomDateRanges({});
+    setCustomDateRanges(prev => (prev["added-date"] ? { "added-date": prev["added-date"] } : {}));
     setSourceFilter([]);
     setOrgStatusFilter([]);
     setIsBrandedActive(false);
@@ -1607,6 +1614,12 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
               {assetsViewMode === "list" && sortField === "relevance" && <RelevanceIndicator />}
 
               <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
+                {/* Both views: the date scopes the results, it isn't a sort */}
+                <UploadedRangeControl
+                  value={addedDateFilter ?? UPLOADED_DEFAULT}
+                  customRange={customDateRanges["added-date"]}
+                  onChange={changeUploaded}
+                />
                 {assetsViewMode === "grid" && (
                   <Tooltip delayDuration={700}>
                     <DropdownMenu>
@@ -1702,7 +1715,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 isBrandingActive={isBrandedActive}
                 onBrandingToggle={setIsBrandedActive}
                 onOpenFiltersSheet={() => setAssetsFiltersSheetOpen(true)}
-                pinUploaded
+                hideFilters={["added-date"]}
               />
             </div>
 
@@ -1710,8 +1723,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             <div className="min-h-[24px] mb-4">
               {(() => {
                 // Build chip objects from all sources
-                // fixed: the default Uploaded chip — there's nothing to clear it to, so no x.
-                const chips: { label: string; value: string; sourceId: string; icon: React.ReactNode; fixed?: boolean }[] = [];
+                const chips: { label: string; value: string; sourceId: string; icon: React.ReactNode }[] = [];
 
                 // Search facets
                 searchSelectedFacets.forEach(f => {
@@ -1736,10 +1748,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 contentTypeFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "content-type", icon: <i className="bi bi-image text-sm" /> }));
                 orientationFilter.forEach(v => chips.push({ label: ORIENTATION_LABELS[v] || v, value: v, sourceId: "orientation", icon: <i className="bi bi-crop text-sm" /> }));
                 {
-                  const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 days", "two-weeks": "Last 14 days", month: "Last 30 days", mtd: "Month to Date", quarter: "Last 90 days", year: "Last 12 months", "all-time": "All time", custom: "Custom Date" };
-                  if (addedDateFilter) {
-                    chips.push({ label: `Uploaded: ${dateLabels[addedDateFilter] || addedDateFilter}`, value: addedDateFilter, sourceId: "added-date", icon: <i className="bi bi-calendar-plus text-sm" />, fixed: addedDateFilter === UPLOADED_DEFAULT });
-                  }
+                  // No Uploaded chip: it's the always-set scope control beside Sort.
+                  const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 days", "two-weeks": "Last 14 days", month: "Last 30 days", mtd: "Month to Date", quarter: "Last 90 days", year: "Last 12 months", custom: "Custom Date" };
                   if (capturedDateFilter) {
                     chips.push({ label: `Captured: ${dateLabels[capturedDateFilter] || capturedDateFilter}`, value: capturedDateFilter, sourceId: "captured-date", icon: <i className="bi bi-calendar text-sm" /> });
                   }
@@ -1768,41 +1778,26 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
                 return (
                   <div className="flex flex-wrap items-center gap-1.5">
-                    {chips.map((chip, i) =>
-                      chip.fixed ? (
-                        <Badge
-                          key={`${chip.sourceId}-${chip.value}-${i}`}
-                          colorStyle="primary"
-                          theme="soft"
-                          shape="rounded"
-                          className="gap-1.5 text-[13px] normal-case tracking-normal font-normal"
-                        >
-                          {chip.icon}
-                          {chip.label}
-                        </Badge>
-                      ) : (
-                        <Badge
-                          key={`${chip.sourceId}-${chip.value}-${i}`}
-                          colorStyle="primary"
-                          theme="soft"
-                          shape="rounded"
-                          className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-primary/30 text-[13px] normal-case tracking-normal font-normal"
-                          onClick={() => handleRemoveChip(chip)}
-                        >
-                          {chip.icon}
-                          {chip.label}
-                          <i className="bi bi-x text-sm ml-0.5" />
-                        </Badge>
-                      )
-                    )}
-                    {chips.some((c) => !c.fixed) && (
-                      <button
-                        onClick={handleClearAllChips}
-                        className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+                    {chips.map((chip, i) => (
+                      <Badge
+                        key={`${chip.sourceId}-${chip.value}-${i}`}
+                        colorStyle="primary"
+                        theme="soft"
+                        shape="rounded"
+                        className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-primary/30 text-[13px] normal-case tracking-normal font-normal"
+                        onClick={() => handleRemoveChip(chip)}
                       >
-                        Clear Filters
-                      </button>
-                    )}
+                        {chip.icon}
+                        {chip.label}
+                        <i className="bi bi-x text-sm ml-0.5" />
+                      </Badge>
+                    ))}
+                    <button
+                      onClick={handleClearAllChips}
+                      className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+                    >
+                      Clear Filters
+                    </button>
                   </div>
                 );
               })()}
@@ -1867,6 +1862,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
               const startOver = () => {
                 searchHandleRef.current?.clearAll();
                 filterBarHandleRef.current?.clearAll();
+                changeUploaded(UPLOADED_DEFAULT);
               };
               // On the 30-day default the date is the likeliest culprit, so offer
               // one step wider (not All time — the expensive search). Start over
@@ -1879,7 +1875,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 const try90 = (
                   <button
                     type="button"
-                    onClick={() => filterBarHandleRef.current?.setValue("added-date", "quarter", "Last 90 days")}
+                    onClick={() => changeUploaded("quarter")}
                     className="text-primary hover:underline focus-visible:outline-none focus-visible:underline"
                   >
                     Last 90 days

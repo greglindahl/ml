@@ -20,6 +20,17 @@ export type DateRangeValue =
  * in the browser; with nothing stored it falls back to 30 days.
  */
 export const UPLOADED_DEFAULT: DateRangeValue = "month";
+
+export const UPLOADED_RANGE_OPTIONS: { value: DateRangeValue; label: string }[] = [
+  { value: "week", label: "Last 7 days" },
+  { value: "two-weeks", label: "Last 14 days" },
+  { value: "month", label: "Last 30 days" },
+  { value: "mtd", label: "Month to Date" },
+  { value: "quarter", label: "Last 90 days" },
+  { value: "year", label: "Last 12 months" },
+  { value: "all-time", label: "All time" },
+  { value: "custom", label: "Custom" },
+];
 const UPLOADED_KEY = "filter.assets.uploaded";
 const PERSISTED_UPLOADED: DateRangeValue[] = ["week", "two-weeks", "month", "mtd", "quarter", "year", "all-time"];
 
