@@ -232,6 +232,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   const gallerySearchHandleRef = useRef<FacetedSearchWithTypeaheadHandle | null>(null);
   const folderSearchHandleRef = useRef<FacetedSearchWithTypeaheadHandle | null>(null);
   const favGallerySearchHandleRef = useRef<FacetedSearchWithTypeaheadHandle | null>(null);
+  const favAssetSearchHandleRef = useRef<FacetedSearchWithTypeaheadHandle | null>(null);
   const favAssetsFilterBarHandleRef = useRef<FilterBarHandle | null>(null);
   // Session-local asset favorite state, seeded from the mock data flags.
   // Gallery favorite state lives on galleryList (already stateful).
@@ -2654,7 +2655,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 {/* Search Row with Utility Cluster */}
                 <div className="flex items-center gap-4 mb-3 cq-search-row">
                   <div className="flex-1 min-w-0 cq-search-input">
-                    <FacetedSearchWithTypeahead onSearch={setFavAssetSearch} assets={favAssetsBase} placeholder="Search by people, tags, filenames…" onCreatorSelect={(id, name) => favAssetsFilterBarHandleRef.current?.addValue("creator", id, name)} selectedCreatorIds={favAssetFilters["creator"] ?? []} />
+                    <FacetedSearchWithTypeahead handleRef={favAssetSearchHandleRef} onSearch={setFavAssetSearch} assets={favAssetsBase} placeholder="Search by people, tags, filenames…" onCreatorSelect={(id, name) => favAssetsFilterBarHandleRef.current?.addValue("creator", id, name)} selectedCreatorIds={favAssetFilters["creator"] ?? []} />
                   </div>
                   <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
                   <UploadedRangeControl value={favUploaded} customRange={favAssetCustomDates["added-date"]} onChange={changeFavUploaded} />
@@ -2814,6 +2815,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     favBrandedActive ||
                     favUnviewedActive;
                   const favStartOver = () => {
+                    // Start over always clears the search box too, not just the query state.
+                    favAssetSearchHandleRef.current?.clearAll();
                     setFavAssetSearch("");
                     setFavBrandedActive(false);
                     setFavUnviewedActive(false);
