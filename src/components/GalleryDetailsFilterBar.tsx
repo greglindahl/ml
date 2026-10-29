@@ -122,11 +122,7 @@ const filters: FilterConfig[] = [{
       }));
   })(),
 }, {
-  id: "added-date",
-  label: "Uploaded",
-  icon: <i className="bi bi-calendar-plus" />,
-  options: DATE_RANGE_OPTIONS,
-}, {
+  // Uploaded isn't a facet here: it's the range control beside Sort (GalleryDetailsView).
   id: "captured-date",
   label: "Captured",
   icon: <i className="bi bi-calendar" />,

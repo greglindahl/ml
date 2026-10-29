@@ -26,7 +26,8 @@ import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFi
 import { matchesCaptureRange } from "@/lib/captureTime";
 import { relevanceScore, capRelevanceResults, isRelevanceCapped } from "@/lib/relevance";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/EmptyState";
+import { DateScopedEmptyState } from "@/components/DateScopedEmptyState";
+import { UploadedRangeControl } from "@/components/UploadedRangeControl";
 import { ErrorState } from "@/components/ErrorState";
 import { RelevanceLimitNotice } from "@/components/RelevanceLimitNotice";
 import {
@@ -183,10 +184,16 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
   const [creatorFilter, setCreatorFilter] = useState<string[]>([]);
   const [orientationFilter, setOrientationFilter] = useState<LibraryAsset["orientation"][]>([]);
   const [peopleFilter, setPeopleFilter] = useState<string[]>([]);
-  const [addedDateFilter, setAddedDateFilter] = useState<DateRangeValue | null>(null);
+  // Uploaded range control beside Sort: only All Assets defaults to 30 days
+  // (Paul); a gallery's assets default to All time.
+  const [addedDateFilter, setAddedDateFilter] = useState<DateRangeValue>("all-time");
   const [capturedDateFilter, setCapturedDateFilter] = useState<DateRangeValue | null>(null);
   // Custom ranges keyed by date filter id ("added-date" / "captured-date")
   const [customDateRanges, setCustomDateRanges] = useState<Record<string, CustomRange>>({});
+  const changeUploaded = (value: DateRangeValue, range?: CustomRange) => {
+    setAddedDateFilter(value);
+    if (range) setCustomDateRanges(prev => ({ ...prev, "added-date": range }));
+  };
 
   // Use the library search hook
   const { results, allAssets, isLoading, isError, search, retry } = useLibrarySearch();
@@ -364,9 +371,6 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
       case "people":
         setPeopleFilter(values);
         break;
-      case "added-date":
-        setAddedDateFilter((values[0] as DateRangeValue) ?? null);
-        break;
       case "captured-date":
         setCapturedDateFilter((values[0] as DateRangeValue) ?? null);
         break;
@@ -518,6 +522,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             </div>
 
             <div className="flex items-center gap-2 cq-compact-sm flex-shrink-0 cq-utility-cluster">
+              <UploadedRangeControl value={addedDateFilter} customRange={customDateRanges["added-date"]} onChange={changeUploaded} />
               {assetsViewMode === "grid" && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -685,12 +690,14 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
             ) : isError ? (
               <ErrorState onRetry={retry} />
             ) : sortedResults.length === 0 ? (
-              <EmptyState
-                icon="bi-image"
-                title="No assets found"
-                onClearAll={() => {
+              <DateScopedEmptyState
+                uploaded={addedDateFilter}
+                nothingElseApplied={!activeQuery && filterChips.length === 0 && !isBrandedActive && !isUnviewedActive}
+                onAllTime={() => changeUploaded("all-time")}
+                onStartOver={() => {
                   searchHandleRef.current?.clearAll();
                   filterBarHandleRef.current?.clearAll();
+                  changeUploaded("all-time");
                 }}
               />
             ) : (
