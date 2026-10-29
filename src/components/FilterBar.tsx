@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { folders, FolderItem } from "@/lib/mockFolderData";
 import { mockLibraryAssets, CREATOR_NAMES } from "@/lib/mockLibraryData";
 import { TogglePill } from "@/components/TogglePill";
+import { UPLOADED_DEFAULT, readStoredUploaded, storeUploaded } from "@/lib/dateRangeFilter";
 
 interface FilterOption {
   label: string;
@@ -103,6 +104,14 @@ const DATE_RANGE_OPTIONS: FilterOption[] = [
   { label: "Custom", value: "custom" },
 ];
 export const DATE_FILTER_IDS = ["added-date", "captured-date"] as const;
+// Pinned Uploaded (All Assets) adds All time; Custom stays last.
+const PINNED_UPLOADED_OPTIONS: FilterOption[] = [
+  ...DATE_RANGE_OPTIONS.slice(0, -1),
+  { label: "All time", value: "all-time" },
+  DATE_RANGE_OPTIONS[DATE_RANGE_OPTIONS.length - 1],
+];
+const uploadedOption = (value: string) =>
+  PINNED_UPLOADED_OPTIONS.find(o => o.value === value) ?? PINNED_UPLOADED_OPTIONS.find(o => o.value === UPLOADED_DEFAULT)!;
 
 // Main filters array (without People, Scene, Brand - those are in AI Tags now)
 const filters: FilterConfig[] = [{
@@ -230,6 +239,9 @@ interface FilterBarProps {
   handleRef?: React.MutableRefObject<FilterBarHandle | null>;
   // Collapsed filters sheet
   onOpenFiltersSheet?: () => void;
+  /** All Assets: Uploaded always has a selection — 30-day default, All time option,
+   *  clearing resets to 30 days, last choice remembered (see dateRangeFilter). */
+  pinUploaded?: boolean;
 }
 
 export function FilterBar({
@@ -247,9 +259,36 @@ export function FilterBar({
   compactMode = false,
   handleRef,
   onOpenFiltersSheet,
+  pinUploaded = false,
 }: FilterBarProps) {
-  const visibleFilters = filters.filter(f => !hideFilters.includes(f.id));
-  const [activeFilters, setActiveFilters] = useState<Record<string, { value: string; label: string }[]>>({});
+  const visibleFilters = filters
+    .filter(f => !hideFilters.includes(f.id))
+    .map(f => (pinUploaded && f.id === "added-date" ? { ...f, options: PINNED_UPLOADED_OPTIONS } : f));
+  const [activeFilters, setActiveFilters] = useState<Record<string, { value: string; label: string }[]>>(() => {
+    if (!pinUploaded) return {};
+    const stored = uploadedOption(readStoredUploaded());
+    return { "added-date": [{ value: stored.value, label: stored.label }] };
+  });
+  // What a cleared filter falls back to: the 30-day default for a pinned Uploaded, nothing otherwise.
+  const resetValue = (filterId: string) => {
+    if (!pinUploaded || filterId !== "added-date") return null;
+    const d = uploadedOption(UPLOADED_DEFAULT);
+    return { value: d.value, label: d.label };
+  };
+
+  // Pinned Uploaded starts with a selection the parent hasn't heard about yet.
+  useEffect(() => {
+    const initial = activeFilters["added-date"]?.[0];
+    if (pinUploaded && initial) onFilterChange?.("added-date", [initial.value]);
+    // Mount only: later changes report through the handlers.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Remember the pinned Uploaded choice for the next visit.
+  const uploadedValue = activeFilters["added-date"]?.[0]?.value;
+  useEffect(() => {
+    if (pinUploaded && uploadedValue) storeUploaded(uploadedValue);
+  }, [pinUploaded, uploadedValue]);
   // Custom ranges keyed by date filter id ("added-date" / "captured-date")
   const [customDateRanges, setCustomDateRanges] = useState<Record<string, CustomDateRange>>({});
   const [tempDateRange, setTempDateRange] = useState<DateRange | undefined>(undefined);
@@ -323,10 +362,12 @@ export function FilterBar({
     setTempDateRange(undefined);
     if (filterId) {
       setCustomDateRanges(prev => ({ ...prev, [filterId]: { from: undefined, to: undefined } }));
+      const fallback = resetValue(filterId);
       setActiveFilters(prev => {
         const newFilters = { ...prev };
-        delete newFilters[filterId];
-        onFilterChange?.(filterId, []);
+        if (fallback) newFilters[filterId] = [fallback];
+        else delete newFilters[filterId];
+        onFilterChange?.(filterId, fallback ? [fallback.value] : []);
         return newFilters;
       });
     }
@@ -337,9 +378,11 @@ export function FilterBar({
     if (DATE_FILTER_IDS.includes(filterId as typeof DATE_FILTER_IDS[number]) && value === "custom") {
       setCustomDateRanges(prev => ({ ...prev, [filterId]: { from: undefined, to: undefined } }));
     }
+    const fallback = resetValue(filterId);
     setActiveFilters(prev => {
       const current = prev[filterId] || [];
-      const updated = current.filter(item => item.value !== value);
+      let updated = current.filter(item => item.value !== value);
+      if (updated.length === 0 && fallback) updated = [fallback];
       const newFilters = { ...prev };
       if (updated.length === 0) {
         delete newFilters[filterId];
@@ -366,20 +409,24 @@ export function FilterBar({
     if (DATE_FILTER_IDS.includes(filterId as typeof DATE_FILTER_IDS[number])) {
       setCustomDateRanges(prev => ({ ...prev, [filterId]: { from: undefined, to: undefined } }));
     }
+    const fallback = resetValue(filterId);
     setActiveFilters(prev => {
       const newFilters = { ...prev };
-      delete newFilters[filterId];
-      onFilterChange?.(filterId, []);
+      if (fallback) newFilters[filterId] = [fallback];
+      else delete newFilters[filterId];
+      onFilterChange?.(filterId, fallback ? [fallback.value] : []);
       return newFilters;
     });
   };
 
   const clearAllFilters = () => {
+    const uploadedFallback = resetValue("added-date");
     setActiveFilters(prev => {
       Object.keys(prev).forEach(filterId => {
-        onFilterChange?.(filterId, []);
+        if (filterId === "added-date" && uploadedFallback) onFilterChange?.(filterId, [uploadedFallback.value]);
+        else onFilterChange?.(filterId, []);
       });
-      return {};
+      return uploadedFallback ? { "added-date": [uploadedFallback] } : {};
     });
     setCustomDateRanges({});
   };

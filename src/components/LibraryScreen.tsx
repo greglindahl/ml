@@ -45,7 +45,7 @@ const ORIENTATION_LABELS: Record<string, string> = {
 };
 import { folders as initialFolders, mockGalleries, mockFolderCards, FolderItem, findFolderById, findFolderAncestorIds, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay, collectAssignedGalleryIds, countAllGalleries, countTotalAssets, findGalleryParentPath, hasArchivedAncestor, enrichGallery, sortGalleries, GALLERY_SORT_OPTIONS, GallerySortField } from "@/lib/mockFolderData";
 import { TooLargeDialog, isTooLarge } from "@/components/TooLarge";
-import { matchesDateRange, DateRangeValue, CustomRange } from "@/lib/dateRangeFilter";
+import { matchesDateRange, DateRangeValue, CustomRange, UPLOADED_DEFAULT } from "@/lib/dateRangeFilter";
 import { matchesCaptureRange } from "@/lib/captureTime";
 import { relevanceScore, capRelevanceResults, isRelevanceCapped, RELEVANCE_RESULT_LIMIT } from "@/lib/relevance";
 import { FolderSidebar } from "@/components/FolderSidebar";
@@ -1702,6 +1702,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 isBrandingActive={isBrandedActive}
                 onBrandingToggle={setIsBrandedActive}
                 onOpenFiltersSheet={() => setAssetsFiltersSheetOpen(true)}
+                pinUploaded
               />
             </div>
 
@@ -1709,7 +1710,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
             <div className="min-h-[24px] mb-4">
               {(() => {
                 // Build chip objects from all sources
-                const chips: { label: string; value: string; sourceId: string; icon: React.ReactNode }[] = [];
+                // fixed: the default Uploaded chip — there's nothing to clear it to, so no x.
+                const chips: { label: string; value: string; sourceId: string; icon: React.ReactNode; fixed?: boolean }[] = [];
 
                 // Search facets
                 searchSelectedFacets.forEach(f => {
@@ -1734,9 +1736,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 contentTypeFilter.forEach(v => chips.push({ label: v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "content-type", icon: <i className="bi bi-image text-sm" /> }));
                 orientationFilter.forEach(v => chips.push({ label: ORIENTATION_LABELS[v] || v, value: v, sourceId: "orientation", icon: <i className="bi bi-crop text-sm" /> }));
                 {
-                  const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 days", "two-weeks": "Last 14 days", month: "Last 30 days", mtd: "Month to Date", quarter: "Last 90 days", year: "Last 12 months", custom: "Custom Date" };
+                  const dateLabels: Record<string, string> = { today: "Today", week: "Last 7 days", "two-weeks": "Last 14 days", month: "Last 30 days", mtd: "Month to Date", quarter: "Last 90 days", year: "Last 12 months", "all-time": "All time", custom: "Custom Date" };
                   if (addedDateFilter) {
-                    chips.push({ label: `Uploaded: ${dateLabels[addedDateFilter] || addedDateFilter}`, value: addedDateFilter, sourceId: "added-date", icon: <i className="bi bi-calendar-plus text-sm" /> });
+                    chips.push({ label: `Uploaded: ${dateLabels[addedDateFilter] || addedDateFilter}`, value: addedDateFilter, sourceId: "added-date", icon: <i className="bi bi-calendar-plus text-sm" />, fixed: addedDateFilter === UPLOADED_DEFAULT });
                   }
                   if (capturedDateFilter) {
                     chips.push({ label: `Captured: ${dateLabels[capturedDateFilter] || capturedDateFilter}`, value: capturedDateFilter, sourceId: "captured-date", icon: <i className="bi bi-calendar text-sm" /> });
@@ -1766,26 +1768,41 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
                 return (
                   <div className="flex flex-wrap items-center gap-1.5">
-                    {chips.map((chip, i) => (
-                      <Badge
-                        key={`${chip.sourceId}-${chip.value}-${i}`}
-                        colorStyle="primary"
-                        theme="soft"
-                        shape="rounded"
-                        className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-primary/30 text-[13px] normal-case tracking-normal font-normal"
-                        onClick={() => handleRemoveChip(chip)}
+                    {chips.map((chip, i) =>
+                      chip.fixed ? (
+                        <Badge
+                          key={`${chip.sourceId}-${chip.value}-${i}`}
+                          colorStyle="primary"
+                          theme="soft"
+                          shape="rounded"
+                          className="gap-1.5 text-[13px] normal-case tracking-normal font-normal"
+                        >
+                          {chip.icon}
+                          {chip.label}
+                        </Badge>
+                      ) : (
+                        <Badge
+                          key={`${chip.sourceId}-${chip.value}-${i}`}
+                          colorStyle="primary"
+                          theme="soft"
+                          shape="rounded"
+                          className="gap-1.5 pr-1.5 cursor-pointer transition-colors hover:bg-primary/30 text-[13px] normal-case tracking-normal font-normal"
+                          onClick={() => handleRemoveChip(chip)}
+                        >
+                          {chip.icon}
+                          {chip.label}
+                          <i className="bi bi-x text-sm ml-0.5" />
+                        </Badge>
+                      )
+                    )}
+                    {chips.some((c) => !c.fixed) && (
+                      <button
+                        onClick={handleClearAllChips}
+                        className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                       >
-                        {chip.icon}
-                        {chip.label}
-                        <i className="bi bi-x text-sm ml-0.5" />
-                      </Badge>
-                    ))}
-                    <button
-                      onClick={handleClearAllChips}
-                      className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
-                    >
-                      Clear Filters
-                    </button>
+                        Clear Filters
+                      </button>
+                    )}
                   </div>
                 );
               })()}
