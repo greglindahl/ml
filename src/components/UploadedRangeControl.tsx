@@ -44,9 +44,9 @@ export function UploadedRangeControl({
           <PopoverAnchor asChild>
             <TooltipTrigger asChild>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-10 gap-2 px-3 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
+                <Button variant="outline" size="sm" className="uploaded-range-trigger h-10 gap-2 px-3 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]">
                   <i className="bi bi-calendar-plus w-4 h-4 inline-flex items-center justify-center leading-none" />
-                  <span className="whitespace-nowrap">
+                  <span className="whitespace-nowrap mr-auto">
                     <span className="uploaded-range-prefix">Uploaded: </span>
                     {label}
                   </span>
