@@ -54,8 +54,13 @@ export function NewFolderDialog({
   onCreateGallery,
 }: NewFolderDialogProps) {
   const contentRef = useRef<HTMLDivElement>(null);
+  // Folders can't be created inside an archived folder (prod: CREATE_PARENT_ARCHIVED),
+  // so archived folders — and anything inside one — aren't offered, and an
+  // archived default falls back to All Media.
+  const locationOptions = useMemo(() => flattenedFolders.filter((f) => !f.archived), [flattenedFolders]);
+  const startLocationId = locationOptions.some((f) => f.id === defaultLocationId) ? defaultLocationId : null;
   const [name, setName] = useState("");
-  const [locationId, setLocationId] = useState<string | null>(defaultLocationId);
+  const [locationId, setLocationId] = useState<string | null>(startLocationId);
   const [selectedGalleryIds, setSelectedGalleryIds] = useState<string[]>([]);
   const [nameError, setNameError] = useState(false);
   const [addGalleryOpen, setAddGalleryOpen] = useState(false);
@@ -69,7 +74,8 @@ export function NewFolderDialog({
   }, []);
 
   const selectedLocationLabel = useMemo(() => {
-    if (!locationId) return "Select Location";
+    // No location = top level, the same "All Media" the list checks
+    if (!locationId) return "All Media";
     const found = flattenedFolders.find((f) => f.id === locationId);
     return found ? found.displayName : "Select Location";
   }, [locationId, flattenedFolders]);
@@ -77,15 +83,15 @@ export function NewFolderDialog({
   const assignedGalleryIds = useMemo(() => collectAssignedGalleryIds(folderTree), [folderTree]);
 
   useEffect(() => {
-    if (open) setLocationId(defaultLocationId);
-  }, [open, defaultLocationId]);
+    if (open) setLocationId(startLocationId);
+  }, [open, startLocationId]);
 
   const resetForm = useCallback(() => {
     setName("");
-    setLocationId(defaultLocationId);
+    setLocationId(startLocationId);
     setSelectedGalleryIds([]);
     setNameError(false);
-  }, [defaultLocationId]);
+  }, [startLocationId]);
 
   const handleOpenChange = useCallback(
     (open: boolean) => {
@@ -182,7 +188,7 @@ export function NewFolderDialog({
                           <i className={cn("bi bi-check mr-2 h-4 w-4", !locationId ? "opacity-100" : "opacity-0")} />
                           All Media
                         </CommandItem>
-                        {flattenedFolders
+                        {locationOptions
                           .filter((f) => f.depth < 2)
                           .map((f) => (
                             <CommandItem
