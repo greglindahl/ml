@@ -34,15 +34,20 @@ export function NewGalleryDialog({ open, onOpenChange, onCreateGallery, flattene
   const [isPublic, setIsPublic] = useState(false);
   const [description, setDescription] = useState("");
   const [instructions, setInstructions] = useState("");
-  const [folderId, setFolderId] = useState<string | null>(defaultFolderId ?? null);
+  // A new gallery is active, and an active gallery can't go into an archived
+  // folder (prod: ASSIGN_FOLDER_ARCHIVED), so archived folders — and anything
+  // inside one — aren't offered. An archived default falls back to All Media.
+  const locationOptions = flattenedFolders.filter(f => !f.archived);
+  const startFolderId = locationOptions.some(f => f.id === defaultFolderId) ? defaultFolderId! : null;
+  const [folderId, setFolderId] = useState<string | null>(startFolderId);
   const [sharing, setSharing] = useState<string[]>([]);
 
   // Sync folderId when dialog opens or defaultFolderId changes
   React.useEffect(() => {
     if (open) {
-      setFolderId(defaultFolderId ?? null);
+      setFolderId(startFolderId);
     }
-  }, [open, defaultFolderId]);
+  }, [open, startFolderId]);
   const [sharingInput, setSharingInput] = useState("");
   const [viewOnly, setViewOnly] = useState(false);
   const [allowUpload, setAllowUpload] = useState(false);
@@ -53,7 +58,7 @@ export function NewGalleryDialog({ open, onOpenChange, onCreateGallery, flattene
     setIsPublic(false);
     setDescription("");
     setInstructions("");
-    setFolderId(defaultFolderId ?? null);
+    setFolderId(startFolderId);
     setSharing([]);
     setSharingInput("");
     setViewOnly(false);
@@ -162,7 +167,7 @@ export function NewGalleryDialog({ open, onOpenChange, onCreateGallery, flattene
               <SelectContent>
                 {/* Top level reads "All Media", like the other folder pickers */}
                 <SelectItem value="none">All Media</SelectItem>
-                {flattenedFolders.map(f => (
+                {locationOptions.map(f => (
                   <SelectItem key={f.id} value={f.id}>{f.displayName}</SelectItem>
                 ))}
               </SelectContent>
