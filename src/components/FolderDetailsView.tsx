@@ -149,6 +149,11 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   const [newGalleryDialogOpen, setNewGalleryDialogOpen] = useState(false);
   const [newFolderDialogOpen, setNewFolderDialogOpen] = useState(false);
   const [unarchiveOpen, setUnarchiveOpen] = useState(false);
+  // New Gallery / New Folder default to this folder when it's active. Inside an
+  // archived folder (itself or an ancestor) they default to All Media, so new
+  // work isn't created somewhere hidden.
+  const inArchivedFolder = folder.archived === true || (folderTree ? hasArchivedAncestor(folderId, folderTree) : false);
+  const createDefaultLocationId = inArchivedFolder ? null : folderId;
   const [moveGalleriesOpen, setMoveGalleriesOpen] = useState(false);
   const [moveGalleryItems, setMoveGalleryItems] = useState<MoveGalleryItem[]>([]);
   const [unarchiveBlocked, setUnarchiveBlocked] = useState<FolderItem | null>(null);
@@ -1442,21 +1447,21 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         open={newGalleryDialogOpen}
         onOpenChange={setNewGalleryDialogOpen}
         onCreateGallery={(data) => {
-          onCreateGallery?.({ ...data, folderId: data.folderId ?? folderId });
+          // The picker's value is final: null means All Media, not "this folder".
+          onCreateGallery?.(data);
           setNewGalleryDialogOpen(false);
           sonnerToast.success("Gallery created successfully");
         }}
         flattenedFolders={flattenedFolders ?? flattenFolders(folderTree)}
-        defaultFolderId={folderId}
+        defaultFolderId={createDefaultLocationId}
       />
       <NewFolderDialog
         open={newFolderDialogOpen}
         onOpenChange={setNewFolderDialogOpen}
-        defaultLocationId={folderId}
+        defaultLocationId={createDefaultLocationId}
         onCreateFolder={(data) => {
-          const folderData = { ...data, locationId: data.locationId ?? folderId };
           // Toast (and optional navigation) handled by the parent's create handler
-          onCreateFolder?.(folderData);
+          onCreateFolder?.(data);
           setNewFolderDialogOpen(false);
         }}
         flattenedFolders={flattenedFolders ?? flattenFolders(folderTree)}

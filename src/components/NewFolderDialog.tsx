@@ -69,7 +69,8 @@ export function NewFolderDialog({
   }, []);
 
   const selectedLocationLabel = useMemo(() => {
-    if (!locationId) return "Select Location";
+    // No location = top level, the same "All Media" the list checks
+    if (!locationId) return "All Media";
     const found = flattenedFolders.find((f) => f.id === locationId);
     return found ? found.displayName : "Select Location";
   }, [locationId, flattenedFolders]);
