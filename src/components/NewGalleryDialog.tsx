@@ -160,7 +160,8 @@ export function NewGalleryDialog({ open, onOpenChange, onCreateGallery, flattene
                 <SelectValue placeholder="Select Folder" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">None</SelectItem>
+                {/* Top level reads "All Media", like the other folder pickers */}
+                <SelectItem value="none">All Media</SelectItem>
                 {flattenedFolders.map(f => (
                   <SelectItem key={f.id} value={f.id}>{f.displayName}</SelectItem>
                 ))}
