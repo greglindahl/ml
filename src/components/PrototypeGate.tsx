@@ -37,7 +37,7 @@ export default function PrototypeGate({ children }: { children: ReactNode }) {
     <main className="h-screen overflow-y-auto bg-background text-foreground flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-sm">
         <LockKeyhole className="mb-6 h-8 w-8 text-primary" aria-hidden="true" />
-        <h1 className="text-2xl font-semibold mb-8">Greenfly prototype</h1>
+        <h1 className="text-2xl font-semibold mb-8">ML prototype</h1>
         <form onSubmit={submit} className="space-y-4">
           <label htmlFor="prototype-passcode" className="block text-sm font-medium">Passcode</label>
           <Input id="prototype-passcode" type="password" autoComplete="current-password" autoFocus required
