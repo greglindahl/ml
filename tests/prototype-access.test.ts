@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { ACCESS_KEY, ACCESS_VERSION, hasRememberedAccess, matchesPasscode } from "./prototype-access";
+import { ACCESS_KEY, ACCESS_VERSION, hasRememberedAccess, matchesPasscode } from "../src/lib/prototype-access";
 
 describe("casual prototype access", () => {
   test("incorrect and empty codes do not unlock", async () => {
