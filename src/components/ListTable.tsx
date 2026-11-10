@@ -42,9 +42,31 @@ export function usePage<T>(rows: T[], perPage: number) {
 
 export const HEAD_TEXT = "flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground";
 
-export function HeadCell({ label, className }: { label: string; className?: string }) {
+/**
+ * The one table-header sort indicator, matching prod: a filled caret pointing
+ * the sort direction on the active column, and a faint stacked up/down caret
+ * on sortable columns that aren't active. Carets, never chevrons or arrows
+ * (sort dropdowns keep prod's arrows).
+ */
+export function SortCaret({ direction, className }: { direction: "asc" | "desc" | null; className?: string }) {
+  if (direction) {
+    return (
+      <i
+        aria-hidden
+        className={cn("bi text-[10px] leading-none", direction === "asc" ? "bi-caret-up-fill" : "bi-caret-down-fill", className)}
+      />
+    );
+  }
   return (
-    <TableHead className={className}>
+    <svg aria-hidden viewBox="0 0 8 12" className={cn("w-[7px] h-[10px] flex-shrink-0 opacity-50", className)} fill="currentColor">
+      <path d="M4 0 8 5H0z M4 12 0 7h8z" />
+    </svg>
+  );
+}
+
+export function HeadCell({ label, className, colSpan }: { label: string; className?: string; colSpan?: number }) {
+  return (
+    <TableHead className={className} colSpan={colSpan}>
       <div className={HEAD_TEXT}>{label}</div>
     </TableHead>
   );
@@ -71,11 +93,7 @@ export function SortableHeadCell<F extends string>({
     >
       <div className={cn(HEAD_TEXT, className)}>
         {label}
-        {active ? (
-          <i className={cn("bi text-[10px]", sort.direction === "asc" ? "bi-chevron-up" : "bi-chevron-down")} />
-        ) : (
-          <i className="bi bi-chevron-expand text-[10px] opacity-50" />
-        )}
+        <SortCaret direction={active ? sort.direction : null} />
       </div>
     </TableHead>
   );

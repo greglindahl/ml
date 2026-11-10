@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import { SortCaret } from "./ListTable";
 import {
   Table,
   TableBody,
@@ -81,16 +82,9 @@ export function GroupsTable({
     }
   };
 
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) {
-      return <i className="bi bi-chevron-expand text-[10px] opacity-50" />;
-    }
-    return sortDirection === "asc" ? (
-      <i className="bi bi-chevron-up text-[10px]" />
-    ) : (
-      <i className="bi bi-chevron-down text-[10px]" />
-    );
-  };
+  const SortIcon = ({ field }: { field: SortField }) => (
+    <SortCaret direction={sortField === field ? sortDirection : null} />
+  );
 
   return (
     <div className="flex flex-col border rounded-lg bg-white overflow-hidden">
