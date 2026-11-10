@@ -19,14 +19,12 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <PrototypeGate>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/dev-spec" element={<DevSpec />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-          </PrototypeGate>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
