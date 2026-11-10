@@ -74,7 +74,8 @@ export const mockEngageCampaigns: EngageCampaign[] = [
   }),
   campaign(3, "tailgate-tuesday", {
     content: "Tailgate Tuesday",
-    instructions: "Show us your tailgate setup. Grills, flags, face paint — all of it.",
+    // Long on purpose: runs past the table's 5-line clamp so View More shows.
+    instructions: "Show us your tailgate setup. Grills, flags, face paint — all of it. Get the whole crew in the shot and tell us which lot you're in. Photos only, please: landscape works best on the videoboard. By submitting you agree to let us share your photo on our social channels and in-stadium. Full rules: https://engage.greenfly.com/zephyr/tailgate-tuesday/rules",
     mediaRequested: "PHOTO", gallery: gallery("halftime-shows"), totalResponses: 312, createdBy: "Marcus Webb", created: daysAgo(11),
   }),
   campaign(4, "watch-party-reactions", {
