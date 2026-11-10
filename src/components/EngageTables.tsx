@@ -1,9 +1,9 @@
-import { useMemo } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { HeadCell, RowActions, SortableHeadCell, TableShell, sortRows, usePage, useSort } from "./ListTable";
+import { HeadCell, RowActions, TableShell, usePage } from "./ListTable";
 import type { VisibilityMap } from "./TableSettingsDrawer";
 import { cn } from "@/lib/utils";
 import {
@@ -13,7 +13,6 @@ import {
   type EngageTheme,
 } from "@/lib/mockEngageData";
 
-const shortDate = (d: Date) => d.toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "2-digit" });
 
 // ---------------------------------------------------------------------------
 // Campaigns
@@ -26,7 +25,37 @@ export const ENGAGE_CAMPAIGN_COLUMNS = [
   { key: "active", label: "Active" },
 ];
 
-type CampaignSortField = "content" | "creator" | "active";
+// Prod's Angular `date: 'short'` — e.g. "10/13/26, 5:06 PM".
+const shortDateTime = (d: Date) =>
+  d.toLocaleString("en-US", { month: "numeric", day: "numeric", year: "2-digit", hour: "numeric", minute: "2-digit" });
+
+/** Prod's gf-line-clamp-view-more: clamps to `lines`, with a View More / View Less toggle only when it overflows. */
+function LineClampViewMore({ lines, children }: { lines: number; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (el && !expanded) setOverflows(el.scrollHeight > el.clientHeight + 1);
+  }, [children, expanded]);
+  return (
+    <div>
+      <div
+        ref={ref}
+        className="break-words"
+        style={expanded ? undefined : { display: "-webkit-box", WebkitLineClamp: lines, WebkitBoxOrient: "vertical", overflow: "hidden" }}
+      >
+        {children}
+      </div>
+      {overflows && (
+        <button type="button" className="mt-1 inline-flex items-center gap-1 text-primary hover:underline" onClick={() => setExpanded(!expanded)}>
+          <i className={cn("bi", expanded ? "bi-dash-circle" : "bi-plus-circle")} />
+          {expanded ? "View Less" : "View More"}
+        </button>
+      )}
+    </div>
+  );
+}
 
 export interface EngageCampaignActions {
   onViewDetails: (c: EngageCampaign) => void;
@@ -48,83 +77,78 @@ export function EngageCampaignsTable({
   actions: EngageCampaignActions;
 }) {
   const show = (key: string) => columnVisibility[key] !== false;
-  const sort = useSort<CampaignSortField>("active");
-  const sorted = useMemo(
-    () =>
-      sortRows(campaigns, sort.field, sort.direction, (row, field) => {
-        switch (field) {
-          case "content": return row.totalResponses;
-          case "creator": return row.createdBy;
-          case "active": return row.created.getTime();
-        }
-      }),
-    [campaigns, sort.field, sort.direction],
-  );
-  const { page, setPage, paged } = usePage(sorted, perPage);
+  // Prod (campaigns-table): no sortable columns; rows stay in API order, newest first.
+  const ordered = useMemo(() => [...campaigns].sort((a, b) => b.created.getTime() - a.created.getTime()), [campaigns]);
+  const { page, setPage, paged } = usePage(ordered, perPage);
 
   return (
-    <TableShell pagination={{ page: page, perPage: perPage, total: sorted.length, onPageChange: setPage }}>
+    <TableShell pagination={{ page: page, perPage: perPage, total: ordered.length, onPageChange: setPage }}>
       <TableHeader>
         <TableRow className="bg-[#f9fbfd]">
-          {show("campaign") && <HeadCell label="Campaign" />}
-          {show("content") && <SortableHeadCell label="Content" field="content" sort={sort} />}
-          {show("creator") && <SortableHeadCell label="Creator" field="creator" sort={sort} />}
-          {show("active") && <SortableHeadCell label="Active" field="active" sort={sort} />}
+          {/* Prod: one "Campaign" header over the link column and the details column */}
+          {show("campaign") && <HeadCell label="Campaign" colSpan={2} />}
+          {show("content") && <HeadCell label="Content" />}
+          {show("creator") && <HeadCell label="Creator" />}
+          {show("active") && <HeadCell label="Active" />}
           <TableHead className="w-[40px]" />
         </TableRow>
       </TableHeader>
       <TableBody>
         {paged.map((c) => (
-          <TableRow key={c.id} className="text-[13px] align-top">
+          <TableRow key={c.id} className="text-[14px] align-top">
             {show("campaign") && (
-              <TableCell className="min-w-[280px] max-w-[520px]">
-                <a
-                  href={c.attachmentUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-primary hover:underline text-[12px]"
-                >
-                  {campaignSlug(c)}
-                  <i className="bi bi-box-arrow-up-right text-[10px]" />
-                </a>
-                <h5 className="text-[14px] font-semibold text-foreground mt-0.5">{c.content}</h5>
-                <p className="text-muted-foreground line-clamp-2 mt-0.5">{c.instructions}</p>
-              </TableCell>
+              <>
+                {/* Column widths are prod's campaigns-table.scss: 12 / 20 / 6 / 10 / 10rem */}
+                <TableCell className="align-top w-[12rem]">
+                  <a
+                    href={c.attachmentUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-start gap-1.5 text-primary hover:underline break-words"
+                  >
+                    <i className="bi bi-box-arrow-up-right mt-0.5" />
+                    {campaignSlug(c)}
+                  </a>
+                </TableCell>
+                <TableCell className="align-top w-[20rem]">
+                  <LineClampViewMore lines={5}>
+                    <h5 className="inline-block text-[15px] font-medium text-[#6e84a3]">{c.content}</h5>
+                    <br />
+                    {c.instructions}
+                  </LineClampViewMore>
+                </TableCell>
+              </>
             )}
             {show("content") && (
-              <TableCell className="whitespace-nowrap">
+              <TableCell className="align-top whitespace-nowrap w-[6rem]">
                 {c.gallery ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button className="text-primary hover:underline">
-                        {c.totalResponses} {c.totalResponses === 1 ? "Asset" : "Assets"}
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>{c.gallery.name}</TooltipContent>
-                  </Tooltip>
+                  // Prod links to the campaign's gallery
+                  <a href={`?gallery=${c.gallery.id}`} className="text-primary hover:underline">
+                    {c.totalResponses.toLocaleString()} {c.totalResponses === 1 ? "Asset" : "Assets"}
+                  </a>
                 ) : (
                   <span className="text-muted-foreground">n/a</span>
                 )}
               </TableCell>
             )}
-            {show("creator") && <TableCell className="whitespace-nowrap">{c.createdBy}</TableCell>}
+            {show("creator") && <TableCell className="align-top w-[10rem]">{c.createdBy}</TableCell>}
             {show("active") && (
-              <TableCell className={cn("whitespace-nowrap", c.expired && "text-muted-foreground")}>
-                {shortDate(c.created)}
-                {c.expired && c.expires && ` - ${shortDate(c.expires)}`}
+              <TableCell className={cn("align-top w-[10rem]", c.expired && "text-muted-foreground")}>
+                {shortDateTime(c.created)}
+                {c.expired && c.expires && ` - ${shortDateTime(c.expires)}`}
               </TableCell>
             )}
-            <TableCell>
+            <TableCell className="align-top">
               <RowActions
                 actions={[
-                  { label: "View Details", icon: "bi-eye", onSelect: () => actions.onViewDetails(c) },
+                  { label: "View Details", icon: "bi-list-task", onSelect: () => actions.onViewDetails(c) },
                   // Prod only offers these on live campaigns.
                   ...(c.expired
                     ? []
                     : [
                         { label: "Get Embed Code", icon: "bi-code-slash", onSelect: () => actions.onGetEmbedCode(c) },
-                        { label: "Edit Campaign", icon: "bi-pencil", onSelect: () => actions.onEdit(c) },
-                        { label: "Expire Campaign", icon: "bi-hourglass-bottom", onSelect: () => actions.onExpire(c), destructive: true },
+                        { label: "Edit Campaign", icon: "bi-pencil-square", onSelect: () => actions.onEdit(c) },
+                        { label: "Expire Campaign", icon: "bi-stop-circle", onSelect: () => actions.onExpire(c) },
                       ]),
                   { label: "Download Results", icon: "bi-download", onSelect: () => actions.onDownloadResults(c) },
                 ]}

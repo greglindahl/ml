@@ -42,9 +42,9 @@ export function usePage<T>(rows: T[], perPage: number) {
 
 export const HEAD_TEXT = "flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground";
 
-export function HeadCell({ label, className }: { label: string; className?: string }) {
+export function HeadCell({ label, className, colSpan }: { label: string; className?: string; colSpan?: number }) {
   return (
-    <TableHead className={className}>
+    <TableHead className={className} colSpan={colSpan}>
       <div className={HEAD_TEXT}>{label}</div>
     </TableHead>
   );
