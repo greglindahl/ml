@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -18,6 +18,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import { cn } from "@/lib/utils";
 import { SortableFolderItem } from "@/components/SortableFolderItem";
 import {
   AlertDialog,
@@ -99,6 +100,71 @@ function findParentId(
   return undefined;
 }
 
+// PORTAL-13311: resizable folder tree. Width is saved per browser and survives
+// collapse/expand. Max raised to 500 (ticket said 450, dev may adjust).
+const TREE_WIDTH_KEY = "proto.folderTree.width";
+const TREE_WIDTH_DEFAULT = 264;
+// The default is also the floor: the panel only ever gets wider than 264.
+const TREE_WIDTH_MIN = TREE_WIDTH_DEFAULT;
+const TREE_WIDTH_MAX = 500;
+const clampTreeWidth = (w: number) => Math.min(TREE_WIDTH_MAX, Math.max(TREE_WIDTH_MIN, Math.round(w)));
+const readTreeWidth = () => {
+  try {
+    const v = Number(localStorage.getItem(TREE_WIDTH_KEY));
+    return v ? clampTreeWidth(v) : TREE_WIDTH_DEFAULT;
+  } catch {
+    return TREE_WIDTH_DEFAULT;
+  }
+};
+
+/** Width state + drag/keyboard handlers for the tree's right-edge resize handle. */
+function useTreeWidth() {
+  const [width, setWidth] = useState(readTreeWidth);
+  const [dragging, setDragging] = useState(false);
+  const drag = useRef<{ startX: number; startWidth: number } | null>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(TREE_WIDTH_KEY, String(width));
+    } catch {
+      // Storage unavailable: the width just won't survive a reload.
+    }
+  }, [width]);
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    drag.current = { startX: e.clientX, startWidth: width };
+    setDragging(true);
+    // Keep the resize cursor and stop text selection even when the pointer outruns the handle.
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  };
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!drag.current) return;
+    setWidth(clampTreeWidth(drag.current.startWidth + e.clientX - drag.current.startX));
+  };
+  const endDrag = () => {
+    if (!drag.current) return;
+    drag.current = null;
+    setDragging(false);
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
+  };
+  const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const step = e.shiftKey ? 48 : 16;
+    if (e.key === "ArrowLeft") setWidth((w) => clampTreeWidth(w - step));
+    else if (e.key === "ArrowRight") setWidth((w) => clampTreeWidth(w + step));
+    else if (e.key === "Home") setWidth(TREE_WIDTH_MIN);
+    else if (e.key === "End") setWidth(TREE_WIDTH_MAX);
+    else return;
+    e.preventDefault();
+  };
+
+  return { width, dragging, handleProps: { onPointerDown, onPointerMove, onPointerUp: endDrag, onPointerCancel: endDrag, onKeyDown } };
+}
+
 export function FolderSidebar({
   folderTree,
   activeFolder,
@@ -112,6 +178,8 @@ export function FolderSidebar({
   showArchived,
   onToggleArchived,
 }: FolderSidebarProps) {
+  // Called before the collapsed early return so collapsing keeps the saved width.
+  const treeWidth = useTreeWidth();
   const [activeItem, setActiveItem] = useState<FolderItem | null>(null);
   const [overTargetId, setOverTargetId] = useState<string | null>(null);
   const [isOverValid, setIsOverValid] = useState(false);
@@ -331,7 +399,17 @@ export function FolderSidebar({
   }
 
   return (
-    <div className="folder-tree-sidebar border-r border-[#e3ebf6] bg-white flex flex-col w-[264px] h-full transition-all duration-300 ease-in-out overflow-hidden pt-3 pb-6 px-1">
+    // Wrapper carries the hide-at-narrow class and positions the resize handle,
+    // which straddles the border and so can't live inside the clipped panel.
+    <div className="folder-tree-sidebar relative h-full flex-shrink-0">
+    <div
+      className={cn(
+        "border-r border-[#e3ebf6] bg-white flex flex-col h-full overflow-hidden pt-3 pb-6 px-1",
+        // No width transition mid-drag, or the panel lags the pointer.
+        !treeWidth.dragging && "transition-[width] duration-300 ease-in-out motion-reduce:transition-none",
+      )}
+      style={{ width: treeWidth.width }}
+    >
       {/* Header */}
       <div className="px-3 py-3 flex items-center justify-between border-b border-[#e3ebf6]">
         <span className="font-normal text-[15px] text-[#12263f] tracking-[-0.3px]">Library</span>
@@ -429,6 +507,33 @@ export function FolderSidebar({
         }
         onClose={() => setLimitAlertItem(null)}
       />
+    </div>
+
+    {/* Resize handle: 8px grab area centered on the border (4px each side).
+        The col-resize cursor shows at once; the 2px line only fades in after
+        the pointer rests ~300ms, so passing over it doesn't flash. While
+        dragging it shows immediately and stays. */}
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize folder panel"
+      aria-valuenow={treeWidth.width}
+      aria-valuemin={TREE_WIDTH_MIN}
+      aria-valuemax={TREE_WIDTH_MAX}
+      tabIndex={0}
+      className="group/resize absolute top-0 bottom-0 -right-1 w-2 z-20 cursor-col-resize touch-none focus-visible:outline-none"
+      {...treeWidth.handleProps}
+    >
+      <span
+        aria-hidden
+        className={cn(
+          "absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[2px] bg-primary transition-opacity motion-reduce:transition-none",
+          treeWidth.dragging
+            ? "opacity-100 duration-150"
+            : "opacity-0 duration-200 group-hover/resize:opacity-100 group-hover/resize:delay-300 group-focus-visible/resize:opacity-100",
+        )}
+      />
+    </div>
     </div>
   );
 }

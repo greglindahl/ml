@@ -100,6 +100,7 @@ import { AssetDetailModal } from "@/components/AssetDetailModal";
 
 const GALLERY_MOVE_LIMIT = 5;
 const MOVE_LIMIT_MESSAGE = "Too many galleries selected. You may only move up to 5 at a time.";
+const FOLDER_TREE_EXPANDED_KEY = "proto.folderTree.expanded";
 
 // Icon component for asset types
 function AssetTypeIcon({ type, className }: { type: LibraryAsset["type"]; className?: string }) {
@@ -152,7 +153,24 @@ interface LibraryScreenProps {
 
 export function LibraryScreen({ isMobile = false, initialActiveFolder, initialActiveTab, initialBulkSelect }: LibraryScreenProps) {
   const [activeTab, setActiveTab] = useState(initialActiveTab ?? "assets");
-  const [isFolderSidebarExpanded, setIsFolderSidebarExpanded] = useState(false);
+  // PORTAL-13406: the folder tree stays the way the user left it. Expanded with
+  // nothing saved; only the user's own expand/collapse changes it (never tabs,
+  // folder picks or creating a folder). Saved per browser.
+  const [isFolderSidebarExpanded, setIsFolderSidebarExpandedState] = useState(() => {
+    try {
+      return localStorage.getItem(FOLDER_TREE_EXPANDED_KEY) !== "false";
+    } catch {
+      return true;
+    }
+  });
+  const setIsFolderSidebarExpanded = useCallback((expanded: boolean) => {
+    setIsFolderSidebarExpandedState(expanded);
+    try {
+      localStorage.setItem(FOLDER_TREE_EXPANDED_KEY, String(expanded));
+    } catch {
+      // Storage unavailable: the choice holds for this visit only.
+    }
+  }, []);
   const [activeFolder, setActiveFolder] = useState(initialActiveFolder ?? "all");
   // Consume-once: bulk preselect only applies to the gallery the deep link opened.
   const [pendingBulkSelectFor] = useState<string | null>(
@@ -362,7 +380,6 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
       if (data.locationId) next.add(data.locationId);
       return next;
     });
-    setIsFolderSidebarExpanded(true);
     setNewFolderDialogOpen(false);
 
     // Open the folder detail view; expand the full ancestor chain so the
@@ -762,9 +779,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     });
   }, [moveToUnarchiveGalleryId, folderTree, galleryList, removeFolderById, insertFolderAt, toast]);
 
-  // Auto-expand/collapse sidebar based on active tab
+  // Switching tabs clears the asset selection. It no longer opens or closes the
+  // folder tree (PORTAL-13406).
   useEffect(() => {
-    setIsFolderSidebarExpanded(activeTab === "folders");
     setSelectedAssets(new Set());
   }, [activeTab]);
 
