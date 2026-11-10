@@ -7,7 +7,8 @@ import { HelmetProvider } from "react-helmet-async";
 import Index from "./pages/Index";
 import DevSpec from "./pages/DevSpec";
 import NotFound from "./pages/NotFound";
-import PrototypeGate from "./components/PrototypeGate";
+// Passcode gate is built but currently disabled (see src/components/PrototypeGate.tsx).
+// To re-enable: import PrototypeGate from "./components/PrototypeGate"; and wrap <Routes> below.
 
 const queryClient = new QueryClient();
 
@@ -18,14 +19,12 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <PrototypeGate>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/dev-spec" element={<DevSpec />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-          </PrototypeGate>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

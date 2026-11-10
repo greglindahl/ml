@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import { SortCaret } from "./ListTable";
 import { LibraryAsset } from "@/lib/mockLibraryData";
 import { TableDate, TableDateDetail } from "@/components/TableDate";
 import { ViewerZoneToggle } from "@/components/ViewerZoneToggle";
@@ -184,14 +185,9 @@ export function AssetTableView({
     }
   };
 
-  const getSortIcon = (field: SortField) => {
-    if (sortField !== field) {
-      return <i className="bi bi-arrow-down-up w-3 h-3 ml-1 opacity-50 inline-flex items-center justify-center leading-none" />;
-    }
-    return sortDirection === "asc"
-      ? <i className="bi bi-arrow-up w-3 h-3 ml-1 inline-flex items-center justify-center leading-none" />
-      : <i className="bi bi-arrow-down w-3 h-3 ml-1 inline-flex items-center justify-center leading-none" />;
-  };
+  const getSortIcon = (field: SortField) => (
+    <SortCaret direction={sortField === field ? sortDirection : null} className="ml-1" />
+  );
 
   // Sort assets. In controlled mode the parent already sorted (incl. relevance
   // ordering) — render the given order as-is; re-sorting here would fight it.

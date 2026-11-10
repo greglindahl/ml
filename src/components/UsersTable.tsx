@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import { SortCaret } from "./ListTable";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -105,16 +106,9 @@ export function UsersTable({
     }
   };
 
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) {
-      return <i className="bi bi-chevron-expand text-[10px] opacity-50" />;
-    }
-    return sortDirection === "asc" ? (
-      <i className="bi bi-chevron-up text-[10px]" />
-    ) : (
-      <i className="bi bi-chevron-down text-[10px]" />
-    );
-  };
+  const SortIcon = ({ field }: { field: SortField }) => (
+    <SortCaret direction={sortField === field ? sortDirection : null} />
+  );
 
   const visibleIds = paginatedUsers.map((u) => u.id);
   const allVisibleSelected =

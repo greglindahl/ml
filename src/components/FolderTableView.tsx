@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { TableDate } from "@/components/TableDate";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import { SortCaret } from "./ListTable";
 import { FolderItem, countAllGalleries } from "@/lib/mockFolderData";
 import { Button } from "@/components/ui/button";
 import {
@@ -93,12 +94,9 @@ export function FolderTableView({
     }
   };
 
-  const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return <i className="bi bi-arrow-down-up w-3 h-3 ml-1 opacity-50 inline-flex items-center justify-center leading-none" />;
-    return sortDirection === "asc"
-      ? <i className="bi bi-arrow-up w-3 h-3 ml-1 inline-flex items-center justify-center leading-none" />
-      : <i className="bi bi-arrow-down w-3 h-3 ml-1 inline-flex items-center justify-center leading-none" />;
-  };
+  const getSortIcon = (field: SortField) => (
+    <SortCaret direction={sortField === field ? sortDirection : null} className="ml-1" />
+  );
 
   const sorted = [...enrichedFolders].sort((a, b) => {
     if (!sortField) return 0;
