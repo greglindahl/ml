@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { TableDate } from "@/components/TableDate";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import { SortCaret } from "./ListTable";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { Gallery, GalleryTableItem, enrichGallery, sortGalleries, GallerySortField } from "@/lib/mockFolderData";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -128,14 +129,9 @@ export function GalleryTableView({
     }
   };
 
-  const getSortIcon = (field: SortField) => {
-    if (sortField !== field) {
-      return <i className="bi bi-arrow-down-up w-3 h-3 ml-1 opacity-50 inline-flex items-center justify-center leading-none" />;
-    }
-    return sortDirection === "asc"
-      ? <i className="bi bi-arrow-up w-3 h-3 ml-1 inline-flex items-center justify-center leading-none" />
-      : <i className="bi bi-arrow-down w-3 h-3 ml-1 inline-flex items-center justify-center leading-none" />;
-  };
+  const getSortIcon = (field: SortField) => (
+    <SortCaret direction={sortField === field ? sortDirection : null} className="ml-1" />
+  );
 
   // Sort via the shared comparator so the grid dropdown and table headers agree
   // (also fixes "13 hours ago" sorting as oldest instead of newest)
