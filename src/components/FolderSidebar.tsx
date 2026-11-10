@@ -104,7 +104,8 @@ function findParentId(
 // collapse/expand. Max raised to 500 (ticket said 450, dev may adjust).
 const TREE_WIDTH_KEY = "proto.folderTree.width";
 const TREE_WIDTH_DEFAULT = 264;
-const TREE_WIDTH_MIN = 220;
+// The default is also the floor: the panel only ever gets wider than 264.
+const TREE_WIDTH_MIN = TREE_WIDTH_DEFAULT;
 const TREE_WIDTH_MAX = 500;
 const clampTreeWidth = (w: number) => Math.min(TREE_WIDTH_MAX, Math.max(TREE_WIDTH_MIN, Math.round(w)));
 const readTreeWidth = () => {
