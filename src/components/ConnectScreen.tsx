@@ -307,7 +307,7 @@ function RoutingRulesTab({ rules, onChange }: { rules: RoutingRule[]; onChange: 
         controls={controls}
         filterDefs={RULE_FILTERS}
         columns={ROUTING_RULE_COLUMNS}
-        searchPlaceholder="Search rules and tags"
+        searchPlaceholder="Search"
         sheetTitle="Routing Rule Filters"
       />
       <div className="min-h-[400px]">
