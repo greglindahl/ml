@@ -6,8 +6,9 @@ import {
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuLabel,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import {
   Tooltip,
@@ -83,6 +84,95 @@ export const STAKEHOLDER_FACETS = [
   { id: "recipientUser", label: "Recipient User", icon: "bi-send", kind: "user", placeholder: "Search users..." },
   { id: "recipientGroup", label: "Recipient Group", icon: "bi-send-check", kind: "group", placeholder: "Search groups..." },
 ] as const;
+
+/** Filters that sit behind the More dropdown instead of in the row. */
+export const MORE_FILTER_IDS: string[] = ["campaign", "creator", "assignedGroup", "recipientGroup"];
+
+/** ML-style More dropdown (as on Manage Users): one search-and-check flyout per filter. */
+function MoreFilters({
+  items,
+  activeFilters,
+  onToggle,
+}: {
+  items: { id: string; label: string; placeholder: string; options: { id: string; name: string }[] }[];
+  activeFilters: Record<string, FilterValue[]>;
+  onToggle: (filterId: string, value: string, label: string, checked: boolean) => void;
+}) {
+  const [queries, setQueries] = useState<Record<string, string>>({});
+  const selectedCount = items.reduce((sum, i) => sum + (activeFilters[i.id]?.length ?? 0), 0);
+  return (
+    <DropdownMenu>
+      <Tooltip delayDuration={700}>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(
+                "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
+                selectedCount > 0 && "bg-primary/10 border-primary text-primary"
+              )}
+            >
+              <i className="bi bi-three-dots w-4 h-4 inline-flex items-center justify-center leading-none" />
+              <span className="filter-label">More</span>
+              {selectedCount > 0 && (
+                <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
+                  {selectedCount}
+                </span>
+              )}
+              <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
+            </Button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">More filters</TooltipContent>
+      </Tooltip>
+      <DropdownMenuContent align="start" className="bg-popover z-50 min-w-[200px]" onCloseAutoFocus={(e) => e.preventDefault()}>
+        {items.map((item) => {
+          const selected = activeFilters[item.id] || [];
+          const query = queries[item.id] ?? "";
+          const visible = item.options.filter((o) => o.name.toLowerCase().includes(query.toLowerCase()));
+          return (
+            <DropdownMenuSub key={item.id}>
+              <DropdownMenuSubTrigger>
+                {item.label}
+                {selected.length > 0 && <span className="ml-auto text-[13px] text-primary">{selected.length}</span>}
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="bg-white z-50 min-w-[200px]">
+                <div className="px-2 py-2 border-b">
+                  <div className="relative">
+                    <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+                    <input
+                      type="text"
+                      placeholder={item.placeholder}
+                      value={query}
+                      onChange={(e) => setQueries((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                      className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+                <div className="max-h-[280px] overflow-y-auto">
+                  {visible.map((o) => (
+                    <DropdownMenuCheckboxItem
+                      key={o.id}
+                      checked={selected.some((s) => s.value === o.id)}
+                      onCheckedChange={(checked) => onToggle(item.id, o.id, o.name, checked as boolean)}
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      {o.name}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                  {visible.length === 0 && <div className="px-2 py-3 text-xs text-muted-foreground text-center">No results found</div>}
+                </div>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 function StakeholderFacet({
   label,
@@ -174,8 +264,6 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
     ref
   ) {
     const [activeFilters, setActiveFilters] = useState<Record<string, FilterValue[]>>({});
-    const [campaignSearchQuery, setCampaignSearchQuery] = useState("");
-    const [creatorSearchQuery, setCreatorSearchQuery] = useState("");
 
     const creators = getUniqueRequestCreators();
     const campaigns = mockCampaigns;
@@ -249,22 +337,13 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
       });
     };
 
-    const campaignSelected = activeFilters["campaign"] || [];
     const requestTypeSelected = activeFilters["requestType"] || [];
     const statusSelected = activeFilters["status"] || [];
-    const creatorSelected = activeFilters["creator"] || [];
     const dateSelected = activeFilters["date"] || [];
 
     // Calculate total active filter count for collapsed button
     const totalActiveCount = Object.values(activeFilters).reduce((sum, arr) => sum + arr.length, 0);
 
-    const filteredCampaigns = campaigns.filter((c) =>
-      c.name.toLowerCase().includes(campaignSearchQuery.toLowerCase())
-    );
-
-    const filteredCreators = creators.filter((c) =>
-      c.name.toLowerCase().includes(creatorSearchQuery.toLowerCase())
-    );
 
 
     return (
@@ -288,74 +367,6 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
 
         {/* Expanded Filters (visible at wide widths) */}
         <div className="filters-expanded contents">
-          {/* Campaigns Dropdown (left out inside a campaign's own Requests tab) */}
-          {!hideCampaignFilter && (
-          <DropdownMenu>
-            <Tooltip delayDuration={700}>
-              <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
-                      campaignSelected.length > 0 && "bg-primary/10 border-primary text-primary"
-                    )}
-                  >
-                    <i className="bi bi-layers w-4 h-4 inline-flex items-center justify-center leading-none" />
-                    <span className="filter-label">Campaign</span>
-                    {campaignSelected.length > 0 && (
-                      <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
-                        {campaignSelected.length}
-                      </span>
-                    )}
-                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                  </Button>
-                </DropdownMenuTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">Campaign</TooltipContent>
-            </Tooltip>
-            <DropdownMenuContent
-              align="start"
-              className="bg-popover z-50 min-w-[200px]"
-              onCloseAutoFocus={(e) => e.preventDefault()}
-            >
-              <div className="px-2 py-2 border-b">
-                <div className="relative">
-                  <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
-                  <input
-                    type="text"
-                    placeholder="Search campaigns..."
-                    value={campaignSearchQuery}
-                    onChange={(e) => setCampaignSearchQuery(e.target.value)}
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
-                    className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                </div>
-              </div>
-              <div className="max-h-[280px] overflow-y-auto">
-                {filteredCampaigns.map((campaign) => (
-                  <DropdownMenuCheckboxItem
-                    key={campaign.id}
-                    checked={campaignSelected.some((s) => s.value === campaign.id)}
-                    onCheckedChange={(checked) =>
-                      handleMultiSelect("campaign", campaign.id, campaign.name, checked as boolean)
-                    }
-                  >
-                    {campaign.name}
-                  </DropdownMenuCheckboxItem>
-                ))}
-                {filteredCampaigns.length === 0 && (
-                  <div className="px-2 py-3 text-xs text-muted-foreground text-center">
-                    No results found
-                  </div>
-                )}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          )}
-
           {/* Request Type Dropdown (single select) */}
           <DropdownMenu>
             <Tooltip delayDuration={700}>
@@ -450,72 +461,6 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Creator Dropdown */}
-          <DropdownMenu>
-            <Tooltip delayDuration={700}>
-              <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "h-10 gap-2 px-4 text-[15px] font-normal rounded-md bg-white border-gray-300 text-[#6e84a3]",
-                      creatorSelected.length > 0 && "bg-primary/10 border-primary text-primary"
-                    )}
-                  >
-                    <i className="bi bi-person w-4 h-4 inline-flex items-center justify-center leading-none" />
-                    <span className="filter-label">Creator</span>
-                    {creatorSelected.length > 0 && (
-                      <span className="ml-0.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] w-4 h-4">
-                        {creatorSelected.length}
-                      </span>
-                    )}
-                    <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-                  </Button>
-                </DropdownMenuTrigger>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">Creator</TooltipContent>
-            </Tooltip>
-            <DropdownMenuContent
-              align="start"
-              className="bg-popover z-50 min-w-[200px]"
-              onCloseAutoFocus={(e) => e.preventDefault()}
-            >
-              <div className="px-2 py-2 border-b">
-                <div className="relative">
-                  <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
-                  <input
-                    type="text"
-                    placeholder="Search creators..."
-                    value={creatorSearchQuery}
-                    onChange={(e) => setCreatorSearchQuery(e.target.value)}
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
-                    className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                </div>
-              </div>
-              <div className="max-h-[280px] overflow-y-auto">
-                {filteredCreators.map((creator) => (
-                  <DropdownMenuCheckboxItem
-                    key={creator.id}
-                    checked={creatorSelected.some((s) => s.value === creator.id)}
-                    onCheckedChange={(checked) =>
-                      handleMultiSelect("creator", creator.id, creator.name, checked as boolean)
-                    }
-                  >
-                    {creator.name}
-                  </DropdownMenuCheckboxItem>
-                ))}
-                {filteredCreators.length === 0 && (
-                  <div className="px-2 py-3 text-xs text-muted-foreground text-center">
-                    No results found
-                  </div>
-                )}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
           {/* Created Date Dropdown */}
           <DropdownMenu>
             <Tooltip delayDuration={700}>
@@ -563,8 +508,8 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Assigned User / Assigned Group / Recipient User / Recipient Group */}
-          {STAKEHOLDER_FACETS.map((f) => (
+          {/* Assigned User, Recipient User. Their group twins live in More. */}
+          {STAKEHOLDER_FACETS.filter((f) => !MORE_FILTER_IDS.includes(f.id)).map((f) => (
             <StakeholderFacet
               key={f.id}
               label={f.label}
@@ -575,6 +520,25 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
               onToggle={(value, name, checked) => handleMultiSelect(f.id, value, name, checked)}
             />
           ))}
+
+          {/* More: the least-used filters (Mixpanel, last 12 months, customers only:
+              Campaign 1 user, Creator 1, Assigned Group 0, Recipient Group 0) */}
+          <MoreFilters
+            items={[
+              ...(hideCampaignFilter
+                ? []
+                : [{ id: "campaign", label: "Campaign", placeholder: "Search campaigns...", options: campaigns }]),
+              { id: "creator", label: "Creator", placeholder: "Search creators...", options: creators },
+              ...STAKEHOLDER_FACETS.filter((f) => MORE_FILTER_IDS.includes(f.id)).map((f) => ({
+                id: f.id,
+                label: f.label,
+                placeholder: f.placeholder,
+                options: f.kind === "user" ? creators : mockGroups,
+              })),
+            ]}
+            activeFilters={activeFilters}
+            onToggle={handleMultiSelect}
+          />
 
 
           {/* Flagged pill */}
