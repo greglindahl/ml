@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { RequestsFilterBar, RequestsFilterBarHandle } from "./RequestsFilterBar";
+import { RequestsFilterBar, RequestsFilterBarHandle, STAKEHOLDER_FACETS } from "./RequestsFilterBar";
 import { RequestsTable } from "./RequestsTable";
 import {
   RequestsSettingsDrawer,
@@ -47,9 +47,11 @@ export function RequestsListPanel({ requests, withinCampaign = false }: { reques
       if (filterId === "status") icon = <i className="bi bi-hourglass-split text-sm" />;
       if (filterId === "creator") icon = <i className="bi bi-person text-sm" />;
       if (filterId === "date") icon = <i className="bi bi-calendar text-sm" />;
-      if (filterId === "assignee") icon = <i className="bi bi-person-check text-sm" />;
-      if (filterId === "recipient") icon = <i className="bi bi-send text-sm" />;
-      chips.push({ label: v.label, value: v.value, filterId, icon });
+      // The four stakeholder facets name themselves on the chip, since a person or
+      // group could be filtered as assigned or as recipient.
+      const stakeholder = STAKEHOLDER_FACETS.find((f) => f.id === filterId);
+      if (stakeholder) icon = <i className={`bi ${stakeholder.icon} text-sm`} />;
+      chips.push({ label: stakeholder ? `${stakeholder.label}: ${v.label}` : v.label, value: v.value, filterId, icon });
     });
   });
 
