@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { FacetedSearchWithTypeahead, FacetedSearchWithTypeaheadHandle } from "@/components/FacetedSearchWithTypeahead";
 import { FilterBar, FilterBarHandle } from "@/components/FilterBar";
 import { GalleryFilterBar, type GalleryFilterBarHandle, type GalleryFilterChip } from "@/components/GalleryFilterBar";
-import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
 import { Badge } from "@/components/ui/badge";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset, CREATOR_NAMES } from "@/lib/mockLibraryData";
@@ -756,6 +755,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               isBrandingActive={isBrandedActive}
               onBrandingToggle={setIsBrandedActive}
               onOpenFiltersSheet={() => setAssetsFiltersSheetOpen(true)}
+              sheetOpen={assetsFiltersSheetOpen}
+              onSheetOpenChange={setAssetsFiltersSheetOpen}
             />
           </div>
 
@@ -1022,6 +1023,8 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
               isFavoritesActive={favoriteGalleriesOnly}
               onFavoritesToggle={setFavoriteGalleriesOnly}
               onOpenFiltersSheet={() => setGalleriesFiltersSheetOpen(true)}
+              sheetOpen={galleriesFiltersSheetOpen}
+              onSheetOpenChange={setGalleriesFiltersSheetOpen}
               onActiveFiltersChange={setGalleryFilterChips}
               handleRef={galleryFilterBarHandleRef}
             />
@@ -1510,55 +1513,6 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
         hiddenFilters={["unsorted"]}
       />
 
-      {/* Assets Filters Sheet (for narrow widths) */}
-      <FiltersSheet
-        open={assetsFiltersSheetOpen}
-        onOpenChange={setAssetsFiltersSheetOpen}
-        value={{}}
-        onApply={() => {
-          // TODO: Apply draft filters when controls are wired up
-        }}
-      >
-        <FilterSection label="Content Type" icon="bi-image">
-          <div className="text-sm text-muted-foreground">Content type filters will go here</div>
-        </FilterSection>
-        <FilterSection label="AI Tags" icon="bi-stars">
-          <div className="text-sm text-muted-foreground">AI tags filters will go here</div>
-        </FilterSection>
-        <FilterSection label="Creator" icon="bi-person">
-          <div className="text-sm text-muted-foreground">Creator filters will go here</div>
-        </FilterSection>
-        <FilterSection label="Date Range" icon="bi-calendar">
-          <div className="text-sm text-muted-foreground">Date range filters will go here</div>
-        </FilterSection>
-        <FilterSection label="More Filters" icon="bi-filter">
-          <div className="text-sm text-muted-foreground">Source, Status, and other filters will go here</div>
-        </FilterSection>
-      </FiltersSheet>
-
-      {/* Galleries Filters Sheet (for narrow widths) */}
-      <FiltersSheet
-        open={galleriesFiltersSheetOpen}
-        onOpenChange={setGalleriesFiltersSheetOpen}
-        value={{}}
-        onApply={() => {
-          // TODO: Apply draft filters when controls are wired up
-        }}
-        title="Gallery Filters"
-      >
-        <FilterSection label="Gallery Options" icon="bi-collection">
-          <div className="text-sm text-muted-foreground">Gallery options filters will go here</div>
-        </FilterSection>
-        <FilterSection label="Creator" icon="bi-person">
-          <div className="text-sm text-muted-foreground">Creator filters will go here</div>
-        </FilterSection>
-        <FilterSection label="Groups" icon="bi-people">
-          <div className="text-sm text-muted-foreground">Groups filters will go here</div>
-        </FilterSection>
-        <FilterSection label="Created Date" icon="bi-calendar">
-          <div className="text-sm text-muted-foreground">Created date filters will go here</div>
-        </FilterSection>
-      </FiltersSheet>
 
       {/* Asset Detail Modal */}
       <AssetDetailModal

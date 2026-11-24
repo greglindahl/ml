@@ -38,7 +38,7 @@ import {
   useInviteCodesPerPage,
   useInviteCodesColumnVisibility,
 } from "./InviteCodesSettingsDrawer";
-import { FiltersSheet, FilterSection } from "./FiltersSheet";
+import { FiltersSheet, FilterSection, SheetAccordionSelect } from "./FiltersSheet";
 import {
   mockUsers,
   getUniqueUserRoles,
@@ -94,6 +94,7 @@ interface MobileFilterDropdownProps {
   setActiveFilters: React.Dispatch<React.SetStateAction<Record<string, FilterValue[]>>>;
 }
 
+/** Manage Users' mobile sheet filter: the shared accordion, writing straight to the page's filters. */
 function MobileFilterDropdown({
   filterId,
   placeholder,
@@ -103,90 +104,30 @@ function MobileFilterDropdown({
   activeFilters,
   setActiveFilters,
 }: MobileFilterDropdownProps) {
-  const [search, setSearch] = useState("");
-  const selected = activeFilters[filterId] || [];
-  const filtered = hasSearch
-    ? options.filter((o) => o.label.toLowerCase().includes(search.toLowerCase()))
-    : options;
-  const display =
-    selected.length === 0
-      ? placeholder
-      : selected.length === 1
-      ? selected[0].label
-      : `${selected.length} selected`;
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="w-full justify-between font-normal h-10">
-          <span className={cn(selected.length === 0 && "text-muted-foreground")}>{display}</span>
-          <i className="bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="w-[var(--radix-dropdown-menu-trigger-width)] bg-white"
-        onCloseAutoFocus={(e) => e.preventDefault()}
-      >
-        {hasSearch && (
-          <div className="px-2 py-2 border-b">
-            <div className="relative">
-              <i className="bi bi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
-                className="w-full h-8 pl-8 pr-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-            </div>
-          </div>
-        )}
-        <div className="max-h-[280px] overflow-y-auto">
-          {filtered.map((opt) => (
-            <DropdownMenuCheckboxItem
-              key={opt.value}
-              checked={selected.some((s) => s.value === opt.value)}
-              onCheckedChange={(checked) => {
-                if (isMulti) {
-                  if (checked) {
-                    setActiveFilters((prev) => ({
-                      ...prev,
-                      [filterId]: [...(prev[filterId] || []), opt],
-                    }));
-                  } else {
-                    setActiveFilters((prev) => {
-                      const remaining = (prev[filterId] || []).filter((f) => f.value !== opt.value);
-                      const next = { ...prev };
-                      if (remaining.length === 0) delete next[filterId];
-                      else next[filterId] = remaining;
-                      return next;
-                    });
-                  }
-                } else {
-                  if (checked) {
-                    setActiveFilters((prev) => ({ ...prev, [filterId]: [opt] }));
-                  } else {
-                    setActiveFilters((prev) => {
-                      const next = { ...prev };
-                      delete next[filterId];
-                      return next;
-                    });
-                  }
-                }
-              }}
-            >
-              {opt.label}
-            </DropdownMenuCheckboxItem>
-          ))}
-          {filtered.length === 0 && (
-            <div className="px-2 py-3 text-xs text-muted-foreground text-center">
-              No results found
-            </div>
-          )}
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <SheetAccordionSelect
+      id={filterId}
+      label={filterId}
+      placeholder={placeholder}
+      options={options}
+      selected={activeFilters[filterId] || []}
+      single={!isMulti}
+      searchable={hasSearch}
+      onToggle={(opt, checked) =>
+        setActiveFilters((prev) => {
+          const current = prev[filterId] || [];
+          const updated = !checked
+            ? current.filter((f) => f.value !== opt.value)
+            : isMulti
+            ? [...current, opt]
+            : [opt];
+          const next = { ...prev };
+          if (updated.length === 0) delete next[filterId];
+          else next[filterId] = updated;
+          return next;
+        })
+      }
+    />
   );
 }
 
@@ -489,6 +430,15 @@ export function AdminScreen({ isMobile = false, initialTab }: AdminScreenProps) 
         value={{}}
         onApply={() => {}}
         title="Filter"
+        // Picks here apply straight away, so Clear Filters clears the page's filters too.
+        clear={{
+          count: () => Object.values(usersActiveFilters).reduce((n, values) => n + values.length, 0),
+          // Same path as the chip row's Clear Filters, so the bar's own state clears too.
+          onClear: () => {
+            handleClearAllUsersChips();
+            setUsersActiveFilters({});
+          },
+        }}
       >
         {usersFilterVisibility.groups !== false && (
           <FilterSection label="Groups">

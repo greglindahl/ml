@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TogglePill } from "./TogglePill";
-import { FiltersSheet, FilterSection } from "./FiltersSheet";
+import { FiltersSheet, FilterSection, SheetAccordionSelect } from "./FiltersSheet";
 import { cn } from "@/lib/utils";
 
 /**
@@ -363,6 +363,7 @@ interface SheetDraft extends Record<string, unknown> {
   pills: ListPillState;
 }
 
+/** A facet in the mobile sheet: the shared accordion, writing to the sheet's draft. */
 function SheetDropdown({
   def,
   draft,
@@ -372,51 +373,16 @@ function SheetDropdown({
   draft: SheetDraft;
   setDraft: React.Dispatch<React.SetStateAction<SheetDraft>>;
 }) {
-  const [query, setQuery] = useState("");
-  const selected = draft.filters[def.id] || [];
-  const options = def.searchable
-    ? def.options.filter((o) => o.label.toLowerCase().includes(query.toLowerCase()))
-    : def.options;
-  const display = selected.length === 0 ? "All" : selected.length === 1 ? selected[0].label : `${selected.length} selected`;
-
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="w-full justify-between font-normal h-10">
-          <span className={cn(selected.length === 0 && "text-muted-foreground")}>{display}</span>
-          <i className={cn("bi bi-chevron-down", ICON_CLASS)} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] bg-white" onCloseAutoFocus={(e) => e.preventDefault()}>
-        {def.searchable && (
-          <div className="px-2 py-2 border-b">
-            <input
-              type="text"
-              placeholder="Search..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-              className="w-full h-8 px-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-          </div>
-        )}
-        <div className="max-h-[280px] overflow-y-auto">
-          {options.map((option) => (
-            <DropdownMenuCheckboxItem
-              key={option.value}
-              checked={selected.some((s) => s.value === option.value)}
-              onCheckedChange={(checked) =>
-                setDraft((d) => ({ ...d, filters: toggleValue(d.filters, def, option, checked as boolean) }))
-              }
-              onSelect={(e) => def.multi !== false && e.preventDefault()}
-            >
-              {option.label}
-            </DropdownMenuCheckboxItem>
-          ))}
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <SheetAccordionSelect
+      id={def.id}
+      label={def.label}
+      options={def.options}
+      selected={draft.filters[def.id] || []}
+      single={def.multi === false}
+      searchable={def.searchable}
+      onToggle={(option, checked) => setDraft((d) => ({ ...d, filters: toggleValue(d.filters, def, option, checked) }))}
+    />
   );
 }
 
@@ -453,6 +419,12 @@ export function ListFiltersSheet({
       value={snapshot}
       onApply={(draft) => onApply(draft.filters, draft.pills)}
       title={title}
+      clear={{
+        count: (d) =>
+          Object.values(d.filters).reduce((n, values) => n + values.length, 0) +
+          Object.values(d.pills).filter(Boolean).length,
+        empty: { filters: {}, pills: {} },
+      }}
     >
       {({ draft, setDraft }) => (
         <>

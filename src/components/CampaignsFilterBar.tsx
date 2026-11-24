@@ -13,6 +13,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { TogglePill } from "./TogglePill";
+import { LiveFiltersSheet } from "./FiltersSheet";
 import { getUniqueCampaignCreators } from "@/lib/mockCampaignData";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +32,9 @@ interface CampaignsFilterBarProps {
   onArchivedToggle?: (active: boolean) => void;
   onOpenFiltersSheet?: () => void;
   onActiveFiltersChange?: (filters: Record<string, FilterValue[]>) => void;
+  /** Mobile sheet: when given, the bar renders its own sheet with its real facets. */
+  sheetOpen?: boolean;
+  onSheetOpenChange?: (open: boolean) => void;
 }
 
 const dateOptions = [
@@ -49,6 +53,8 @@ export const CampaignsFilterBar = forwardRef<CampaignsFilterBarHandle, Campaigns
       onArchivedToggle,
       onOpenFiltersSheet,
       onActiveFiltersChange,
+      sheetOpen,
+      onSheetOpenChange,
     },
     ref
   ) {
@@ -279,6 +285,35 @@ export const CampaignsFilterBar = forwardRef<CampaignsFilterBarHandle, Campaigns
             onClick={() => onArchivedToggle?.(!isArchivedActive)}
           />
         </div>
+
+        {/* Mobile sheet: the same facets as the row, same state, so picks show as chips at once. */}
+        {onSheetOpenChange && (
+          <LiveFiltersSheet
+            open={!!sheetOpen}
+            onOpenChange={onSheetOpenChange}
+            title="Campaign Filters"
+            facets={[
+              { id: "creator", label: "Creator", options: creators.map((c) => ({ value: c.id, label: c.name })), searchable: true },
+              // Custom date ranges need the calendar, so the sheet offers the presets only.
+              { id: "date", label: "Created Date", options: dateOptions.filter((o) => o.value !== "custom"), single: true },
+            ]}
+            active={activeFilters}
+            onToggle={(facet, option, checked) =>
+              facet.single
+                ? handleSingleSelect(facet.id, option.value, option.label)
+                : handleMultiSelect(facet.id, option.value, option.label, checked)
+            }
+            toggles={
+              onArchivedToggle
+                ? [{ id: "archived", label: "Archived", description: "Show only archived campaigns", checked: isArchivedActive, onChange: onArchivedToggle }]
+                : []
+            }
+            onClear={() => {
+              setActiveFilters({});
+              onActiveFiltersChange?.({});
+            }}
+          />
+        )}
       </div>
     );
   }

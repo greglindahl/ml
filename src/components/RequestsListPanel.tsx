@@ -3,7 +3,6 @@ import { SettingsButton } from "@/components/ListFilters";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { RequestsFilterBar, RequestsFilterBarHandle, STAKEHOLDER_FACETS } from "./RequestsFilterBar";
 import { RequestsTable } from "./RequestsTable";
@@ -13,7 +12,6 @@ import {
   useRequestsColumnVisibility,
   useRequestsFilterVisibility,
 } from "./RequestsSettingsDrawer";
-import { FiltersSheet, FilterSection } from "./FiltersSheet";
 import { getUniqueRequestCreators, type Request } from "@/lib/mockCampaignData";
 
 interface FilterValue {
@@ -94,6 +92,8 @@ export function RequestsListPanel({ requests, withinCampaign = false }: { reques
           onArchivedToggle={setArchivedActive}
           onActiveFiltersChange={setActiveFilters}
           onOpenFiltersSheet={() => setFiltersSheetOpen(true)}
+          sheetOpen={filtersSheetOpen}
+          onSheetOpenChange={setFiltersSheetOpen}
           hideCampaignFilter={withinCampaign}
         />
       </div>
@@ -146,56 +146,6 @@ export function RequestsListPanel({ requests, withinCampaign = false }: { reques
         filterVisibility={filterVisibility}
         onFilterVisibilityChange={setFilterVisibility}
       />
-
-      {/* FiltersSheet (mobile/narrow widths) */}
-      <FiltersSheet
-        open={filtersSheetOpen}
-        onOpenChange={setFiltersSheetOpen}
-        value={{ flagged: flaggedActive, archived: archivedActive }}
-        onApply={(draft) => {
-          setFlaggedActive(draft.flagged as boolean);
-          setArchivedActive(draft.archived as boolean);
-        }}
-        title="Request Filters"
-      >
-        <FilterSection label="Creator" icon="bi-person">
-          <div className="space-y-2">
-            {getUniqueRequestCreators().map((creator) => (
-              <label key={creator.id} className="flex items-center gap-2 cursor-pointer">
-                <Checkbox
-                  checked={activeFilters.creator?.some((f) => f.value === creator.id)}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setActiveFilters((prev) => ({
-                        ...prev,
-                        creator: [...(prev.creator || []), { value: creator.id, label: creator.name }],
-                      }));
-                    } else {
-                      setActiveFilters((prev) => ({
-                        ...prev,
-                        creator: (prev.creator || []).filter((f) => f.value !== creator.id),
-                      }));
-                    }
-                  }}
-                />
-                <span className="text-sm">{creator.name}</span>
-              </label>
-            ))}
-          </div>
-        </FilterSection>
-        <FilterSection label="Flagged" icon="bi-flag">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <Checkbox checked={flaggedActive} onCheckedChange={(checked) => setFlaggedActive(checked as boolean)} />
-            <span className="text-sm">Show only flagged requests</span>
-          </label>
-        </FilterSection>
-        <FilterSection label="Archived" icon="bi-archive">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <Checkbox checked={archivedActive} onCheckedChange={(checked) => setArchivedActive(checked as boolean)} />
-            <span className="text-sm">Show only archived requests</span>
-          </label>
-        </FilterSection>
-      </FiltersSheet>
     </>
   );
 }
