@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -363,60 +363,94 @@ interface SheetDraft extends Record<string, unknown> {
   pills: ListPillState;
 }
 
+/**
+ * Mobile sheet filter as an accordion (prod, per Tell): the options expand inline
+ * and the whole sheet scrolls, instead of a popover that gets cut off at the
+ * sheet's bottom edge. Long lists cap at ~6 rows with their own scroll; one
+ * section open at a time; a newly opened section scrolls into view.
+ */
 function SheetDropdown({
   def,
   draft,
   setDraft,
+  open,
+  onOpenChange,
 }: {
   def: ListFilterDef;
   draft: SheetDraft;
   setDraft: React.Dispatch<React.SetStateAction<SheetDraft>>;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
   const [query, setQuery] = useState("");
+  const panelRef = useRef<HTMLDivElement>(null);
+  const single = def.multi === false;
   const selected = draft.filters[def.id] || [];
   const options = def.searchable
     ? def.options.filter((o) => o.label.toLowerCase().includes(query.toLowerCase()))
     : def.options;
   const display = selected.length === 0 ? "All" : selected.length === 1 ? selected[0].label : `${selected.length} selected`;
 
+  useEffect(() => {
+    if (open) panelRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [open]);
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="w-full justify-between font-normal h-10">
-          <span className={cn(selected.length === 0 && "text-muted-foreground")}>{display}</span>
-          <i className={cn("bi bi-chevron-down", ICON_CLASS)} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] bg-white" onCloseAutoFocus={(e) => e.preventDefault()}>
-        {def.searchable && (
-          <div className="px-2 py-2 border-b">
-            <input
-              type="text"
-              placeholder="Search..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-              className="w-full h-8 px-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-          </div>
-        )}
-        <div className="max-h-[280px] overflow-y-auto">
-          {options.map((option) => (
-            <DropdownMenuCheckboxItem
-              key={option.value}
-              checked={selected.some((s) => s.value === option.value)}
-              onCheckedChange={(checked) =>
-                setDraft((d) => ({ ...d, filters: toggleValue(d.filters, def, option, checked as boolean) }))
-              }
-              onSelect={(e) => def.multi !== false && e.preventDefault()}
-            >
-              {option.label}
-            </DropdownMenuCheckboxItem>
-          ))}
+    <div>
+      <Button
+        variant="outline"
+        className={cn("w-full justify-between font-normal h-10", open && "border-primary")}
+        aria-expanded={open}
+        onClick={() => onOpenChange(!open)}
+      >
+        <span className={cn(selected.length === 0 && "text-muted-foreground")}>{display}</span>
+        <i className={cn("bi bi-chevron-down transition-transform motion-reduce:transition-none", open && "rotate-180", ICON_CLASS)} />
+      </Button>
+      {open && (
+        <div ref={panelRef} className="mt-1 rounded-md border border-input bg-white">
+          {def.searchable && (
+            <div className="px-2 py-2 border-b">
+              <input
+                type="text"
+                placeholder="Search..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full h-9 px-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+          )}
+          {/* ~6 rows, then the list scrolls inside the open section */}
+          <ul className="max-h-[252px] overflow-y-auto py-1" role={single ? "radiogroup" : "group"} aria-label={def.label}>
+            {options.map((option) => {
+              const checked = selected.some((s) => s.value === option.value);
+              const pick = () => {
+                setDraft((d) => ({ ...d, filters: toggleValue(d.filters, def, option, single ? true : !checked) }));
+                if (single) onOpenChange(false);
+              };
+              return (
+                <li key={option.value}>
+                  <label className="flex items-center gap-3 px-3 h-[42px] text-sm cursor-pointer hover:bg-accent/60">
+                    {single ? (
+                      <input
+                        type="radio"
+                        name={`sheet-${def.id}`}
+                        checked={checked}
+                        onChange={pick}
+                        className="h-4 w-4 accent-primary"
+                      />
+                    ) : (
+                      <Checkbox checked={checked} onCheckedChange={pick} />
+                    )}
+                    <span className="flex-1 truncate">{option.label}</span>
+                  </label>
+                </li>
+              );
+            })}
+            {options.length === 0 && <li className="px-3 py-3 text-xs text-muted-foreground text-center">No results found</li>}
+          </ul>
         </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      )}
+    </div>
   );
 }
 
@@ -445,6 +479,11 @@ export function ListFiltersSheet({
   // FiltersSheet re-seeds its draft whenever `value` changes identity while open,
   // so this has to be stable across unrelated parent renders.
   const snapshot = useMemo<SheetDraft>(() => ({ filters: value, pills: pillState }), [value, pillState]);
+  // One accordion section open at a time; all closed each time the sheet opens.
+  const [openSection, setOpenSection] = useState<string | null>(null);
+  useEffect(() => {
+    if (open) setOpenSection(null);
+  }, [open]);
 
   return (
     <FiltersSheet<SheetDraft>
@@ -464,7 +503,13 @@ export function ListFiltersSheet({
         <>
           {filters.map((def) => (
             <FilterSection key={def.id} label={def.label} icon={def.icon}>
-              <SheetDropdown def={def} draft={draft} setDraft={setDraft} />
+              <SheetDropdown
+                def={def}
+                draft={draft}
+                setDraft={setDraft}
+                open={openSection === def.id}
+                onOpenChange={(next) => setOpenSection(next ? def.id : null)}
+              />
             </FilterSection>
           ))}
           {pills.map((pill) => (
