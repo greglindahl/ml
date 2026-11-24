@@ -1,5 +1,6 @@
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect, useRef, createContext, useContext } from "react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Sheet,
   SheetContent,
@@ -14,6 +15,9 @@ export type FilterSnapshot = Record<string, unknown>;
 interface FiltersSheetContextValue<T extends FilterSnapshot> {
   draft: T;
   setDraft: React.Dispatch<React.SetStateAction<T>>;
+  /** Which accordion section is open (one at a time); null = all closed. */
+  openSection: string | null;
+  setOpenSection: (id: string | null) => void;
 }
 
 const FiltersSheetContext = createContext<FiltersSheetContextValue<FilterSnapshot> | null>(null);
@@ -52,6 +56,7 @@ export function FiltersSheet<T extends FilterSnapshot>({
 }: FiltersSheetProps<T>) {
   // Initialize draft from value when sheet opens
   const [draft, setDraft] = useState<T>(value);
+  const [openSection, setOpenSection] = useState<string | null>(null);
 
   // Reset draft when sheet opens
   useEffect(() => {
@@ -60,12 +65,17 @@ export function FiltersSheet<T extends FilterSnapshot>({
     }
   }, [open, value]);
 
+  // Every accordion section starts closed each time the sheet opens.
+  useEffect(() => {
+    if (open) setOpenSection(null);
+  }, [open]);
+
   const handleApply = () => {
     onApply(draft);
     onOpenChange(false);
   };
 
-  const contextValue: FiltersSheetContextValue<T> = { draft, setDraft };
+  const contextValue: FiltersSheetContextValue<T> = { draft, setDraft, openSection, setOpenSection };
   const selectedCount = clear ? clear.count(draft) : 0;
 
   return (
@@ -114,6 +124,111 @@ interface FilterSectionProps {
   label: string;
   icon?: string;
   children: React.ReactNode;
+}
+
+/**
+ * The mobile sheet's filter control (prod, per Tell): an accordion, not a popover.
+ * Options expand inline and the whole sheet scrolls; long lists cap at ~6 rows
+ * with their own scroll; one section open at a time across the sheet; a newly
+ * opened section scrolls into view; picked options are solid blue rows; a
+ * pick-one control closes on pick. Every sheet uses this one control.
+ */
+export function SheetAccordionSelect({
+  id,
+  label,
+  placeholder = "All",
+  options,
+  selected,
+  onToggle,
+  single = false,
+  searchable = false,
+}: {
+  /** Unique within the sheet: which section is open is tracked by this. */
+  id: string;
+  label: string;
+  placeholder?: string;
+  options: { value: string; label: string }[];
+  selected: { value: string; label: string }[];
+  onToggle: (option: { value: string; label: string }, checked: boolean) => void;
+  single?: boolean;
+  searchable?: boolean;
+}) {
+  const { openSection, setOpenSection } = useFiltersSheetDraft();
+  const open = openSection === id;
+  const [query, setQuery] = useState("");
+  const panelRef = useRef<HTMLDivElement>(null);
+  const visible = searchable ? options.filter((o) => o.label.toLowerCase().includes(query.toLowerCase())) : options;
+  const display = selected.length === 0 ? placeholder : selected.length === 1 ? selected[0].label : `${selected.length} selected`;
+
+  useEffect(() => {
+    if (open) panelRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [open]);
+
+  return (
+    <div>
+      <Button
+        variant="outline"
+        className={cn("w-full justify-between font-normal h-10", open && "border-primary")}
+        aria-expanded={open}
+        onClick={() => setOpenSection(open ? null : id)}
+      >
+        <span className={cn(selected.length === 0 && "text-muted-foreground")}>{display}</span>
+        <i
+          className={cn(
+            "bi bi-chevron-down w-4 h-4 inline-flex items-center justify-center leading-none transition-transform motion-reduce:transition-none",
+            open && "rotate-180",
+          )}
+        />
+      </Button>
+      {open && (
+        <div ref={panelRef} className="mt-1 rounded-md border border-input bg-white">
+          {searchable && (
+            <div className="px-2 py-2 border-b">
+              <input
+                type="text"
+                placeholder="Search..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full h-9 px-2 text-sm border border-input rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+          )}
+          {/* ~6 rows, then the list scrolls inside the open section */}
+          <ul className="max-h-[252px] overflow-y-auto py-1" role="listbox" aria-multiselectable={!single} aria-label={label}>
+            {visible.map((option) => {
+              const checked = selected.some((s) => s.value === option.value);
+              const pick = () => {
+                onToggle(option, single ? true : !checked);
+                if (single) setOpenSection(null);
+              };
+              return (
+                <li
+                  key={option.value}
+                  role="option"
+                  aria-selected={checked}
+                  tabIndex={0}
+                  onClick={pick}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      pick();
+                    }
+                  }}
+                  className={cn(
+                    "flex items-center px-4 h-[42px] text-[15px] cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
+                    checked ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent/60",
+                  )}
+                >
+                  <span className="flex-1 truncate">{option.label}</span>
+                </li>
+              );
+            })}
+            {visible.length === 0 && <li className="px-3 py-3 text-xs text-muted-foreground text-center">No results found</li>}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // `icon` is still accepted so callers don't change, but prod's mobile sheet labels
