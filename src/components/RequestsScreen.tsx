@@ -1,3 +1,5 @@
+import { activeToggleChips, clearToggleChips, ToggleChips } from "@/components/TogglePill";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useRef } from "react";
 import { SettingsButton } from "@/components/ListFilters";
 import "bootstrap-icons/font/bootstrap-icons.css";
@@ -66,6 +68,10 @@ export function RequestsScreen({ isMobile = false, initialTab }: RequestsScreenP
 
   // Refs for filter bars
   const campaignsFilterBarRef = useRef<CampaignsFilterBarHandle>(null);
+  // On phone, toggles that are on show as chips (see activeToggleChips).
+  const campaignsToggleChips = activeToggleChips(useIsMobile(), [
+    { id: "archived", label: "Archived", iconClass: "bi-archive", active: campaignsArchivedActive, onChange: setCampaignsArchivedActive },
+  ]);
 
   // Build chips for Campaigns tab
   const campaignsChips: { label: string; value: string; filterId: string; icon: React.ReactNode }[] = [];
@@ -85,6 +91,7 @@ export function RequestsScreen({ isMobile = false, initialTab }: RequestsScreenP
 
   const handleClearAllCampaignsChips = () => {
     campaignsFilterBarRef.current?.clearAll();
+    clearToggleChips(campaignsToggleChips);
   };
 
 
@@ -164,7 +171,7 @@ export function RequestsScreen({ isMobile = false, initialTab }: RequestsScreenP
 
           {/* Active Filter Chips */}
           <div className="min-h-[24px]">
-            {campaignsChips.length > 0 && (
+            {(campaignsChips.length > 0 || campaignsToggleChips.length > 0) && (
               <div className="flex flex-wrap items-center gap-1.5">
                 {campaignsChips.map((chip, i) => (
                   <Badge
@@ -180,6 +187,7 @@ export function RequestsScreen({ isMobile = false, initialTab }: RequestsScreenP
                     <i className="bi bi-x text-sm ml-0.5" />
                   </Badge>
                 ))}
+                <ToggleChips chips={campaignsToggleChips} />
                 <button
                   onClick={handleClearAllCampaignsChips}
                   className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"

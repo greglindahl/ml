@@ -549,14 +549,18 @@
   .filters-expanded {
     display: none;
   }
-  /* Prod: on phone the toggle pills live only in the filters sheet. */
-  .filter-toggle-pill {
-    display: none;
-  }
 }
 
 @container filterbar (min-width: 768px) {
   .filters-collapsed-button {
+    display: none;
+  }
+}
+
+/* Prod: on phone the toggle pills live only in the filters sheet, and an on
+   toggle shows as a chip instead (activeToggleChips, same 768px breakpoint). */
+@media (max-width: 767px) {
+  .filter-toggle-pill {
     display: none;
   }
 }

@@ -420,10 +420,10 @@ export function FilterBar({
   const sourceSelected = activeFilters["source"] || [];
   const sourceCount = sourceSelected.length;
 
-  // Calculate total active filter count for collapsed button
+  // Collapsed button count. activeFilters already holds the AI Tags and Source picks, so they are not added again.
   const standardFiltersCount = Object.values(activeFilters).reduce((sum, arr) => sum + arr.length, 0);
   // Toggle pills count too: on phone they live only in the sheet, so the button is where an on toggle shows.
-  const totalActiveCount = standardFiltersCount + aiTagsCount + sourceCount + [isUnsortedActive, isUnviewedActive, isBrandingActive].filter(Boolean).length;
+  const totalActiveCount = standardFiltersCount + [isUnsortedActive, isUnviewedActive, isBrandingActive].filter(Boolean).length;
 
 
   return (
