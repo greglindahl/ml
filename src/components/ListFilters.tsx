@@ -453,6 +453,12 @@ export function ListFiltersSheet({
       value={snapshot}
       onApply={(draft) => onApply(draft.filters, draft.pills)}
       title={title}
+      clear={{
+        count: (d) =>
+          Object.values(d.filters).reduce((n, values) => n + values.length, 0) +
+          Object.values(d.pills).filter(Boolean).length,
+        empty: { filters: {}, pills: {} },
+      }}
     >
       {({ draft, setDraft }) => (
         <>

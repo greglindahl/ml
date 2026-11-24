@@ -157,6 +157,7 @@ export function RequestsListPanel({ requests, withinCampaign = false }: { reques
           setArchivedActive(draft.archived as boolean);
         }}
         title="Request Filters"
+        clear={{ count: (d) => [d.flagged, d.archived].filter(Boolean).length, empty: { flagged: false, archived: false } }}
       >
         <FilterSection label="Creator" icon="bi-person">
           <div className="space-y-2">

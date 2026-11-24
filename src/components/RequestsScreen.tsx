@@ -229,6 +229,7 @@ export function RequestsScreen({ isMobile = false, initialTab }: RequestsScreenP
           setCampaignsArchivedActive(draft.archived as boolean);
         }}
         title="Campaign Filters"
+        clear={{ count: (d) => (d.archived ? 1 : 0), empty: { archived: false } }}
       >
         <FilterSection label="Creator" icon="bi-person">
           <div className="space-y-2">
