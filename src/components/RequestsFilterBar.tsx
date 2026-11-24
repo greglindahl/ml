@@ -16,6 +16,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { TogglePill } from "./TogglePill";
+import { LiveFiltersSheet } from "./FiltersSheet";
 import { mockCampaigns, getUniqueRequestCreators } from "@/lib/mockCampaignData";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +39,9 @@ interface RequestsFilterBarProps {
   onActiveFiltersChange?: (filters: Record<string, FilterValue[]>) => void;
   /** Inside a campaign every request already belongs to it, so the Campaign filter goes. */
   hideCampaignFilter?: boolean;
+  /** Mobile sheet: when given, the bar renders its own sheet with its real facets. */
+  sheetOpen?: boolean;
+  onSheetOpenChange?: (open: boolean) => void;
 }
 
 const dateOptions = [
@@ -260,6 +264,8 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
       onOpenFiltersSheet,
       onActiveFiltersChange,
       hideCampaignFilter = false,
+      sheetOpen,
+      onSheetOpenChange,
     },
     ref
   ) {
@@ -559,6 +565,54 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
             onClick={() => onArchivedToggle?.(!isArchivedActive)}
           />
         </div>
+
+        {/* Mobile sheet: the row's facets in row order, then the More filters, then the pills. */}
+        {onSheetOpenChange && (
+          <LiveFiltersSheet
+            open={!!sheetOpen}
+            onOpenChange={onSheetOpenChange}
+            title="Request Filters"
+            facets={[
+              { id: "requestType", label: "Request Type", options: requestTypeOptions, single: true },
+              { id: "status", label: "Status", options: statusOptions },
+              // Custom date ranges need the calendar, so the sheet offers the presets only.
+              { id: "date", label: "Created Date", options: dateOptions.filter((o) => o.value !== "custom"), single: true },
+              ...STAKEHOLDER_FACETS.filter((f) => !MORE_FILTER_IDS.includes(f.id)).map((f) => ({
+                id: f.id,
+                label: f.label,
+                options: (f.kind === "user" ? creators : mockGroups).map((o) => ({ value: o.id, label: o.name })),
+                searchable: true,
+              })),
+              ...(hideCampaignFilter
+                ? []
+                : [{ id: "campaign", label: "Campaign", options: campaigns.map((c) => ({ value: c.id, label: c.name })), searchable: true }]),
+              { id: "creator", label: "Creator", options: creators.map((c) => ({ value: c.id, label: c.name })), searchable: true },
+              ...STAKEHOLDER_FACETS.filter((f) => MORE_FILTER_IDS.includes(f.id) && f.kind === "group").map((f) => ({
+                id: f.id,
+                label: f.label,
+                options: mockGroups.map((g) => ({ value: g.id, label: g.name })),
+              })),
+            ]}
+            active={activeFilters}
+            onToggle={(facet, option, checked) =>
+              facet.single
+                ? handleSingleSelect(facet.id, option.value, option.label)
+                : handleMultiSelect(facet.id, option.value, option.label, checked)
+            }
+            toggles={[
+              ...(onFlaggedToggle
+                ? [{ id: "flagged", label: "Flagged", description: "Show only flagged requests", checked: isFlaggedActive, onChange: onFlaggedToggle }]
+                : []),
+              ...(onArchivedToggle
+                ? [{ id: "archived", label: "Archived", description: "Show only archived requests", checked: isArchivedActive, onChange: onArchivedToggle }]
+                : []),
+            ]}
+            onClear={() => {
+              setActiveFilters({});
+              onActiveFiltersChange?.({});
+            }}
+          />
+        )}
       </div>
     );
   }

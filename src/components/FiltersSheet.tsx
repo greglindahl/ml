@@ -86,7 +86,9 @@ export function FiltersSheet<T extends FilterSnapshot>({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="h-[85vh] max-h-[700px] flex flex-col p-0 rounded-t-lg"
+        // Prod: the sheet always rises to just below the top of the screen, however
+        // few filters it holds, so its size never jumps between pages.
+        className="h-[calc(100dvh-4rem)] flex flex-col p-0 rounded-t-lg"
       >
         <SheetHeader className="px-4 py-3 border-b flex-shrink-0">
           <SheetTitle className="text-base font-semibold text-left">{title}</SheetTitle>

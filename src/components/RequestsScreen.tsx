@@ -6,7 +6,6 @@ import { SectionTabs } from "@/components/SectionTabs";
 import { useScreenSlug, validTab } from "@/hooks/useScreenSlug";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Tooltip,
   TooltipContent,
@@ -22,8 +21,7 @@ import {
   useCampaignsColumnVisibility,
   useCampaignsFilterVisibility,
 } from "./CampaignsSettingsDrawer";
-import { FiltersSheet, FilterSection } from "./FiltersSheet";
-import { mockCampaigns, mockRequests, getUniqueCampaignCreators } from "@/lib/mockCampaignData";
+import { mockCampaigns, mockRequests } from "@/lib/mockCampaignData";
 
 interface FilterValue {
   value: string;
@@ -159,6 +157,8 @@ export function RequestsScreen({ isMobile = false, initialTab }: RequestsScreenP
               onArchivedToggle={setCampaignsArchivedActive}
               onActiveFiltersChange={setCampaignsActiveFilters}
               onOpenFiltersSheet={() => setCampaignsFiltersSheetOpen(true)}
+              sheetOpen={campaignsFiltersSheetOpen}
+              onSheetOpenChange={setCampaignsFiltersSheetOpen}
             />
           </div>
 
@@ -220,53 +220,6 @@ export function RequestsScreen({ isMobile = false, initialTab }: RequestsScreenP
         onFilterVisibilityChange={setCampaignsFilterVisibility}
       />
 
-      {/* FiltersSheet for Campaigns (mobile/narrow widths) */}
-      <FiltersSheet
-        open={campaignsFiltersSheetOpen}
-        onOpenChange={setCampaignsFiltersSheetOpen}
-        value={{ archived: campaignsArchivedActive }}
-        onApply={(draft) => {
-          setCampaignsArchivedActive(draft.archived as boolean);
-        }}
-        title="Campaign Filters"
-        clear={{ count: (d) => (d.archived ? 1 : 0), empty: { archived: false } }}
-      >
-        <FilterSection label="Creator" icon="bi-person">
-          <div className="space-y-2">
-            {getUniqueCampaignCreators().map((creator) => (
-              <label key={creator.id} className="flex items-center gap-2 cursor-pointer">
-                <Checkbox
-                  checked={campaignsActiveFilters.creator?.some(f => f.value === creator.id)}
-                  onCheckedChange={(checked) => {
-                    // This is a simplified version - in production you'd use draft state
-                    if (checked) {
-                      setCampaignsActiveFilters(prev => ({
-                        ...prev,
-                        creator: [...(prev.creator || []), { value: creator.id, label: creator.name }]
-                      }));
-                    } else {
-                      setCampaignsActiveFilters(prev => ({
-                        ...prev,
-                        creator: (prev.creator || []).filter(f => f.value !== creator.id)
-                      }));
-                    }
-                  }}
-                />
-                <span className="text-sm">{creator.name}</span>
-              </label>
-            ))}
-          </div>
-        </FilterSection>
-        <FilterSection label="Archived" icon="bi-archive">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <Checkbox
-              checked={campaignsArchivedActive}
-              onCheckedChange={(checked) => setCampaignsArchivedActive(checked as boolean)}
-            />
-            <span className="text-sm">Show only archived campaigns</span>
-          </label>
-        </FilterSection>
-      </FiltersSheet>
     </div>
     </>
   );
