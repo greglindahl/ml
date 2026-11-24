@@ -1,3 +1,5 @@
+import { activeToggleChips } from "@/components/TogglePill";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useCallback, useMemo, useState } from "react";
 import {
   AppliedFilterChips,
@@ -138,11 +140,16 @@ export function ListToolbar({
 }: ListToolbarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const isPhone = useIsMobile();
 
   const filterDefs = useMemo(() => allFilterDefs.filter(isFilterAvailable), [allFilterDefs]);
   const visibleFilters = filterDefs.filter((f) => controls.filterVisibility[f.id] !== false);
   const pillDefs = allPillDefs.filter((p) => controls.filterVisibility[p.id] !== false);
   const hasFilterRow = visibleFilters.length > 0 || pillDefs.length > 0;
+  const toggleChips = activeToggleChips(
+    isPhone,
+    pillDefs.map((p) => ({ id: p.id, label: p.label, iconClass: p.icon, active: !!controls.pills[p.id], onChange: (on: boolean) => controls.setPill(p.id, on) })),
+  );
   const showSearch = !searchProposed || SHOW_PROPOSED_FILTERS;
   const openSettings = columns || filterSettingsOnly ? () => setSettingsOpen(true) : undefined;
   // Toggles (pills) are filters too, so they get a row in the Filters tab.
@@ -186,9 +193,10 @@ export function ListToolbar({
         </div>
       )}
 
-      {/* Reserved chip row only where dropdown filters exist to produce chips. */}
-      {visibleFilters.length > 0 && (
-        <AppliedFilterChips filters={visibleFilters} value={controls.filters} onChange={controls.setFilters} trailing={chipRowTrailing} />
+      {/* Reserved chip row where dropdown filters exist to produce chips, or on
+          phone once a toggle is on (it chips there; see activeToggleChips). */}
+      {(visibleFilters.length > 0 || toggleChips.length > 0) && (
+        <AppliedFilterChips filters={visibleFilters} value={controls.filters} onChange={controls.setFilters} trailing={chipRowTrailing} toggles={toggleChips} />
       )}
 
       {hasFilterRow && (

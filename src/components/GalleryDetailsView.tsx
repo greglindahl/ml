@@ -1,3 +1,5 @@
+import { activeToggleChips, clearToggleChips, ToggleChips } from "@/components/TogglePill";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SettingsButton } from "@/components/ListFilters";
@@ -129,6 +131,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
   // Filters sheet state for narrow widths
   const [filtersSheetOpen, setFiltersSheetOpen] = useState(false);
   // Toggle pill states — previously the bar rendered these pills unwired (decorative)
+  const isPhone = useIsMobile();
   const [isUnviewedActive, setIsUnviewedActive] = useState(false);
   const [isBrandedActive, setIsBrandedActive] = useState(false);
 
@@ -380,6 +383,12 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
     setCustomDateRanges(prev => ({ ...prev, [filterId]: range }));
   }, []);
 
+  // On phone, toggles that are on show as chips (see activeToggleChips).
+  const toggleChips = activeToggleChips(isPhone, [
+    { id: "unviewed", label: "Unviewed Only", iconClass: "bi-eye-slash", active: isUnviewedActive, onChange: setIsUnviewedActive },
+    { id: "branding", label: "Branding", iconClass: "bi-palette", active: isBrandedActive, onChange: setIsBrandedActive },
+  ]);
+
   return (
     <div className={`flex-1 flex flex-col min-w-0 h-full overflow-hidden px-6 md:px-9 content-container ${isMobile ? "pt-[72px]" : ""}`}>
       {/* Breadcrumb Navigation - fixed height to prevent layout shift */}
@@ -604,7 +613,7 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
 
           {/* Applied Filter Chips - reserved height to prevent layout shift */}
           <div className="min-h-[24px] mb-4">
-            {filterChips.length > 0 && (
+            {(filterChips.length > 0 || toggleChips.length > 0) && (
               <div className="flex flex-wrap items-center gap-1.5">
                 {filterChips.map((chip, i) => (
                   <Badge
@@ -619,8 +628,12 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
                     <i className="bi bi-x text-sm ml-0.5" />
                   </Badge>
                 ))}
+                <ToggleChips chips={toggleChips} />
                 <button
-                  onClick={() => filterBarHandleRef.current?.clearAll()}
+                  onClick={() => {
+                    filterBarHandleRef.current?.clearAll();
+                    clearToggleChips(toggleChips);
+                  }}
                   className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                 >
                   Clear Filters

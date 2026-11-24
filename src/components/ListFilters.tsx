@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -10,8 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { TogglePill } from "./TogglePill";
-import { FiltersSheet, FilterSection, SheetAccordionSelect } from "./FiltersSheet";
+import { TogglePill, ToggleChips, clearToggleChips, type ToggleChipDef } from "./TogglePill";
+import { FiltersSheet, FilterSection, SheetAccordionSelect, SheetToggleRow } from "./FiltersSheet";
 import { cn } from "@/lib/utils";
 
 /**
@@ -316,15 +315,17 @@ interface AppliedFilterChipsProps {
   onChange: (next: ListFilterState) => void;
   /** Right-aligned after the chips; only rendered while chips are showing. */
   trailing?: React.ReactNode;
+  /** Toggles that are on, as chips (phone only; see activeToggleChips). */
+  toggles?: ToggleChipDef[];
 }
 
 /** Reserved-height row so the table doesn't jump when the first chip lands. */
-export function AppliedFilterChips({ filters, value, onChange, trailing }: AppliedFilterChipsProps) {
+export function AppliedFilterChips({ filters, value, onChange, trailing, toggles = [] }: AppliedFilterChipsProps) {
   const chips = filters.flatMap((def) => (value[def.id] || []).map((v) => ({ def, v })));
 
   return (
     <div className="min-h-[24px]">
-      {chips.length > 0 && (
+      {(chips.length > 0 || toggles.length > 0) && (
         <div className="flex flex-wrap items-center gap-1.5">
           {chips.map(({ def, v }) => (
             <Badge
@@ -340,9 +341,13 @@ export function AppliedFilterChips({ filters, value, onChange, trailing }: Appli
               <i className="bi bi-x text-sm ml-0.5" />
             </Badge>
           ))}
-          {/* Filters only — the search term and toggle pills are left alone. */}
+          <ToggleChips chips={toggles} />
+          {/* Filters and any chipped toggles; the search term is left alone. */}
           <button
-            onClick={() => onChange({})}
+            onClick={() => {
+              onChange({});
+              clearToggleChips(toggles);
+            }}
             className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
           >
             Clear Filters
@@ -434,17 +439,13 @@ export function ListFiltersSheet({
             </FilterSection>
           ))}
           {pills.map((pill) => (
-            <FilterSection key={pill.id} label={pill.label} icon={pill.icon}>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox
-                  checked={!!draft.pills[pill.id]}
-                  onCheckedChange={(checked) =>
-                    setDraft((d) => ({ ...d, pills: { ...d.pills, [pill.id]: checked === true } }))
-                  }
-                />
-                <span className="text-sm">{pill.tooltip ?? pill.label}</span>
-              </label>
-            </FilterSection>
+            <SheetToggleRow
+              key={pill.id}
+              id={pill.id}
+              label={pill.label}
+              checked={!!draft.pills[pill.id]}
+              onChange={(checked) => setDraft((d) => ({ ...d, pills: { ...d.pills, [pill.id]: checked } }))}
+            />
           ))}
         </>
       )}

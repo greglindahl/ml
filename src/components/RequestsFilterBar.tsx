@@ -348,7 +348,8 @@ export const RequestsFilterBar = forwardRef<RequestsFilterBarHandle, RequestsFil
     const dateSelected = activeFilters["date"] || [];
 
     // Calculate total active filter count for collapsed button
-    const totalActiveCount = Object.values(activeFilters).reduce((sum, arr) => sum + arr.length, 0);
+    // Toggle pills count too: on phone they live only in the sheet.
+    const totalActiveCount = Object.values(activeFilters).reduce((sum, arr) => sum + arr.length, 0) + [isFlaggedActive, isArchivedActive].filter(Boolean).length;
 
 
 

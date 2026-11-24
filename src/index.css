@@ -557,6 +557,14 @@
   }
 }
 
+/* Prod: on phone the toggle pills live only in the filters sheet, and an on
+   toggle shows as a chip instead (activeToggleChips, same 768px breakpoint). */
+@media (max-width: 767px) {
+  .filter-toggle-pill {
+    display: none;
+  }
+}
+
 /* Hide folder sidebar at narrow viewport widths */
 @media (max-width: 767px) {
   .folder-tree-sidebar {

@@ -1,3 +1,5 @@
+import { activeToggleChips, clearToggleChips, ToggleChips } from "@/components/TogglePill";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { SettingsButton } from "@/components/ListFilters";
 import "bootstrap-icons/font/bootstrap-icons.css";
@@ -194,6 +196,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
   const [galleriesFiltersSheetOpen, setGalleriesFiltersSheetOpen] = useState(false);
 
   // Toggle pill states for FilterBar
+  const isPhone = useIsMobile();
   const [isUnsortedActive, setIsUnsortedActive] = useState(false);
   const [gallerySearchQuery, setGallerySearchQuery] = useState("");
   const [isUnviewedActive, setIsUnviewedActive] = useState(false);
@@ -552,6 +555,17 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
     handleMoveGalleries(Array.from(selectedGalleries));
   }, [selectedGalleries, handleMoveGalleries]);
 
+  // On phone, toggles that are on show as chips (see activeToggleChips).
+  const assetToggleChips = activeToggleChips(isPhone, [
+    { id: "unsorted", label: "Unsorted", iconClass: "bi-inbox", active: isUnsortedActive, onChange: setIsUnsortedActive },
+    { id: "unviewed", label: "Unviewed Only", iconClass: "bi-eye-slash", active: isUnviewedActive, onChange: setIsUnviewedActive },
+    { id: "branding", label: "Branding", iconClass: "bi-palette", active: isBrandedActive, onChange: setIsBrandedActive },
+  ]);
+  const galleryToggleChips = activeToggleChips(isPhone, [
+    { id: "archived", label: "Archived", iconClass: "bi-archive", active: archivedGalleriesOnly, onChange: setArchivedGalleriesOnly },
+    { id: "favorites", label: "Favorites", iconClass: "bi-heart-fill", active: favoriteGalleriesOnly, onChange: setFavoriteGalleriesOnly },
+  ]);
+
   return (
     <div className={`flex-1 flex flex-col min-w-0 h-full overflow-hidden px-6 md:px-9 content-container ${isMobile ? "pt-[72px]" : ""}`}>
       {/* Breadcrumb Navigation - fixed height to prevent layout shift */}
@@ -776,7 +790,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                 }
               }
 
-              if (chips.length === 0) return null;
+              if (chips.length === 0 && assetToggleChips.length === 0) return null;
 
               return (
                 <div className="flex flex-wrap items-center gap-1.5">
@@ -793,8 +807,12 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                       <i className="bi bi-x text-sm ml-0.5" />
                     </Badge>
                   ))}
+                  <ToggleChips chips={assetToggleChips} />
                   <button
-                    onClick={() => filterBarHandleRef.current?.clearAll()}
+                    onClick={() => {
+                      filterBarHandleRef.current?.clearAll();
+                      clearToggleChips(assetToggleChips);
+                    }}
                     className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                   >
                     Clear Filters
@@ -1032,7 +1050,7 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
 
           {/* Applied Filter Chips - reserved height to prevent layout shift */}
           <div className="min-h-[24px] mb-4">
-            {galleryFilterChips.length > 0 && (
+            {(galleryFilterChips.length > 0 || galleryToggleChips.length > 0) && (
               <div className="flex flex-wrap items-center gap-1.5">
                 {galleryFilterChips.map((chip, i) => (
                   <Badge
@@ -1047,8 +1065,12 @@ export function FolderDetailsView({ folderId, folder, onNavigate, isMobile = fal
                     <i className="bi bi-x text-sm ml-0.5" />
                   </Badge>
                 ))}
+                <ToggleChips chips={galleryToggleChips} />
                 <button
-                  onClick={() => galleryFilterBarHandleRef.current?.clearAll()}
+                  onClick={() => {
+                    galleryFilterBarHandleRef.current?.clearAll();
+                    clearToggleChips(galleryToggleChips);
+                  }}
                   className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                 >
                   Clear Filters

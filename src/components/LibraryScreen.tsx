@@ -96,6 +96,8 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { UploadModal } from "@/components/UploadModal";
 import { AssetDetailModal } from "@/components/AssetDetailModal";
+import { activeToggleChips, clearToggleChips, ToggleChips } from "@/components/TogglePill";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const GALLERY_MOVE_LIMIT = 5;
 const MOVE_LIMIT_MESSAGE = "Too many galleries selected. You may only move up to 5 at a time.";
@@ -295,6 +297,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   const [folderColumnVisibility, setFolderColumnVisibility] = useColumnVisibility<FolderColumnVisibility>("folders", DEFAULT_FOLDER_COLUMN_VISIBILITY);
 
   // Toggle pill states for FilterBar
+  const isPhone = useIsMobile();
   const [isUnsortedActive, setIsUnsortedActive] = useState(false);
   const [isUnviewedActive, setIsUnviewedActive] = useState(false);
 
@@ -1491,6 +1494,25 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
     window.history.replaceState(null, "", `?${params.toString()}`);
   }, [activeFolder, activeTab, folderTree]);
 
+  // On phone, toggles that are on show as chips (see activeToggleChips).
+  const assetToggleChips = activeToggleChips(isPhone, [
+    { id: "unsorted", label: "Unsorted", iconClass: "bi-inbox", active: isUnsortedActive, onChange: setIsUnsortedActive },
+    { id: "unviewed", label: "Unviewed Only", iconClass: "bi-eye-slash", active: isUnviewedActive, onChange: setIsUnviewedActive },
+    { id: "branding", label: "Branding", iconClass: "bi-palette", active: isBrandedActive, onChange: setIsBrandedActive },
+  ]);
+  const galleryToggleChips = activeToggleChips(isPhone, [
+    { id: "unsorted", label: "Unsorted", iconClass: "bi-inbox", active: unsortedGalleriesOnly, onChange: setUnsortedGalleriesOnly },
+    { id: "archived", label: "Archived", iconClass: "bi-archive", active: archivedGalleriesOnly, onChange: setArchivedGalleriesOnly },
+    { id: "favorites", label: "Favorites", iconClass: "bi-heart-fill", active: favoriteGalleriesOnly, onChange: setFavoriteGalleriesOnly },
+  ]);
+  const favGalleryToggleChips = activeToggleChips(isPhone, [
+    { id: "archived", label: "Archived", iconClass: "bi-archive", active: favArchivedOnly, onChange: setFavArchivedOnly },
+  ]);
+  const favAssetToggleChips = activeToggleChips(isPhone, [
+    { id: "unviewed", label: "Unviewed Only", iconClass: "bi-eye-slash", active: favUnviewedActive, onChange: setFavUnviewedActive },
+    { id: "branding", label: "Branding", iconClass: "bi-palette", active: favBrandedActive, onChange: setFavBrandedActive },
+  ]);
+
   return (
     <div className="flex-1 flex h-screen overflow-hidden">
       {/* Folders Sidebar with DnD. Hidden on Workflows and Branding, which
@@ -1787,7 +1809,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 sourceFilter.forEach(v => chips.push({ label: v.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), value: v, sourceId: "source", icon: <i className="bi bi-cloud-arrow-down text-sm" /> }));
                 orgStatusFilter.forEach(v => chips.push({ label: v === "organized" ? "Sorted" : v === "unorganized" ? "Unsorted" : v.charAt(0).toUpperCase() + v.slice(1), value: v, sourceId: "organization-status", icon: <i className="bi bi-gear text-sm" /> }));
 
-                if (chips.length === 0) return null;
+                if (chips.length === 0 && assetToggleChips.length === 0) return null;
 
                 const handleRemoveChip = (chip: typeof chips[0]) => {
                   if (chip.sourceId === "search") {
@@ -1803,6 +1825,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 // both. Every other tab's chip row was already filters-only.
                 const handleClearAllChips = () => {
                   filterBarHandleRef.current?.clearAll();
+                  clearToggleChips(assetToggleChips);
                 };
 
                 return (
@@ -1821,6 +1844,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                         <i className="bi bi-x text-sm ml-0.5" />
                       </Badge>
                     ))}
+                    <ToggleChips chips={assetToggleChips} />
                     <button
                       onClick={handleClearAllChips}
                       className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
@@ -2068,7 +2092,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
             {/* Applied Filter Chips - reserved height to prevent layout shift */}
             <div className="min-h-[24px] mb-4">
-              {galleryTabChips.length > 0 && (
+              {(galleryTabChips.length > 0 || galleryToggleChips.length > 0) && (
                 <div className="flex flex-wrap items-center gap-1.5">
                   {galleryTabChips.map((chip, i) => (
                     <Badge
@@ -2083,8 +2107,12 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                       <i className="bi bi-x text-sm ml-0.5" />
                     </Badge>
                   ))}
+                  <ToggleChips chips={galleryToggleChips} />
                   <button
-                    onClick={() => galleryTabFilterBarHandleRef.current?.clearAll()}
+                    onClick={() => {
+                      galleryTabFilterBarHandleRef.current?.clearAll();
+                      clearToggleChips(galleryToggleChips);
+                    }}
                     className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                   >
                     Clear Filters
@@ -2500,7 +2528,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
 
                 {/* Applied Filter Chips - reserved height to prevent layout shift */}
                 <div className="min-h-[24px] mb-4">
-                  {favGalleryChips.length > 0 && (
+                  {(favGalleryChips.length > 0 || favGalleryToggleChips.length > 0) && (
                     <div className="flex flex-wrap items-center gap-1.5">
                       {favGalleryChips.map((chip, i) => (
                         <Badge
@@ -2515,8 +2543,12 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                           <i className="bi bi-x text-sm ml-0.5" />
                         </Badge>
                       ))}
+                      <ToggleChips chips={favGalleryToggleChips} />
                       <button
-                        onClick={() => favGalleryFilterBarHandleRef.current?.clearAll()}
+                        onClick={() => {
+                          favGalleryFilterBarHandleRef.current?.clearAll();
+                          clearToggleChips(favGalleryToggleChips);
+                        }}
                         className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                       >
                         Clear Filters
@@ -2792,7 +2824,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                           : value,
                       }))
                     );
-                    if (chips.length === 0) return null;
+                    if (chips.length === 0 && favAssetToggleChips.length === 0) return null;
                     return (
                       <div className="flex flex-wrap items-center gap-1.5">
                         {chips.map((chip, i) => (
@@ -2808,8 +2840,12 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                             <i className="bi bi-x text-sm ml-0.5" />
                           </Badge>
                         ))}
+                        <ToggleChips chips={favAssetToggleChips} />
                         <button
-                          onClick={() => favAssetsFilterBarHandleRef.current?.clearAll()}
+                          onClick={() => {
+                            favAssetsFilterBarHandleRef.current?.clearAll();
+                            clearToggleChips(favAssetToggleChips);
+                          }}
                           className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
                         >
                           Clear Filters

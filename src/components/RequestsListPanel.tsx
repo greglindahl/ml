@@ -1,3 +1,5 @@
+import { activeToggleChips, clearToggleChips, ToggleChips } from "@/components/TogglePill";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useRef, useState } from "react";
 import { SettingsButton } from "@/components/ListFilters";
 import "bootstrap-icons/font/bootstrap-icons.css";
@@ -35,6 +37,11 @@ export function RequestsListPanel({ requests, withinCampaign = false }: { reques
   const [archivedActive, setArchivedActive] = useState(false);
   const [filtersSheetOpen, setFiltersSheetOpen] = useState(false);
   const filterBarRef = useRef<RequestsFilterBarHandle>(null);
+  // On phone, toggles that are on show as chips (see activeToggleChips).
+  const toggleChips = activeToggleChips(useIsMobile(), [
+    { id: "flagged", label: "Flagged", iconClass: "bi-flag-fill", active: flaggedActive, onChange: setFlaggedActive },
+    { id: "archived", label: "Archived", iconClass: "bi-archive", active: archivedActive, onChange: setArchivedActive },
+  ]);
 
   const chips: { label: string; value: string; filterId: string; icon: React.ReactNode }[] = [];
   Object.entries(activeFilters).forEach(([filterId, values]) => {
@@ -100,7 +107,7 @@ export function RequestsListPanel({ requests, withinCampaign = false }: { reques
 
       {/* Active Filter Chips */}
       <div className="min-h-[24px]">
-        {chips.length > 0 && (
+        {(chips.length > 0 || toggleChips.length > 0) && (
           <div className="flex flex-wrap items-center gap-1.5">
             {chips.map((chip, i) => (
               <Badge
@@ -116,8 +123,12 @@ export function RequestsListPanel({ requests, withinCampaign = false }: { reques
                 <i className="bi bi-x text-sm ml-0.5" />
               </Badge>
             ))}
+            <ToggleChips chips={toggleChips} />
             <button
-              onClick={() => filterBarRef.current?.clearAll()}
+              onClick={() => {
+                filterBarRef.current?.clearAll();
+                clearToggleChips(toggleChips);
+              }}
               className="text-[13px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
             >
               Clear Filters
