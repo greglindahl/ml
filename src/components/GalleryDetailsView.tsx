@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FacetedSearchWithTypeahead, FacetedSearchWithTypeaheadHandle } from "@/components/FacetedSearchWithTypeahead";
 import { GalleryDetailsFilterBar, GalleryDetailsFilterBarHandle, ActiveFilterChip } from "@/components/GalleryDetailsFilterBar";
-import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
 import { useLibrarySearch } from "@/hooks/useLibrarySearch";
 import { getRelativeTime, LibraryAsset } from "@/lib/mockLibraryData";
 import { FolderItem, getAllDescendantIds, flattenFolders, getGalleryLocationDisplay } from "@/lib/mockFolderData";
@@ -598,6 +597,8 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
               isBrandingActive={isBrandedActive}
               onBrandingToggle={setIsBrandedActive}
               onOpenFiltersSheet={() => setFiltersSheetOpen(true)}
+              sheetOpen={filtersSheetOpen}
+              onSheetOpenChange={setFiltersSheetOpen}
             />
           </div>
 
@@ -835,32 +836,6 @@ export function GalleryDetailsView({ galleryId, gallery, onNavigate, isMobile = 
         movingArchivedOnly={gallery.archived === true}
       />
 
-      {/* Filters Sheet (for narrow widths) */}
-      <FiltersSheet
-        open={filtersSheetOpen}
-        onOpenChange={setFiltersSheetOpen}
-        value={{}}
-        onApply={() => {
-          // TODO: Apply draft filters when controls are wired up
-        }}
-        title="Gallery Asset Filters"
-      >
-        <FilterSection label="Type" icon="bi-image">
-          <div className="text-sm text-muted-foreground">Content type filters will go here</div>
-        </FilterSection>
-        <FilterSection label="Tags" icon="bi-tag">
-          <div className="text-sm text-muted-foreground">Tags filters will go here</div>
-        </FilterSection>
-        <FilterSection label="Creator" icon="bi-person">
-          <div className="text-sm text-muted-foreground">Creator filters will go here</div>
-        </FilterSection>
-        <FilterSection label="Capture Date" icon="bi-calendar">
-          <div className="text-sm text-muted-foreground">Date range filters will go here</div>
-        </FilterSection>
-        <FilterSection label="Source" icon="bi-cloud-arrow-down">
-          <div className="text-sm text-muted-foreground">Source filters will go here</div>
-        </FilterSection>
-      </FiltersSheet>
 
       {/* Settings Drawer - tabbed interface, shared with All Assets and Folder > Assets */}
       <AssetSettingsDrawer

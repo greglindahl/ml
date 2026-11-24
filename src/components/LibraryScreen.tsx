@@ -72,7 +72,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { GalleryFilterBar, type GalleryFilterBarHandle, type GalleryFilterChip } from "@/components/GalleryFilterBar";
-import { FiltersSheet, FilterSection } from "@/components/FiltersSheet";
 import { GalleryCard, GalleryCardState } from "@/components/GalleryCard";
 import { AssetCard, AssetCardState } from "@/components/AssetCard";
 import { FolderCard, FolderCardState } from "@/components/FolderCard";
@@ -302,6 +301,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
   // Filters sheet state for narrow widths
   const [assetsFiltersSheetOpen, setAssetsFiltersSheetOpen] = useState(false);
   const [galleriesFiltersSheetOpen, setGalleriesFiltersSheetOpen] = useState(false);
+  // Favorites has its own Assets/Galleries bars, so its sheets get their own open state.
+  const [favAssetsFiltersSheetOpen, setFavAssetsFiltersSheetOpen] = useState(false);
+  const [favGalleriesFiltersSheetOpen, setFavGalleriesFiltersSheetOpen] = useState(false);
 
   const flatFolders = useMemo(() => flattenFolders(folderTree), [folderTree]);
 
@@ -1740,6 +1742,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 isBrandingActive={isBrandedActive}
                 onBrandingToggle={setIsBrandedActive}
                 onOpenFiltersSheet={() => setAssetsFiltersSheetOpen(true)}
+                sheetOpen={assetsFiltersSheetOpen}
+                onSheetOpenChange={setAssetsFiltersSheetOpen}
                 hideFilters={["added-date"]}
               />
             </div>
@@ -2055,6 +2059,8 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                 isFavoritesActive={favoriteGalleriesOnly}
                 onFavoritesToggle={setFavoriteGalleriesOnly}
                 onOpenFiltersSheet={() => setGalleriesFiltersSheetOpen(true)}
+                sheetOpen={galleriesFiltersSheetOpen}
+                onSheetOpenChange={setGalleriesFiltersSheetOpen}
                 onActiveFiltersChange={setGalleryTabChips}
                 handleRef={galleryTabFilterBarHandleRef}
               />
@@ -2486,7 +2492,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     onArchivedToggle={setFavArchivedOnly}
                     onActiveFiltersChange={setFavGalleryChips}
                     handleRef={favGalleryFilterBarHandleRef}
-                    onOpenFiltersSheet={() => setGalleriesFiltersSheetOpen(true)}
+                    onOpenFiltersSheet={() => setFavGalleriesFiltersSheetOpen(true)}
+                    sheetOpen={favGalleriesFiltersSheetOpen}
+                    onSheetOpenChange={setFavGalleriesFiltersSheetOpen}
                   />
                 </div>
 
@@ -2763,7 +2771,9 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
                     onUnviewedToggle={setFavUnviewedActive}
                     isBrandingActive={favBrandedActive}
                     onBrandingToggle={setFavBrandedActive}
-                    onOpenFiltersSheet={() => setAssetsFiltersSheetOpen(true)}
+                    onOpenFiltersSheet={() => setFavAssetsFiltersSheetOpen(true)}
+                    sheetOpen={favAssetsFiltersSheetOpen}
+                    onSheetOpenChange={setFavAssetsFiltersSheetOpen}
                     hideFilters={["added-date"]}
                   />
                 </div>
@@ -3073,59 +3083,7 @@ export function LibraryScreen({ isMobile = false, initialActiveFolder, initialAc
         })()}
       </SettingsDrawer>
 
-      {/* Assets Filters Sheet (for narrow widths) */}
-      <FiltersSheet
-        open={assetsFiltersSheetOpen}
-        onOpenChange={setAssetsFiltersSheetOpen}
-        value={{}}
-        onApply={() => {
-          // TODO: Apply draft filters when controls are wired up
-        }}
-      >
-        <FilterSection label="Content Type" icon="bi-image">
-          <div className="text-sm text-muted-foreground">Content type filters will go here</div>
-        </FilterSection>
-        <FilterSection label="AI Tags" icon="bi-stars">
-          <div className="text-sm text-muted-foreground">AI tags filters will go here</div>
-        </FilterSection>
-        <FilterSection label="Creator" icon="bi-person">
-          <div className="text-sm text-muted-foreground">Creator filters will go here</div>
-        </FilterSection>
-        <FilterSection label="Uploaded Date" icon="bi-calendar-plus">
-          <div className="text-sm text-muted-foreground">Uploaded date filters will go here</div>
-        </FilterSection>
-        <FilterSection label="Captured Date" icon="bi-calendar">
-          <div className="text-sm text-muted-foreground">Captured date filters will go here</div>
-        </FilterSection>
-        <FilterSection label="More Filters" icon="bi-filter">
-          <div className="text-sm text-muted-foreground">Source, Status, and other filters will go here</div>
-        </FilterSection>
-      </FiltersSheet>
-
-      {/* Galleries Filters Sheet (for narrow widths) */}
-      <FiltersSheet
-        open={galleriesFiltersSheetOpen}
-        onOpenChange={setGalleriesFiltersSheetOpen}
-        value={{}}
-        onApply={() => {
-          // TODO: Apply draft filters when controls are wired up
-        }}
-        title="Gallery Filters"
-      >
-        <FilterSection label="Gallery Options" icon="bi-collection">
-          <div className="text-sm text-muted-foreground">Gallery options filters will go here</div>
-        </FilterSection>
-        <FilterSection label="Creator" icon="bi-person">
-          <div className="text-sm text-muted-foreground">Creator filters will go here</div>
-        </FilterSection>
-        <FilterSection label="Groups" icon="bi-people">
-          <div className="text-sm text-muted-foreground">Groups filters will go here</div>
-        </FilterSection>
-        <FilterSection label="Created Date" icon="bi-calendar">
-          <div className="text-sm text-muted-foreground">Created date filters will go here</div>
-        </FilterSection>
-      </FiltersSheet>
-
+      {/* Mobile filter sheets live in each filter bar (FilterBar / GalleryFilterBar), built from its real facets. */}
       {/* Upload Modal */}
       <UploadModal
         open={uploadModalOpen}

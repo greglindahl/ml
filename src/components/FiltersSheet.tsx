@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, createContext, useContext } from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import {
   Sheet,
@@ -234,6 +235,94 @@ export function SheetAccordionSelect({
         </div>
       )}
     </div>
+  );
+}
+
+export interface LiveSheetFacet {
+  id: string;
+  label: string;
+  options: { value: string; label: string }[];
+  single?: boolean;
+  searchable?: boolean;
+}
+
+export interface LiveSheetToggle {
+  id: string;
+  label: string;
+  /** The checkbox text; the pill's tooltip. Falls back to the label. */
+  description?: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}
+
+const NO_DRAFT: FilterSnapshot = {};
+
+/**
+ * The mobile sheet for a filter bar that owns its own state (Library assets and
+ * galleries, gallery and folder details). Picks apply straight away, so the
+ * sheet, the bar and the chips always agree; View Results just closes it.
+ * Facets render as the shared accordion, toggle pills as on/off rows, and
+ * Clear Filters clears both.
+ */
+export function LiveFiltersSheet({
+  open,
+  onOpenChange,
+  title = "Filters",
+  facets,
+  active,
+  onToggle,
+  toggles = [],
+  onClear,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title?: string;
+  facets: LiveSheetFacet[];
+  active: Record<string, { value: string; label: string }[]>;
+  onToggle: (facet: LiveSheetFacet, option: { value: string; label: string }, checked: boolean) => void;
+  toggles?: LiveSheetToggle[];
+  /** Clears the bar's filters; the sheet turns the toggles off itself. */
+  onClear: () => void;
+}) {
+  const count =
+    facets.reduce((n, f) => n + (active[f.id]?.length ?? 0), 0) + toggles.filter((t) => t.checked).length;
+  return (
+    <FiltersSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      value={NO_DRAFT}
+      onApply={() => {}}
+      title={title}
+      clear={{
+        count: () => count,
+        onClear: () => {
+          onClear();
+          toggles.forEach((t) => t.checked && t.onChange(false));
+        },
+      }}
+    >
+      {facets.map((f) => (
+        <FilterSection key={f.id} label={f.label}>
+          <SheetAccordionSelect
+            id={f.id}
+            label={f.label}
+            options={f.options}
+            selected={active[f.id] || []}
+            single={f.single}
+            searchable={f.searchable}
+            onToggle={(option, checked) => onToggle(f, option, checked)}
+          />
+        </FilterSection>
+      ))}
+      {toggles.map((t) => (
+        <FilterSection key={t.id} label={t.label}>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <Checkbox checked={t.checked} onCheckedChange={(checked) => t.onChange(checked === true)} />
+            <span className="text-sm">{t.description ?? t.label}</span>
+          </label>
+        </FilterSection>
+      ))}
+    </FiltersSheet>
   );
 }
 

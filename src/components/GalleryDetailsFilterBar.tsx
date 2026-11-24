@@ -18,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { mockLibraryAssets, CREATOR_NAMES } from "@/lib/mockLibraryData";
 import { TogglePill } from "./TogglePill";
+import { LiveFiltersSheet } from "./FiltersSheet";
 
 interface FilterOption {
   label: string;
@@ -208,6 +209,9 @@ interface GalleryDetailsFilterBarProps {
   isBrandingActive?: boolean;
   onBrandingToggle?: (active: boolean) => void;
   onOpenFiltersSheet?: () => void;
+  /** Mobile sheet: when given, the bar renders its own sheet with its real facets. */
+  sheetOpen?: boolean;
+  onSheetOpenChange?: (open: boolean) => void;
 }
 
 export function GalleryDetailsFilterBar({
@@ -220,6 +224,8 @@ export function GalleryDetailsFilterBar({
   isBrandingActive = false,
   onBrandingToggle,
   onOpenFiltersSheet,
+  sheetOpen,
+  onSheetOpenChange,
 }: GalleryDetailsFilterBarProps) {
   const [activeFilters, setActiveFilters] = useState<Record<string, { value: string; label: string }[]>>({});
   // Custom ranges keyed by date filter id ("added-date" / "captured-date")
@@ -868,6 +874,49 @@ export function GalleryDetailsFilterBar({
         isActive={isBrandingActive}
         onClick={() => onBrandingToggle?.(!isBrandingActive)}
       />
+
+      {/* Mobile sheet: the same facets as the row, same state, so picks show as chips at once. */}
+      {onSheetOpenChange && (
+        <LiveFiltersSheet
+          open={!!sheetOpen}
+          onOpenChange={onSheetOpenChange}
+          facets={[
+            { id: "people", label: "AI Tags: People", options: peopleOptions, searchable: true },
+            { id: "scene", label: "AI Tags: Scene", options: sceneOptions, searchable: true },
+            { id: "brand", label: "AI Tags: Brand", options: brandOptions },
+            // Custom date ranges need the calendar, so the sheet offers the presets only.
+            ...filters.map((f) => ({
+              id: f.id,
+              label: f.label,
+              options: f.options.filter((o) => o.value !== "custom"),
+              single: !f.multiSelect,
+              searchable: f.options.length > 8,
+            })),
+            { id: "source", label: "Source", options: sourceOptions },
+          ]}
+          active={activeFilters}
+          onToggle={(facet, option, checked) =>
+            facet.single
+              ? handleSingleSelect(facet.id, option.value, option.label)
+              : handleMultiSelect(facet.id, option.value, option.label, checked)
+          }
+          toggles={[
+            ...(onUnviewedToggle
+              ? [{ id: "unviewed", label: "Unviewed Only", description: "Show only assets you haven't viewed yet", checked: isUnviewedActive, onChange: onUnviewedToggle }]
+              : []),
+            ...(onBrandingToggle
+              ? [{ id: "branding", label: "Branding", description: "Show only branded assets", checked: isBrandingActive, onChange: onBrandingToggle }]
+              : []),
+          ]}
+          onClear={() => {
+            setActiveFilters((prev) => {
+              Object.keys(prev).forEach((filterId) => onFilterChange?.(filterId, []));
+              return {};
+            });
+            setCustomDateRanges({});
+          }}
+        />
+      )}
     </div>
   );
 }

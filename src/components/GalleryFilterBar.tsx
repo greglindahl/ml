@@ -9,6 +9,7 @@ import {
 "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { TogglePill } from "./TogglePill";
+import { LiveFiltersSheet } from "./FiltersSheet";
 
 interface FilterOption {
   label: string;
@@ -106,6 +107,9 @@ interface GalleryFilterBarProps {
   /** Reports applied filters as chips for the parent's chip row (new pattern, matching the assets bars). */
   onActiveFiltersChange?: (chips: GalleryFilterChip[]) => void;
   handleRef?: React.MutableRefObject<GalleryFilterBarHandle | null>;
+  /** Mobile sheet: when given, the bar renders its own sheet with its real facets. */
+  sheetOpen?: boolean;
+  onSheetOpenChange?: (open: boolean) => void;
 }
 
 export function GalleryFilterBar({
@@ -118,6 +122,8 @@ export function GalleryFilterBar({
   onOpenFiltersSheet,
   onActiveFiltersChange,
   handleRef,
+  sheetOpen,
+  onSheetOpenChange,
 }: GalleryFilterBarProps = {}) {
   const [activeFilters, setActiveFilters] = useState<
     Record<string, {value: string;label: string;}[]>>(
@@ -347,6 +353,40 @@ export function GalleryFilterBar({
           tooltip="Show only favorited galleries"
           isActive={isFavoritesActive}
           onClick={() => onFavoritesToggle(!isFavoritesActive)}
+        />
+      )}
+
+      {/* Mobile sheet: the same facets as the row, same state, so picks show as chips at once. */}
+      {onSheetOpenChange && (
+        <LiveFiltersSheet
+          open={!!sheetOpen}
+          onOpenChange={onSheetOpenChange}
+          title="Gallery Filters"
+          facets={galleryFilters.map((f) => ({
+            id: f.id,
+            label: f.label,
+            // Custom date ranges need the calendar, so the sheet offers the presets only.
+            options: f.options.filter((o) => o.value !== "custom"),
+            single: !f.multiSelect,
+          }))}
+          active={activeFilters}
+          onToggle={(facet, option, checked) =>
+            facet.single
+              ? handleSingleSelect(facet.id, option.value, option.label)
+              : handleMultiSelect(facet.id, option.value, option.label, checked)
+          }
+          toggles={[
+            ...(onUnsortedToggle
+              ? [{ id: "unsorted", label: "Unsorted", description: "Show only galleries not in any folder", checked: isUnsortedActive, onChange: onUnsortedToggle }]
+              : []),
+            ...(onArchivedToggle
+              ? [{ id: "archived", label: "Archived", description: "Show only archived galleries", checked: isArchivedActive, onChange: onArchivedToggle }]
+              : []),
+            ...(onFavoritesToggle
+              ? [{ id: "favorites", label: "Favorites", description: "Show only favorited galleries", checked: isFavoritesActive, onChange: onFavoritesToggle }]
+              : []),
+          ]}
+          onClear={() => setActiveFilters({})}
         />
       )}
     </div>);

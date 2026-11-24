@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { folders, FolderItem } from "@/lib/mockFolderData";
 import { mockLibraryAssets, CREATOR_NAMES } from "@/lib/mockLibraryData";
 import { TogglePill } from "@/components/TogglePill";
+import { LiveFiltersSheet } from "@/components/FiltersSheet";
 
 interface FilterOption {
   label: string;
@@ -230,7 +231,19 @@ interface FilterBarProps {
   handleRef?: React.MutableRefObject<FilterBarHandle | null>;
   // Collapsed filters sheet
   onOpenFiltersSheet?: () => void;
+  /** Mobile sheet: when given, the bar renders its own sheet with its real facets. */
+  sheetOpen?: boolean;
+  onSheetOpenChange?: (open: boolean) => void;
 }
+
+const SOURCE_OPTIONS = [
+  { label: "Posted Content", value: "posted-content" },
+  { label: "Imported Content", value: "imported-content" },
+  { label: "Published Content", value: "published-content" },
+  { label: "Uploaded Content", value: "uploaded-content" },
+  { label: "Engage Content", value: "engage-content" },
+  { label: "Requested Content", value: "requested-content" },
+];
 
 export function FilterBar({
   onFilterChange,
@@ -247,6 +260,8 @@ export function FilterBar({
   compactMode = false,
   handleRef,
   onOpenFiltersSheet,
+  sheetOpen,
+  onSheetOpenChange,
 }: FilterBarProps) {
   const visibleFilters = filters.filter(f => !hideFilters.includes(f.id));
   const [activeFilters, setActiveFilters] = useState<Record<string, { value: string; label: string }[]>>({});
@@ -995,6 +1010,46 @@ export function FilterBar({
         isActive={isBrandingActive}
         onClick={() => onBrandingToggle?.(!isBrandingActive)}
       />
+
+      {/* Mobile sheet: the same facets as the row, same state, so picks show as chips at once. */}
+      {onSheetOpenChange && (
+        <LiveFiltersSheet
+          open={!!sheetOpen}
+          onOpenChange={onSheetOpenChange}
+          facets={[
+            { id: "people", label: "AI Tags: People", options: peopleOptions, searchable: true },
+            { id: "scene", label: "AI Tags: Scene", options: sceneOptions, searchable: true },
+            { id: "brand", label: "AI Tags: Brand", options: brandOptions },
+            // Custom date ranges need the calendar, so the sheet offers the presets only.
+            ...visibleFilters.map((f) => ({
+              id: f.id,
+              label: f.label,
+              options: f.options.filter((o) => o.value !== "custom"),
+              single: !f.multiSelect,
+              searchable: f.options.length > 8,
+            })),
+            { id: "source", label: "Source", options: SOURCE_OPTIONS },
+          ]}
+          active={activeFilters}
+          onToggle={(facet, option, checked) =>
+            facet.single
+              ? handleSingleSelect(facet.id, option.value, option.label)
+              : handleMultiSelect(facet.id, option.value, option.label, checked)
+          }
+          toggles={[
+            ...(onUnsortedToggle
+              ? [{ id: "unsorted", label: "Unsorted", description: "Show only assets not in any gallery", checked: isUnsortedActive, onChange: onUnsortedToggle }]
+              : []),
+            ...(onUnviewedToggle
+              ? [{ id: "unviewed", label: "Unviewed Only", description: "Show only assets you haven't viewed yet", checked: isUnviewedActive, onChange: onUnviewedToggle }]
+              : []),
+            ...(onBrandingToggle
+              ? [{ id: "branding", label: "Branding", description: "Show only branded assets", checked: isBrandingActive, onChange: onBrandingToggle }]
+              : []),
+          ]}
+          onClear={clearAllFilters}
+        />
+      )}
     </div>
   );
 }
