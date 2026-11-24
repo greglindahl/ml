@@ -75,10 +75,7 @@ export function FiltersSheet<T extends FilterSnapshot>({
         className="h-[85vh] max-h-[700px] flex flex-col p-0 rounded-t-lg"
       >
         <SheetHeader className="px-4 py-3 border-b flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <i className="bi bi-filter text-lg" />
-            <SheetTitle className="text-base font-semibold">{title}</SheetTitle>
-          </div>
+          <SheetTitle className="text-base font-semibold text-left">{title}</SheetTitle>
         </SheetHeader>
 
         {/* Scrollable filter content */}
@@ -119,11 +116,12 @@ interface FilterSectionProps {
   children: React.ReactNode;
 }
 
-export function FilterSection({ label, icon, children }: FilterSectionProps) {
+// `icon` is still accepted so callers don't change, but prod's mobile sheet labels
+// are plain text, so it isn't drawn.
+export function FilterSection({ label, children }: FilterSectionProps) {
   return (
     <div className="mb-4 last:mb-0">
       <div className="flex items-center gap-2 mb-2">
-        {icon && <i className={`bi ${icon} text-muted-foreground`} />}
         <span className="text-[15px] font-medium">{label}</span>
       </div>
       {children}
