@@ -38,11 +38,14 @@ interface FiltersSheetProps<T extends FilterSnapshot> {
   children: React.ReactNode | ((context: FiltersSheetContextValue<T>) => React.ReactNode);
   title?: string;
   /**
-   * Turns on the footer's "Clear Filters (n)" (prod's mobile sheet): how many
-   * selections the draft holds, and the draft with none. Clearing changes the
-   * draft only; View Results applies it, like every other change in the sheet.
+   * Turns on the footer's "Clear Filters (n)" (prod's mobile sheet), shown only
+   * while something is selected. Two kinds of sheet:
+   * - draft: `count` reads the draft and `empty` is the draft with nothing
+   *   picked; clearing changes the draft and View Results applies it.
+   * - live (picks apply straight away, e.g. Manage Users): `count` reads the
+   *   page's filters and `onClear` clears them.
    */
-  clear?: { count: (draft: T) => number; empty: T };
+  clear?: { count: (draft: T) => number; empty?: T; onClear?: () => void };
 }
 
 export function FiltersSheet<T extends FilterSnapshot>({
@@ -100,7 +103,10 @@ export function FiltersSheet<T extends FilterSnapshot>({
           {selectedCount > 0 && (
             <button
               type="button"
-              onClick={() => setDraft(clear!.empty)}
+              onClick={() => {
+                if (clear!.empty) setDraft(clear!.empty);
+                clear!.onClear?.();
+              }}
               className="inline-flex items-center gap-1.5 text-[15px] text-primary hover:underline"
             >
               <i className="bi bi-x-lg text-[12px]" aria-hidden="true" />

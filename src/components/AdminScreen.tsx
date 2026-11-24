@@ -430,6 +430,15 @@ export function AdminScreen({ isMobile = false, initialTab }: AdminScreenProps) 
         value={{}}
         onApply={() => {}}
         title="Filter"
+        // Picks here apply straight away, so Clear Filters clears the page's filters too.
+        clear={{
+          count: () => Object.values(usersActiveFilters).reduce((n, values) => n + values.length, 0),
+          // Same path as the chip row's Clear Filters, so the bar's own state clears too.
+          onClear: () => {
+            handleClearAllUsersChips();
+            setUsersActiveFilters({});
+          },
+        }}
       >
         {usersFilterVisibility.groups !== false && (
           <FilterSection label="Groups">
