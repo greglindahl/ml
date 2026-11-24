@@ -36,7 +36,7 @@ export function TogglePill({
           type="button"
           onClick={onClick}
           className={cn(
-            "inline-flex items-center justify-center h-10 w-10 rounded-md transition-colors",
+            "filter-toggle-pill inline-flex items-center justify-center h-10 w-10 rounded-md transition-colors",
             isActive
               ? "bg-primary/10 border border-primary text-primary"
               : "bg-white border border-gray-300 text-[#6e84a3] hover:bg-accent/50",

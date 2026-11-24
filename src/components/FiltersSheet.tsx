@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, createContext, useContext } from "react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import {
   Sheet,
@@ -317,22 +317,44 @@ export function LiveFiltersSheet({
         </FilterSection>
       ))}
       {toggles.map((t) => (
-        <FilterSection key={t.id} label={t.label}>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <Checkbox checked={t.checked} onCheckedChange={(checked) => t.onChange(checked === true)} />
-            <span className="text-sm">{t.description ?? t.label}</span>
-          </label>
-        </FilterSection>
+        <SheetToggleRow key={t.id} id={t.id} label={t.label} checked={t.checked} onChange={t.onChange} />
       ))}
     </FiltersSheet>
   );
 }
 
+/**
+ * A toggle pill inside the mobile sheet (prod, per Tell): the label on the left,
+ * a switch on the right. On phone the pills live only here, not beside the
+ * Filters button.
+ */
+export function SheetToggleRow({
+  id,
+  label,
+  checked,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  const inputId = `sheet-toggle-${id}`;
+  return (
+    <div className="flex items-center justify-between gap-3 py-4 first:pt-0 border-b last:border-b-0">
+      <label htmlFor={inputId} className="text-[15px] font-medium cursor-pointer">
+        {label}
+      </label>
+      <Switch id={inputId} checked={checked} onCheckedChange={onChange} />
+    </div>
+  );
+}
+
 // `icon` is still accepted so callers don't change, but prod's mobile sheet labels
-// are plain text, so it isn't drawn.
+// are plain text, so it isn't drawn. A rule separates each section, as in prod.
 export function FilterSection({ label, children }: FilterSectionProps) {
   return (
-    <div className="mb-4 last:mb-0">
+    <div className="py-4 first:pt-0 border-b last:border-b-0">
       <div className="flex items-center gap-2 mb-2">
         <span className="text-[15px] font-medium">{label}</span>
       </div>

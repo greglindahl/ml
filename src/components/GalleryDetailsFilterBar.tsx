@@ -250,7 +250,8 @@ export function GalleryDetailsFilterBar({
 
   // Calculate total active filter count for collapsed button
   const standardFiltersCount = Object.values(activeFilters).reduce((sum, arr) => sum + arr.length, 0);
-  const totalActiveCount = standardFiltersCount + aiTagsCount + sourceCount;
+  // Toggle pills count too: on phone they live only in the sheet.
+  const totalActiveCount = standardFiltersCount + aiTagsCount + sourceCount + [isUnviewedActive, isBrandingActive].filter(Boolean).length;
 
   // Build chips and notify parent when filters change
   useEffect(() => {

@@ -549,6 +549,10 @@
   .filters-expanded {
     display: none;
   }
+  /* Prod: on phone the toggle pills live only in the filters sheet. */
+  .filter-toggle-pill {
+    display: none;
+  }
 }
 
 @container filterbar (min-width: 768px) {

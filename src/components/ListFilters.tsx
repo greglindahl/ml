@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -11,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TogglePill } from "./TogglePill";
-import { FiltersSheet, FilterSection, SheetAccordionSelect } from "./FiltersSheet";
+import { FiltersSheet, FilterSection, SheetAccordionSelect, SheetToggleRow } from "./FiltersSheet";
 import { cn } from "@/lib/utils";
 
 /**
@@ -434,17 +433,13 @@ export function ListFiltersSheet({
             </FilterSection>
           ))}
           {pills.map((pill) => (
-            <FilterSection key={pill.id} label={pill.label} icon={pill.icon}>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox
-                  checked={!!draft.pills[pill.id]}
-                  onCheckedChange={(checked) =>
-                    setDraft((d) => ({ ...d, pills: { ...d.pills, [pill.id]: checked === true } }))
-                  }
-                />
-                <span className="text-sm">{pill.tooltip ?? pill.label}</span>
-              </label>
-            </FilterSection>
+            <SheetToggleRow
+              key={pill.id}
+              id={pill.id}
+              label={pill.label}
+              checked={!!draft.pills[pill.id]}
+              onChange={(checked) => setDraft((d) => ({ ...d, pills: { ...d.pills, [pill.id]: checked } }))}
+            />
           ))}
         </>
       )}

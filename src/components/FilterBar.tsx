@@ -422,7 +422,8 @@ export function FilterBar({
 
   // Calculate total active filter count for collapsed button
   const standardFiltersCount = Object.values(activeFilters).reduce((sum, arr) => sum + arr.length, 0);
-  const totalActiveCount = standardFiltersCount + aiTagsCount + sourceCount;
+  // Toggle pills count too: on phone they live only in the sheet, so the button is where an on toggle shows.
+  const totalActiveCount = standardFiltersCount + aiTagsCount + sourceCount + [isUnsortedActive, isUnviewedActive, isBrandingActive].filter(Boolean).length;
 
 
   return (
