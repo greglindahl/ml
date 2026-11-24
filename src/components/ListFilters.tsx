@@ -420,7 +420,13 @@ function SheetDropdown({
             </div>
           )}
           {/* ~6 rows, then the list scrolls inside the open section */}
-          <ul className="max-h-[252px] overflow-y-auto py-1" role={single ? "radiogroup" : "group"} aria-label={def.label}>
+          {/* Prod's rows: no checkboxes; a picked row is a solid blue bar with white text. */}
+          <ul
+            className="max-h-[252px] overflow-y-auto py-1"
+            role="listbox"
+            aria-multiselectable={!single}
+            aria-label={def.label}
+          >
             {options.map((option) => {
               const checked = selected.some((s) => s.value === option.value);
               const pick = () => {
@@ -428,21 +434,24 @@ function SheetDropdown({
                 if (single) onOpenChange(false);
               };
               return (
-                <li key={option.value}>
-                  <label className="flex items-center gap-3 px-3 h-[42px] text-sm cursor-pointer hover:bg-accent/60">
-                    {single ? (
-                      <input
-                        type="radio"
-                        name={`sheet-${def.id}`}
-                        checked={checked}
-                        onChange={pick}
-                        className="h-4 w-4 accent-primary"
-                      />
-                    ) : (
-                      <Checkbox checked={checked} onCheckedChange={pick} />
-                    )}
-                    <span className="flex-1 truncate">{option.label}</span>
-                  </label>
+                <li
+                  key={option.value}
+                  role="option"
+                  aria-selected={checked}
+                  tabIndex={0}
+                  onClick={pick}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      pick();
+                    }
+                  }}
+                  className={cn(
+                    "flex items-center px-4 h-[42px] text-[15px] cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
+                    checked ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent/60",
+                  )}
+                >
+                  <span className="flex-1 truncate">{option.label}</span>
                 </li>
               );
             })}
